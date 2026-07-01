@@ -1,5 +1,6 @@
 import { useLiveQuery } from "dexie-react-hooks";
 import { useState, useEffect } from "react";
+
 import { db } from "../db/db";
 import { StudentSwipeCard } from "../components/ui/StudentSwipeCard";
 
