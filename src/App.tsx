@@ -1,10 +1,12 @@
 import { Routes, Route, Navigate } from "react-router";
+
 import { AuthProvider } from "./contexts/AuthContext";
 import { ProtectedRoute } from "./components/auth/ProtectedRoute";
 import { Login } from "./pages/Login";
 import { Onboarding } from "./pages/Onboarding";
 import { Dashboard } from "./pages/Dashboard";
 import { AttendanceTest } from "./pages/AttendanceTest";
+import { ContinuousAssessment } from "./pages/ContinuousAssessment";
 
 function App() {
   return (
@@ -12,7 +14,22 @@ function App() {
       <Routes>
         <Route path="/login" element={<Login />} />
         <Route path="/onboarding" element={<Onboarding />} />
-        <Route path="/attendance" element={<AttendanceTest />} />
+        <Route
+          path="/attendance"
+          element={
+            <ProtectedRoute>
+              <AttendanceTest />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/continuous-assessment"
+          element={
+            <ProtectedRoute>
+              <ContinuousAssessment />
+            </ProtectedRoute>
+          }
+        />
         <Route
           path="/dashboard"
           element={
