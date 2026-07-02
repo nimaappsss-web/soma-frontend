@@ -7,9 +7,10 @@ function getApiBaseUrl(): string {
   if (typeof window !== "undefined") {
     const hostname = window.location.hostname;
     const port = "3000";
-    return hostname === "localhost" || hostname === "127.0.0.1"
-      ? import.meta.env.VITE_API_BASE_URL || `http://localhost:${port}/api`
-      : `http://${hostname}:${port}/api`;
+    if (hostname === "localhost" || hostname === "127.0.0.1") {
+      return import.meta.env.VITE_API_BASE_URL || `http://localhost:${port}/api`;
+    }
+    return import.meta.env.VITE_API_BASE_URL || `https://${hostname}/api`;
   }
   return import.meta.env.VITE_API_BASE_URL || `http://localhost:3000/api`;
 }
