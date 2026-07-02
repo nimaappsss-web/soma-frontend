@@ -30,7 +30,7 @@ export const StudentCACard = ({
   const [confirmed, setConfirmed] = useState(false);
   const [showNumpad, setShowNumpad] = useState(false);
   const [voiceFeedback, setVoiceFeedback] = useState("");
-  const { isListening, startListening } = useSpeechToText();
+  const { isListening, startListening, supported: voiceSupported } = useSpeechToText();
   const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -133,19 +133,30 @@ export const StudentCACard = ({
       />
 
       <div className="flex items-center gap-3">
-        <button
-          type="button"
-          onClick={handleVoiceInput}
-          disabled={isListening || confirmed}
-          className={`h-16 w-16 rounded-full flex items-center justify-center text-3xl transition-all shadow-md ${
-            isListening
-              ? "bg-red-500 text-white scale-110 shadow-lg animate-pulse"
-              : "bg-blue-600 text-white hover:bg-blue-700 active:bg-blue-800"
-          }`}
-          title="Speak score"
-        >
-          {isListening ? "..." : "🎤"}
-        </button>
+        {voiceSupported ? (
+          <button
+            type="button"
+            onClick={handleVoiceInput}
+            disabled={isListening || confirmed}
+            className={`h-16 w-16 rounded-full flex items-center justify-center text-3xl transition-all shadow-md ${
+              isListening
+                ? "bg-red-500 text-white scale-110 shadow-lg animate-pulse"
+                : "bg-blue-600 text-white hover:bg-blue-700 active:bg-blue-800"
+            }`}
+            title="Speak score"
+          >
+            {isListening ? "..." : "🎤"}
+          </button>
+        ) : (
+          <button
+            type="button"
+            onClick={() => setShowNumpad(true)}
+            disabled={confirmed}
+            className="h-10 px-4 rounded-lg text-sm font-medium bg-blue-600 text-white hover:bg-blue-700"
+          >
+            Open keypad
+          </button>
+        )}
 
         <button
           type="button"
@@ -211,7 +222,12 @@ export const StudentCACard = ({
         </p>
       ) : (
         <p className="text-xs text-gray-400 text-center">
-          {showNumpad ? "Tap digits then ✓, or" : "Tap the mic and speak,"} or type + Enter
+          {!voiceSupported
+            ? "Voice requires HTTPS — use the keypad or type"
+            : showNumpad
+              ? "Tap digits then ✓, or use the mic"
+              : "Tap the mic and speak, or open keypad"}{" "}
+          &middot; Type + Enter works too
         </p>
       )}
     </div>

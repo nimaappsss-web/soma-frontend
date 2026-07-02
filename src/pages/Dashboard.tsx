@@ -12,7 +12,9 @@ export const Dashboard = () => {
         <div className="flex items-center gap-4">
           <span className="text-sm text-gray-500">{user?.schoolName}</span>
           <span className="text-sm text-gray-700">{user?.name}</span>
-          <span className="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded">{user?.role}</span>
+          <span className="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded">
+            {user?.role}
+          </span>
           <button
             onClick={logout}
             className="text-sm text-red-500 hover:text-red-600"
@@ -31,14 +33,18 @@ export const Dashboard = () => {
             className="bg-white rounded-xl p-6 shadow-sm border border-gray-100 hover:border-blue-200 transition-colors"
           >
             <p className="text-sm text-gray-400">Attendance</p>
-            <p className="text-lg font-semibold text-blue-600 mt-1">Take today's</p>
+            <p className="text-lg font-semibold text-blue-600 mt-1">
+              Take today's
+            </p>
           </Link>
           <Link
             to="/continuous-assessment"
             className="bg-white rounded-xl p-6 shadow-sm border border-gray-100 hover:border-blue-200 transition-colors"
           >
             <p className="text-sm text-gray-400">Continuous Assessment</p>
-            <p className="text-lg font-semibold text-blue-600 mt-1">Record scores</p>
+            <p className="text-lg font-semibold text-blue-600 mt-1">
+              Record scores
+            </p>
           </Link>
           <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
             <p className="text-sm text-gray-400">Classes</p>
@@ -60,7 +66,10 @@ export const Dashboard = () => {
             </li>
             <li>
               5.{" "}
-              <Link to="/continuous-assessment" className="text-blue-600 hover:underline">
+              <Link
+                to="/continuous-assessment"
+                className="text-blue-600 hover:underline"
+              >
                 Record CA scores
               </Link>
             </li>
