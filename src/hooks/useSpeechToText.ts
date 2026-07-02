@@ -18,9 +18,20 @@ declare global {
   }
 }
 
+const isSecureContext = (): boolean =>
+  typeof window !== "undefined" &&
+  (window.location.protocol === "https:" ||
+    window.location.hostname === "localhost" ||
+    window.location.hostname === "127.0.0.1");
+
+const isSpeechSupported = (): boolean =>
+  isSecureContext() &&
+  (!!window.SpeechRecognition || !!window.webkitSpeechRecognition);
+
 export const useSpeechToText = () => {
   const [isListening, setIsListening] = useState(false);
   const [transcript, setTranscript] = useState("");
+  const [supported] = useState(isSpeechSupported);
   const recognitionRef = useRef<SpeechRecognitionInstance | null>(null);
 
   const startListening = useCallback(
@@ -28,7 +39,6 @@ export const useSpeechToText = () => {
       const SpeechRecognition =
         window.SpeechRecognition || window.webkitSpeechRecognition;
       if (!SpeechRecognition) {
-        console.warn("SpeechRecognition not supported");
         return;
       }
 
@@ -63,5 +73,5 @@ export const useSpeechToText = () => {
     setIsListening(false);
   }, []);
 
-  return { isListening, transcript, startListening, stopListening };
+  return { isListening, transcript, startListening, stopListening, supported };
 };

@@ -1,13 +1,14 @@
 import { createContext, useContext, useState, useEffect, useCallback, type ReactNode } from "react";
 import { useNavigate } from "react-router";
 
-import { tokenStorage, refreshTokenStorage, userIDStorage, roleStorage, storage } from "../utils/storage";
+import { tokenStorage, userIDStorage, roleStorage, storage } from "../utils/storage";
 import { authApi } from "../services/auth";
 import type { User, LoginResponse } from "../features/auth/types";
 
 interface AuthContextType {
   user: User | null;
   isAuthenticated: boolean;
+  isLoading: boolean;
   login: (data: LoginResponse) => void;
   setTokens: (accessToken: string, user: User) => void;
   logout: () => Promise<void>;
@@ -20,6 +21,7 @@ const AUTH_EVENT = "nima:auth-change";
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -30,7 +32,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         .catch(() => {
           storage.clear();
           setUser(null);
-        });
+        })
+        .finally(() => setIsLoading(false));
+    } else {
+      setIsLoading(false);
     }
 
     const onAuthChange = () => {
@@ -43,7 +48,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const login = useCallback((data: LoginResponse) => {
     tokenStorage.setToken(data.accessToken);
-    refreshTokenStorage.setRefreshToken(data.refreshToken);
     userIDStorage.setUserID(data.user.id);
     roleStorage.setRole(data.user.role);
     setUser(data.user);
@@ -59,12 +63,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   }, []);
 
   const logout = useCallback(async () => {
-    const refresh = refreshTokenStorage.getRefreshToken();
-    if (refresh) {
-      try {
-        await authApi.logout(refresh);
-      } catch { /* ignore */ }
-    }
+    try {
+      await authApi.logout();
+    } catch { /* ignore */ }
     storage.clear();
     setUser(null);
     window.dispatchEvent(new Event(AUTH_EVENT));
@@ -82,7 +83,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   }, []);
 
   return (
-      <AuthContext value={{ user, isAuthenticated: !!user, login, setTokens, logout, refreshUser }}>
+    <AuthContext value={{ user, isAuthenticated: !!user, isLoading, login, setTokens, logout, refreshUser }}>
       {children}
     </AuthContext>
   );
