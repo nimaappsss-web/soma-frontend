@@ -9,7 +9,19 @@ export const useSendOTP = () => {
   return useMutation({
     mutationFn: (phone: string) => fetchData("/auth/send-otp", "POST", { phone }),
     onSuccess: async () => {
-      toast.success("OTP sent successfully!");
+      toast.success("OTP sent to phone!");
+    },
+    onError: async (error) => {
+      toast.error(transformError(error));
+    },
+  });
+};
+
+export const useSendOTPByEmail = () => {
+  return useMutation({
+    mutationFn: (email: string) => fetchData("/auth/send-otp", "POST", { email }),
+    onSuccess: async () => {
+      toast.success("OTP sent to email!");
     },
     onError: async (error) => {
       toast.error(transformError(error));

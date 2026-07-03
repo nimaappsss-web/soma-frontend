@@ -4,7 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../co
 import { Input } from "../components/ui/input";
 import { Label } from "../components/ui/label";
 import { Button } from "../components/ui/button";
-import { useRegisterPrincipal, useSendOTP, useVerifyOTP, useRegisterSchool } from "../features/auth/api";
+import { useRegisterPrincipal, useSendOTP, useSendOTPByEmail, useVerifyOTP, useRegisterSchool } from "../features/auth/api";
 import { useAuth } from "../contexts/AuthContext";
 
 interface PrincipalForm {
@@ -39,6 +39,7 @@ export const Onboarding = () => {
 
   const registerPrincipalMutation = useRegisterPrincipal();
   const sendOTPMutation = useSendOTP();
+  const sendOTPEmailMutation = useSendOTPByEmail();
   const verifyOTPMutation = useVerifyOTP();
   const registerSchoolMutation = useRegisterSchool();
   const { setTokens } = useAuth();
@@ -74,6 +75,13 @@ export const Onboarding = () => {
       onSuccess: () => setCooldown(RESEND_COOLDOWN),
     });
   }, [cooldown, phone, sendOTPMutation]);
+
+  const handleResendOTPEmail = useCallback(() => {
+    if (!principal.email || cooldown > 0) return;
+    sendOTPEmailMutation.mutate(principal.email, {
+      onSuccess: () => setCooldown(RESEND_COOLDOWN),
+    });
+  }, [cooldown, principal.email, sendOTPEmailMutation]);
 
   const handleOTPSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -201,9 +209,24 @@ export const Onboarding = () => {
                 {sendOTPMutation.isPending
                   ? "Sending..."
                   : cooldown > 0
-                    ? `Resend code in ${cooldown}s`
-                    : "Resend code"}
+                    ? `Resend via SMS in ${cooldown}s`
+                    : "Resend via SMS"}
               </Button>
+              {principal.email && (
+                <Button
+                  type="button"
+                  variant="link"
+                  onClick={handleResendOTPEmail}
+                  disabled={sendOTPEmailMutation.isPending || cooldown > 0}
+                  className="w-full text-sm"
+                >
+                  {sendOTPEmailMutation.isPending
+                    ? "Sending..."
+                    : cooldown > 0
+                      ? `Resend via email in ${cooldown}s`
+                      : "Send to email"}
+                </Button>
+              )}
             </form>
           )}
 
