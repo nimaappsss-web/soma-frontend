@@ -7,7 +7,10 @@ import type { VerifyOTPRequest, VerifyOTPResponse, AxiosErrorResponse } from "..
 
 export const useSendOTP = () => {
   return useMutation({
-    mutationFn: (phone: string) => fetchData<{ phone: string }>("/auth/send-otp", "POST", { phone }),
+    mutationFn: (phone: string) => fetchData("/auth/send-otp", "POST", { phone }),
+    onSuccess: async () => {
+      toast.success("OTP sent successfully!");
+    },
     onError: async (error) => {
       toast.error(transformError(error));
     },
