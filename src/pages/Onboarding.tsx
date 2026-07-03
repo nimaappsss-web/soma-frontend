@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../components/ui/card";
 import { Input } from "../components/ui/input";
@@ -23,6 +23,7 @@ interface SchoolForm {
 }
 
 const NIGERIAN_STATES = ["Lagos", "Abuja", "Rivers", "Kano", "Oyo", "Kaduna"];
+const RESEND_COOLDOWN = 30;
 
 export const Onboarding = () => {
   const [step, setStep] = useState(1);
@@ -34,12 +35,19 @@ export const Onboarding = () => {
   const [school, setSchool] = useState<SchoolForm>({
     name: "", state: "", lga: "", schoolType: "secondary", address: "",
   });
+  const [cooldown, setCooldown] = useState(0);
 
   const registerPrincipalMutation = useRegisterPrincipal();
   const sendOTPMutation = useSendOTP();
   const verifyOTPMutation = useVerifyOTP();
   const registerSchoolMutation = useRegisterSchool();
   const { setTokens } = useAuth();
+
+  useEffect(() => {
+    if (cooldown <= 0) return;
+    const timer = setInterval(() => setCooldown((prev) => prev - 1), 1000);
+    return () => clearInterval(timer);
+  }, [cooldown]);
 
   const handlePrincipalSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -53,15 +61,19 @@ export const Onboarding = () => {
       {
         onSuccess: (data) => {
           setPhone(data.phone);
+          setCooldown(RESEND_COOLDOWN);
           setStep(2);
         },
       },
     );
   };
 
-  const handleResendOTP = () => {
-    sendOTPMutation.mutate(phone);
-  };
+  const handleResendOTP = useCallback(() => {
+    if (cooldown > 0) return;
+    sendOTPMutation.mutate(phone, {
+      onSuccess: () => setCooldown(RESEND_COOLDOWN),
+    });
+  }, [cooldown, phone, sendOTPMutation]);
 
   const handleOTPSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -183,10 +195,14 @@ export const Onboarding = () => {
                 type="button"
                 variant="link"
                 onClick={handleResendOTP}
-                disabled={sendOTPMutation.isPending}
+                disabled={sendOTPMutation.isPending || cooldown > 0}
                 className="w-full text-sm"
               >
-                {sendOTPMutation.isPending ? "Sending..." : "Resend code"}
+                {sendOTPMutation.isPending
+                  ? "Sending..."
+                  : cooldown > 0
+                    ? `Resend code in ${cooldown}s`
+                    : "Resend code"}
               </Button>
             </form>
           )}
