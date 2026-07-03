@@ -2,6 +2,7 @@ import { Routes, Route, Navigate } from "react-router";
 
 import { AuthProvider } from "./contexts/AuthContext";
 import { ProtectedRoute } from "./components/auth/ProtectedRoute";
+import { GuestRoute } from "./components/auth/GuestRoute";
 import { Login } from "./pages/Login";
 import { Onboarding } from "./pages/Onboarding";
 import { Dashboard } from "./pages/Dashboard";
@@ -12,8 +13,8 @@ function App() {
   return (
     <AuthProvider>
       <Routes>
-        <Route path="/login" element={<Login />} />
-        <Route path="/onboarding" element={<Onboarding />} />
+        <Route path="/login" element={<GuestRoute><Login /></GuestRoute>} />
+        <Route path="/onboarding" element={<GuestRoute><Onboarding /></GuestRoute>} />
         <Route
           path="/attendance"
           element={

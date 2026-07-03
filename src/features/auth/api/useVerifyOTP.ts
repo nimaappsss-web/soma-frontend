@@ -3,7 +3,7 @@ import toast from "react-hot-toast";
 
 import { transformError } from "../../../utils/transformError";
 import { fetchData } from "../../../utils/fetchData";
-import type { VerifyOTPRequest, VerifyOTPResponse, AxiosErrorResponse } from "../types";
+import type { VerifyOTPResponse, AxiosErrorResponse } from "../types";
 
 export const useSendOTP = () => {
   return useMutation({
@@ -30,15 +30,14 @@ export const useSendOTPByEmail = () => {
 };
 
 export const useVerifyOTP = () => {
-  return useMutation<VerifyOTPResponse, AxiosErrorResponse, VerifyOTPRequest>({
+  return useMutation<VerifyOTPResponse, AxiosErrorResponse, { email: string; code: string }>({
     mutationFn: (payload) =>
-      fetchData<VerifyOTPRequest>("/auth/verify-otp", "POST", {
-        ...payload,
-        deviceId: payload.deviceId ?? "web",
-        deviceName: payload.deviceName ?? "Web Browser",
+      fetchData("/auth/verify-email-otp", "POST", {
+        email: payload.email,
+        code: payload.code,
       }),
     onSuccess: async () => {
-      toast.success("Phone verified!");
+      toast.success("Email verified!");
     },
     onError: async (error) => {
       toast.error(transformError(error));

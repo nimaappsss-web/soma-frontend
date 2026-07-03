@@ -85,12 +85,16 @@ export const Onboarding = () => {
 
   const handleOTPSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    if (!principal.email || !otp) return;
     verifyOTPMutation.mutate(
-      { phone, code: otp },
-      { onSuccess: (data) => {
+      { email: principal.email, code: otp },
+      {
+        onSuccess: (data) => {
+          if (!data.accessToken || !data.user) return;
           setTokens(data.accessToken, data.user);
-          setStep(3);
-        }},
+          window.location.href = "/dashboard";
+        },
+      },
     );
   };
 
@@ -121,13 +125,13 @@ export const Onboarding = () => {
             ))}
           </div>
           <CardTitle className="text-xl">
-            {step === 1 ? "Create Account" : step === 2 ? "Verify Phone" : "Register School"}
+            {step === 1 ? "Create Account" : step === 2 ? "Verify Email" : "Register School"}
           </CardTitle>
           <CardDescription>
             {step === 1
               ? "Step 1 — Principal details"
               : step === 2
-                ? `Step 2 — Enter the code sent to ${phone}`
+                ? `Step 2 — Enter the code sent to ${principal.email}`
                 : "Step 3 — School details"}
           </CardDescription>
         </CardHeader>
