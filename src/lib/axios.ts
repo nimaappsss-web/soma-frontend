@@ -35,9 +35,11 @@ axiosInstance.interceptors.request.use(
 axiosInstance.interceptors.response.use(
   (response) => response,
   (error) => {
+    const url = error.config?.url ?? "";
     if (
       error.response?.status === 401 &&
-      !error.config._retry
+      !error.config._retry &&
+      !url.startsWith("/auth/")
     ) {
       error.config._retry = true;
       storage.clear();
