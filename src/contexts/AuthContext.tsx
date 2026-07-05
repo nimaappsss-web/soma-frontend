@@ -1,9 +1,24 @@
-import { createContext, useContext, useState, useEffect, useCallback, type ReactNode } from "react";
+import {
+  createContext,
+  useContext,
+  useState,
+  useEffect,
+  useCallback,
+  type ReactNode,
+} from "react";
 import { useNavigate } from "react-router";
 
-import { tokenStorage, userIDStorage, roleStorage, storage } from "../utils/storage";
+import {
+  tokenStorage,
+  userIDStorage,
+  roleStorage,
+  userStorage,
+  loginTimestampStorage,
+  storage,
+} from "../utils/storage";
 import { authApi } from "../services/auth";
 import type { User, LoginResponse } from "../features/auth/types";
+import type { AxiosError } from "axios";
 
 interface AuthContextType {
   user: User | null;
@@ -12,12 +27,17 @@ interface AuthContextType {
   login: (data: LoginResponse) => void;
   setTokens: (accessToken: string, user: User) => void;
   logout: () => Promise<void>;
-  refreshUser: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | null>(null);
 
 const AUTH_EVENT = "nima:auth-change";
+const DAYS_3_MS = 3 * 24 * 60 * 60 * 1000;
+
+function isSessionExpired() {
+  const ts = loginTimestampStorage.get();
+  return ts > 0 && Date.now() - ts > DAYS_3_MS;
+}
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
@@ -27,11 +47,26 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   useEffect(() => {
     const token = tokenStorage.getToken();
     if (token) {
-      authApi.me()
-        .then(setUser)
-        .catch(() => {
-          storage.clear();
-          setUser(null);
+      if (isSessionExpired()) {
+        storage.clear();
+        setIsLoading(false);
+        return;
+      }
+      authApi
+        .me()
+        .then((user) => {
+          userStorage.set(user);
+          setUser(user);
+        })
+        .catch((err) => {
+          const axiosErr = err as AxiosError;
+          if (axiosErr.response?.status === 401) {
+            storage.clear();
+            setUser(null);
+          } else {
+            const cached = userStorage.get();
+            if (cached) setUser(cached);
+          }
         })
         .finally(() => setIsLoading(false));
     } else {
@@ -50,6 +85,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     tokenStorage.setToken(data.accessToken);
     userIDStorage.setUserID(data.user.id);
     roleStorage.setRole(data.user.role);
+    userStorage.set(data.user);
+    loginTimestampStorage.set(Date.now());
     setUser(data.user);
     window.dispatchEvent(new Event(AUTH_EVENT));
   }, []);
@@ -58,6 +95,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     tokenStorage.setToken(accessToken);
     userIDStorage.setUserID(userData.id);
     roleStorage.setRole(userData.role);
+    userStorage.set(userData);
+    loginTimestampStorage.set(Date.now());
     setUser(userData);
     window.dispatchEvent(new Event(AUTH_EVENT));
   }, []);
@@ -65,25 +104,26 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const logout = useCallback(async () => {
     try {
       await authApi.logout();
-    } catch { /* ignore */ }
+    } catch {
+      /* ignore */
+    }
     storage.clear();
     setUser(null);
     window.dispatchEvent(new Event(AUTH_EVENT));
     navigate("/login");
   }, [navigate]);
 
-  const refreshUser = useCallback(async () => {
-    try {
-      const u = await authApi.me();
-      setUser(u);
-    } catch {
-      storage.clear();
-      setUser(null);
-    }
-  }, []);
-
   return (
-    <AuthContext value={{ user, isAuthenticated: !!user, isLoading, login, setTokens, logout, refreshUser }}>
+    <AuthContext
+      value={{
+        user,
+        isAuthenticated: !!user,
+        isLoading,
+        login,
+        setTokens,
+        logout,
+      }}
+    >
       {children}
     </AuthContext>
   );
