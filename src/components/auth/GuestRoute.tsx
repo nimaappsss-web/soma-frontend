@@ -2,9 +2,10 @@ import { type ReactNode } from "react";
 import { Navigate } from "react-router";
 
 import { useAuth } from "../../contexts/AuthContext";
+import { getPostAuthPath } from "../../features/auth/utils/routing";
 
 export const GuestRoute = ({ children }: { children: ReactNode }) => {
-  const { isAuthenticated, isLoading } = useAuth();
+  const { user, isAuthenticated, isLoading } = useAuth();
 
   if (isLoading) {
     return (
@@ -14,8 +15,8 @@ export const GuestRoute = ({ children }: { children: ReactNode }) => {
     );
   }
 
-  if (isAuthenticated) {
-    return <Navigate to="/dashboard" replace />;
+  if (isAuthenticated && user) {
+    return <Navigate to={getPostAuthPath(user)} replace />;
   }
 
   return <>{children}</>;
