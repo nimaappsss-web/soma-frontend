@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
+import { useSearchParams } from "react-router";
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../components/ui/card";
 import { Input } from "../components/ui/input";
@@ -26,7 +27,9 @@ const NIGERIAN_STATES = ["Lagos", "Abuja", "Rivers", "Kano", "Oyo", "Kaduna"];
 const RESEND_COOLDOWN = 30;
 
 export const Onboarding = () => {
-  const [step, setStep] = useState(1);
+  const [searchParams, setSearchParams] = useSearchParams();
+  const stepFromUrl = Number(searchParams.get("step")) || 1;
+  const [step, setStep] = useState(stepFromUrl);
   const [phone, setPhone] = useState("");
   const [principal, setPrincipal] = useState<PrincipalForm>({
     name: "", email: "", phone: "", password: "",
@@ -42,7 +45,30 @@ export const Onboarding = () => {
   const sendOTPEmailMutation = useSendOTPByEmail();
   const verifyOTPMutation = useVerifyOTP();
   const registerSchoolMutation = useRegisterSchool();
-  const { setTokens } = useAuth();
+  const { user, setTokens } = useAuth();
+
+  useEffect(() => {
+    setStep(stepFromUrl);
+  }, [stepFromUrl]);
+
+  useEffect(() => {
+    if (step !== stepFromUrl) {
+      if (step === 1) {
+        setSearchParams({}, { replace: true });
+      } else {
+        setSearchParams({ step: String(step) }, { replace: true });
+      }
+    }
+  }, [step]);
+
+  useEffect(() => {
+    if (user?.email) {
+      setPrincipal((prev) => ({ ...prev, email: user.email || prev.email }));
+    }
+    if (user?.phone) {
+      setPrincipal((prev) => ({ ...prev, phone: user.phone || prev.phone }));
+    }
+  }, [user?.email, user?.phone]);
 
   useEffect(() => {
     if (cooldown <= 0) return;
