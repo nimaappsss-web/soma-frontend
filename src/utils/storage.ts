@@ -46,9 +46,16 @@ export const loginTimestampStorage = {
   clear: () => localStorage.removeItem(EXPIRES_KEY),
 };
 
+export const refreshTokenStorage = {
+  get: () => Cookies.get(`${STORAGE_PREFIX}REFRESH_TOKEN`) as string,
+  set: (token: string) => Cookies.set(`${STORAGE_PREFIX}REFRESH_TOKEN`, token),
+  clear: () => Cookies.remove(`${STORAGE_PREFIX}REFRESH_TOKEN`),
+};
+
 export const storage = {
   clear: () => {
     tokenStorage.clearToken();
+    refreshTokenStorage.clear();
     userIDStorage.clearUserID();
     roleStorage.clearRole();
     userStorage.clear();

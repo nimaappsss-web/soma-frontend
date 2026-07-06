@@ -1,7 +1,7 @@
 import type { AxiosInstance } from "axios";
 import Axios from "axios";
 
-import { tokenStorage, storage } from "../utils/storage";
+import { tokenStorage, refreshTokenStorage, storage } from "../utils/storage";
 
 function getApiBaseUrl(): string {
   if (typeof window !== "undefined") {
@@ -21,6 +21,23 @@ export const axiosInstance = Axios.create({
   baseURL: API_BASE_URL,
 });
 
+let isRefreshing = false;
+let failedQueue: Array<{
+  resolve: (token: string) => void;
+  reject: (err: unknown) => void;
+}> = [];
+
+function processQueue(error: unknown, token: string | null) {
+  failedQueue.forEach((prom) => {
+    if (error) {
+      prom.reject(error);
+    } else {
+      prom.resolve(token!);
+    }
+  });
+  failedQueue = [];
+}
+
 axiosInstance.interceptors.request.use(
   (config) => {
     const token = tokenStorage.getToken();
@@ -34,17 +51,56 @@ axiosInstance.interceptors.request.use(
 
 axiosInstance.interceptors.response.use(
   (response) => response,
-  (error) => {
-    const url = error.config?.url ?? "";
+  async (error) => {
+    const originalRequest = error.config;
+    const url = originalRequest?.url ?? "";
+
     if (
       error.response?.status === 401 &&
-      !error.config._retry &&
+      !originalRequest._retry &&
       !url.startsWith("/auth/")
     ) {
-      error.config._retry = true;
-      storage.clear();
-      if (typeof window !== "undefined") {
-        window.location.href = "/login";
+      const refreshToken = refreshTokenStorage.get();
+      if (!refreshToken) {
+        storage.clear();
+        if (typeof window !== "undefined") {
+          window.location.href = "/login";
+        }
+        return Promise.reject(error);
+      }
+
+      if (isRefreshing) {
+        return new Promise<string>((resolve, reject) => {
+          failedQueue.push({ resolve, reject });
+        })
+          .then((token) => {
+            originalRequest.headers.Authorization = `Bearer ${token}`;
+            return axiosInstance(originalRequest);
+          })
+          .catch((err) => Promise.reject(err));
+      }
+
+      originalRequest._retry = true;
+      isRefreshing = true;
+
+      try {
+        const { data } = await Axios.post(`${API_BASE_URL}/auth/refresh`, {
+          refreshToken,
+        });
+        const newToken = data.accessToken;
+        tokenStorage.setToken(newToken);
+        processQueue(null, newToken);
+        originalRequest.headers.Authorization = `Bearer ${newToken}`;
+        return axiosInstance(originalRequest);
+      } catch {
+        processQueue(error, null);
+        storage.clear();
+        if (typeof window !== "undefined") {
+          window.location.href = "/login";
+        }
+        return Promise.reject(error);
+      } finally {
+        isRefreshing = false;
       }
     }
     return Promise.reject(error);

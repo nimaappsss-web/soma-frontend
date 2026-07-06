@@ -8,6 +8,7 @@ import { Onboarding } from "./pages/Onboarding";
 import { Dashboard } from "./pages/Dashboard";
 import { AttendanceTest } from "./pages/AttendanceTest";
 import { ContinuousAssessment } from "./pages/ContinuousAssessment";
+import { CompleteRegistration } from "./pages/CompleteRegistration";
 
 function App() {
   return (
@@ -36,6 +37,14 @@ function App() {
           element={
             <ProtectedRoute>
               <Dashboard />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/complete-registration"
+          element={
+            <ProtectedRoute>
+              <CompleteRegistration />
             </ProtectedRoute>
           }
         />

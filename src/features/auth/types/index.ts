@@ -35,6 +35,7 @@ export interface VerifyOTPResponse {
   message: string;
   user: User;
   accessToken: string;
+  refreshToken: string;
 }
 
 export interface RegisterSchoolRequest {
@@ -59,6 +60,7 @@ export interface RegisterSchoolResponse {
   };
   user: User;
   accessToken: string;
+  refreshToken: string;
 }
 
 export interface User {
@@ -71,12 +73,29 @@ export interface User {
   schoolName?: string;
   image?: string;
   phoneVerified?: boolean;
+  needsRegistration?: boolean;
   assignments?: Array<{
     id: string;
     type: "form" | "subject";
     classId: string;
     subjectId?: string;
   }>;
+}
+
+export interface CompleteRegistrationRequest {
+  name: string;
+  password: string;
+  assignments: Array<{
+    subjectId: string;
+    classIds: string[];
+  }>;
+}
+
+export interface CompleteRegistrationResponse {
+  message: string;
+  user: User;
+  accessToken: string;
+  refreshToken: string;
 }
 
 export interface LoginResponse {

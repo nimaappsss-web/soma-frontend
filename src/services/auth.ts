@@ -1,6 +1,11 @@
 import { axiosInstance } from "../lib/axios";
 
-import type { LoginRequest, RegisterPrincipalRequest, RegisterSchoolRequest, VerifyOTPRequest, LoginResponse, User } from "../features/auth/types";
+import type { LoginRequest, RegisterPrincipalRequest, RegisterSchoolRequest, VerifyOTPRequest, LoginResponse, User, CompleteRegistrationRequest, CompleteRegistrationResponse } from "../features/auth/types";
+
+export interface RefreshResponse {
+  accessToken: string;
+  expiresIn: number;
+}
 
 export const authApi = {
   login: (data: LoginRequest) =>
@@ -18,8 +23,14 @@ export const authApi = {
   registerSchool: (data: RegisterSchoolRequest) =>
     axiosInstance.post("/auth/register-school", data).then((r) => r.data),
 
-  logout: () =>
-    axiosInstance.post<{ message: string }>("/auth/logout").then((r) => r.data),
+  refresh: (refreshToken: string) =>
+    axiosInstance.post<RefreshResponse>("/auth/refresh", { refreshToken }).then((r) => r.data),
+
+  logout: (refreshToken: string) =>
+    axiosInstance.post<{ message: string }>("/auth/logout", { refreshToken }).then((r) => r.data),
+
+  completeRegistration: (data: CompleteRegistrationRequest) =>
+    axiosInstance.post<CompleteRegistrationResponse>("/auth/complete-registration", data).then((r) => r.data),
 
   me: () => axiosInstance.get<User>("/auth/me").then((r) => r.data),
 };

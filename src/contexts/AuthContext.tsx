@@ -10,10 +10,10 @@ import { useNavigate } from "react-router";
 
 import {
   tokenStorage,
+  refreshTokenStorage,
   userIDStorage,
   roleStorage,
   userStorage,
-  loginTimestampStorage,
   storage,
 } from "../utils/storage";
 import { authApi } from "../services/auth";
@@ -24,20 +24,15 @@ interface AuthContextType {
   user: User | null;
   isAuthenticated: boolean;
   isLoading: boolean;
+  needsRegistration: boolean;
   login: (data: LoginResponse) => void;
-  setTokens: (accessToken: string, user: User) => void;
+  setTokens: (accessToken: string, refreshToken: string, user: User) => void;
   logout: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | null>(null);
 
 const AUTH_EVENT = "nima:auth-change";
-const DAYS_3_MS = 3 * 24 * 60 * 60 * 1000;
-
-function isSessionExpired() {
-  const ts = loginTimestampStorage.get();
-  return ts > 0 && Date.now() - ts > DAYS_3_MS;
-}
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
@@ -46,31 +41,67 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   useEffect(() => {
     const token = tokenStorage.getToken();
+    const refreshToken = refreshTokenStorage.get();
+
+    if (!token && !refreshToken) {
+      setIsLoading(false);
+      return;
+    }
+
     if (token) {
-      if (isSessionExpired()) {
-        storage.clear();
-        setIsLoading(false);
-        return;
-      }
       authApi
         .me()
         .then((user) => {
           userStorage.set(user);
           setUser(user);
+          setIsLoading(false);
         })
         .catch((err) => {
           const axiosErr = err as AxiosError;
           if (axiosErr.response?.status === 401) {
-            storage.clear();
-            setUser(null);
+            if (refreshToken) {
+              authApi
+                .refresh(refreshToken)
+                .then((res) => {
+                  tokenStorage.setToken(res.accessToken);
+                  return authApi.me();
+                })
+                .then((user) => {
+                  userStorage.set(user);
+                  setUser(user);
+                })
+                .catch(() => {
+                  storage.clear();
+                  setUser(null);
+                })
+                .finally(() => setIsLoading(false));
+            } else {
+              storage.clear();
+              setUser(null);
+              setIsLoading(false);
+            }
           } else {
             const cached = userStorage.get();
             if (cached) setUser(cached);
+            setIsLoading(false);
           }
+        });
+    } else if (refreshToken) {
+      authApi
+        .refresh(refreshToken)
+        .then((res) => {
+          tokenStorage.setToken(res.accessToken);
+          return authApi.me();
+        })
+        .then((user) => {
+          userStorage.set(user);
+          setUser(user);
+        })
+        .catch(() => {
+          storage.clear();
+          setUser(null);
         })
         .finally(() => setIsLoading(false));
-    } else {
-      setIsLoading(false);
     }
 
     const onAuthChange = () => {
@@ -83,27 +114,31 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const login = useCallback((data: LoginResponse) => {
     tokenStorage.setToken(data.accessToken);
+    if (data.refreshToken) refreshTokenStorage.set(data.refreshToken);
     userIDStorage.setUserID(data.user.id);
     roleStorage.setRole(data.user.role);
     userStorage.set(data.user);
-    loginTimestampStorage.set(Date.now());
     setUser(data.user);
     window.dispatchEvent(new Event(AUTH_EVENT));
   }, []);
 
-  const setTokens = useCallback((accessToken: string, userData: User) => {
-    tokenStorage.setToken(accessToken);
-    userIDStorage.setUserID(userData.id);
-    roleStorage.setRole(userData.role);
-    userStorage.set(userData);
-    loginTimestampStorage.set(Date.now());
-    setUser(userData);
-    window.dispatchEvent(new Event(AUTH_EVENT));
-  }, []);
+  const setTokens = useCallback(
+    (accessToken: string, refreshToken: string, userData: User) => {
+      tokenStorage.setToken(accessToken);
+      if (refreshToken) refreshTokenStorage.set(refreshToken);
+      userIDStorage.setUserID(userData.id);
+      roleStorage.setRole(userData.role);
+      userStorage.set(userData);
+      setUser(userData);
+      window.dispatchEvent(new Event(AUTH_EVENT));
+    },
+    [],
+  );
 
   const logout = useCallback(async () => {
+    const refreshToken = refreshTokenStorage.get();
     try {
-      await authApi.logout();
+      await authApi.logout(refreshToken);
     } catch {
       /* ignore */
     }
@@ -113,12 +148,15 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     navigate("/login");
   }, [navigate]);
 
+  const needsRegistration = !!user?.needsRegistration;
+
   return (
     <AuthContext
       value={{
         user,
         isAuthenticated: !!user,
         isLoading,
+        needsRegistration,
         login,
         setTokens,
         logout,
