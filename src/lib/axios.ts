@@ -19,6 +19,7 @@ export const API_BASE_URL = getApiBaseUrl();
 
 export const axiosInstance = Axios.create({
   baseURL: API_BASE_URL,
+  timeout: 10000,
 });
 
 let isRefreshing = false;

@@ -16,8 +16,8 @@ import {
   userStorage,
   storage,
 } from "../utils/storage";
-import { authApi } from "../services/auth";
 import type { User, LoginResponse } from "../features/auth/types";
+import { authApi } from "../services/auth";
 import type { AxiosError } from "axios";
 
 interface AuthContextType {
@@ -48,13 +48,18 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       return;
     }
 
+    const cached = userStorage.get();
+    if (cached) {
+      setUser(cached);
+      setIsLoading(false);
+    }
+
     if (token) {
       authApi
         .me()
         .then((user) => {
           userStorage.set(user);
           setUser(user);
-          setIsLoading(false);
         })
         .catch((err) => {
           const axiosErr = err as AxiosError;
@@ -73,18 +78,17 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
                 .catch(() => {
                   storage.clear();
                   setUser(null);
-                })
-                .finally(() => setIsLoading(false));
+                });
             } else {
               storage.clear();
               setUser(null);
-              setIsLoading(false);
             }
-          } else {
-            const cached = userStorage.get();
-            if (cached) setUser(cached);
+          } else if (!cached) {
             setIsLoading(false);
           }
+        })
+        .finally(() => {
+          if (!cached) setIsLoading(false);
         });
     } else if (refreshToken) {
       authApi
@@ -101,7 +105,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           storage.clear();
           setUser(null);
         })
-        .finally(() => setIsLoading(false));
+        .finally(() => {
+          if (!cached) setIsLoading(false);
+        });
     }
 
     const onAuthChange = () => {
