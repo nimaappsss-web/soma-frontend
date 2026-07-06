@@ -92,7 +92,7 @@ export const Onboarding = () => {
         onSuccess: (data) => {
           if (!data.accessToken || !data.user) return;
           setTokens(data.accessToken, data.refreshToken, data.user);
-          window.location.href = "/dashboard";
+          setStep(3);
         },
       },
     );
