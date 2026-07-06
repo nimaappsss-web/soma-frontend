@@ -3,6 +3,7 @@ import { Routes, Route, Navigate } from "react-router";
 import { AuthProvider } from "./contexts/AuthContext";
 import { ProtectedRoute } from "./components/auth/ProtectedRoute";
 import { GuestRoute } from "./components/auth/GuestRoute";
+import { OnboardingRoute } from "./components/auth/OnboardingRoute";
 import { Login } from "./pages/Login";
 import { Onboarding } from "./pages/Onboarding";
 import { Dashboard } from "./pages/Dashboard";
@@ -15,7 +16,7 @@ function App() {
     <AuthProvider>
       <Routes>
         <Route path="/login" element={<GuestRoute><Login /></GuestRoute>} />
-        <Route path="/onboarding" element={<GuestRoute><Onboarding /></GuestRoute>} />
+        <Route path="/onboarding" element={<OnboardingRoute><Onboarding /></OnboardingRoute>} />
         <Route
           path="/attendance"
           element={

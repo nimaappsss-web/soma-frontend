@@ -73,6 +73,7 @@ export interface User {
   schoolName?: string;
   image?: string;
   phoneVerified?: boolean;
+  emailVerified?: boolean;
   needsRegistration?: boolean;
   assignments?: Array<{
     id: string;
