@@ -1,9 +1,13 @@
+import { useState } from "react";
 import { Link } from "react-router";
 
 import { useAuth } from "../contexts/AuthContext";
+import { InviteTeacherModal } from "../features/principal/components/InviteTeacherModal";
+import { Button } from "../components/ui/button";
 
 export const Dashboard = () => {
   const { user, logout } = useAuth();
+  const [showInvite, setShowInvite] = useState(false);
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -55,7 +59,15 @@ export const Dashboard = () => {
         <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
           <h3 className="font-semibold text-gray-800 mb-2">Getting Started</h3>
           <ul className="text-sm text-gray-500 space-y-2">
-            <li>1. Add teachers to your school</li>
+            <li>
+              1.{" "}
+              <button
+                onClick={() => setShowInvite(true)}
+                className="text-blue-600 hover:underline"
+              >
+                Add teachers to your school
+              </button>
+            </li>
             <li>2. Create classes and subjects</li>
             <li>3. Register students</li>
             <li>
@@ -74,8 +86,17 @@ export const Dashboard = () => {
               </Link>
             </li>
           </ul>
+          <Button
+            onClick={() => setShowInvite(true)}
+            className="mt-4"
+            size="sm"
+          >
+            + Invite Teacher
+          </Button>
         </div>
       </main>
+
+      <InviteTeacherModal open={showInvite} onClose={() => setShowInvite(false)} />
     </div>
   );
 };
