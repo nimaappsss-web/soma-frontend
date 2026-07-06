@@ -45,7 +45,7 @@ export const Onboarding = () => {
   const sendOTPEmailMutation = useSendOTPByEmail();
   const verifyOTPMutation = useVerifyOTP();
   const registerSchoolMutation = useRegisterSchool();
-  const { user, setTokens } = useAuth();
+  const { user, setTokens, logout } = useAuth();
 
   useEffect(() => {
     setStep(stepFromUrl);
@@ -145,10 +145,21 @@ export const Onboarding = () => {
     <div className="min-h-screen flex items-center justify-center bg-gray-50 p-4">
       <Card className="w-full max-w-md">
         <CardHeader>
-          <div className="flex gap-2 mb-2">
-            {[1, 2, 3].map((s) => (
-              <div key={s} className={`h-2 w-full rounded ${step >= s ? "bg-primary" : "bg-muted"}`} />
-            ))}
+          <div className="flex items-center justify-between mb-2">
+            <div className="flex gap-2 flex-1">
+              {[1, 2, 3].map((s) => (
+                <div key={s} className={`h-2 w-full rounded ${step >= s ? "bg-primary" : "bg-muted"}`} />
+              ))}
+            </div>
+            {user && (
+              <button
+                type="button"
+                onClick={logout}
+                className="ml-2 text-xs text-red-400 hover:text-red-600 shrink-0"
+              >
+                Sign out
+              </button>
+            )}
           </div>
           <CardTitle className="text-xl">
             {step === 1 ? "Create Account" : step === 2 ? "Verify Email" : "Register School"}
