@@ -3,6 +3,7 @@ import { useNavigate, Link } from "react-router";
 
 import { useAuth } from "../contexts/AuthContext";
 import { useLogin, useSendOTPByEmail, useVerifyOTP } from "../features/auth/api";
+import { getPostAuthPath } from "../features/auth/utils/routing";
 import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
 import { Label } from "../components/ui/label";
@@ -27,7 +28,7 @@ export const Login = () => {
       {
         onSuccess: (data) => {
           login(data);
-          navigate(data.user.needsRegistration ? "/complete-registration" : "/dashboard");
+          navigate(getPostAuthPath(data.user));
         },
       },
     );
@@ -47,7 +48,7 @@ export const Login = () => {
       {
         onSuccess: (data) => {
           login(data);
-          navigate(data.user.needsRegistration ? "/complete-registration" : "/dashboard");
+          navigate(getPostAuthPath(data.user));
         },
       },
     );
