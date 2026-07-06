@@ -2,12 +2,12 @@ import { type ReactNode } from "react";
 import { Navigate, useLocation } from "react-router";
 
 import { useAuth } from "../../contexts/AuthContext";
+import { getPostAuthPath } from "../../features/auth/utils/routing";
 
 const COMPLETE_REGISTRATION_PATH = "/complete-registration";
-const ONBOARDING_PATH = "/onboarding";
 
 export const ProtectedRoute = ({ children }: { children: ReactNode }) => {
-  const { user, isAuthenticated, isLoading, needsRegistration } = useAuth();
+  const { user, isAuthenticated, isLoading } = useAuth();
   const location = useLocation();
 
   if (isLoading) {
@@ -18,21 +18,17 @@ export const ProtectedRoute = ({ children }: { children: ReactNode }) => {
     );
   }
 
-  if (!isAuthenticated) {
+  if (!isAuthenticated || !user) {
     return <Navigate to="/login" replace />;
   }
 
-  if (needsRegistration && location.pathname !== COMPLETE_REGISTRATION_PATH) {
-    return <Navigate to={COMPLETE_REGISTRATION_PATH} replace />;
+  const target = getPostAuthPath(user);
+  if (target !== "/dashboard" && location.pathname !== target.split("?")[0]) {
+    return <Navigate to={target} replace />;
   }
 
-  if (user) {
-    if (!user.emailVerified && location.pathname !== ONBOARDING_PATH) {
-      return <Navigate to={`${ONBOARDING_PATH}?step=2`} replace />;
-    }
-    if (!user.schoolId && location.pathname !== ONBOARDING_PATH) {
-      return <Navigate to={`${ONBOARDING_PATH}?step=3`} replace />;
-    }
+  if (target === COMPLETE_REGISTRATION_PATH && location.pathname !== COMPLETE_REGISTRATION_PATH) {
+    return <Navigate to={COMPLETE_REGISTRATION_PATH} replace />;
   }
 
   return <>{children}</>;

@@ -24,7 +24,6 @@ interface AuthContextType {
   user: User | null;
   isAuthenticated: boolean;
   isLoading: boolean;
-  needsRegistration: boolean;
   login: (data: LoginResponse) => void;
   setTokens: (accessToken: string, refreshToken: string, user: User) => void;
   logout: () => Promise<void>;
@@ -154,15 +153,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     navigate("/login");
   }, [navigate]);
 
-  const needsRegistration = !!user?.needsRegistration;
-
   return (
     <AuthContext
       value={{
         user,
         isAuthenticated: !!user,
         isLoading,
-        needsRegistration,
         login,
         setTokens,
         logout,

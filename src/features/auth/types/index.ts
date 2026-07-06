@@ -74,6 +74,7 @@ export interface User {
   image?: string;
   phoneVerified?: boolean;
   emailVerified?: boolean;
+  hasSchool?: boolean;
   needsRegistration?: boolean;
   assignments?: Array<{
     id: string;
