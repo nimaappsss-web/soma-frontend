@@ -126,10 +126,9 @@ export const StudentCACard = ({
           onScoreChange(student.id, Math.min(maxScore, Math.max(0, Number(e.target.value))))
         }
         onKeyDown={handleKeyDown}
-        readOnly={confirmed}
-        className="w-full h-14 rounded-xl border-2 border-gray-200 bg-gray-50 px-4 text-3xl text-center font-bold text-gray-800 focus:border-blue-400 focus:ring-2 focus:ring-blue-100 outline-none transition-all [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+        readOnly
+        className="w-full h-14 rounded-xl border-2 border-gray-200 bg-gray-50 px-4 text-3xl text-center font-bold text-gray-800 outline-none transition-all [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
         placeholder="—"
-        autoFocus
       />
 
       <div className="flex items-center gap-3">
