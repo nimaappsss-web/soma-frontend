@@ -10,6 +10,7 @@ import { Dashboard } from "./pages/Dashboard";
 import { AttendanceTest } from "./pages/AttendanceTest";
 import { ContinuousAssessment } from "./pages/ContinuousAssessment";
 import { CompleteRegistration } from "./pages/CompleteRegistration";
+import { VerifyTeacher } from "./pages/VerifyTeacher";
 
 function App() {
   return (
@@ -49,6 +50,7 @@ function App() {
             </ProtectedRoute>
           }
         />
+        <Route path="/invite/:token" element={<VerifyTeacher />} />
         <Route path="*" element={<Navigate to="/login" replace />} />
       </Routes>
     </AuthProvider>
