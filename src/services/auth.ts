@@ -1,6 +1,7 @@
 import { axiosInstance } from "../lib/axios";
 
 import type { LoginRequest, RegisterPrincipalRequest, RegisterSchoolRequest, VerifyOTPRequest, LoginResponse, User, CompleteRegistrationRequest, CompleteRegistrationResponse } from "../features/auth/types";
+import type { InviteInfo, AcceptInviteRequest, AcceptInviteResponse } from "../features/principal/types";
 
 export interface RefreshResponse {
   accessToken: string;
@@ -31,6 +32,12 @@ export const authApi = {
 
   completeRegistration: (data: CompleteRegistrationRequest) =>
     axiosInstance.post<CompleteRegistrationResponse>("/auth/complete-registration", data).then((r) => r.data),
+
+  getInviteInfo: (token: string) =>
+    axiosInstance.get<InviteInfo>("/auth/invite-info", { params: { token } }).then((r) => r.data),
+
+  acceptInvite: (data: AcceptInviteRequest) =>
+    axiosInstance.post<AcceptInviteResponse>("/auth/accept-invite", data).then((r) => r.data),
 
   me: () => axiosInstance.get<User>("/auth/me").then((r) => r.data),
 };

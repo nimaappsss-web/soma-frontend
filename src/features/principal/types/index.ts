@@ -1,3 +1,5 @@
+import type { User } from "../../auth/types";
+
 export type AxiosErrorResponse = {
   response?: {
     data?: { message?: string };
@@ -5,6 +7,30 @@ export type AxiosErrorResponse = {
   };
   message?: string;
 };
+
+export interface InviteInfo {
+  teacherPhone: string;
+  schoolName: string;
+  subjects: Array<{ id: string; name: string }>;
+  classes: Array<{ id: string; name: string }>;
+}
+
+export interface AcceptInviteRequest {
+  token: string;
+  name: string;
+  password: string;
+  assignments: Array<{
+    subjectId: string;
+    classIds: string[];
+  }>;
+}
+
+export interface AcceptInviteResponse {
+  message: string;
+  accessToken: string;
+  refreshToken: string;
+  user: User;
+}
 
 export interface InviteTeacherRequest {
   teacherEmail: string;
