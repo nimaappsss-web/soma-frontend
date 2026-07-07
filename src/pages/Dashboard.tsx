@@ -3,6 +3,7 @@ import { Link } from "react-router";
 
 import { useAuth } from "../contexts/AuthContext";
 import { InviteTeacherModal } from "../features/principal/components/InviteTeacherModal";
+import { TeacherListSection } from "../features/principal/components/TeacherListSection";
 import { Button } from "../components/ui/button";
 
 export const Dashboard = () => {
@@ -55,6 +56,8 @@ export const Dashboard = () => {
             <p className="text-3xl font-bold text-gray-800">—</p>
           </div>
         </div>
+
+        <TeacherListSection />
 
         <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
           <h3 className="font-semibold text-gray-800 mb-2">Getting Started</h3>

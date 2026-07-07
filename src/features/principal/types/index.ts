@@ -56,3 +56,26 @@ export interface BulkInviteResponse {
     reason: string;
   }>;
 }
+
+export interface Teacher {
+  id: string;
+  name: string;
+  email: string;
+  status: "active";
+  assignments: Array<{
+    subject: string;
+    classes: string[];
+  }>;
+}
+
+export interface PendingInvite {
+  id: string;
+  email: string;
+  status: "pending";
+  expiresIn: number;
+}
+
+export interface TeachersResponse {
+  teachers: Teacher[];
+  pendingInvites: PendingInvite[];
+}

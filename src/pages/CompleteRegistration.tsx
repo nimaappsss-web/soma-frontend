@@ -25,7 +25,8 @@ export const CompleteRegistration = () => {
   const navigate = useNavigate();
   const mutation = useCompleteRegistration();
   const { data: subjects = [] } = useSubjects();
-  const { data: classes = [] } = useClasses();
+  const { data: classesData } = useClasses();
+  const classes = classesData?.classes ?? [];
 
   const subjectOptions: SelectOption[] = subjects.map((s) => ({
     value: s.id,

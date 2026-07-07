@@ -51,6 +51,7 @@ function App() {
           }
         />
         <Route path="/invite/:token" element={<VerifyTeacher />} />
+        <Route path="/verify-teacher" element={<VerifyTeacher />} />
         <Route path="*" element={<Navigate to="/login" replace />} />
       </Routes>
     </AuthProvider>

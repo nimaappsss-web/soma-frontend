@@ -1,5 +1,6 @@
-import { useState, useEffect } from "react";
-import { useParams, useNavigate } from "react-router";
+import { useState } from "react";
+import { useParams, useSearchParams, useNavigate } from "react-router";
+import { useQuery } from "@tanstack/react-query";
 
 import { authApi } from "../services/auth";
 import { useAcceptInvite } from "../features/principal/api";
@@ -18,14 +19,12 @@ interface AssignmentRow {
 }
 
 export const VerifyTeacher = () => {
-  const { token } = useParams<{ token: string }>();
+  const { token: pathToken } = useParams<{ token: string }>();
+  const [searchParams] = useSearchParams();
+  const token = pathToken || searchParams.get("token") || "";
   const navigate = useNavigate();
   const { setTokens } = useAuth();
   const acceptMutation = useAcceptInvite();
-
-  const [inviteInfo, setInviteInfo] = useState<InviteInfo | null>(null);
-  const [infoError, setInfoError] = useState("");
-  const [infoLoading, setInfoLoading] = useState(true);
 
   const [name, setName] = useState("");
   const [password, setPassword] = useState("");
@@ -33,23 +32,16 @@ export const VerifyTeacher = () => {
     { subjectId: "", classIds: [] },
   ]);
 
-  useEffect(() => {
-    if (!token) {
-      setInfoError("No invitation token found in URL.");
-      setInfoLoading(false);
-      return;
-    }
-    authApi
-      .getInviteInfo(token)
-      .then((info) => {
-        setInviteInfo(info);
-        setInfoLoading(false);
-      })
-      .catch(() => {
-        setInfoError("Invalid or expired invitation link.");
-        setInfoLoading(false);
-      });
-  }, [token]);
+  const {
+    data: inviteInfo,
+    isLoading: infoLoading,
+    error: infoError,
+  } = useQuery<InviteInfo>({
+    queryKey: ["invite-info", token],
+    queryFn: () => authApi.getInviteInfo(token),
+    enabled: !!token,
+    retry: false,
+  });
 
   const subjectOptions: SelectOption[] =
     inviteInfo?.subjects.map((s) => ({ value: s.id, label: s.name })) || [];
@@ -111,7 +103,9 @@ export const VerifyTeacher = () => {
         <Card className="w-full max-w-md">
           <CardHeader>
             <CardTitle>Invalid Link</CardTitle>
-            <CardDescription>{infoError}</CardDescription>
+            <CardDescription>
+              {token ? "Invalid or expired invitation link." : "No invitation token found in URL."}
+            </CardDescription>
           </CardHeader>
           <CardContent>
             <p className="text-sm text-gray-500">
