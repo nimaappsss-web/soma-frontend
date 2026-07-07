@@ -53,13 +53,16 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       setIsLoading(false);
     }
 
+    const mergeUser = (fromServer: User) => {
+      const merged = { ...cached, ...fromServer };
+      userStorage.set(merged);
+      setUser(merged);
+    };
+
     if (token) {
       authApi
         .me()
-        .then((user) => {
-          userStorage.set(user);
-          setUser(user);
-        })
+        .then(mergeUser)
         .catch((err) => {
           const axiosErr = err as AxiosError;
           if (axiosErr.response?.status === 401) {
@@ -70,10 +73,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
                   tokenStorage.setToken(res.accessToken);
                   return authApi.me();
                 })
-                .then((user) => {
-                  userStorage.set(user);
-                  setUser(user);
-                })
+                .then(mergeUser)
                 .catch(() => {
                   storage.clear();
                   setUser(null);
@@ -96,10 +96,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           tokenStorage.setToken(res.accessToken);
           return authApi.me();
         })
-        .then((user) => {
-          userStorage.set(user);
-          setUser(user);
-        })
+        .then(mergeUser)
         .catch(() => {
           storage.clear();
           setUser(null);
