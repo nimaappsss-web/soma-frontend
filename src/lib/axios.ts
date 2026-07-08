@@ -55,8 +55,9 @@ axiosInstance.interceptors.response.use(
     const originalRequest = error.config;
     const url = originalRequest?.url ?? "";
 
+    const status = error.response?.status;
     if (
-      error.response?.status === 401 &&
+      (status === 401 || status === 403) &&
       !originalRequest._retry &&
       !url.startsWith("/auth/")
     ) {

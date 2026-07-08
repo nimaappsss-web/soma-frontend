@@ -83,9 +83,13 @@ export const TeacherListSection = () => {
                   </span>
                 </td>
                 <td className="py-2.5 text-gray-500">
-                  {t.assignments.length > 0
-                    ? t.assignments.map((a) => `${a.subject} (${a.classes.join(", ")})`).join("; ")
-                    : "—"}
+                  {t.formClass ? (
+                    <span className="inline-block px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-700">
+                      Form: {t.formClass}
+                    </span>
+                  ) : (
+                    <span className="text-gray-400">—</span>
+                  )}
                 </td>
                 <td className="py-2.5" />
               </tr>

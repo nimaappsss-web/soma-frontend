@@ -18,6 +18,7 @@ import {
 } from "../utils/storage";
 import type { User, LoginResponse } from "../features/auth/types";
 import { authApi } from "../services/auth";
+import { clearUserData } from "../db/db";
 import type { AxiosError } from "axios";
 
 interface AuthContextType {
@@ -65,7 +66,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         .then(mergeUser)
         .catch((err) => {
           const axiosErr = err as AxiosError;
-          if (axiosErr.response?.status === 401) {
+          const st = axiosErr.response?.status;
+          if (st === 401 || st === 403) {
             if (refreshToken) {
               authApi
                 .refresh(refreshToken)
@@ -144,6 +146,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     } catch {
       /* ignore */
     }
+    await clearUserData();
     storage.clear();
     setUser(null);
     window.dispatchEvent(new Event(AUTH_EVENT));

@@ -6,8 +6,12 @@ import { GuestRoute } from "./components/auth/GuestRoute";
 import { OnboardingRoute } from "./components/auth/OnboardingRoute";
 import { Login } from "./pages/Login";
 import { Onboarding } from "./pages/Onboarding";
-import { Dashboard } from "./pages/Dashboard";
-import { AttendanceTest } from "./pages/AttendanceTest";
+import { AdminDashboard } from "./pages/AdminDashboard";
+import { TeacherDashboard } from "./pages/teach/TeacherDashboard";
+import { TeacherStudents } from "./pages/teach/TeacherStudents";
+import { TeacherAttendance } from "./pages/teach/TeacherAttendance";
+import { ParentDashboard } from "./pages/ParentDashboard";
+import { StaffDashboard } from "./pages/StaffDashboard";
 import { ContinuousAssessment } from "./pages/ContinuousAssessment";
 import { CompleteRegistration } from "./pages/CompleteRegistration";
 import { VerifyTeacher } from "./pages/VerifyTeacher";
@@ -19,14 +23,6 @@ function App() {
         <Route path="/login" element={<GuestRoute><Login /></GuestRoute>} />
         <Route path="/onboarding" element={<OnboardingRoute><Onboarding /></OnboardingRoute>} />
         <Route
-          path="/attendance"
-          element={
-            <ProtectedRoute>
-              <AttendanceTest />
-            </ProtectedRoute>
-          }
-        />
-        <Route
           path="/continuous-assessment"
           element={
             <ProtectedRoute>
@@ -35,10 +31,29 @@ function App() {
           }
         />
         <Route
-          path="/dashboard"
+          path="/admin"
           element={
             <ProtectedRoute>
-              <Dashboard />
+              <AdminDashboard />
+            </ProtectedRoute>
+          }
+        />
+        <Route path="/teach" element={<ProtectedRoute><TeacherDashboard /></ProtectedRoute>} />
+        <Route path="/teach/students" element={<ProtectedRoute><TeacherStudents /></ProtectedRoute>} />
+        <Route path="/teach/attendance" element={<ProtectedRoute><TeacherAttendance /></ProtectedRoute>} />
+        <Route
+          path="/parent"
+          element={
+            <ProtectedRoute>
+              <ParentDashboard />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/staff"
+          element={
+            <ProtectedRoute>
+              <StaffDashboard />
             </ProtectedRoute>
           }
         />

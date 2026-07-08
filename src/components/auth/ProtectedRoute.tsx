@@ -2,9 +2,9 @@ import { type ReactNode } from "react";
 import { Navigate, useLocation } from "react-router";
 
 import { useAuth } from "../../contexts/AuthContext";
-import { getPostAuthPath } from "../../features/auth/utils/routing";
+import { getPostAuthPath, isFullyRegistered } from "../../features/auth/utils/routing";
 
-const COMPLETE_REGISTRATION_PATH = "/complete-registration";
+const ONBOARDING_FLOW = ["/onboarding", "/complete-registration"];
 
 export const ProtectedRoute = ({ children }: { children: ReactNode }) => {
   const { user, isAuthenticated, isLoading } = useAuth();
@@ -22,13 +22,24 @@ export const ProtectedRoute = ({ children }: { children: ReactNode }) => {
     return <Navigate to="/login" replace />;
   }
 
-  const target = getPostAuthPath(user);
-  if (target !== "/dashboard" && location.pathname !== target.split("?")[0]) {
-    return <Navigate to={target} replace />;
+  const currentPath = location.pathname;
+
+  if (!isFullyRegistered(user)) {
+    const target = getPostAuthPath(user);
+    if (currentPath !== target.split("?")[0]) {
+      return <Navigate to={target} replace />;
+    }
+    return <>{children}</>;
   }
 
-  if (target === COMPLETE_REGISTRATION_PATH && location.pathname !== COMPLETE_REGISTRATION_PATH) {
-    return <Navigate to={COMPLETE_REGISTRATION_PATH} replace />;
+  const rolePaths = ["/admin", "/teach", "/parent", "/staff"];
+  if (!rolePaths.includes(currentPath) && !ONBOARDING_FLOW.some((p) => currentPath.startsWith(p))) {
+    return <>{children}</>;
+  }
+
+  const dashboard = getPostAuthPath(user);
+  if (currentPath !== dashboard) {
+    return <Navigate to={dashboard} replace />;
   }
 
   return <>{children}</>;

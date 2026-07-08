@@ -21,11 +21,12 @@ export const CompleteRegistration = () => {
   const [assignments, setAssignments] = useState<AssignmentRow[]>([
     { subjectId: "", classIds: [] },
   ]);
-  const { setTokens } = useAuth();
+  const [formClassId, setFormClassId] = useState("");
+  const { user, setTokens } = useAuth();
   const navigate = useNavigate();
   const mutation = useCompleteRegistration();
-  const { data: subjects = [] } = useSubjects();
-  const { data: classesData } = useClasses();
+  const { data: subjects = [] } = useSubjects(user?.schoolId);
+  const { data: classesData } = useClasses(user?.schoolId);
   const classes = classesData?.classes ?? [];
 
   const subjectOptions: SelectOption[] = subjects.map((s) => ({
@@ -67,6 +68,7 @@ export const CompleteRegistration = () => {
         assignments: assignments
           .filter((a) => a.subjectId && a.classIds.length > 0)
           .map((a) => ({ subjectId: a.subjectId, classIds: a.classIds })),
+        formClassId: formClassId || undefined,
       },
       {
         onSuccess: (data) => {
@@ -164,6 +166,23 @@ export const CompleteRegistration = () => {
                   </div>
                 </div>
               ))}
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="formClass">Class Teacher (optional)</Label>
+              <select
+                id="formClass"
+                value={formClassId}
+                onChange={(e) => setFormClassId(e.target.value)}
+                className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm"
+              >
+                <option value="">Not a class teacher</option>
+                {classOptions.map((opt) => (
+                  <option key={opt.value} value={opt.value}>
+                    {opt.label}
+                  </option>
+                ))}
+              </select>
             </div>
 
             <Button type="submit" disabled={mutation.isPending} className="w-full">
