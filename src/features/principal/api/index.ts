@@ -9,3 +9,4 @@ export { useCreateSubject } from "./useCreateSubject";
 export { useDeleteSubject } from "./useDeleteSubject";
 export { useCreateClass } from "./useCreateClass";
 export { useDeleteClass } from "./useDeleteClass";
+export { useTeacherDetail } from "./useTeacherDetail";

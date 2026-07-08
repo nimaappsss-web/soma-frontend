@@ -9,10 +9,9 @@ export type AxiosErrorResponse = {
 };
 
 export interface InviteInfo {
-  teacherPhone: string;
-  schoolName: string;
-  subjects: Array<{ id: string; name: string }>;
-  classes: Array<{ id: string; name: string }>;
+  email: string;
+  role: string;
+  schoolId: string;
 }
 
 export interface AcceptInviteRequest {
@@ -23,6 +22,7 @@ export interface AcceptInviteRequest {
     subjectId: string;
     classIds: string[];
   }>;
+  formClassId?: string;
 }
 
 export interface AcceptInviteResponse {
@@ -61,10 +61,23 @@ export interface Teacher {
   id: string;
   name: string;
   email: string;
-  status: "active";
+  role: string;
+  formClassId?: string | null;
+  formClass?: string | null;
+  createdAt?: string;
+}
+
+export interface TeacherDetail {
+  id: string;
+  name: string;
+  email: string;
+  role: string;
+  formClassId?: string | null;
+  formClass?: { id: string; name: string; level: string; arm?: string } | null;
   assignments: Array<{
-    subject: string;
-    classes: string[];
+    id: string;
+    subject: { id: string; name: string; code?: string };
+    classes: Array<{ id: string; name: string; level: string; arm?: string }>;
   }>;
 }
 

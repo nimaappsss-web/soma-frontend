@@ -21,18 +21,32 @@ export const roleStorage = {
 };
 
 const PROFILE_KEY = `${STORAGE_PREFIX}PROFILE`;
+const SCHEMA_KEY = `${STORAGE_PREFIX}SCHEMA`;
+const SCHEMA_VERSION = 2;
 
 export const userStorage = {
   get: () => {
     try {
+      const schema = localStorage.getItem(SCHEMA_KEY);
+      if (schema && Number(schema) < SCHEMA_VERSION) {
+        localStorage.removeItem(PROFILE_KEY);
+        localStorage.setItem(SCHEMA_KEY, String(SCHEMA_VERSION));
+        return null;
+      }
       const raw = localStorage.getItem(PROFILE_KEY);
       return raw ? JSON.parse(raw) : null;
     } catch {
       return null;
     }
   },
-  set: (user: unknown) => localStorage.setItem(PROFILE_KEY, JSON.stringify(user)),
-  clear: () => localStorage.removeItem(PROFILE_KEY),
+  set: (user: unknown) => {
+    localStorage.setItem(SCHEMA_KEY, String(SCHEMA_VERSION));
+    localStorage.setItem(PROFILE_KEY, JSON.stringify(user));
+  },
+  clear: () => {
+    localStorage.removeItem(PROFILE_KEY);
+    localStorage.removeItem(SCHEMA_KEY);
+  },
 };
 
 const EXPIRES_KEY = `${STORAGE_PREFIX}TOKEN_EXPIRES_AT`;

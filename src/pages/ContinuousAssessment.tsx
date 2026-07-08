@@ -52,7 +52,7 @@ export const ContinuousAssessment = () => {
       assessmentType,
       term,
       session,
-      synced: false,
+      syncStatus: "pending" as const,
       createdAt: Date.now(),
     }));
 

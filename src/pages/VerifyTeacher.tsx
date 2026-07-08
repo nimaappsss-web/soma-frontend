@@ -1,12 +1,9 @@
 import { useState } from "react";
 import { useParams, useSearchParams, useNavigate } from "react-router";
-import { useQuery } from "@tanstack/react-query";
 
-import { authApi } from "../services/auth";
-import { useAcceptInvite } from "../features/principal/api";
+import { useAcceptInvite, useSubjects, useClasses } from "../features/principal/api";
 import { useAuth } from "../contexts/AuthContext";
 import { getPostAuthPath } from "../features/auth/utils/routing";
-import type { InviteInfo } from "../features/principal/types";
 import { MultiSelect, type SelectOption } from "../components/ui/multi-select";
 import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
@@ -22,6 +19,7 @@ export const VerifyTeacher = () => {
   const { token: pathToken } = useParams<{ token: string }>();
   const [searchParams] = useSearchParams();
   const token = pathToken || searchParams.get("token") || "";
+  const schoolId = searchParams.get("schoolId") || "";
   const navigate = useNavigate();
   const { setTokens } = useAuth();
   const acceptMutation = useAcceptInvite();
@@ -31,22 +29,15 @@ export const VerifyTeacher = () => {
   const [assignments, setAssignments] = useState<AssignmentRow[]>([
     { subjectId: "", classIds: [] },
   ]);
+  const [formClassId, setFormClassId] = useState("");
 
-  const {
-    data: inviteInfo,
-    isLoading: infoLoading,
-    error: infoError,
-  } = useQuery<InviteInfo>({
-    queryKey: ["invite-info", token],
-    queryFn: () => authApi.getInviteInfo(token),
-    enabled: !!token,
-    retry: false,
-  });
+  const { data: subjects, isLoading: subjectsLoading, error: subjectsError } = useSubjects(schoolId);
+  const { data: classesData, isLoading: classesLoading } = useClasses(schoolId);
 
   const subjectOptions: SelectOption[] =
-    inviteInfo?.subjects.map((s) => ({ value: s.id, label: s.name })) || [];
+    subjects?.map((s) => ({ value: s.id, label: s.name })) || [];
   const classOptions: SelectOption[] =
-    inviteInfo?.classes.map((c) => ({ value: c.id, label: c.name })) || [];
+    classesData?.classes?.map((c) => ({ value: c.id, label: c.name })) || [];
 
   const handleAddSubject = () => {
     setAssignments((prev) => [...prev, { subjectId: "", classIds: [] }]);
@@ -79,6 +70,7 @@ export const VerifyTeacher = () => {
         assignments: assignments
           .filter((a) => a.subjectId && a.classIds.length > 0)
           .map((a) => ({ subjectId: a.subjectId, classIds: a.classIds })),
+        formClassId: formClassId || undefined,
       },
       {
         onSuccess: (data) => {
@@ -89,23 +81,13 @@ export const VerifyTeacher = () => {
     );
   };
 
-  if (infoLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center text-gray-400 text-sm">
-        Loading invitation...
-      </div>
-    );
-  }
-
-  if (infoError) {
+  if (!token) {
     return (
       <div className="min-h-screen flex items-center justify-center p-4">
         <Card className="w-full max-w-md">
           <CardHeader>
             <CardTitle>Invalid Link</CardTitle>
-            <CardDescription>
-              {token ? "Invalid or expired invitation link." : "No invitation token found in URL."}
-            </CardDescription>
+            <CardDescription>No invitation token found in URL.</CardDescription>
           </CardHeader>
           <CardContent>
             <p className="text-sm text-gray-500">
@@ -117,11 +99,55 @@ export const VerifyTeacher = () => {
     );
   }
 
+  if (!schoolId) {
+    return (
+      <div className="min-h-screen flex items-center justify-center p-4">
+        <Card className="w-full max-w-md">
+          <CardHeader>
+            <CardTitle>Invalid Link</CardTitle>
+            <CardDescription>Missing school information in invitation.</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <p className="text-sm text-gray-500">
+              Ask your school principal to send a new invitation.
+            </p>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  if (subjectsLoading || classesLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center text-gray-400 text-sm">
+        Loading...
+      </div>
+    );
+  }
+
+  if (subjectsError) {
+    return (
+      <div className="min-h-screen flex items-center justify-center p-4">
+        <Card className="w-full max-w-md">
+          <CardHeader>
+            <CardTitle>Something went wrong</CardTitle>
+            <CardDescription>Could not load school information.</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <p className="text-sm text-gray-500">
+              Please try again or contact support.
+            </p>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 p-4">
       <Card className="w-full max-w-lg">
         <CardHeader>
-          <CardTitle>Join {inviteInfo?.schoolName}</CardTitle>
+          <CardTitle>Join Your School</CardTitle>
           <CardDescription>
             You've been invited to join as a teacher. Set your name, password, and
             teaching subjects to get started.
@@ -205,6 +231,23 @@ export const VerifyTeacher = () => {
                   </div>
                 </div>
               ))}
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="formClass">Class Teacher (optional)</Label>
+              <select
+                id="formClass"
+                value={formClassId}
+                onChange={(e) => setFormClassId(e.target.value)}
+                className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm"
+              >
+                <option value="">Not a class teacher</option>
+                {classOptions.map((opt) => (
+                  <option key={opt.value} value={opt.value}>
+                    {opt.label}
+                  </option>
+                ))}
+              </select>
             </div>
 
             <Button type="submit" disabled={acceptMutation.isPending} className="w-full">

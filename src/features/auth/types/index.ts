@@ -67,8 +67,9 @@ export interface User {
   id: string;
   name: string;
   email: string;
-  phone?: string;
+  phone?: string | null;
   role: string;
+  active?: boolean;
   schoolId?: string;
   schoolName?: string;
   image?: string;
@@ -76,11 +77,21 @@ export interface User {
   emailVerified?: boolean;
   hasSchool?: boolean;
   needsRegistration?: boolean;
+  formClassId?: string;
+  formClass?: string;
   assignments?: Array<{
     id: string;
-    type: "form" | "subject";
-    classId: string;
-    subjectId?: string;
+    type: "subject";
+    subject: {
+      id: string;
+      name: string;
+    };
+    classes: Array<{
+      id: string;
+      name: string;
+      level: string;
+      arm?: string;
+    }>;
   }>;
 }
 
@@ -91,6 +102,7 @@ export interface CompleteRegistrationRequest {
     subjectId: string;
     classIds: string[];
   }>;
+  formClassId?: string;
 }
 
 export interface CompleteRegistrationResponse {
