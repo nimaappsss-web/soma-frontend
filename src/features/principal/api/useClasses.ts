@@ -26,7 +26,7 @@ export const useClasses = (schoolId?: string) => {
     return () => sub.unsubscribe();
   }, [isPublic]);
 
-  const queryKey = isPublic ? ["classes-public", schoolId] : principalKeys.classes();
+  const queryKey = isPublic ? ["classes-public", schoolId] : principalKeys.details();
 
   const query = useQuery<ClassesResponse>({
     queryKey,

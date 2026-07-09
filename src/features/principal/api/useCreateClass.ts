@@ -19,7 +19,7 @@ export const useCreateClass = () => {
     mutationFn: (payload) => fetchData("/classes", "POST", payload),
     onSuccess: async () => {
       toast.success("Class added!");
-      queryClient.invalidateQueries({ queryKey: principalKeys.classes() });
+      queryClient.invalidateQueries({ queryKey: principalKeys.details() });
     },
     onError: async (error) => {
       toast.error(transformError(error));

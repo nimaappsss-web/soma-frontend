@@ -25,7 +25,7 @@ export const useTeachers = () => {
   }, []);
 
   const query = useQuery<TeachersResponse>({
-    queryKey: principalKeys.teachers(),
+    queryKey: principalKeys.lists(),
     queryFn: async () => {
       const data: TeachersResponse = await fetchData("/teachers", "GET");
       await db.teachers.clear();

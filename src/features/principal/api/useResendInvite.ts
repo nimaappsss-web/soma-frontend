@@ -14,7 +14,7 @@ export const useResendInvite = () => {
     mutationFn: (inviteId) => fetchData(`/teachers/${inviteId}/resend-invite`, "POST"),
     onSuccess: async () => {
       toast.success("Invitation resent!");
-      queryClient.invalidateQueries({ queryKey: principalKeys.teachers() });
+      queryClient.invalidateQueries({ queryKey: principalKeys.lists() });
     },
     onError: async (error) => {
       toast.error(transformError(error));

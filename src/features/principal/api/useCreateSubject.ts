@@ -18,7 +18,7 @@ export const useCreateSubject = () => {
     mutationFn: (payload) => fetchData("/subjects", "POST", payload),
     onSuccess: async () => {
       toast.success("Subject added!");
-      queryClient.invalidateQueries({ queryKey: principalKeys.subjects() });
+      queryClient.invalidateQueries({ queryKey: principalKeys.subjectLists() });
     },
     onError: async (error) => {
       toast.error(transformError(error));

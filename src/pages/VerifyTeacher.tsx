@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useParams, useSearchParams, useNavigate } from "react-router";
 
 import { useAcceptInvite, useSubjects, useClasses } from "../features/principal/api";
+import { useInviteInfo } from "../features/auth/api";
 import { useAuth } from "../contexts/AuthContext";
 import { getPostAuthPath } from "../features/auth/utils/routing";
 import { MultiSelect, type SelectOption } from "../components/ui/multi-select";
@@ -31,6 +32,7 @@ export const VerifyTeacher = () => {
   ]);
   const [formClassId, setFormClassId] = useState("");
 
+  const { data: inviteInfo, isLoading: infoLoading } = useInviteInfo(token);
   const { data: subjects, isLoading: subjectsLoading, error: subjectsError } = useSubjects(schoolId);
   const { data: classesData, isLoading: classesLoading } = useClasses(schoolId);
 
@@ -117,7 +119,7 @@ export const VerifyTeacher = () => {
     );
   }
 
-  if (subjectsLoading || classesLoading) {
+  if (infoLoading || subjectsLoading || classesLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center text-gray-400 text-sm">
         Loading...
@@ -149,8 +151,11 @@ export const VerifyTeacher = () => {
         <CardHeader>
           <CardTitle>Join Your School</CardTitle>
           <CardDescription>
-            You've been invited to join as a teacher. Set your name, password, and
-            teaching subjects to get started.
+            {inviteInfo ? (
+              <>You've been invited as <strong>{inviteInfo.role.toLowerCase()}</strong> — <span className="text-blue-600">{inviteInfo.email}</span></>
+            ) : (
+              "Set your name, password, and teaching subjects to get started."
+            )}
           </CardDescription>
         </CardHeader>
         <CardContent>

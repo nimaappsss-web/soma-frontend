@@ -29,7 +29,7 @@ export const useTeacherDetail = (id: string) => {
   }, [id]);
 
   const query = useQuery<TeacherDetail>({
-    queryKey: principalKeys.teacherDetail(id),
+    queryKey: principalKeys.list(id),
     queryFn: async () => {
       const data: TeacherDetail = await fetchData(`/teachers/${id}`, "GET");
       await db.teacherDetails.put({

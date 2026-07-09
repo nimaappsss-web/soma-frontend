@@ -1,5 +1,6 @@
 import { Routes, Route, Navigate } from "react-router";
 
+import { useAnimatedFavicon } from "./hooks/useAnimatedFavicon";
 import { AuthProvider } from "./contexts/AuthContext";
 import { ProtectedRoute } from "./components/auth/ProtectedRoute";
 import { GuestRoute } from "./components/auth/GuestRoute";
@@ -17,6 +18,11 @@ import { CompleteRegistration } from "./pages/CompleteRegistration";
 import { VerifyTeacher } from "./pages/VerifyTeacher";
 
 function App() {
+  useAnimatedFavicon(
+    ["/favicon.ico", "/favicon.svg"],
+    [4000, 600],
+  );
+
   return (
     <AuthProvider>
       <Routes>

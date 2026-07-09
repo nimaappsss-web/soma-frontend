@@ -13,7 +13,7 @@ export const useDeleteSubject = () => {
     mutationFn: (id) => fetchData(`/subjects/${id}`, "DELETE"),
     onSuccess: async () => {
       toast.success("Subject removed!");
-      queryClient.invalidateQueries({ queryKey: principalKeys.subjects() });
+      queryClient.invalidateQueries({ queryKey: principalKeys.subjectLists() });
     },
     onError: async (error) => {
       toast.error(transformError(error));
