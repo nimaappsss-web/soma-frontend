@@ -17,7 +17,7 @@ export const useMyFormClass = (userId: string) => {
   }, [userId]);
 
   const query = useQuery<string | null>({
-    queryKey: teacherKeys.formClass(userId),
+    queryKey: teacherKeys.formClassDetail(userId),
     queryFn: async () => {
       const res: { formClassId?: string | null; formClass?: { id: string; name: string; level: string; arm?: string } | null } = await fetchData("/teachers/form-class", "GET");
       const formClass = res?.formClass?.name ?? null;

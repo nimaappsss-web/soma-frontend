@@ -13,7 +13,7 @@ export const useDeleteClass = () => {
     mutationFn: (id) => fetchData(`/classes/${id}`, "DELETE"),
     onSuccess: async () => {
       toast.success("Class removed!");
-      queryClient.invalidateQueries({ queryKey: principalKeys.classes() });
+      queryClient.invalidateQueries({ queryKey: principalKeys.details() });
     },
     onError: async (error) => {
       toast.error(transformError(error));

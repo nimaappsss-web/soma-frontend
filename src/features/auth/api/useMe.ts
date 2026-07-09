@@ -6,7 +6,7 @@ import type { User } from "../types";
 
 export const useMe = () => {
   return useQuery<User>({
-    queryKey: authKeys.me(),
+    queryKey: authKeys.details(),
     queryFn: () => fetchData("/auth/me", "GET"),
     staleTime: 5 * 60 * 1000,
     retry: false,
