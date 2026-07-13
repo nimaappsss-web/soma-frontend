@@ -1,4 +1,4 @@
-import { useTeachers, useResendInvite } from "../api";
+import { useTeachers, useResendInvite } from "../../teacher/api";
 
 export const TeacherListSection = () => {
   const { data, isLoading, error } = useTeachers();

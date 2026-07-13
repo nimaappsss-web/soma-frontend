@@ -49,7 +49,7 @@ export const AttendanceTest = () => {
   return (
     <div className="p-8">
       <h1 className="text-2xl font-bold text-blue-700 mb-4">
-        Nima — Dexie Test
+        Soma — Dexie Test
       </h1>
 
       <h2 className="font-semibold mb-2">Students in DB:</h2>
@@ -63,7 +63,7 @@ export const AttendanceTest = () => {
             className="bg-white border border-gray-200 rounded-lg px-4 py-2 text-sm"
           >
             <span className="font-medium">{student.name}</span>
-            <span className="text-gray-400 ml-2">{student.studentClass}</span>
+            <span className="text-gray-400 ml-2">{student.classId}</span>
           </li>
         ))}
       </ul>
@@ -74,7 +74,8 @@ export const AttendanceTest = () => {
           db.students.add({
             id: Date.now().toString(),
             name: "Test Student",
-            studentClass: "JSS 2B",
+            classId: "JSS 2B",
+            status: "ACTIVE",
             schoolId: "school_1",
             createdAt: Date.now(),
           })

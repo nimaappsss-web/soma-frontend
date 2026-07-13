@@ -2,9 +2,9 @@ import { useState } from "react";
 import { Link } from "react-router";
 
 import { useAuth } from "../contexts/AuthContext";
-import { InviteTeacherModal } from "../features/principal/components/InviteTeacherModal";
 import { TeacherListSection } from "../features/principal/components/TeacherListSection";
 import { Button } from "../components/ui/button";
+import { InviteTeacherModal } from "../features/principal/components/InviteTeacherModal";
 
 export const AdminDashboard = () => {
   const { user, logout } = useAuth();
@@ -13,7 +13,7 @@ export const AdminDashboard = () => {
   return (
     <div className="min-h-screen bg-gray-50">
       <header className="bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between">
-        <h1 className="text-xl font-bold text-blue-700">Nima</h1>
+        <h1 className="text-xl font-bold text-blue-700">Soma</h1>
         <div className="flex items-center gap-4">
           <span className="text-sm text-gray-500">{user?.schoolName}</span>
           <span className="text-sm text-gray-700">{user?.name}</span>
@@ -30,62 +30,55 @@ export const AdminDashboard = () => {
       </header>
 
       <main className="max-w-5xl mx-auto px-6 py-8">
-        <h2 className="text-2xl font-bold text-gray-800 mb-6">Admin</h2>
-
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-5 gap-4 mb-8">
           <Link
-            to="/attendance"
+            to="/admin/students"
             className="bg-white rounded-xl p-6 shadow-sm border border-gray-100 hover:border-blue-200 transition-colors"
           >
-            <p className="text-sm text-gray-400">Attendance</p>
-            <p className="text-lg font-semibold text-blue-600 mt-1">Take today's</p>
+            <p className="text-sm text-gray-400">Students</p>
+            <p className="text-lg font-semibold text-blue-600 mt-1">Manage</p>
           </Link>
           <Link
-            to="/continuous-assessment"
+            to="/admin/teachers"
             className="bg-white rounded-xl p-6 shadow-sm border border-gray-100 hover:border-blue-200 transition-colors"
           >
-            <p className="text-sm text-gray-400">Continuous Assessment</p>
-            <p className="text-lg font-semibold text-blue-600 mt-1">Record scores</p>
+            <p className="text-sm text-gray-400">Teachers</p>
+            <p className="text-lg font-semibold text-blue-600 mt-1">Manage</p>
           </Link>
-          <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
+          <Link
+            to="/admin/classes"
+            className="bg-white rounded-xl p-6 shadow-sm border border-gray-100 hover:border-blue-200 transition-colors"
+          >
             <p className="text-sm text-gray-400">Classes</p>
-            <p className="text-3xl font-bold text-gray-800">—</p>
-          </div>
+            <p className="text-lg font-semibold text-blue-600 mt-1">Manage</p>
+          </Link>
+          <Link
+            to="/admin/subjects"
+            className="bg-white rounded-xl p-6 shadow-sm border border-gray-100 hover:border-blue-200 transition-colors"
+          >
+            <p className="text-sm text-gray-400">Subjects</p>
+            <p className="text-lg font-semibold text-blue-600 mt-1">Manage</p>
+          </Link>
+          <Link
+            to="/admin/parents"
+            className="bg-white rounded-xl p-6 shadow-sm border border-gray-100 hover:border-blue-200 transition-colors"
+          >
+            <p className="text-sm text-gray-400">Parents</p>
+            <p className="text-lg font-semibold text-blue-600 mt-1">Manage</p>
+          </Link>
+          <Link
+            to="/admin/settings"
+            className="bg-white rounded-xl p-6 shadow-sm border border-gray-100 hover:border-blue-200 transition-colors"
+          >
+            <p className="text-sm text-gray-400">Settings</p>
+            <p className="text-lg font-semibold text-blue-600 mt-1">School</p>
+          </Link>
         </div>
 
         <TeacherListSection />
 
-        <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
-          <h3 className="font-semibold text-gray-800 mb-2">Getting Started</h3>
-          <ul className="text-sm text-gray-500 space-y-2">
-            <li>
-              1.{" "}
-              <button
-                onClick={() => setShowInvite(true)}
-                className="text-blue-600 hover:underline"
-              >
-                Add teachers to your school
-              </button>
-            </li>
-            <li>2. Create classes and subjects</li>
-            <li>3. Register students</li>
-            <li>
-              4.{" "}
-              <Link to="/attendance" className="text-blue-600 hover:underline">
-                Take attendance
-              </Link>
-            </li>
-            <li>
-              5.{" "}
-              <Link
-                to="/continuous-assessment"
-                className="text-blue-600 hover:underline"
-              >
-                Record CA scores
-              </Link>
-            </li>
-          </ul>
-          <Button onClick={() => setShowInvite(true)} className="mt-4" size="sm">
+        <div className="flex justify-center mt-6">
+          <Button onClick={() => setShowInvite(true)} size="sm">
             + Invite Teacher
           </Button>
         </div>

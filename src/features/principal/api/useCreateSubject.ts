@@ -3,7 +3,7 @@ import toast from "react-hot-toast";
 
 import { transformError } from "../../../utils/transformError";
 import { fetchData } from "../../../utils/fetchData";
-import { principalKeys } from "../utils/query-keys";
+import { subjectKeys } from "../utils/query-keys";
 import type { AxiosErrorResponse } from "../types";
 
 interface CreateSubjectPayload {
@@ -18,7 +18,8 @@ export const useCreateSubject = () => {
     mutationFn: (payload) => fetchData("/subjects", "POST", payload),
     onSuccess: async () => {
       toast.success("Subject added!");
-      queryClient.invalidateQueries({ queryKey: principalKeys.subjectLists() });
+      queryClient.invalidateQueries({ queryKey: subjectKeys.lists() });
+      queryClient.invalidateQueries({ queryKey: subjectKeys.details() });
     },
     onError: async (error) => {
       toast.error(transformError(error));

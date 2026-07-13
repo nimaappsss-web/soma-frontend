@@ -3,7 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { liveQuery } from "dexie";
 
 import { fetchData } from "../../../utils/fetchData";
-import { principalKeys } from "../utils/query-keys";
+import { subjectKeys } from "../utils/query-keys";
 import { db } from "../../../db/db";
 import type { SubjectCache } from "../../../db/db";
 
@@ -21,17 +21,19 @@ export const useSubjects = (schoolId?: string) => {
     return () => sub.unsubscribe();
   }, [isPublic]);
 
-  const queryKey = isPublic ? ["subjects-public", schoolId] : principalKeys.subjectLists();
+  const queryKey = isPublic ? [...subjectKeys.lists(), "public", schoolId] : subjectKeys.lists();
 
   const query = useQuery<Subject[]>({
     queryKey,
     queryFn: async () => {
-      const url = isPublic ? `/subjects?schoolId=${schoolId}` : "/subjects";
-      const res = await fetchData<Subject[] | { subjects: Subject[] }>(url, "GET");
+      const url = isPublic ? `/subjects?schoolId=${schoolId}` : "/subjects?limit=200";
+      const res = await fetchData<Subject[] | { subjects: Subject[]; total: number; page: number; totalPages: number }>(url, "GET");
       const data = Array.isArray(res) ? res : res.subjects;
       if (!isPublic) {
-        await db.subjects.clear();
-        await db.subjects.bulkAdd(data);
+        await db.transaction("rw", db.subjects, async () => {
+          await db.subjects.clear();
+          await db.subjects.bulkAdd(data);
+        });
       }
       return data;
     },

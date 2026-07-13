@@ -15,14 +15,13 @@ const ReactQueryProvider: React.FunctionComponent<ReactQueryProviderProps> = ({
   children,
 }) => {
   const twelveHoursInMs = 1000 * 60 * 60 * 12;
-  const sixtySeconds = 60 * 1000;
   const defaultOptions: DefaultOptions = {
     queries: {
-      refetchOnWindowFocus: true,
+      refetchOnWindowFocus: false,
+      refetchOnReconnect: false,
       retry: 0,
       staleTime: twelveHoursInMs,
       gcTime: twelveHoursInMs,
-      refetchInterval: sixtySeconds,
     },
   };
 

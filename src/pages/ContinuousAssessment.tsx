@@ -15,9 +15,9 @@ export const ContinuousAssessment = () => {
   const [index, setIndex] = useState(0);
   const [savedCount, setSavedCount] = useState(0);
 
-  const classes = [...new Set(students?.map((s) => s.studentClass) ?? [])];
+  const classes = [...new Set(students?.map((s) => s.classId) ?? [])];
   const filtered = selectedClass
-    ? students?.filter((s) => s.studentClass === selectedClass) ?? []
+    ? students?.filter((s) => s.classId === selectedClass) ?? []
     : students ?? [];
 
   const current = filtered[index];

@@ -1,8 +1,8 @@
 import { type ReactNode } from "react";
 import { Navigate } from "react-router";
 
-import { useAuth } from "../../contexts/AuthContext";
-import { getPostAuthPath } from "../../features/auth/utils/routing";
+import { useAuth } from "../../../contexts/AuthContext";
+import { getPostAuthPath } from "../utils/routing";
 
 export const GuestRoute = ({ children }: { children: ReactNode }) => {
   const { user, isAuthenticated, isLoading } = useAuth();

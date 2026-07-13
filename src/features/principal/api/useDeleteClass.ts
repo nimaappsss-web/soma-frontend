@@ -3,7 +3,7 @@ import toast from "react-hot-toast";
 
 import { transformError } from "../../../utils/transformError";
 import { fetchData } from "../../../utils/fetchData";
-import { principalKeys } from "../utils/query-keys";
+import { classKeys } from "../utils/query-keys";
 import type { AxiosErrorResponse } from "../types";
 
 export const useDeleteClass = () => {
@@ -13,7 +13,8 @@ export const useDeleteClass = () => {
     mutationFn: (id) => fetchData(`/classes/${id}`, "DELETE"),
     onSuccess: async () => {
       toast.success("Class removed!");
-      queryClient.invalidateQueries({ queryKey: principalKeys.details() });
+      queryClient.invalidateQueries({ queryKey: classKeys.lists() });
+      queryClient.invalidateQueries({ queryKey: classKeys.details() });
     },
     onError: async (error) => {
       toast.error(transformError(error));

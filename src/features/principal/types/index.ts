@@ -91,4 +91,39 @@ export interface PendingInvite {
 export interface TeachersResponse {
   teachers: Teacher[];
   pendingInvites: PendingInvite[];
+  total: number;
+  page: number;
+  totalPages: number;
+}
+
+export interface ParentStudent {
+  id: string;
+  name: string;
+  admissionNo: string;
+}
+
+export interface Parent {
+  id: string;
+  name: string;
+  email: string;
+  phone: string | null;
+  emailVerified: boolean;
+  hasAccount: boolean;
+  status: "active" | "pending";
+  students: ParentStudent[];
+  createdAt: string;
+  updatedAt: string;
+  /** Present on pending (invited) parents */
+  invitedAt?: string;
+  expiresAt?: string;
+  expiresIn?: number;
+  emailFailed?: boolean;
+  emailError?: string | null;
+}
+
+export interface ParentsResponse {
+  parents: Parent[];
+  total: number;
+  page: number;
+  totalPages: number;
 }

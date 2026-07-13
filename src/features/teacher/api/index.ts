@@ -1,3 +1,10 @@
 export { useTeacherProfile } from "./useTeacherProfile";
 export { useMyFormClass } from "./useMyFormClass";
 export { useMyAssignments } from "./useMyAssignments";
+export { useTeachers } from "./useTeachers";
+export { useTeacherDetail } from "./useTeacherDetail";
+export { useBulkInvite } from "./useBulkInvite";
+export { useResendInvite } from "./useResendInvite";
+export { useMarkAttendance } from "./useMarkAttendance";
+export { useAttendance } from "./useAttendance";
+export { useStudentAttendanceHistory } from "./useStudentAttendanceHistory";

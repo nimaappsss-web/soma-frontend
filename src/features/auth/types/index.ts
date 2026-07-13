@@ -45,6 +45,8 @@ export interface RegisterSchoolRequest {
   schoolType: string;
   address?: string;
   logoUrl?: string;
+  schoolCode?: string;
+  arms?: string[];
 }
 
 export interface RegisterSchoolResponse {
@@ -117,6 +119,11 @@ export interface LoginResponse {
   user: User;
   accessToken: string;
   refreshToken: string;
+}
+
+export interface AcceptParentInviteRequest {
+  token: string;
+  password: string;
 }
 
 export type AxiosErrorResponse = {

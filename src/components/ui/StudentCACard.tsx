@@ -99,9 +99,9 @@ export const StudentCACard = ({
       }`}
     >
       <div className="w-20 h-20 rounded-full bg-blue-100 flex items-center justify-center text-blue-700 font-bold text-2xl">
-        {student.avatarUrl ? (
+        {student.imageUrl ? (
           <img
-            src={student.avatarUrl}
+            src={student.imageUrl}
             alt={student.name}
             className="w-full h-full rounded-full object-cover"
           />
@@ -114,7 +114,7 @@ export const StudentCACard = ({
         {student.name}
       </p>
 
-      <p className="text-sm text-gray-400">{student.studentClass}</p>
+      <p className="text-sm text-gray-400">{student.classId}</p>
 
       <input
         ref={inputRef}

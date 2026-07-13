@@ -1,5 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { useSearchParams } from "react-router";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../components/ui/card";
 import { Input } from "../components/ui/input";
@@ -7,21 +9,7 @@ import { Label } from "../components/ui/label";
 import { Button } from "../components/ui/button";
 import { useRegisterPrincipal, useSendOTP, useSendOTPByEmail, useVerifyOTP, useRegisterSchool } from "../features/auth/api";
 import { useAuth } from "../contexts/AuthContext";
-
-interface PrincipalForm {
-  name: string;
-  email: string;
-  phone: string;
-  password: string;
-}
-
-interface SchoolForm {
-  name: string;
-  state: string;
-  lga: string;
-  schoolType: string;
-  address: string;
-}
+import { principalFormSchema, schoolFormSchema, type PrincipalFormData, type SchoolFormData } from "../features/auth/utils/validationSchema";
 
 const NIGERIAN_STATES = ["Lagos", "Abuja", "Rivers", "Kano", "Oyo", "Kaduna"];
 const RESEND_COOLDOWN = 30;
@@ -31,14 +19,18 @@ export const Onboarding = () => {
   const stepFromUrl = Number(searchParams.get("step")) || 1;
   const [step, setStep] = useState(stepFromUrl);
   const [phone, setPhone] = useState("");
-  const [principal, setPrincipal] = useState<PrincipalForm>({
-    name: "", email: "", phone: "", password: "",
-  });
   const [otp, setOtp] = useState("");
-  const [school, setSchool] = useState<SchoolForm>({
-    name: "", state: "", lga: "", schoolType: "secondary", address: "",
-  });
   const [cooldown, setCooldown] = useState(0);
+
+  const principalForm = useForm<PrincipalFormData>({
+    resolver: zodResolver(principalFormSchema),
+    defaultValues: { name: "", email: "", phone: "", password: "" },
+  });
+
+  const schoolForm = useForm<SchoolFormData>({
+    resolver: zodResolver(schoolFormSchema),
+    defaultValues: { name: "", state: "", lga: "", schoolType: "secondary", address: "", schoolCode: "", arms: "" },
+  });
 
   const registerPrincipalMutation = useRegisterPrincipal();
   const sendOTPMutation = useSendOTP();
@@ -63,10 +55,10 @@ export const Onboarding = () => {
 
   useEffect(() => {
     if (user?.email) {
-      setPrincipal((prev) => ({ ...prev, email: user.email || prev.email }));
+      principalForm.setValue("email", user.email);
     }
     if (user?.phone) {
-      setPrincipal((prev) => ({ ...prev, phone: user.phone || prev.phone }));
+      principalForm.setValue("phone", user.phone);
     }
   }, [user?.email, user?.phone]);
 
@@ -76,18 +68,17 @@ export const Onboarding = () => {
     return () => clearInterval(timer);
   }, [cooldown]);
 
-  const handlePrincipalSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
+  const handlePrincipalSubmit = (data: PrincipalFormData) => {
     registerPrincipalMutation.mutate(
       {
-        principalName: principal.name,
-        principalPhone: principal.phone,
-        principalEmail: principal.email || undefined,
-        password: principal.password,
+        principalName: data.name,
+        principalPhone: data.phone,
+        principalEmail: data.email || undefined,
+        password: data.password,
       },
       {
-        onSuccess: (data) => {
-          setPhone(data.phone);
+        onSuccess: (res) => {
+          setPhone(res.phone);
           setCooldown(RESEND_COOLDOWN);
           setStep(2);
         },
@@ -103,17 +94,19 @@ export const Onboarding = () => {
   }, [cooldown, phone, sendOTPMutation]);
 
   const handleResendOTPEmail = useCallback(() => {
-    if (!principal.email || cooldown > 0) return;
-    sendOTPEmailMutation.mutate(principal.email, {
+    const email = principalForm.getValues("email");
+    if (!email || cooldown > 0) return;
+    sendOTPEmailMutation.mutate(email, {
       onSuccess: () => setCooldown(RESEND_COOLDOWN),
     });
-  }, [cooldown, principal.email, sendOTPEmailMutation]);
+  }, [cooldown, principalForm, sendOTPEmailMutation]);
 
   const handleOTPSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!principal.email || !otp) return;
+    const email = principalForm.getValues("email");
+    if (!email || !otp) return;
     verifyOTPMutation.mutate(
-      { email: principal.email, code: otp },
+      { email, code: otp },
       {
         onSuccess: (data) => {
           if (!data.accessToken || !data.user) return;
@@ -124,20 +117,25 @@ export const Onboarding = () => {
     );
   };
 
-  const handleSchoolSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSchoolSubmit = (data: SchoolFormData) => {
     registerSchoolMutation.mutate(
       {
-        schoolName: school.name,
-        state: school.state,
-        lga: school.lga,
-        schoolType: school.schoolType,
-        address: school.address || undefined,
+        schoolName: data.name,
+        state: data.state,
+        lga: data.lga,
+        schoolType: data.schoolType,
+        address: data.address || undefined,
+        schoolCode: data.schoolCode || undefined,
+        arms: data.arms
+          ? data.arms.split(",").map((a) => a.trim()).filter(Boolean)
+          : undefined,
       },
-      { onSuccess: (data) => {
-          setTokens(data.accessToken, data.refreshToken, data.user);
+      {
+        onSuccess: (res) => {
+          setTokens(res.accessToken, res.refreshToken, res.user);
           window.location.href = "/dashboard";
-        }},
+        },
+      },
     );
   };
 
@@ -168,53 +166,43 @@ export const Onboarding = () => {
             {step === 1
               ? "Step 1 — Principal details"
               : step === 2
-                ? `Step 2 — Enter the code sent to ${principal.email}`
+                ? `Step 2 — Enter the code sent to ${principalForm.getValues("email")}`
                 : "Step 3 — School details"}
           </CardDescription>
         </CardHeader>
         <CardContent>
           {step === 1 && (
-            <form onSubmit={handlePrincipalSubmit} className="space-y-4">
+            <form onSubmit={principalForm.handleSubmit(handlePrincipalSubmit)} className="space-y-4">
               {registerPrincipalMutation.isError && (
                 <p className="text-sm text-destructive">{(registerPrincipalMutation.error as Error)?.message}</p>
               )}
               <div className="space-y-2">
                 <Label htmlFor="name">Full Name</Label>
-                <Input
-                  id="name"
-                  value={principal.name}
-                  onChange={(e) => setPrincipal({ ...principal, name: e.target.value })}
-                  required
-                />
+                <Input id="name" {...principalForm.register("name")} />
+                {principalForm.formState.errors.name && (
+                  <p className="text-sm text-destructive">{principalForm.formState.errors.name.message}</p>
+                )}
               </div>
               <div className="space-y-2">
                 <Label htmlFor="email">Email</Label>
-                <Input
-                  id="email"
-                  type="email"
-                  value={principal.email}
-                  onChange={(e) => setPrincipal({ ...principal, email: e.target.value })}
-                />
+                <Input id="email" type="email" {...principalForm.register("email")} />
+                {principalForm.formState.errors.email && (
+                  <p className="text-sm text-destructive">{principalForm.formState.errors.email.message}</p>
+                )}
               </div>
               <div className="space-y-2">
                 <Label htmlFor="phone">Phone</Label>
-                <Input
-                  id="phone"
-                  type="tel"
-                  value={principal.phone}
-                  onChange={(e) => setPrincipal({ ...principal, phone: e.target.value })}
-                  required
-                />
+                <Input id="phone" type="tel" {...principalForm.register("phone")} />
+                {principalForm.formState.errors.phone && (
+                  <p className="text-sm text-destructive">{principalForm.formState.errors.phone.message}</p>
+                )}
               </div>
               <div className="space-y-2">
                 <Label htmlFor="password">Password</Label>
-                <Input
-                  id="password"
-                  type="password"
-                  value={principal.password}
-                  onChange={(e) => setPrincipal({ ...principal, password: e.target.value })}
-                  required
-                />
+                <Input id="password" type="password" {...principalForm.register("password")} />
+                {principalForm.formState.errors.password && (
+                  <p className="text-sm text-destructive">{principalForm.formState.errors.password.message}</p>
+                )}
               </div>
               <Button type="submit" disabled={registerPrincipalMutation.isPending} className="w-full">
                 {registerPrincipalMutation.isPending ? "Creating..." : "Next"}
@@ -253,7 +241,7 @@ export const Onboarding = () => {
                     ? `Resend via SMS in ${cooldown}s`
                     : "Resend via SMS"}
               </Button>
-              {principal.email && (
+              {principalForm.getValues("email") && (
                 <Button
                   type="button"
                   variant="link"
@@ -272,50 +260,70 @@ export const Onboarding = () => {
           )}
 
           {step === 3 && (
-            <form onSubmit={handleSchoolSubmit} className="space-y-4">
+            <form onSubmit={schoolForm.handleSubmit(handleSchoolSubmit)} className="space-y-4">
               {registerSchoolMutation.isError && (
                 <p className="text-sm text-destructive">{(registerSchoolMutation.error as Error)?.message}</p>
               )}
               <div className="space-y-2">
                 <Label htmlFor="schoolName">School Name</Label>
+                <Input id="schoolName" {...schoolForm.register("name")} />
+                {schoolForm.formState.errors.name && (
+                  <p className="text-sm text-destructive">{schoolForm.formState.errors.name.message}</p>
+                )}
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="schoolCode">School Code <span className="text-gray-400 font-normal">(optional)</span></Label>
                 <Input
-                  id="schoolName"
-                  value={school.name}
-                  onChange={(e) => setSchool({ ...school, name: e.target.value })}
-                  required
+                  id="schoolCode"
+                  placeholder="e.g. ATH"
+                  maxLength={10}
+                  {...schoolForm.register("schoolCode", {
+                    onChange: (e) => { e.target.value = e.target.value.toUpperCase(); },
+                  })}
                 />
+                {schoolForm.formState.errors.schoolCode && (
+                  <p className="text-sm text-destructive">{schoolForm.formState.errors.schoolCode.message}</p>
+                )}
+                <p className="text-xs text-gray-400">Used as prefix for auto-generated admission numbers</p>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="arms">Arms <span className="text-gray-400 font-normal">(optional, comma-separated)</span></Label>
+                <Input
+                  id="arms"
+                  placeholder="e.g. A, B, C or 1, 2, 3"
+                  {...schoolForm.register("arms")}
+                />
+                <p className="text-xs text-gray-400">Defaults to A, B, C if not provided.</p>
               </div>
               <div className="space-y-2">
                 <Label htmlFor="state">State</Label>
                 <select
                   id="state"
-                  value={school.state}
-                  onChange={(e) => setSchool({ ...school, state: e.target.value })}
                   className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm"
-                  required
+                  {...schoolForm.register("state")}
                 >
                   <option value="">Select state</option>
                   {NIGERIAN_STATES.map((s) => (
                     <option key={s} value={s}>{s}</option>
                   ))}
                 </select>
+                {schoolForm.formState.errors.state && (
+                  <p className="text-sm text-destructive">{schoolForm.formState.errors.state.message}</p>
+                )}
               </div>
               <div className="space-y-2">
                 <Label htmlFor="lga">LGA</Label>
-                <Input
-                  id="lga"
-                  value={school.lga}
-                  onChange={(e) => setSchool({ ...school, lga: e.target.value })}
-                  required
-                />
+                <Input id="lga" {...schoolForm.register("lga")} />
+                {schoolForm.formState.errors.lga && (
+                  <p className="text-sm text-destructive">{schoolForm.formState.errors.lga.message}</p>
+                )}
               </div>
               <div className="space-y-2">
                 <Label htmlFor="schoolType">School Type</Label>
                 <select
                   id="schoolType"
-                  value={school.schoolType}
-                  onChange={(e) => setSchool({ ...school, schoolType: e.target.value })}
                   className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm"
+                  {...schoolForm.register("schoolType")}
                 >
                   <option value="secondary">Secondary</option>
                   <option value="primary">Primary</option>
@@ -323,11 +331,7 @@ export const Onboarding = () => {
               </div>
               <div className="space-y-2">
                 <Label htmlFor="address">Address</Label>
-                <Input
-                  id="address"
-                  value={school.address}
-                  onChange={(e) => setSchool({ ...school, address: e.target.value })}
-                />
+                <Input id="address" {...schoolForm.register("address")} />
               </div>
               <div className="flex gap-2">
                 <Button type="button" variant="outline" onClick={() => setStep(2)} className="w-full">

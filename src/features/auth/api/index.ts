@@ -9,3 +9,4 @@ export {
 export { useCompleteRegistration } from "./useCompleteRegistration";
 export { useMe } from "./useMe";
 export { useInviteInfo } from "./useInviteInfo";
+export { useAcceptParentInvite } from "./useAcceptParentInvite";

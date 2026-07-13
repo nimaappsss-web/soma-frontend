@@ -3,7 +3,7 @@ import toast from "react-hot-toast";
 
 import { transformError } from "../../../utils/transformError";
 import { fetchData } from "../../../utils/fetchData";
-import { principalKeys } from "../utils/query-keys";
+import { classKeys } from "../utils/query-keys";
 import type { AxiosErrorResponse } from "../types";
 
 interface CreateClassPayload {
@@ -19,7 +19,8 @@ export const useCreateClass = () => {
     mutationFn: (payload) => fetchData("/classes", "POST", payload),
     onSuccess: async () => {
       toast.success("Class added!");
-      queryClient.invalidateQueries({ queryKey: principalKeys.details() });
+      queryClient.invalidateQueries({ queryKey: classKeys.lists() });
+      queryClient.invalidateQueries({ queryKey: classKeys.details() });
     },
     onError: async (error) => {
       toast.error(transformError(error));

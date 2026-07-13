@@ -1,10 +1,13 @@
-import { useState } from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+
 import { Modal } from "../../../components/others/Modal";
 import { Button } from "../../../components/ui/button";
 import { Input } from "../../../components/ui/input";
 import { Label } from "../../../components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "../../../components/ui/card";
 import { useInviteTeacher } from "../api";
+import { inviteTeacherSchema, type InviteTeacherFormData } from "../utils/validationSchema";
 
 interface InviteTeacherModalProps {
   open: boolean;
@@ -12,16 +15,24 @@ interface InviteTeacherModalProps {
 }
 
 export const InviteTeacherModal = ({ open, onClose }: InviteTeacherModalProps) => {
-  const [email, setEmail] = useState("");
   const inviteMutation = useInviteTeacher();
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
+  const {
+    register,
+    handleSubmit,
+    reset,
+    formState: { errors },
+  } = useForm<InviteTeacherFormData>({
+    resolver: zodResolver(inviteTeacherSchema),
+    defaultValues: { email: "" },
+  });
+
+  const onSubmit = (data: InviteTeacherFormData) => {
     inviteMutation.mutate(
-      { teacherEmail: email, role: "TEACHER" },
+      { teacherEmail: data.email, role: "TEACHER" },
       {
         onSuccess: () => {
-          setEmail("");
+          reset();
           onClose();
         },
       },
@@ -38,7 +49,7 @@ export const InviteTeacherModal = ({ open, onClose }: InviteTeacherModalProps) =
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <form onSubmit={handleSubmit} className="space-y-4">
+          <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
             {inviteMutation.isError && (
               <p className="text-sm text-destructive">
                 {(inviteMutation.error as Error)?.message}
@@ -50,11 +61,12 @@ export const InviteTeacherModal = ({ open, onClose }: InviteTeacherModalProps) =
               <Input
                 id="teacher-email"
                 type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
                 placeholder="teacher@school.com"
-                required
+                {...register("email")}
               />
+              {errors.email && (
+                <p className="text-sm text-destructive">{errors.email.message}</p>
+              )}
             </div>
 
             <div className="flex gap-2 pt-2">

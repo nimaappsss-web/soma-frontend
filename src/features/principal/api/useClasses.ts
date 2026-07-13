@@ -3,7 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { liveQuery } from "dexie";
 
 import { fetchData } from "../../../utils/fetchData";
-import { principalKeys } from "../utils/query-keys";
+import { classKeys } from "../utils/query-keys";
 import { db } from "../../../db/db";
 import type { ClassCache } from "../../../db/db";
 
@@ -26,7 +26,7 @@ export const useClasses = (schoolId?: string) => {
     return () => sub.unsubscribe();
   }, [isPublic]);
 
-  const queryKey = isPublic ? ["classes-public", schoolId] : principalKeys.details();
+  const queryKey = isPublic ? [...classKeys.lists(), "public", schoolId] : classKeys.lists();
 
   const query = useQuery<ClassesResponse>({
     queryKey,
@@ -37,8 +37,10 @@ export const useClasses = (schoolId?: string) => {
         ? { classes: res, levels: [...new Set(res.map((c) => c.level))] }
         : res;
       if (!isPublic) {
-        await db.classes.clear();
-        await db.classes.bulkAdd(data.classes);
+        await db.transaction("rw", db.classes, async () => {
+          await db.classes.clear();
+          await db.classes.bulkAdd(data.classes);
+        });
       }
       return data;
     },

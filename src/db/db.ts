@@ -3,9 +3,17 @@ import Dexie, { type EntityTable } from "dexie";
 export interface Student {
   id: string;
   name: string;
-  studentClass: string;
-  schoolId: string;
-  avatarUrl?: string;
+  admissionNo?: string;
+  classId: string;
+  gender?: "M" | "F" | null;
+  dateOfBirth?: string | null;
+  address?: string | null;
+  imageUrl?: string | null;
+  parentName?: string | null;
+  parentPhone?: string | null;
+  parentEmail?: string | null;
+  status: "ACTIVE" | "TRANSFERRED" | "WITHDRAWN" | "GRADUATED";
+  schoolId?: string;
   createdAt: number;
 }
 
@@ -39,6 +47,7 @@ export interface CAScore {
 export interface SubjectCache {
   id: string;
   name: string;
+  code?: string;
 }
 
 export interface ClassCache {
@@ -50,6 +59,7 @@ export interface ClassCache {
 
 export interface TeacherFormClassCache {
   id: string;
+  formClassId: string | null;
   formClass: string | null;
 }
 
@@ -60,6 +70,7 @@ export interface TeacherAssignmentCache {
 
 export interface TeacherCache {
   id: string;
+  userId: string;
   name: string;
   email: string;
   role: string;
@@ -70,6 +81,7 @@ export interface TeacherCache {
 
 export interface PendingInviteCache {
   id: string;
+  userId: string;
   email: string;
   status: "pending";
   expiresIn: number;
@@ -80,7 +92,38 @@ export interface TeacherDetailCache {
   detailJson: string;
 }
 
-export const db = new Dexie("nimaDB") as Dexie & {
+export interface ParentCache {
+  id: string;
+  name: string;
+  email: string;
+  phone: string | null;
+  emailVerified: boolean;
+  hasAccount: boolean;
+  status: "active" | "pending";
+  students: Array<{ id: string; name: string; admissionNo: string }>;
+  createdAt: string;
+  updatedAt: string;
+  invitedAt?: string;
+  expiresAt?: string;
+  expiresIn?: number;
+  emailFailed?: boolean;
+  emailError?: string | null;
+}
+
+export interface SyncQueueItem {
+  id?: number;
+  userId: string;
+  table: string;
+  recordId: string;
+  endpoint: string;
+  method: "POST" | "PUT" | "PATCH" | "DELETE";
+  payload: unknown;
+  status: "pending" | "syncing" | "synced" | "failed";
+  createdAt: number;
+  retryCount: number;
+}
+
+export const db = new Dexie("somaDB") as Dexie & {
   students: EntityTable<Student, "id">;
   attendance: EntityTable<AttendanceRecord, "id">;
   caScores: EntityTable<CAScore, "id">;
@@ -91,27 +134,53 @@ export const db = new Dexie("nimaDB") as Dexie & {
   teachers: EntityTable<TeacherCache, "id">;
   pendingInvites: EntityTable<PendingInviteCache, "id">;
   teacherDetails: EntityTable<TeacherDetailCache, "id">;
+  parents: EntityTable<ParentCache, "id">;
+  syncQueue: EntityTable<SyncQueueItem, "id">;
 };
 
-db.version(6).stores({
-  students: "id, name, studentClass, schoolId",
+db.version(11).stores({
+  students: "id, name, classId, status",
   attendance: "id, studentId, className, schoolId, date, syncStatus",
   caScores: "id, studentId, className, schoolId, term, session, syncStatus",
   subjects: "id",
   classes: "id, level",
   teacherFormClass: "id",
   teacherAssignments: "id",
-  teachers: "id",
-  pendingInvites: "id",
+  teachers: "id, userId",
+  pendingInvites: "id, userId",
   teacherDetails: "id",
+  parents: "id, status",
+  syncQueue: "++id, status, createdAt",
 });
 
-export const clearUserData = async () => {
-  await Promise.all([
-    db.teacherFormClass.clear(),
-    db.teacherAssignments.clear(),
-    db.teachers.clear(),
-    db.pendingInvites.clear(),
-    db.teacherDetails.clear(),
-  ]);
-};
+db.version(12).stores({
+  students: "id, name, classId, status",
+  attendance: "id, studentId, className, schoolId, date, syncStatus",
+  caScores: "id, studentId, className, schoolId, term, session, syncStatus",
+  subjects: "id",
+  classes: "id, level",
+  teacherFormClass: "id",
+  teacherAssignments: "id",
+  teachers: "id, userId",
+  pendingInvites: "id, userId",
+  teacherDetails: "id",
+  parents: "id, status",
+  syncQueue: "++id, status, createdAt, table",
+});
+
+db.version(13).stores({
+  students: "id, name, classId, status",
+  attendance: "id, studentId, className, schoolId, date, syncStatus",
+  caScores: "id, studentId, className, schoolId, term, session, syncStatus",
+  subjects: "id",
+  classes: "id, level",
+  teacherFormClass: "id",
+  teacherAssignments: "id",
+  teachers: "id, userId",
+  pendingInvites: "id, userId",
+  teacherDetails: "id",
+  parents: "id, status",
+  syncQueue: "++id, status, createdAt, table, userId",
+});
+
+
