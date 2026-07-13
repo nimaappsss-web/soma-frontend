@@ -3,7 +3,7 @@ import toast from "react-hot-toast";
 
 import { transformError } from "../../../utils/transformError";
 import { fetchData } from "../../../utils/fetchData";
-import { principalKeys } from "../utils/query-keys";
+import { teacherKeys } from "../../teacher/utils/query-keys";
 import type { InviteTeacherRequest, InviteTeacherResponse, AxiosErrorResponse } from "../types";
 
 export const useInviteTeacher = () => {
@@ -13,7 +13,8 @@ export const useInviteTeacher = () => {
     mutationFn: (payload) => fetchData<InviteTeacherRequest>("/auth/invite-teacher", "POST", payload),
     onSuccess: async () => {
       toast.success("Invitation sent to teacher!");
-      queryClient.invalidateQueries({ queryKey: principalKeys.lists() });
+      queryClient.invalidateQueries({ queryKey: teacherKeys.lists() });
+      queryClient.invalidateQueries({ queryKey: teacherKeys.details() });
     },
     onError: async (error) => {
       toast.error(transformError(error));

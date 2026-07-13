@@ -1,8 +1,8 @@
 import { type ReactNode } from "react";
 import { Navigate, useLocation } from "react-router";
 
-import { useAuth } from "../../contexts/AuthContext";
-import { getPostAuthPath, isFullyRegistered } from "../../features/auth/utils/routing";
+import { useAuth } from "../../../contexts/AuthContext";
+import { getPostAuthPath, isFullyRegistered } from "../utils/routing";
 
 const ONBOARDING_FLOW = ["/onboarding", "/complete-registration"];
 

@@ -3,6 +3,9 @@ import Axios from "axios";
 
 import { tokenStorage, refreshTokenStorage, storage } from "../utils/storage";
 
+const isServerRejection = (err: unknown): boolean =>
+  !!(err as { response?: { status?: number } }).response?.status;
+
 function getApiBaseUrl(): string {
   if (typeof window !== "undefined") {
     const hostname = window.location.hostname;
@@ -63,9 +66,11 @@ axiosInstance.interceptors.response.use(
     ) {
       const refreshToken = refreshTokenStorage.get();
       if (!refreshToken) {
-        storage.clear();
-        if (typeof window !== "undefined") {
-          window.location.href = "/login";
+        if (isServerRejection(error)) {
+          storage.clear();
+          if (typeof window !== "undefined") {
+            window.location.href = "/login";
+          }
         }
         return Promise.reject(error);
       }
@@ -93,11 +98,13 @@ axiosInstance.interceptors.response.use(
         processQueue(null, newToken);
         originalRequest.headers.Authorization = `Bearer ${newToken}`;
         return axiosInstance(originalRequest);
-      } catch {
+      } catch (refreshErr) {
         processQueue(error, null);
-        storage.clear();
-        if (typeof window !== "undefined") {
-          window.location.href = "/login";
+        if (isServerRejection(refreshErr)) {
+          storage.clear();
+          if (typeof window !== "undefined") {
+            window.location.href = "/login";
+          }
         }
         return Promise.reject(error);
       } finally {

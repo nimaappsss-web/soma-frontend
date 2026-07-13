@@ -1,10 +1,13 @@
 import { useState } from "react";
 import { useParams, useSearchParams, useNavigate } from "react-router";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
 
 import { useAcceptInvite, useSubjects, useClasses } from "../features/principal/api";
 import { useInviteInfo } from "../features/auth/api";
 import { useAuth } from "../contexts/AuthContext";
 import { getPostAuthPath } from "../features/auth/utils/routing";
+import { completeRegistrationSchema, type CompleteRegistrationFormData } from "../features/auth/utils/validationSchema";
 import { MultiSelect, type SelectOption } from "../components/ui/multi-select";
 import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
@@ -25,12 +28,19 @@ export const VerifyTeacher = () => {
   const { setTokens } = useAuth();
   const acceptMutation = useAcceptInvite();
 
-  const [name, setName] = useState("");
-  const [password, setPassword] = useState("");
   const [assignments, setAssignments] = useState<AssignmentRow[]>([
     { subjectId: "", classIds: [] },
   ]);
   const [formClassId, setFormClassId] = useState("");
+
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm<CompleteRegistrationFormData>({
+    resolver: zodResolver(completeRegistrationSchema),
+    defaultValues: { name: "", password: "" },
+  });
 
   const { data: inviteInfo, isLoading: infoLoading } = useInviteInfo(token);
   const { data: subjects, isLoading: subjectsLoading, error: subjectsError } = useSubjects(schoolId);
@@ -61,23 +71,22 @@ export const VerifyTeacher = () => {
     );
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
+  const onSubmit = (data: CompleteRegistrationFormData) => {
     if (!token) return;
     acceptMutation.mutate(
       {
         token,
-        name,
-        password,
+        name: data.name,
+        password: data.password,
         assignments: assignments
           .filter((a) => a.subjectId && a.classIds.length > 0)
           .map((a) => ({ subjectId: a.subjectId, classIds: a.classIds })),
         formClassId: formClassId || undefined,
       },
       {
-        onSuccess: (data) => {
-          setTokens(data.accessToken, data.refreshToken, data.user);
-          navigate(getPostAuthPath(data.user));
+        onSuccess: (res) => {
+          setTokens(res.accessToken, res.refreshToken, res.user);
+          navigate(getPostAuthPath(res.user));
         },
       },
     );
@@ -159,7 +168,7 @@ export const VerifyTeacher = () => {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <form onSubmit={handleSubmit} className="space-y-4">
+          <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
             {acceptMutation.isError && (
               <p className="text-sm text-destructive">
                 {(acceptMutation.error as Error)?.message}
@@ -168,25 +177,14 @@ export const VerifyTeacher = () => {
 
             <div className="space-y-2">
               <Label htmlFor="name">Full Name</Label>
-              <Input
-                id="name"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                placeholder="e.g. Mr Adeyemi"
-                required
-              />
+              <Input id="name" placeholder="e.g. Mr Adeyemi" {...register("name")} />
+              {errors.name && <p className="text-sm text-destructive">{errors.name.message}</p>}
             </div>
 
             <div className="space-y-2">
               <Label htmlFor="password">Password</Label>
-              <Input
-                id="password"
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder="Choose a password"
-                required
-              />
+              <Input id="password" type="password" placeholder="Choose a password" {...register("password")} />
+              {errors.password && <p className="text-sm text-destructive">{errors.password.message}</p>}
             </div>
 
             <div className="space-y-3">
@@ -205,7 +203,6 @@ export const VerifyTeacher = () => {
                         value={a.subjectId}
                         onChange={(e) => handleSubjectChange(i, e.target.value)}
                         className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm"
-                        required
                       >
                         <option value="">Select subject</option>
                         {subjectOptions.map((opt) => (

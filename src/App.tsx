@@ -1,33 +1,54 @@
 import { Routes, Route, Navigate } from "react-router";
 
-import { useAnimatedFavicon } from "./hooks/useAnimatedFavicon";
-import { AuthProvider } from "./contexts/AuthContext";
-import { ProtectedRoute } from "./components/auth/ProtectedRoute";
-import { GuestRoute } from "./components/auth/GuestRoute";
-import { OnboardingRoute } from "./components/auth/OnboardingRoute";
-import { Login } from "./pages/Login";
-import { Onboarding } from "./pages/Onboarding";
-import { AdminDashboard } from "./pages/AdminDashboard";
-import { TeacherDashboard } from "./pages/teach/TeacherDashboard";
-import { TeacherStudents } from "./pages/teach/TeacherStudents";
 import { TeacherAttendance } from "./pages/teach/TeacherAttendance";
-import { ParentDashboard } from "./pages/ParentDashboard";
-import { StaffDashboard } from "./pages/StaffDashboard";
+import { OnboardingRoute } from "./features/auth/components/OnboardingRoute";
 import { ContinuousAssessment } from "./pages/ContinuousAssessment";
 import { CompleteRegistration } from "./pages/CompleteRegistration";
+import { ProtectedRoute } from "./features/auth/components/ProtectedRoute";
+import { TeacherDashboard } from "./pages/teach/TeacherDashboard";
+import { useAnimatedFavicon } from "./hooks/useAnimatedFavicon";
+import { TeacherStudents } from "./pages/teach/TeacherStudents";
+import { AdminStudents } from "./pages/admin/AdminStudents";
+import { AdminTeachers } from "./pages/admin/AdminTeachers";
+import { AdminSubjects } from "./pages/admin/AdminSubjects";
+import { ParentDashboard } from "./pages/ParentDashboard";
+import { ParentSetup } from "./pages/ParentSetup";
+import { GuestRoute } from "./features/auth/components/GuestRoute";
+import { AdminClasses } from "./pages/admin/AdminClasses";
+import { AdminParents } from "./pages/admin/AdminParents";
+import { StaffDashboard } from "./pages/StaffDashboard";
+import { AdminDashboard } from "./pages/AdminDashboard";
 import { VerifyTeacher } from "./pages/VerifyTeacher";
+import { AuthProvider } from "./contexts/AuthContext";
+import { SyncProvider } from "./contexts/SyncContext";
+import { SyncIndicator } from "./components/SyncIndicator";
+import { AdminSettings } from "./pages/AdminSettings";
+import { Onboarding } from "./pages/Onboarding";
+import { Login } from "./pages/Login";
 
 function App() {
-  useAnimatedFavicon(
-    ["/favicon.ico", "/favicon.svg"],
-    [4000, 600],
-  );
+  useAnimatedFavicon(["/favicon2.svg", "/favicon.svg"], [3000, 600]);
 
   return (
     <AuthProvider>
+      <SyncProvider>
       <Routes>
-        <Route path="/login" element={<GuestRoute><Login /></GuestRoute>} />
-        <Route path="/onboarding" element={<OnboardingRoute><Onboarding /></OnboardingRoute>} />
+        <Route
+          path="/login"
+          element={
+            <GuestRoute>
+              <Login />
+            </GuestRoute>
+          }
+        />
+        <Route
+          path="/onboarding"
+          element={
+            <OnboardingRoute>
+              <Onboarding />
+            </OnboardingRoute>
+          }
+        />
         <Route
           path="/continuous-assessment"
           element={
@@ -44,9 +65,78 @@ function App() {
             </ProtectedRoute>
           }
         />
-        <Route path="/teach" element={<ProtectedRoute><TeacherDashboard /></ProtectedRoute>} />
-        <Route path="/teach/students" element={<ProtectedRoute><TeacherStudents /></ProtectedRoute>} />
-        <Route path="/teach/attendance" element={<ProtectedRoute><TeacherAttendance /></ProtectedRoute>} />
+        <Route
+          path="/teach"
+          element={
+            <ProtectedRoute>
+              <TeacherDashboard />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/students"
+          element={
+            <ProtectedRoute>
+              <AdminStudents />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/parents"
+          element={
+            <ProtectedRoute>
+              <AdminParents />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/teachers"
+          element={
+            <ProtectedRoute>
+              <AdminTeachers />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/classes"
+          element={
+            <ProtectedRoute>
+              <AdminClasses />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/subjects"
+          element={
+            <ProtectedRoute>
+              <AdminSubjects />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/settings"
+          element={
+            <ProtectedRoute>
+              <AdminSettings />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/teach/students"
+          element={
+            <ProtectedRoute>
+              <TeacherStudents />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/teach/attendance"
+          element={
+            <ProtectedRoute>
+              <TeacherAttendance />
+            </ProtectedRoute>
+          }
+        />
         <Route
           path="/parent"
           element={
@@ -73,8 +163,11 @@ function App() {
         />
         <Route path="/invite/:token" element={<VerifyTeacher />} />
         <Route path="/verify-teacher" element={<VerifyTeacher />} />
+        <Route path="/parent/setup" element={<ParentSetup />} />
         <Route path="*" element={<Navigate to="/login" replace />} />
       </Routes>
+      <SyncIndicator />
+      </SyncProvider>
     </AuthProvider>
   );
 }

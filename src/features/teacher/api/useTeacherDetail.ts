@@ -3,7 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { liveQuery } from "dexie";
 
 import { fetchData } from "../../../utils/fetchData";
-import { principalKeys } from "../utils/query-keys";
+import { teacherKeys } from "../utils/query-keys";
 import { db } from "../../../db/db";
 import type { TeacherDetail } from "../types";
 
@@ -29,7 +29,7 @@ export const useTeacherDetail = (id: string) => {
   }, [id]);
 
   const query = useQuery<TeacherDetail>({
-    queryKey: principalKeys.list(id),
+    queryKey: teacherKeys.list(id),
     queryFn: async () => {
       const data: TeacherDetail = await fetchData(`/teachers/${id}`, "GET");
       await db.teacherDetails.put({

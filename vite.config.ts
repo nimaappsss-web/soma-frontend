@@ -4,16 +4,21 @@ import { defineConfig } from "vite";
 import { VitePWA } from "vite-plugin-pwa";
 
 export default defineConfig({
+  resolve: {
+    alias: {
+      "@": "/src",
+    },
+  },
   plugins: [
     react(),
     tailwindcss(),
     VitePWA({
       registerType: "autoUpdate",
-      includeAssets: ["favicon.svg", "icons.svg"],
+      includeAssets: ["favicon.ico", "favicon2.ico", "icons.svg"],
       manifest: {
-        name: "Nima",
-        short_name: "Nima",
-        description: "Nima app",
+        name: "Soma",
+        short_name: "Soma",
+        description: "Soma app",
         theme_color: "#863bff",
         background_color: "#ffffff",
         display: "standalone",

@@ -1,8 +1,8 @@
 import { type ReactNode } from "react";
 import { Navigate } from "react-router";
 
-import { useAuth } from "../../contexts/AuthContext";
-import { getPostAuthPath, isFullyRegistered } from "../../features/auth/utils/routing";
+import { useAuth } from "../../../contexts/AuthContext";
+import { getPostAuthPath, isFullyRegistered } from "../utils/routing";
 
 export const OnboardingRoute = ({ children }: { children: ReactNode }) => {
   const { user, isAuthenticated, isLoading } = useAuth();

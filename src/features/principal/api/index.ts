@@ -1,12 +1,11 @@
 export { useInviteTeacher } from "./useInviteTeacher";
-export { useBulkInvite } from "./useBulkInvite";
 export { useSubjects } from "./useSubjects";
 export { useClasses } from "./useClasses";
 export { useAcceptInvite } from "./useAcceptInvite";
-export { useTeachers } from "./useTeachers";
-export { useResendInvite } from "./useResendInvite";
 export { useCreateSubject } from "./useCreateSubject";
 export { useDeleteSubject } from "./useDeleteSubject";
 export { useCreateClass } from "./useCreateClass";
 export { useDeleteClass } from "./useDeleteClass";
-export { useTeacherDetail } from "./useTeacherDetail";
+export { useUpdateSchool } from "./useUpdateSchool";
+export { useParents } from "./useParents";
+export { useResendParentInvite } from "./useResendParentInvite";

@@ -3,7 +3,7 @@ import toast from "react-hot-toast";
 
 import { transformError } from "../../../utils/transformError";
 import { fetchData } from "../../../utils/fetchData";
-import { principalKeys } from "../utils/query-keys";
+import { teacherKeys } from "../utils/query-keys";
 import type { BulkInviteRequest, BulkInviteResponse, AxiosErrorResponse } from "../types";
 
 export const useBulkInvite = () => {
@@ -16,7 +16,8 @@ export const useBulkInvite = () => {
       if (data.failed?.length > 0) {
         data.failed.forEach((f) => toast.error(`Failed: ${f.phone} - ${f.reason}`));
       }
-      queryClient.invalidateQueries({ queryKey: principalKeys.lists() });
+      queryClient.invalidateQueries({ queryKey: teacherKeys.lists() });
+      queryClient.invalidateQueries({ queryKey: teacherKeys.details() });
     },
     onError: async (error) => {
       toast.error(transformError(error));

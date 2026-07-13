@@ -1,10 +1,9 @@
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import toast from "react-hot-toast";
 
 import { transformError } from "../../../utils/transformError";
 import { fetchData } from "../../../utils/fetchData";
-import { principalKeys } from "../utils/query-keys";
-import { useQueryClient } from "@tanstack/react-query";
+import { teacherKeys } from "../utils/query-keys";
 import type { AxiosErrorResponse } from "../types";
 
 export const useResendInvite = () => {
@@ -14,7 +13,8 @@ export const useResendInvite = () => {
     mutationFn: (inviteId) => fetchData(`/teachers/${inviteId}/resend-invite`, "POST"),
     onSuccess: async () => {
       toast.success("Invitation resent!");
-      queryClient.invalidateQueries({ queryKey: principalKeys.lists() });
+      queryClient.invalidateQueries({ queryKey: teacherKeys.lists() });
+      queryClient.invalidateQueries({ queryKey: teacherKeys.details() });
     },
     onError: async (error) => {
       toast.error(transformError(error));

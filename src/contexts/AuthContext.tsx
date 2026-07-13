@@ -18,8 +18,6 @@ import {
 } from "../utils/storage";
 import type { User, LoginResponse } from "../features/auth/types";
 import { authApi } from "../services/auth";
-import { clearUserData } from "../db/db";
-import type { AxiosError } from "axios";
 
 interface AuthContextType {
   user: User | null;
@@ -32,7 +30,7 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | null>(null);
 
-const AUTH_EVENT = "nima:auth-change";
+const AUTH_EVENT = "soma:auth-change";
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
@@ -60,13 +58,20 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       setUser(merged);
     };
 
+    const isServerRejection = (err: unknown) =>
+      !!(err as { response?: { status?: number } }).response?.status;
+
     if (token) {
       authApi
         .me()
         .then(mergeUser)
         .catch((err) => {
-          const axiosErr = err as AxiosError;
-          const st = axiosErr.response?.status;
+          if (!isServerRejection(err)) {
+            if (!cached) setIsLoading(false);
+            return;
+          }
+
+          const st = (err as { response: { status: number } }).response.status;
           if (st === 401 || st === 403) {
             if (refreshToken) {
               authApi
@@ -76,13 +81,21 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
                   return authApi.me();
                 })
                 .then(mergeUser)
-                .catch(() => {
-                  storage.clear();
-                  setUser(null);
+                .catch((refreshErr) => {
+                  if (isServerRejection(refreshErr)) {
+                    storage.clear();
+                    setUser(null);
+                  } else if (!cached) {
+                    setIsLoading(false);
+                  }
+                })
+                .finally(() => {
+                  if (!cached) setIsLoading(false);
                 });
             } else {
               storage.clear();
               setUser(null);
+              if (!cached) setIsLoading(false);
             }
           } else if (!cached) {
             setIsLoading(false);
@@ -99,9 +112,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           return authApi.me();
         })
         .then(mergeUser)
-        .catch(() => {
-          storage.clear();
-          setUser(null);
+        .catch((refreshErr) => {
+          if (isServerRejection(refreshErr)) {
+            storage.clear();
+            setUser(null);
+          }
         })
         .finally(() => {
           if (!cached) setIsLoading(false);
@@ -146,7 +161,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     } catch {
       /* ignore */
     }
-    await clearUserData();
     storage.clear();
     setUser(null);
     window.dispatchEvent(new Event(AUTH_EVENT));

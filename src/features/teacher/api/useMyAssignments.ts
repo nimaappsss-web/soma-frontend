@@ -30,7 +30,7 @@ export const useMyAssignments = (userId: string) => {
   }, [userId]);
 
   const query = useQuery<SubjectAssignment[]>({
-    queryKey: teacherKeys.assignmentDetail(userId),
+    queryKey: teacherKeys.details(),
     queryFn: async () => {
       const res: { assignments: SubjectAssignment[] } = await fetchData("/teachers/assignments", "GET");
       const assignments: SubjectAssignment[] = res?.assignments ?? [];

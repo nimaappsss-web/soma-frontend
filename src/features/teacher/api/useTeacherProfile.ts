@@ -5,6 +5,7 @@ import type { SubjectAssignment } from "../types";
 
 interface TeacherProfile {
   formClass: string | null;
+  formClassId: string | null;
   name: string;
   email: string;
   schoolName: string;
@@ -32,8 +33,9 @@ export const useTeacherProfile = (): TeacherProfile => {
   const error = formClassQuery.error ?? assignmentsQuery.error;
 
   return {
+    formClassId: formClassQuery.data?.formClassId ?? null,
     formClass:
-      toFormClassString(formClassQuery.data) ??
+      formClassQuery.data?.formClass ??
       toFormClassString(user?.formClass),
     name: user?.name ?? "",
     email: user?.email ?? "",
