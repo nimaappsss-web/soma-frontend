@@ -30,7 +30,7 @@ export const useTeacherProfile = (): TeacherProfile => {
   const assignmentsQuery = useMyAssignments(userId);
 
   const isLoading = formClassQuery.isLoading || assignmentsQuery.isLoading;
-  const error = formClassQuery.error ?? assignmentsQuery.error;
+  const error = (formClassQuery.error ?? assignmentsQuery.error) ?? null;
 
   return {
     formClassId: formClassQuery.data?.formClassId ?? null,

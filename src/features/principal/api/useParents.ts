@@ -43,6 +43,6 @@ export const useParents = (page = 1, limit = 50) => {
       ? { parents: cached, total: cached.length, page, totalPages: 1 }
       : query.data,
     isLoading: query.isLoading && cached.length === 0,
-    error: query.error,
+    error: cached.length > 0 ? undefined : query.error,
   };
 };

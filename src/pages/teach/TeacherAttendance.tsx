@@ -1,13 +1,16 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Link } from "react-router";
 import { useLiveQuery } from "dexie-react-hooks";
 
-import { useTeacherProfile } from "../../features/teacher/api";
+import { useTeacherProfile, useAttendance } from "../../features/teacher/api";
+import { useStudents } from "../../features/students/api";
 import { useAuth } from "../../contexts/AuthContext";
 import { AttendanceListView } from "../../features/teacher/components/AttendanceListView";
 import { AttendanceHistoryView } from "../../features/teacher/components/AttendanceHistoryView";
-import { db } from "../../db/db";
+import { StudentSwipeCard } from "../../components/ui/StudentSwipeCard";
 import { addToQueue } from "../../sync/syncQueue";
+import { db } from "../../db/db";
+import { Button } from "../../components/ui/button";
 import type { AttendanceStatus } from "../../features/teacher/types";
 
 type Tab = "mark" | "history";
@@ -20,14 +23,57 @@ export const TeacherAttendance = () => {
   const [tab, setTab] = useState<Tab>("mark");
   const [view, setView] = useState<ViewMode>("list");
   const [attendance, setAttendance] = useState<Record<string, AttendanceStatus>>({});
+  const [isSaved, setIsSaved] = useState(false);
 
-  const students = useLiveQuery(
-    () =>
-      formClassId
-        ? db.students.where("classId").equals(formClassId).toArray()
-        : [],
-    [formClassId],
+  const today = new Date().toISOString().split("T")[0];
+  const initialized = useRef(false);
+
+  const { data: students, isLoading: studentsLoading } = useStudents(formClassId ?? "", "ACTIVE", user?.id);
+  const { data: existingAttendance } = useAttendance(
+    { classId: formClassId ?? "", date: today },
   );
+
+  const cachedAttendance = useLiveQuery(
+    () => formClassId ? db.attendance.where({ date: today, schoolId: user?.schoolId ?? "" }).toArray() : [],
+    [formClassId, today, user?.schoolId],
+  );
+
+  useEffect(() => {
+    if (existingAttendance?.records) {
+      db.attendance.bulkPut(
+        existingAttendance.records.map((r) => ({
+          id: r.id,
+          studentId: r.studentId,
+          className: formClass ?? "",
+          schoolId: user?.schoolId ?? "",
+          status: r.status,
+          date: r.date ?? today,
+          syncStatus: "synced" as const,
+          createdAt: Date.now(),
+        })),
+      );
+    }
+  }, [existingAttendance, formClass, user?.schoolId, today]);
+
+  useEffect(() => {
+    if (initialized.current) return;
+
+    const src = cachedAttendance?.length
+      ? cachedAttendance
+      : existingAttendance?.records?.length
+        ? existingAttendance.records
+        : null;
+
+    if (src) {
+      initialized.current = true;
+      const prefill: Record<string, AttendanceStatus> = {};
+      for (const r of src) {
+        prefill[r.studentId] = r.status;
+      }
+      setAttendance(prefill);
+      setIsSaved(true);
+    }
+  }, [existingAttendance, cachedAttendance]);
 
   const handleMark = (studentId: string, status: AttendanceStatus) => {
     setAttendance((prev) => {
@@ -40,9 +86,16 @@ export const TeacherAttendance = () => {
     });
   };
 
+  const handleUndo = (studentId: string) => {
+    setAttendance((prev) => {
+      const next = { ...prev };
+      delete next[studentId];
+      return next;
+    });
+  };
+
   const handleSave = async () => {
     if (!formClassId || Object.keys(attendance).length === 0) return;
-    const today = new Date().toISOString().split("T")[0];
     const records = Object.entries(attendance).map(([studentId, status]) => ({
       studentId, status,
     }));
@@ -57,10 +110,40 @@ export const TeacherAttendance = () => {
       payload: { classId: formClassId, date: today, records },
     });
 
-    setAttendance({});
+    await db.attendance.bulkPut(
+      records.map((r) => ({
+        id: `att_${formClassId}_${today}_${r.studentId}`,
+        studentId: r.studentId,
+        className: formClass ?? "",
+        schoolId: user?.schoolId ?? "",
+        status: r.status,
+        date: today,
+        syncStatus: "pending" as const,
+        createdAt: Date.now(),
+      })),
+    );
+
+    setIsSaved(true);
   };
 
-  if (profileLoading) {
+  const handleModify = () => {
+    setIsSaved(false);
+    setView("list");
+    const src = cachedAttendance?.length
+      ? cachedAttendance
+      : existingAttendance?.records?.length
+        ? existingAttendance.records
+        : null;
+    if (src) {
+      const prefill: Record<string, AttendanceStatus> = {};
+      for (const r of src) {
+        prefill[r.studentId] = r.status;
+      }
+      setAttendance(prefill);
+    }
+  };
+
+  if (profileLoading || studentsLoading || cachedAttendance === undefined) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <p className="text-gray-400">Loading...</p>
@@ -93,7 +176,7 @@ export const TeacherAttendance = () => {
               Attendance — {formClass}
             </h1>
             <p className="text-xs text-gray-400 mt-0.5">
-              {tab === "mark" ? `${markedCount} / ${totalStudents} marked` : "View history"}
+              {tab === "history" ? "View history" : isSaved ? "Marked for today" : `${markedCount} / ${totalStudents} marked`}
             </p>
           </div>
           <div className="flex items-center gap-3">
@@ -115,26 +198,6 @@ export const TeacherAttendance = () => {
                 History
               </button>
             </div>
-            {tab === "mark" && (
-              <div className="flex bg-gray-100 rounded-lg p-0.5">
-                <button
-                  onClick={() => setView("list")}
-                  className={`px-3 py-1.5 rounded-md text-xs font-medium transition-colors ${
-                    view === "list" ? "bg-white shadow-sm text-gray-800" : "text-gray-500"
-                  }`}
-                >
-                  List
-                </button>
-                <button
-                  onClick={() => setView("card")}
-                  className={`px-3 py-1.5 rounded-md text-xs font-medium transition-colors ${
-                    view === "card" ? "bg-white shadow-sm text-gray-800" : "text-gray-500"
-                  }`}
-                >
-                  Cards
-                </button>
-              </div>
-            )}
             <Link to="/teach" className="text-sm text-gray-500 hover:text-gray-700">
               &larr;
             </Link>
@@ -149,6 +212,20 @@ export const TeacherAttendance = () => {
           ) : (
             <p className="text-sm text-gray-400 text-center py-8">No class assigned.</p>
           )
+        ) : isSaved ? (
+          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-8 max-w-sm mx-auto text-center">
+            <div className="text-4xl mb-4">✅</div>
+            <h3 className="text-lg font-semibold text-gray-800 mb-2">Attendance Marked</h3>
+            <p className="text-sm text-gray-400 mb-2">
+              {markedCount} students marked for today
+            </p>
+            <p className="text-xs text-gray-400 mb-6">
+              Tap Modify to change individual records
+            </p>
+            <Button onClick={handleModify} variant="outline" className="w-full">
+              Modify
+            </Button>
+          </div>
         ) : !students || students.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-64 gap-4">
             <p className="text-gray-400">No students in this class yet.</p>
@@ -161,20 +238,45 @@ export const TeacherAttendance = () => {
           </div>
         ) : (
           <>
-            <div className="flex justify-end mb-4">
+            {view === "list" && (
+              <div className="flex justify-end mb-4">
+                <Button
+                  onClick={handleSave}
+                  disabled={markedCount === 0}
+                >
+                  Save ({markedCount})
+                </Button>
+              </div>
+            )}
+
+            <div className="flex justify-center gap-2 mb-4">
               <button
-                onClick={handleSave}
-                disabled={markedCount === 0}
-                className="px-5 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium disabled:opacity-50"
+                onClick={() => setView("list")}
+                className={`px-3 py-1.5 rounded-md text-xs font-medium transition-colors ${
+                  view === "list" ? "bg-blue-600 text-white" : "bg-gray-100 text-gray-500 hover:text-gray-700"
+                }`}
               >
-                Save ({markedCount})
+                List View
+              </button>
+              <button
+                onClick={() => setView("card")}
+                className={`px-3 py-1.5 rounded-md text-xs font-medium transition-colors ${
+                  view === "card" ? "bg-blue-600 text-white" : "bg-gray-100 text-gray-500 hover:text-gray-700"
+                }`}
+              >
+                Card View
               </button>
             </div>
 
             {view === "card" ? (
-              <p className="text-sm text-gray-400 text-center py-8">
-                Card view — swipe right for present, left for absent. (Late not available in card view.)
-              </p>
+              <StudentSwipeCard
+                students={students}
+                onSwipe={(studentId, status) => handleMark(studentId, status)}
+                onUndo={handleUndo}
+                onSave={handleSave}
+                markedCount={markedCount}
+                totalStudents={totalStudents}
+              />
             ) : (
               <AttendanceListView
                 students={students}

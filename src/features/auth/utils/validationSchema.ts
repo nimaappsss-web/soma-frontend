@@ -45,4 +45,18 @@ export type SchoolFormData = z.infer<typeof schoolFormSchema>;
 export type LoginPasswordFormData = z.infer<typeof loginPasswordSchema>;
 export type LoginSendOTPFormData = z.infer<typeof loginSendOTPSchema>;
 export type LoginVerifyOTPFormData = z.infer<typeof loginVerifyOTPSchema>;
+export const forgotPasswordSchema = z.object({
+  email: z.string().email("Valid email is required"),
+});
+
+export const resetPasswordSchema = z.object({
+  password: z.string().min(6, "Password must be at least 6 characters"),
+  confirmPassword: z.string().min(6, "Please confirm your password"),
+}).refine((data) => data.password === data.confirmPassword, {
+  message: "Passwords don't match",
+  path: ["confirmPassword"],
+});
+
 export type CompleteRegistrationFormData = z.infer<typeof completeRegistrationSchema>;
+export type ForgotPasswordFormData = z.infer<typeof forgotPasswordSchema>;
+export type ResetPasswordFormData = z.infer<typeof resetPasswordSchema>;

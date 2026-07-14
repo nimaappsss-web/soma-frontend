@@ -59,12 +59,12 @@ export const TeacherDashboard = () => {
               </p>
             </Link>
             <Link
-              to="/teach/students"
+              to="/teach/lesson-notes"
               className="bg-white rounded-xl p-6 shadow-sm border border-gray-100 hover:border-blue-200 transition-colors"
             >
-              <p className="text-sm text-gray-400">New Student</p>
+              <p className="text-sm text-gray-400">Lesson Notes</p>
               <p className="text-lg font-semibold text-blue-600 mt-1">
-                Add to class
+                Create / Edit
               </p>
             </Link>
           </div>

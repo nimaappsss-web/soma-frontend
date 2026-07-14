@@ -1,10 +1,10 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { Link } from "react-router";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 
 import { useAuth } from "../../contexts/AuthContext";
-import { useAllStudents, useCreateStudent } from "../../features/students/api";
+import { useAllStudents, useCreateStudent, useStudentDetail } from "../../features/students/api";
 import { BulkAddStudents } from "../../features/students/components/BulkAddStudents";
 import { useClasses } from "../../features/principal/api";
 import { createStudentSchema, editStudentSchema, type CreateStudentFormData, type EditStudentFormData } from "../../features/students/utils/validationSchema";
@@ -24,6 +24,8 @@ export const AdminStudents = () => {
   const [showForm, setShowForm] = useState(false);
   const [showBulk, setShowBulk] = useState(false);
   const [editingStudent, setEditingStudent] = useState<Student | null>(null);
+  const [detailId, setDetailId] = useState<string | null>(null);
+  const { data: studentDetail } = useStudentDetail(detailId ?? "");
 
   const filtered = useMemo(
     () => classFilter
@@ -76,13 +78,14 @@ export const AdminStudents = () => {
     register: editRegister,
     handleSubmit: handleEditSubmit,
     reset: resetEdit,
-    formState: { errors: editErrors },
+    formState: { errors: editErrors, isDirty: editDirty },
   } = useForm<EditStudentFormData>({
     resolver: zodResolver(editStudentSchema),
   });
 
   const startEditing = (s: Student) => {
     setEditingStudent(s);
+    setDetailId(s.id);
     setShowForm(false);
     setShowBulk(false);
     resetEdit({
@@ -97,6 +100,21 @@ export const AdminStudents = () => {
       classId: s.classId,
     });
   };
+
+  useEffect(() => {
+    if (!studentDetail || !editingStudent || editDirty) return;
+    resetEdit({
+      name: studentDetail.name,
+      gender: studentDetail.gender ?? "",
+      dateOfBirth: studentDetail.dateOfBirth?.split("T")[0] ?? "",
+      address: studentDetail.address ?? "",
+      parentName: studentDetail.parentName ?? "",
+      parentPhone: studentDetail.parentPhone ?? "",
+      parentEmail: studentDetail.parentEmail ?? "",
+      status: studentDetail.status,
+      classId: studentDetail.classId,
+    });
+  }, [studentDetail]);
 
   const [savingEdit, setSavingEdit] = useState(false);
 
@@ -122,6 +140,7 @@ export const AdminStudents = () => {
       });
       toast.success("Student updated!");
       setEditingStudent(null);
+      setDetailId(null);
       resetEdit();
     } catch (err) {
       toast.error(transformError(err));
@@ -132,6 +151,7 @@ export const AdminStudents = () => {
 
   const cancelEdit = () => {
     setEditingStudent(null);
+    setDetailId(null);
     resetEdit();
   };
 

@@ -68,6 +68,6 @@ export const useTeachers = () => {
   return {
     data: cached ?? query.data,
     isLoading: query.isLoading && !cached,
-    error: query.error,
+    error: cached ? undefined : query.error,
   };
 };

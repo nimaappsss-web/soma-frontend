@@ -1,4 +1,4 @@
-import type { Student } from "../../db/db";
+import type { Student } from "../../features/students/types";
 
 interface StudentCardProps {
   student: Student;

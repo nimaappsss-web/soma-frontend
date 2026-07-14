@@ -37,6 +37,6 @@ export const useStudentDetail = (id: string) => {
   return {
     data: cached !== undefined ? cached : query.data,
     isLoading: query.isLoading && cached === undefined,
-    error: query.error,
+    error: cached !== undefined ? undefined : query.error,
   };
 };
