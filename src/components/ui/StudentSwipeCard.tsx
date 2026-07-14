@@ -137,6 +137,9 @@ export const StudentSwipeCard = ({ students, onSwipe, onUndo, onSave, markedCoun
     return <div className="text-center text-gray-400 py-8">No students</div>;
   }
 
+  const presentCount = history.filter((h) => h.status === "present").length;
+  const absentCount = history.filter((h) => h.status === "absent").length;
+
   if (showSummary) {
     return (
       <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-8 max-w-sm mx-auto text-center">
@@ -147,11 +150,11 @@ export const StudentSwipeCard = ({ students, onSwipe, onUndo, onSave, markedCoun
         <div className="space-y-3 mb-6">
           <div className="flex justify-between items-center px-4 py-3 bg-green-50 rounded-xl">
             <span className="text-sm font-medium text-green-700">Present</span>
-            <span className="text-lg font-bold text-green-700">{markedCount}</span>
+            <span className="text-lg font-bold text-green-700">{presentCount}</span>
           </div>
           <div className="flex justify-between items-center px-4 py-3 bg-red-50 rounded-xl">
             <span className="text-sm font-medium text-red-700">Absent</span>
-            <span className="text-lg font-bold text-red-700">{totalStudents - markedCount}</span>
+            <span className="text-lg font-bold text-red-700">{absentCount}</span>
           </div>
         </div>
 
