@@ -24,6 +24,7 @@ export const TeacherAttendance = () => {
   const [view, setView] = useState<ViewMode>("list");
   const [attendance, setAttendance] = useState<Record<string, AttendanceStatus>>({});
   const [isSaved, setIsSaved] = useState(false);
+  const [clearConfirm, setClearConfirm] = useState(false);
 
   const today = new Date().toISOString().split("T")[0];
   const initialized = useRef(false);
@@ -143,6 +144,31 @@ export const TeacherAttendance = () => {
     }
   };
 
+  const handleClearAll = async () => {
+    if (!formClassId) return;
+
+    await db.attendance.where({ date: today, schoolId: user?.schoolId ?? "" }).delete();
+
+    await db.syncQueue
+      .where("userId")
+      .equals(user!.id)
+      .filter((i) => i.table === "attendance" && (i.status === "pending" || i.status === "failed"))
+      .delete();
+
+    await addToQueue({
+      userId: user!.id,
+      table: "attendance",
+      recordId: `attendance_clear_${formClassId}_${today}`,
+      endpoint: "/attendance/bulk",
+      method: "DELETE",
+      payload: { classId: formClassId, date: today },
+    });
+
+    setClearConfirm(false);
+    setIsSaved(false);
+    setAttendance({});
+  };
+
   if (profileLoading || studentsLoading || cachedAttendance === undefined) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
@@ -222,9 +248,28 @@ export const TeacherAttendance = () => {
             <p className="text-xs text-gray-400 mb-6">
               Tap Modify to change individual records
             </p>
-            <Button onClick={handleModify} variant="outline" className="w-full">
-              Modify
-            </Button>
+            <div className="space-y-2">
+              <Button onClick={handleModify} variant="outline" className="w-full">
+                Modify
+              </Button>
+              {clearConfirm ? (
+                <div className="flex gap-2">
+                  <Button onClick={handleClearAll} variant="destructive" className="flex-1">
+                    Yes, clear all
+                  </Button>
+                  <Button onClick={() => setClearConfirm(false)} variant="ghost" className="flex-1">
+                    Cancel
+                  </Button>
+                </div>
+              ) : (
+                <button
+                  onClick={() => setClearConfirm(true)}
+                  className="w-full text-xs text-red-400 hover:text-red-600 py-2 transition-colors"
+                >
+                  Clear all attendance for today
+                </button>
+              )}
+            </div>
           </div>
         ) : !students || students.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-64 gap-4">
