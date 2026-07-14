@@ -53,6 +53,6 @@ export const useSubjects = (schoolId?: string) => {
   return {
     data: cached.length > 0 ? cached : query.data,
     isLoading: query.isLoading && cached.length === 0,
-    error: query.error,
+    error: cached.length > 0 ? undefined : query.error,
   };
 };

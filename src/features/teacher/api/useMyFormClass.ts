@@ -50,6 +50,6 @@ export const useMyFormClass = (userId: string) => {
   return {
     data: cached ?? query.data ?? { formClassId: null, formClass: null },
     isLoading: query.isLoading && cached === undefined,
-    error: query.error,
+    error: cached !== undefined ? undefined : query.error,
   };
 };

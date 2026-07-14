@@ -64,6 +64,6 @@ export const useClasses = (schoolId?: string) => {
   return {
     data: { classes: cached, levels },
     isLoading: query.isLoading && cached.length === 0,
-    error: query.error,
+    error: cached.length > 0 ? undefined : query.error,
   };
 };

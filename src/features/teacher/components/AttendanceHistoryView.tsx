@@ -1,8 +1,10 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useLiveQuery } from "dexie-react-hooks";
 
 import { useAttendance } from "../api";
+import { useAuth } from "../../../contexts/AuthContext";
 import { db } from "../../../db/db";
+import type { AttendanceRecord } from "../../../db/db";
 
 interface AttendanceHistoryViewProps {
   classId: string;
@@ -16,19 +18,56 @@ const statusColors: Record<string, string> = {
 };
 
 export const AttendanceHistoryView = ({ classId, formClass }: AttendanceHistoryViewProps) => {
+  const { user } = useAuth();
   const today = new Date().toISOString().split("T")[0];
   const [date, setDate] = useState(today);
 
   const { data, isLoading } = useAttendance({ classId, date });
+
+  const cachedRecords = useLiveQuery(
+    () => db.attendance.where({ date, schoolId: user?.schoolId ?? "" }).toArray(),
+    [date, user?.schoolId],
+  );
 
   const students = useLiveQuery(
     () => db.students.where("classId").equals(classId).toArray(),
     [classId],
   );
 
+  useEffect(() => {
+    if (data?.records) {
+      const records: AttendanceRecord[] = data.records.map((r) => ({
+        id: r.id,
+        studentId: r.studentId,
+        className: formClass,
+        schoolId: user?.schoolId ?? "",
+        status: r.status,
+        date: r.date ?? date,
+        syncStatus: "synced" as const,
+        createdAt: Date.now(),
+      }));
+      db.attendance.bulkPut(records);
+    }
+  }, [data, formClass, user?.schoolId, date]);
+
+  const displayRecords = data?.records?.length
+    ? data.records
+    : (!isLoading && cachedRecords?.length
+        ? cachedRecords.map((r) => ({
+            id: r.id,
+            studentId: r.studentId,
+            studentName: undefined as string | undefined,
+            admissionNo: null as string | null,
+            status: r.status,
+            remarks: null as string | null,
+            date: r.date,
+            classId,
+          }))
+        : []);
+
   const studentMap = new Map(students?.map((s) => [s.id, s.name]) ?? []);
 
-  if (isLoading) {
+  if (isLoading && !cachedRecords?.length) {
     return <p className="text-sm text-gray-400 text-center py-8">Loading...</p>;
   }
 
@@ -46,13 +85,13 @@ export const AttendanceHistoryView = ({ classId, formClass }: AttendanceHistoryV
         </span>
       </div>
 
-      {!data?.records.length ? (
+      {!displayRecords.length ? (
         <p className="text-sm text-gray-400 text-center py-8">
           No attendance records for {date}.
         </p>
       ) : (
         <div className="bg-white rounded-xl shadow-sm border border-gray-100 divide-y divide-gray-100">
-          {data.records.map((r) => (
+          {displayRecords.map((r) => (
             <div
               key={r.id}
               className="px-5 py-3 flex items-center justify-between"

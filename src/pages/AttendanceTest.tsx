@@ -91,6 +91,10 @@ export const AttendanceTest = () => {
               key={currentIndex}
               students={students.slice(currentIndex)}
               onSwipe={handleSwipe}
+              onUndo={() => {}}
+              onSave={() => {}}
+              markedCount={0}
+              totalStudents={students.length}
             />
 
             {lastSwipe && (

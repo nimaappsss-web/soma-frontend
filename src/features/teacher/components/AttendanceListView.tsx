@@ -1,4 +1,4 @@
-import type { Student } from "../../../db/db";
+import type { Student } from "../../../features/students/types";
 import type { AttendanceStatus } from "../types";
 
 interface AttendanceListViewProps {

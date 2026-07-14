@@ -123,6 +123,20 @@ export interface SyncQueueItem {
   retryCount: number;
 }
 
+export interface LessonNoteCache {
+  id: string;
+  userId: string;
+  subjectId: string;
+  subjectName: string;
+  topic: string;
+  className: string;
+  classId?: string;
+  date: string;
+  sectionsJson: string;
+  createdAt: number;
+  updatedAt: number;
+}
+
 export const db = new Dexie("somaDB") as Dexie & {
   students: EntityTable<Student, "id">;
   attendance: EntityTable<AttendanceRecord, "id">;
@@ -136,6 +150,7 @@ export const db = new Dexie("somaDB") as Dexie & {
   teacherDetails: EntityTable<TeacherDetailCache, "id">;
   parents: EntityTable<ParentCache, "id">;
   syncQueue: EntityTable<SyncQueueItem, "id">;
+  lessonNotes: EntityTable<LessonNoteCache, "id">;
 };
 
 db.version(11).stores({
@@ -181,6 +196,22 @@ db.version(13).stores({
   teacherDetails: "id",
   parents: "id, status",
   syncQueue: "++id, status, createdAt, table, userId",
+});
+
+db.version(14).stores({
+  students: "id, name, classId, status",
+  attendance: "id, studentId, className, schoolId, date, syncStatus",
+  caScores: "id, studentId, className, schoolId, term, session, syncStatus",
+  subjects: "id",
+  classes: "id, level",
+  teacherFormClass: "id",
+  teacherAssignments: "id",
+  teachers: "id, userId",
+  pendingInvites: "id, userId",
+  teacherDetails: "id",
+  parents: "id, status",
+  syncQueue: "++id, status, createdAt, table, userId",
+  lessonNotes: "id, userId",
 });
 
 

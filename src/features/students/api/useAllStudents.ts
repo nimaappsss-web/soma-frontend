@@ -46,10 +46,16 @@ export const useAllStudents = (userId: string) => {
         const existing = await db.students.toArray();
         const toDelete = existing.filter((s) => !pendingSet.has(s.id)).map((s) => s.id);
         if (toDelete.length > 0) await db.students.bulkDelete(toDelete);
-        const toAdd = apiStudents
+        const toPut = apiStudents
           .filter((s) => !pendingSet.has(s.id))
-          .map((s) => ({ ...s, createdAt: Date.now() }) as StudentCache);
-        if (toAdd.length > 0) await db.students.bulkAdd(toAdd);
+          .map((s) => {
+            const existingStudent = existing.find((e) => e.id === s.id);
+            const merged = existingStudent
+              ? { ...existingStudent, ...s, createdAt: Date.now() }
+              : { ...s, createdAt: Date.now() };
+            return merged as StudentCache;
+          });
+        if (toPut.length > 0) await db.students.bulkPut(toPut);
       });
       return apiStudents;
     },
@@ -60,6 +66,6 @@ export const useAllStudents = (userId: string) => {
   return {
     data: cached.length > 0 ? cached : query.data ?? [],
     isLoading: query.isLoading && cached.length === 0,
-    error: query.error,
+    error: cached.length > 0 ? undefined : query.error,
   };
 };

@@ -73,6 +73,6 @@ export const useStudents = (classId: string, status: string = "ACTIVE", userId?:
   return {
     data: cached.length > 0 ? cached : query.data ?? [],
     isLoading: query.isLoading && cached.length === 0,
-    error: query.error,
+    error: cached.length > 0 ? undefined : query.error,
   };
 };

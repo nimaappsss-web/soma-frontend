@@ -1,6 +1,7 @@
 import { Routes, Route, Navigate } from "react-router";
 
 import { TeacherAttendance } from "./pages/teach/TeacherAttendance";
+import { TeacherLessonNotes } from "./pages/teach/TeacherLessonNotes";
 import { OnboardingRoute } from "./features/auth/components/OnboardingRoute";
 import { ContinuousAssessment } from "./pages/ContinuousAssessment";
 import { CompleteRegistration } from "./pages/CompleteRegistration";
@@ -25,6 +26,8 @@ import { SyncIndicator } from "./components/SyncIndicator";
 import { AdminSettings } from "./pages/AdminSettings";
 import { Onboarding } from "./pages/Onboarding";
 import { Login } from "./pages/Login";
+import { ForgotPassword } from "./pages/ForgotPassword";
+import { ResetPassword } from "./pages/ResetPassword";
 
 function App() {
   useAnimatedFavicon(["/favicon2.svg", "/favicon.svg"], [3000, 600]);
@@ -38,6 +41,22 @@ function App() {
           element={
             <GuestRoute>
               <Login />
+            </GuestRoute>
+          }
+        />
+        <Route
+          path="/forgot-password"
+          element={
+            <GuestRoute>
+              <ForgotPassword />
+            </GuestRoute>
+          }
+        />
+        <Route
+          path="/reset-password"
+          element={
+            <GuestRoute>
+              <ResetPassword />
             </GuestRoute>
           }
         />
@@ -134,6 +153,14 @@ function App() {
           element={
             <ProtectedRoute>
               <TeacherAttendance />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/teach/lesson-notes"
+          element={
+            <ProtectedRoute>
+              <TeacherLessonNotes />
             </ProtectedRoute>
           }
         />
