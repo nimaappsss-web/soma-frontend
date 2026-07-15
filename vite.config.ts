@@ -19,7 +19,7 @@ export default defineConfig({
         name: "Soma",
         short_name: "Soma",
         description: "Soma app",
-        theme_color: "#863bff",
+        theme_color: "#000000",
         background_color: "#ffffff",
         display: "standalone",
         orientation: "portrait",

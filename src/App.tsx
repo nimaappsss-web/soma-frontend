@@ -23,6 +23,7 @@ import { VerifyTeacher } from "./pages/VerifyTeacher";
 import { AuthProvider } from "./contexts/AuthContext";
 import { SyncProvider } from "./contexts/SyncContext";
 import { SyncIndicator } from "./components/SyncIndicator";
+import { InstallPWA } from "./components/InstallPWA";
 import { AdminSettings } from "./pages/AdminSettings";
 import { Onboarding } from "./pages/Onboarding";
 import { Login } from "./pages/Login";
@@ -194,6 +195,7 @@ function App() {
         <Route path="*" element={<Navigate to="/login" replace />} />
       </Routes>
       <SyncIndicator />
+      <InstallPWA />
       </SyncProvider>
     </AuthProvider>
   );
