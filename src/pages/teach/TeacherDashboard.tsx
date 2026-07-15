@@ -19,6 +19,12 @@ export const TeacherDashboard = () => {
           <span className="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded capitalize">
             {role}
           </span>
+          <Link
+            to="/teach/settings"
+            className="text-sm text-gray-500 hover:text-gray-700"
+          >
+            Settings
+          </Link>
           <button
             onClick={logout}
             className="text-sm text-red-500 hover:text-red-600"

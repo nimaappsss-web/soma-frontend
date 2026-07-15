@@ -36,6 +36,11 @@ export interface TeacherDetail {
   name: string;
   email: string;
   role: string;
+  phone?: string | null;
+  address?: string | null;
+  gender?: "M" | "F" | null;
+  dateOfBirth?: string | null;
+  profilePictureUrl?: string | null;
   formClassId?: string | null;
   formClass?: { id: string; name: string; level: string; arm?: string } | null;
   assignments: Array<{
@@ -54,6 +59,11 @@ export interface PendingInvite {
 
 export interface UpdateTeacherPayload {
   name?: string;
+  phone?: string | null;
+  address?: string | null;
+  gender?: "M" | "F" | null;
+  dateOfBirth?: string | null;
+  profilePictureUrl?: string | null;
   formClassId?: string | null;
   role?: string;
 }

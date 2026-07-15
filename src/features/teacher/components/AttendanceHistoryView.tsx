@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useLiveQuery } from "dexie-react-hooks";
 
+import { Avatar } from "../../../components/ui/Avatar";
 import { useAttendance } from "../api";
 import { useAuth } from "../../../contexts/AuthContext";
 import { db } from "../../../db/db";
@@ -110,13 +111,16 @@ export const AttendanceHistoryView = ({ classId, formClass }: AttendanceHistoryV
               key={r.id}
               className="px-5 py-3 flex items-center justify-between"
             >
-              <div>
-                <span className="text-gray-800 font-medium text-sm">
-                  {r.studentName ?? studentMap.get(r.studentId) ?? r.studentId}
-                </span>
-                {r.admissionNo && (
-                  <span className="ml-2 text-xs text-gray-400">{r.admissionNo}</span>
-                )}
+              <div className="flex items-center gap-3">
+                <Avatar name={r.studentName ?? studentMap.get(r.studentId) ?? r.studentId} size={28} />
+                <div>
+                  <span className="text-gray-800 font-medium text-sm">
+                    {r.studentName ?? studentMap.get(r.studentId) ?? r.studentId}
+                  </span>
+                  {r.admissionNo && (
+                    <span className="ml-2 text-xs text-gray-400">{r.admissionNo}</span>
+                  )}
+                </div>
               </div>
               <div className="flex items-center gap-2">
                 <span

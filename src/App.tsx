@@ -2,6 +2,7 @@ import { Routes, Route, Navigate } from "react-router";
 
 import { TeacherAttendance } from "./pages/teach/TeacherAttendance";
 import { TeacherLessonNotes } from "./pages/teach/TeacherLessonNotes";
+import { TeacherSettings } from "./pages/teach/TeacherSettings";
 import { OnboardingRoute } from "./features/auth/components/OnboardingRoute";
 import { ContinuousAssessment } from "./pages/ContinuousAssessment";
 import { CompleteRegistration } from "./pages/CompleteRegistration";
@@ -25,6 +26,7 @@ import { SyncProvider } from "./contexts/SyncContext";
 import { SyncIndicator } from "./components/SyncIndicator";
 import { InstallPWA } from "./components/InstallPWA";
 import { AdminSettings } from "./pages/AdminSettings";
+import { AdminProfile } from "./pages/admin/AdminProfile";
 import { Onboarding } from "./pages/Onboarding";
 import { Login } from "./pages/Login";
 import { ForgotPassword } from "./pages/ForgotPassword";
@@ -142,6 +144,14 @@ function App() {
           }
         />
         <Route
+          path="/admin/profile"
+          element={
+            <ProtectedRoute>
+              <AdminProfile />
+            </ProtectedRoute>
+          }
+        />
+        <Route
           path="/teach/students"
           element={
             <ProtectedRoute>
@@ -162,6 +172,14 @@ function App() {
           element={
             <ProtectedRoute>
               <TeacherLessonNotes />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/teach/settings"
+          element={
+            <ProtectedRoute>
+              <TeacherSettings />
             </ProtectedRoute>
           }
         />

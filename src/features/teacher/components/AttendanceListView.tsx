@@ -1,3 +1,4 @@
+import { Avatar } from "../../../components/ui/Avatar";
 import type { Student } from "../../../features/students/types";
 import type { AttendanceStatus } from "../types";
 
@@ -37,11 +38,14 @@ export const AttendanceListView = ({ students, attendance, onMark }: AttendanceL
             key={s.id}
             className="px-5 py-3 flex items-center justify-between"
           >
-            <div>
-              <span className="text-gray-800 font-medium text-sm">{s.name}</span>
-              {s.admissionNo && (
-                <span className="ml-2 text-xs text-gray-400">{s.admissionNo}</span>
-              )}
+            <div className="flex items-center gap-3">
+              <Avatar name={s.name} size={28} />
+              <div>
+                <span className="text-gray-800 font-medium text-sm">{s.name}</span>
+                {s.admissionNo && (
+                  <span className="ml-2 text-xs text-gray-400">{s.admissionNo}</span>
+                )}
+              </div>
             </div>
             <div className="flex items-center gap-2">
               {(Object.keys(statusIcons) as AttendanceStatus[]).map((status) => (

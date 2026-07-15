@@ -4,6 +4,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Link } from "react-router";
 
+import { Avatar } from "../components/ui/Avatar";
 import { useAuth } from "../contexts/AuthContext";
 import { useUpdateSchool } from "../features/principal/api/useUpdateSchool";
 import { useGenerateAdmission } from "../features/students/api";
@@ -97,6 +98,7 @@ export const AdminSettings = () => {
         <h1 className="text-xl font-bold text-blue-700">Soma</h1>
         <div className="flex items-center gap-4">
           <span className="text-sm text-gray-500">{user?.schoolName}</span>
+          <Avatar name={user?.name ?? ""} size={24} className="inline-block align-middle" />
           <span className="text-sm text-gray-700">{user?.name}</span>
           <span className="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded capitalize">{user?.role}</span>
           <button onClick={logout} className="text-sm text-red-500 hover:text-red-600">Sign out</button>

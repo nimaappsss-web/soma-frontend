@@ -3,6 +3,7 @@ import { Link } from "react-router";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 
+import { Avatar } from "../../components/ui/Avatar";
 import { useAuth } from "../../contexts/AuthContext";
 import { useAllStudents, useCreateStudent, useStudentDetail } from "../../features/students/api";
 import { BulkAddStudents } from "../../features/students/components/BulkAddStudents";
@@ -187,6 +188,8 @@ export const AdminStudents = () => {
         <h1 className="text-xl font-bold text-blue-700">Soma</h1>
         <div className="flex items-center gap-4">
           <span className="text-sm text-gray-500">{user?.schoolName}</span>
+          <Avatar name={user?.name ?? ""} size={24} className="inline-block align-middle" />
+          <span className="text-sm text-gray-700">{user?.name}</span>
           <span className="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded capitalize">
             {user?.role}
           </span>
@@ -353,13 +356,16 @@ export const AdminStudents = () => {
                 const className = classesData?.classes.find(c => c.id === s.classId)?.name;
                 return (
                   <div key={s.id} className="px-6 py-3 flex items-center justify-between">
-                    <div>
-                      <span className="text-gray-800 font-medium">{s.name}</span>
-                      {s.admissionNo && <span className="ml-2 text-xs text-gray-400">{s.admissionNo}</span>}
-                      {className && <span className="ml-2 text-xs text-blue-500">{className}</span>}
-                      {s.parentPhone && (
-                        <span className="ml-3 text-xs text-gray-400">{s.parentName ?? "—"} · {s.parentPhone}</span>
-                      )}
+                    <div className="flex items-center gap-3">
+                      <Avatar name={s.name} size={32} />
+                      <div>
+                        <span className="text-gray-800 font-medium">{s.name}</span>
+                        {s.admissionNo && <span className="ml-2 text-xs text-gray-400">{s.admissionNo}</span>}
+                        {className && <span className="ml-2 text-xs text-blue-500">{className}</span>}
+                        {s.parentPhone && (
+                          <span className="ml-3 text-xs text-gray-400">{s.parentName ?? "—"} · {s.parentPhone}</span>
+                        )}
+                      </div>
                     </div>
                     <div className="flex items-center gap-2">
                       <span className="text-xs text-gray-400">{s.gender ?? "—"}</span>

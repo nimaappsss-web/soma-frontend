@@ -4,6 +4,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import toast from "react-hot-toast";
 
+import { Avatar } from "../../components/ui/Avatar";
 import { useAuth } from "../../contexts/AuthContext";
 import { useTeachers, useResendInvite } from "../../features/teacher/api";
 import { useClasses } from "../../features/principal/api";
@@ -91,6 +92,8 @@ export const AdminTeachers = () => {
         <h1 className="text-xl font-bold text-blue-700">Soma</h1>
         <div className="flex items-center gap-4">
           <span className="text-sm text-gray-500">{user?.schoolName}</span>
+          <Avatar name={user?.name ?? ""} size={24} className="inline-block align-middle" />
+          <span className="text-sm text-gray-700">{user?.name}</span>
           <span className="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded capitalize">
             {user?.role}
           </span>
@@ -179,15 +182,18 @@ export const AdminTeachers = () => {
                   : null;
                 return (
                   <div key={t.id} className="px-6 py-3 flex items-center justify-between">
-                    <div>
-                      <span className="text-gray-800 font-medium">{t.name}</span>
-                      <span className="ml-3 text-sm text-gray-400">{t.email}</span>
-                      {className && (
-                        <span className="ml-2 inline-block px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-700">
-                          {className}
-                        </span>
-                      )}
-                      <span className="ml-2 text-xs text-gray-400 capitalize">{t.role}</span>
+                    <div className="flex items-center gap-3">
+                      <Avatar name={t.name} size={32} />
+                      <div>
+                        <span className="text-gray-800 font-medium">{t.name}</span>
+                        <span className="ml-3 text-sm text-gray-400">{t.email}</span>
+                        {className && (
+                          <span className="ml-2 inline-block px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-700">
+                            {className}
+                          </span>
+                        )}
+                        <span className="ml-2 text-xs text-gray-400 capitalize">{t.role}</span>
+                      </div>
                     </div>
                     <button
                       onClick={() => startEditing(t)}

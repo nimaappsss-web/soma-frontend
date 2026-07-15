@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Link } from "react-router";
 
+import { Avatar } from "../components/ui/Avatar";
 import { useAuth } from "../contexts/AuthContext";
 import { TeacherListSection } from "../features/principal/components/TeacherListSection";
 import { Button } from "../components/ui/button";
@@ -16,6 +17,7 @@ export const AdminDashboard = () => {
         <h1 className="text-xl font-bold text-blue-700">Soma</h1>
         <div className="flex items-center gap-4">
           <span className="text-sm text-gray-500">{user?.schoolName}</span>
+          <Avatar name={user?.name ?? ""} size={24} className="inline-block align-middle" />
           <span className="text-sm text-gray-700">{user?.name}</span>
           <span className="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded capitalize">
             {user?.role}
@@ -30,7 +32,7 @@ export const AdminDashboard = () => {
       </header>
 
       <main className="max-w-5xl mx-auto px-6 py-8">
-        <div className="grid grid-cols-1 md:grid-cols-5 gap-4 mb-8">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
           <Link
             to="/admin/students"
             className="bg-white rounded-xl p-6 shadow-sm border border-gray-100 hover:border-blue-200 transition-colors"
@@ -72,6 +74,13 @@ export const AdminDashboard = () => {
           >
             <p className="text-sm text-gray-400">Settings</p>
             <p className="text-lg font-semibold text-blue-600 mt-1">School</p>
+          </Link>
+          <Link
+            to="/admin/profile"
+            className="bg-white rounded-xl p-6 shadow-sm border border-gray-100 hover:border-blue-200 transition-colors"
+          >
+            <p className="text-sm text-gray-400">Profile</p>
+            <p className="text-lg font-semibold text-blue-600 mt-1">Edit</p>
           </Link>
         </div>
 

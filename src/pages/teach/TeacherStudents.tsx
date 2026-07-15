@@ -1,5 +1,6 @@
 import { Link } from "react-router";
 
+import { Avatar } from "../../components/ui/Avatar";
 import { useTeacherProfile } from "../../features/teacher/api";
 import { useStudents } from "../../features/students/api";
 
@@ -65,13 +66,16 @@ export const TeacherStudents = () => {
                   key={s.id}
                   className="px-6 py-3 flex items-center justify-between"
                 >
-                  <div>
-                    <span className="text-gray-800 font-medium">{s.name}</span>
-                    {s.admissionNo && (
-                      <span className="ml-2 text-xs text-gray-400">
-                        {s.admissionNo}
-                      </span>
-                    )}
+                  <div className="flex items-center gap-3">
+                    <Avatar name={s.name} size={32} />
+                    <div>
+                      <span className="text-gray-800 font-medium">{s.name}</span>
+                      {s.admissionNo && (
+                        <span className="ml-2 text-xs text-gray-400">
+                          {s.admissionNo}
+                        </span>
+                      )}
+                    </div>
                   </div>
                   <span className="text-xs text-gray-400">
                     {s.gender ?? "—"}
