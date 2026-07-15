@@ -12,3 +12,4 @@ export { useInviteInfo } from "./useInviteInfo";
 export { useAcceptParentInvite } from "./useAcceptParentInvite";
 export { useForgotPassword } from "./useForgotPassword";
 export { useResetPassword } from "./useResetPassword";
+export { useChangePassword } from "./useChangePassword";

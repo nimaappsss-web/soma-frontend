@@ -1,6 +1,7 @@
 import { useMemo } from "react";
 import { useLiveQuery } from "dexie-react-hooks";
 
+import { Link } from "react-router";
 import { Avatar } from "../components/ui/Avatar";
 import { useAuth } from "../contexts/AuthContext";
 import { useParentProfile, useChildrenWithDetails } from "../features/parent/api";
@@ -46,6 +47,7 @@ export const ParentDashboard = () => {
           <span className="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded capitalize">
             {user?.role}
           </span>
+          <Link to="/settings" className="text-sm text-gray-500 hover:text-gray-700">Settings</Link>
           <button onClick={logout} className="text-sm text-red-500 hover:text-red-600">
             Sign out
           </button>

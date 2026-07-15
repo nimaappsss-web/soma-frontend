@@ -31,6 +31,7 @@ import { Onboarding } from "./pages/Onboarding";
 import { Login } from "./pages/Login";
 import { ForgotPassword } from "./pages/ForgotPassword";
 import { ResetPassword } from "./pages/ResetPassword";
+import { Settings } from "./pages/Settings";
 
 function App() {
   useAnimatedFavicon(["/favicon2.svg", "/favicon.svg"], [3000, 600]);
@@ -210,6 +211,15 @@ function App() {
         <Route path="/invite/:token" element={<VerifyTeacher />} />
         <Route path="/verify-teacher" element={<VerifyTeacher />} />
         <Route path="/parent/setup" element={<ParentSetup />} />
+        <Route path="/settings" element={<Navigate to="/settings/account" replace />} />
+        <Route
+          path="/settings/:tab"
+          element={
+            <ProtectedRoute>
+              <Settings />
+            </ProtectedRoute>
+          }
+        />
         <Route path="*" element={<Navigate to="/login" replace />} />
       </Routes>
       <SyncIndicator />

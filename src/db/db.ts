@@ -137,6 +137,12 @@ export interface LessonNoteCache {
   updatedAt: number;
 }
 
+export interface SchoolSettingsCache {
+  id: string;
+  settingsJson: string;
+  updatedAt: number;
+}
+
 export const db = new Dexie("somaDB") as Dexie & {
   students: EntityTable<Student, "id">;
   attendance: EntityTable<AttendanceRecord, "id">;
@@ -151,6 +157,7 @@ export const db = new Dexie("somaDB") as Dexie & {
   parents: EntityTable<ParentCache, "id">;
   syncQueue: EntityTable<SyncQueueItem, "id">;
   lessonNotes: EntityTable<LessonNoteCache, "id">;
+  schoolSettings: EntityTable<SchoolSettingsCache, "id">;
 };
 
 db.version(11).stores({
@@ -212,6 +219,23 @@ db.version(14).stores({
   parents: "id, status",
   syncQueue: "++id, status, createdAt, table, userId",
   lessonNotes: "id, userId",
+});
+
+db.version(15).stores({
+  students: "id, name, classId, status",
+  attendance: "id, studentId, className, schoolId, date, syncStatus",
+  caScores: "id, studentId, className, schoolId, term, session, syncStatus",
+  subjects: "id",
+  classes: "id, level",
+  teacherFormClass: "id",
+  teacherAssignments: "id",
+  teachers: "id, userId",
+  pendingInvites: "id, userId",
+  teacherDetails: "id",
+  parents: "id, status",
+  syncQueue: "++id, status, createdAt, table, userId",
+  lessonNotes: "id, userId",
+  schoolSettings: "id",
 });
 
 

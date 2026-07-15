@@ -75,7 +75,7 @@ export const AdminProfile = () => {
         userId: user.id,
         table: "users",
         recordId: user.id,
-        endpoint: `/users/${user.id}`,
+        endpoint: "/auth/me",
         method: "PATCH",
         payload,
       });
