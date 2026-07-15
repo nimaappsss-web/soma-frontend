@@ -40,21 +40,26 @@ export const TeacherAttendance = () => {
   );
 
   useEffect(() => {
-    if (existingAttendance?.records) {
-      db.attendance.bulkPut(
-        existingAttendance.records.map((r) => ({
-          id: r.id,
-          studentId: r.studentId,
-          className: formClass ?? "",
-          schoolId: user?.schoolId ?? "",
-          status: r.status,
-          date: r.date ?? today,
-          syncStatus: "synced" as const,
-          createdAt: Date.now(),
-        })),
+    if (existingAttendance?.records && cachedAttendance) {
+      const hasLocalChanges = cachedAttendance.some(
+        (r) => r.syncStatus === "pending" || r.syncStatus === "failed",
       );
+      if (!hasLocalChanges) {
+        db.attendance.bulkPut(
+          existingAttendance.records.map((r) => ({
+            id: r.id,
+            studentId: r.studentId,
+            className: formClass ?? "",
+            schoolId: user?.schoolId ?? "",
+            status: r.status,
+            date: r.date ?? today,
+            syncStatus: "synced" as const,
+            createdAt: Date.now(),
+          })),
+        );
+      }
     }
-  }, [existingAttendance, formClass, user?.schoolId, today]);
+  }, [existingAttendance, cachedAttendance, formClass, user?.schoolId, today]);
 
   useEffect(() => {
     if (initialized.current) return;

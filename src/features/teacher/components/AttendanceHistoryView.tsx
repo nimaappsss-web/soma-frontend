@@ -35,35 +35,49 @@ export const AttendanceHistoryView = ({ classId, formClass }: AttendanceHistoryV
   );
 
   useEffect(() => {
-    if (data?.records) {
-      const records: AttendanceRecord[] = data.records.map((r) => ({
-        id: r.id,
-        studentId: r.studentId,
-        className: formClass,
-        schoolId: user?.schoolId ?? "",
-        status: r.status,
-        date: r.date ?? date,
-        syncStatus: "synced" as const,
-        createdAt: Date.now(),
-      }));
-      db.attendance.bulkPut(records);
+    if (data?.records && cachedRecords) {
+      const hasLocalChanges = cachedRecords.some(
+        (r) => r.syncStatus === "pending" || r.syncStatus === "failed",
+      );
+      if (!hasLocalChanges) {
+        const records: AttendanceRecord[] = data.records.map((r) => ({
+          id: r.id,
+          studentId: r.studentId,
+          className: formClass,
+          schoolId: user?.schoolId ?? "",
+          status: r.status,
+          date: r.date ?? date,
+          syncStatus: "synced" as const,
+          createdAt: Date.now(),
+        }));
+        db.attendance.bulkPut(records);
+      }
     }
-  }, [data, formClass, user?.schoolId, date]);
+  }, [data, cachedRecords, formClass, user?.schoolId, date]);
 
-  const displayRecords = data?.records?.length
-    ? data.records
-    : (!isLoading && cachedRecords?.length
-        ? cachedRecords.map((r) => ({
-            id: r.id,
-            studentId: r.studentId,
-            studentName: undefined as string | undefined,
-            admissionNo: null as string | null,
-            status: r.status,
-            remarks: null as string | null,
-            date: r.date,
-            classId,
-          }))
-        : []);
+  const toDisplay = (records: typeof cachedRecords) =>
+    records?.map((r) => ({
+      id: r.id,
+      studentId: r.studentId,
+      studentName: undefined as string | undefined,
+      admissionNo: null as string | null,
+      status: r.status,
+      remarks: null as string | null,
+      date: r.date,
+      classId,
+    })) ?? [];
+
+  const hasLocalChanges = cachedRecords?.some(
+    (r) => r.syncStatus === "pending" || r.syncStatus === "failed",
+  );
+
+  const displayRecords = hasLocalChanges && cachedRecords?.length
+    ? toDisplay(cachedRecords)
+    : data?.records?.length
+      ? data.records
+      : !isLoading && cachedRecords?.length
+        ? toDisplay(cachedRecords)
+        : [];
 
   const studentMap = new Map(students?.map((s) => [s.id, s.name]) ?? []);
 
