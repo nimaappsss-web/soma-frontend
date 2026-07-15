@@ -78,7 +78,7 @@ export const TeacherSettings = () => {
         userId: user!.id,
         table: "teachers",
         recordId: teacher.id,
-        endpoint: `/teachers/${teacher.id}`,
+        endpoint: "/auth/me",
         method: "PATCH",
         payload,
       });

@@ -11,7 +11,7 @@ export const schoolFormSchema = z.object({
   name: z.string().min(2, "School name is required"),
   state: z.string().min(1, "State is required"),
   lga: z.string().min(1, "LGA is required"),
-  schoolType: z.string().min(1, "School type is required"),
+  schoolType: z.array(z.enum(["creche", "kg", "primary", "secondary"])).min(1, "School type is required"),
   address: z.string().optional(),
   schoolCode: z
     .string()

@@ -42,7 +42,7 @@ export interface RegisterSchoolRequest {
   schoolName: string;
   state: string;
   lga: string;
-  schoolType: string;
+  schoolType: string[];
   address?: string;
   logoUrl?: string;
   schoolCode?: string;
@@ -57,7 +57,7 @@ export interface RegisterSchoolResponse {
     logo?: string;
     state: string;
     lga: string;
-    schoolType: string;
+  schoolType: string[];
     address?: string;
   };
   user: User;

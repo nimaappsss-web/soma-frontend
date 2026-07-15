@@ -29,7 +29,7 @@ export const Onboarding = () => {
 
   const schoolForm = useForm<SchoolFormData>({
     resolver: zodResolver(schoolFormSchema),
-    defaultValues: { name: "", state: "", lga: "", schoolType: "secondary", address: "", schoolCode: "", arms: "" },
+    defaultValues: { name: "", state: "", lga: "", schoolType: ["primary"], address: "", schoolCode: "", arms: "" },
   });
 
   const registerPrincipalMutation = useRegisterPrincipal();
@@ -319,15 +319,33 @@ export const Onboarding = () => {
                 )}
               </div>
               <div className="space-y-2">
-                <Label htmlFor="schoolType">School Type</Label>
-                <select
-                  id="schoolType"
-                  className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm"
-                  {...schoolForm.register("schoolType")}
-                >
-                  <option value="secondary">Secondary</option>
-                  <option value="primary">Primary</option>
-                </select>
+                <Label>School Type</Label>
+                {(["creche", "kg", "primary", "secondary"] as const).map((opt) => {
+                  const selected = (schoolForm.watch("schoolType") ?? []).includes(opt);
+                  return (
+                    <button
+                      key={opt}
+                      type="button"
+                      onClick={() => {
+                        const current = schoolForm.getValues("schoolType") ?? [];
+                        const next = selected
+                          ? current.filter((v) => v !== opt)
+                          : [...current, opt];
+                        schoolForm.setValue("schoolType", next, { shouldValidate: true });
+                      }}
+                      className={`px-3 py-1.5 rounded-lg text-sm border transition-colors mr-2 mb-2 ${
+                        selected
+                          ? "bg-blue-600 text-white border-blue-600"
+                          : "bg-white text-gray-600 border-gray-200 hover:border-blue-300"
+                      }`}
+                    >
+                      {opt === "kg" ? "Kindergarten" : opt.charAt(0).toUpperCase() + opt.slice(1)}
+                    </button>
+                  );
+                })}
+                {schoolForm.formState.errors.schoolType && (
+                  <p className="text-sm text-destructive">{schoolForm.formState.errors.schoolType.message}</p>
+                )}
               </div>
               <div className="space-y-2">
                 <Label htmlFor="address">Address</Label>

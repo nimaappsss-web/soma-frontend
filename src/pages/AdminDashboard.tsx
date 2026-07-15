@@ -69,18 +69,11 @@ export const AdminDashboard = () => {
             <p className="text-lg font-semibold text-blue-600 mt-1">Manage</p>
           </Link>
           <Link
-            to="/admin/settings"
+            to="/settings"
             className="bg-white rounded-xl p-6 shadow-sm border border-gray-100 hover:border-blue-200 transition-colors"
           >
             <p className="text-sm text-gray-400">Settings</p>
-            <p className="text-lg font-semibold text-blue-600 mt-1">School</p>
-          </Link>
-          <Link
-            to="/admin/profile"
-            className="bg-white rounded-xl p-6 shadow-sm border border-gray-100 hover:border-blue-200 transition-colors"
-          >
-            <p className="text-sm text-gray-400">Profile</p>
-            <p className="text-lg font-semibold text-blue-600 mt-1">Edit</p>
+            <p className="text-lg font-semibold text-blue-600 mt-1">Manage</p>
           </Link>
         </div>
 
