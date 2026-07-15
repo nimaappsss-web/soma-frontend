@@ -1,5 +1,6 @@
 import { useState } from "react";
 
+import { Avatar } from "../../../components/ui/Avatar";
 import { useParents } from "../api/useParents";
 import { useResendParentInvite } from "../api/useResendParentInvite";
 
@@ -81,14 +82,17 @@ export const ParentsListSection = ({ limit = 10 }: ParentsListSectionProps) => {
           <div className="divide-y divide-gray-50">
             {pendingInvites.map((inv) => (
               <div key={inv.id} className="py-2 flex items-center justify-between">
-                <div className="min-w-0">
-                  <p className="text-sm text-gray-800 truncate">{inv.name || "—"}</p>
+                <div className="flex items-center gap-3 min-w-0">
+                  <Avatar name={inv.name || inv.email} size={32} />
+                  <div className="min-w-0">
+                    <p className="text-sm text-gray-800 truncate">{inv.name || "—"}</p>
                   <p className="text-xs text-gray-400 truncate">{inv.email}</p>
                   {inv.students.length > 0 && (
                     <p className="text-xs text-gray-400 truncate">
                       Linked: {inv.students.map((s) => s.name).join(", ")}
                     </p>
                   )}
+                  </div>
                 </div>
                 <div className="flex items-center gap-2 shrink-0 ml-3">
                   <button
@@ -117,14 +121,17 @@ export const ParentsListSection = ({ limit = 10 }: ParentsListSectionProps) => {
           <div className="divide-y divide-gray-50">
             {registered.map((p) => (
               <div key={p.id} className="py-2.5 flex items-center justify-between">
-                <div className="min-w-0">
-                  <p className="text-sm text-gray-800 truncate">{p.name}</p>
-                  <p className="text-xs text-gray-400 truncate">{p.email}{p.phone ? ` · ${p.phone}` : ""}</p>
-                  {p.students.length > 0 && (
-                    <p className="text-xs text-gray-400 truncate">
-                      Children: {p.students.map((s) => s.name).join(", ")}
-                    </p>
-                  )}
+                <div className="flex items-center gap-3 min-w-0">
+                  <Avatar name={p.name} size={32} />
+                  <div className="min-w-0">
+                    <p className="text-sm text-gray-800 truncate">{p.name}</p>
+                    <p className="text-xs text-gray-400 truncate">{p.email}{p.phone ? ` · ${p.phone}` : ""}</p>
+                    {p.students.length > 0 && (
+                      <p className="text-xs text-gray-400 truncate">
+                        Children: {p.students.map((s) => s.name).join(", ")}
+                      </p>
+                    )}
+                  </div>
                 </div>
                 <div className="flex items-center gap-2 shrink-0 ml-3">
                   {p.hasAccount ? (

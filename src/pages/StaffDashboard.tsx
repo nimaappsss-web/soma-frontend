@@ -1,3 +1,4 @@
+import { Avatar } from "../components/ui/Avatar";
 import { useAuth } from "../contexts/AuthContext";
 
 export const StaffDashboard = () => {
@@ -9,6 +10,7 @@ export const StaffDashboard = () => {
         <h1 className="text-xl font-bold text-blue-700">Soma</h1>
         <div className="flex items-center gap-4">
           <span className="text-sm text-gray-500">{user?.schoolName}</span>
+          <Avatar name={user?.name ?? ""} size={24} className="inline-block align-middle" />
           <span className="text-sm text-gray-700">{user?.name}</span>
           <span className="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded capitalize">
             {user?.role}

@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from "react";
 import { useSpeechToText } from "../../hooks/useSpeechToText";
 import { spokenToNumber } from "../../utils/spokenNumber";
+import { Avatar } from "./Avatar";
 import type { Student } from "../../db/db";
 
 interface StudentCACardProps {
@@ -10,14 +11,6 @@ interface StudentCACardProps {
   onScoreChange: (studentId: string, score: number) => void;
   onAutoAdvance: () => void;
 }
-
-const getInitials = (name: string) =>
-  name
-    .split(" ")
-    .map((n) => n[0])
-    .join("")
-    .toUpperCase()
-    .slice(0, 2);
 
 export const StudentCACard = ({
   student,
@@ -98,17 +91,11 @@ export const StudentCACard = ({
             : ""
       }`}
     >
-      <div className="w-20 h-20 rounded-full bg-blue-100 flex items-center justify-center text-blue-700 font-bold text-2xl">
-        {student.imageUrl ? (
-          <img
-            src={student.imageUrl}
-            alt={student.name}
-            className="w-full h-full rounded-full object-cover"
-          />
-        ) : (
-          getInitials(student.name)
-        )}
-      </div>
+      <Avatar
+        name={student.name}
+        imageUrl={student.imageUrl ?? null}
+        size={80}
+      />
 
       <p className="text-lg font-semibold text-gray-800 text-center">
         {student.name}

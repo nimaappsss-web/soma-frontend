@@ -1,3 +1,4 @@
+import { Avatar } from "../../../components/ui/Avatar";
 import { useTeachers, useResendInvite } from "../../teacher/api";
 
 export const TeacherListSection = () => {
@@ -75,7 +76,12 @@ export const TeacherListSection = () => {
             ))}
             {teachers.map((t) => (
               <tr key={t.id} className="border-b border-gray-50">
-                <td className="py-2.5 text-gray-800">{t.name}</td>
+                <td className="py-2.5">
+                  <div className="flex items-center gap-2">
+                    <Avatar name={t.name} size={28} />
+                    <span className="text-gray-800">{t.name}</span>
+                  </div>
+                </td>
                 <td className="py-2.5 text-gray-500">{t.email}</td>
                 <td className="py-2.5">
                   <span className="inline-block px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-700">
