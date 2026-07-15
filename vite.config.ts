@@ -14,7 +14,7 @@ export default defineConfig({
     tailwindcss(),
     VitePWA({
       registerType: "autoUpdate",
-      includeAssets: ["favicon.ico", "favicon2.ico", "icons.svg"],
+      includeAssets: ["favicon.svg", "favicon2.svg", "icons.svg"],
       manifest: {
         name: "Soma",
         short_name: "Soma",
@@ -27,19 +27,19 @@ export default defineConfig({
         start_url: "/",
         icons: [
           {
-            src: "/icons/pwa-192x192.png",
+            src: "/icons/favicon2.svg",
             sizes: "192x192",
-            type: "image/png",
+            type: "image/svg+xml",
           },
           {
-            src: "/icons/pwa-512x512.png",
+            src: "/icons/favicon2.svg",
             sizes: "512x512",
-            type: "image/png",
+            type: "image/svg+xml",
           },
           {
-            src: "/icons/pwa-512x512.png",
+            src: "/icons/favicon2.svg",
             sizes: "512x512",
-            type: "image/png",
+            type: "image/svg+xml",
             purpose: "maskable",
           },
         ],
