@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useEffect } from "react";
 import { useLiveQuery } from "dexie-react-hooks";
 
 import { Avatar } from "../../../components/ui/Avatar";
@@ -10,6 +10,8 @@ import type { AttendanceRecord } from "../../../db/db";
 interface AttendanceHistoryViewProps {
   classId: string;
   formClass: string;
+  date: string;
+  onDateChange: (date: string) => void;
 }
 
 const statusColors: Record<string, string> = {
@@ -18,16 +20,14 @@ const statusColors: Record<string, string> = {
   late: "text-amber-600 bg-amber-50",
 };
 
-export const AttendanceHistoryView = ({ classId, formClass }: AttendanceHistoryViewProps) => {
+export const AttendanceHistoryView = ({ classId, formClass, date, onDateChange }: AttendanceHistoryViewProps) => {
   const { user } = useAuth();
-  const today = new Date().toISOString().split("T")[0];
-  const [date, setDate] = useState(today);
 
   const { data, isLoading } = useAttendance({ classId, date });
 
   const cachedRecords = useLiveQuery(
-    () => db.attendance.where({ date, schoolId: user?.schoolId ?? "" }).toArray(),
-    [date, user?.schoolId],
+    () => db.attendance.where({ date, schoolId: user?.schoolId ?? "", className: formClass }).toArray(),
+    [date, user?.schoolId, formClass],
   );
 
   const students = useLiveQuery(
@@ -56,8 +56,13 @@ export const AttendanceHistoryView = ({ classId, formClass }: AttendanceHistoryV
     }
   }, [data, cachedRecords, formClass, user?.schoolId, date]);
 
-  const toDisplay = (records: typeof cachedRecords) =>
-    records?.map((r) => ({
+  const toDisplay = (records: typeof cachedRecords) => {
+    const seen = new Set<string>();
+    return records?.filter((r) => {
+      if (seen.has(r.studentId)) return false;
+      seen.add(r.studentId);
+      return true;
+    }).map((r) => ({
       id: r.id,
       studentId: r.studentId,
       studentName: undefined as string | undefined,
@@ -67,6 +72,7 @@ export const AttendanceHistoryView = ({ classId, formClass }: AttendanceHistoryV
       date: r.date,
       classId,
     })) ?? [];
+  };
 
   const hasLocalChanges = cachedRecords?.some(
     (r) => r.syncStatus === "pending" || r.syncStatus === "failed",
@@ -82,6 +88,12 @@ export const AttendanceHistoryView = ({ classId, formClass }: AttendanceHistoryV
 
   const studentMap = new Map(students?.map((s) => [s.id, s.name]) ?? []);
 
+  const sortedRecords = [...displayRecords].sort((a, b) => {
+    const nameA = (a.studentName ?? studentMap.get(a.studentId) ?? a.studentId).toLowerCase();
+    const nameB = (b.studentName ?? studentMap.get(b.studentId) ?? b.studentId).toLowerCase();
+    return nameA.localeCompare(nameB);
+  });
+
   if (isLoading && !cachedRecords?.length) {
     return <p className="text-sm text-gray-400 text-center py-8">Loading...</p>;
   }
@@ -92,21 +104,21 @@ export const AttendanceHistoryView = ({ classId, formClass }: AttendanceHistoryV
         <input
           type="date"
           value={date}
-          onChange={(e) => setDate(e.target.value)}
+          onChange={(e) => onDateChange(e.target.value)}
           className="h-10 rounded-md border border-gray-200 px-3 text-sm"
         />
         <span className="text-xs text-gray-400">
-          {data?.total ?? 0} record(s)
+          {sortedRecords.length} record(s)
         </span>
       </div>
 
-      {!displayRecords.length ? (
+      {!sortedRecords.length ? (
         <p className="text-sm text-gray-400 text-center py-8">
           No attendance records for {date}.
         </p>
       ) : (
         <div className="bg-white rounded-xl shadow-sm border border-gray-100 divide-y divide-gray-100">
-          {displayRecords.map((r) => (
+          {sortedRecords.map((r) => (
             <div
               key={r.id}
               className="px-5 py-3 flex items-center justify-between"
