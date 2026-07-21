@@ -44,7 +44,7 @@ export const Onboarding = () => {
   const sendOTPEmailMutation = useSendOTPByEmail();
   const verifyOTPMutation = useVerifyOTP();
   const registerSchoolMutation = useRegisterSchool();
-  const { user, setTokens } = useAuth();
+  const { user, setTokens, isAuthenticated } = useAuth();
 
   useEffect(() => {
     setStep(stepFromUrl);
@@ -84,7 +84,7 @@ export const Onboarding = () => {
         {
           onSuccess: (data) => {
             if (!data.accessToken || !data.user) return;
-            setTokens(data.accessToken, data.refreshToken, data.user);
+            setTokens(data.accessToken, "", data.user);
             setStep(3);
           },
         },
@@ -134,7 +134,7 @@ export const Onboarding = () => {
       {
         onSuccess: (data) => {
           if (!data.accessToken || !data.user) return;
-          setTokens(data.accessToken, data.refreshToken, data.user);
+          setTokens(data.accessToken, "", data.user);
           setStep(3);
         },
       },
@@ -403,12 +403,14 @@ export const Onboarding = () => {
           </>
         )}
 
-        <p className="text-center text-sm text-gray-500 mt-5.25">
-          Already have an account?{" "}
-          <Link to="/login" className="text-gray-900 font-medium underline hover:text-gray-700">
-            Log in
-          </Link>
-        </p>
+        {!isAuthenticated && (
+          <p className="text-center text-sm text-gray-500 mt-5.25">
+            Already have an account?{" "}
+            <Link to="/login" className="text-gray-900 font-medium underline hover:text-gray-700">
+              Log in
+            </Link>
+          </p>
+        )}
       </div>
     </AuthLayout>
   );
