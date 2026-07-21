@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { Link } from "react-router";
+import { Link, useSearchParams } from "react-router";
 import { useLiveQuery } from "dexie-react-hooks";
 
 import { useTeacherProfile, useAttendance } from "../../features/teacher/api";
@@ -20,13 +20,30 @@ export const TeacherAttendance = () => {
   const { user } = useAuth();
   const { formClass, formClassId, isLoading: profileLoading } = useTeacherProfile();
 
-  const [tab, setTab] = useState<Tab>("mark");
+  const [searchParams, setSearchParams] = useSearchParams();
+  const tabParam = searchParams.get("tab");
+  const tab: Tab = tabParam === "history" ? "history" : "mark";
+  const dateParam = searchParams.get("date");
+  const today = new Date().toISOString().split("T")[0];
   const [view, setView] = useState<ViewMode>("list");
+
+  const handleTabChange = (newTab: Tab) => {
+    if (newTab === "mark") {
+      setSearchParams({});
+    } else {
+      setSearchParams({ tab: "history" });
+    }
+  };
+
+  const handleDateChange = (date: string) => {
+    setSearchParams({ tab: "history", date });
+  };
+  const historyDate = dateParam ?? today;
+
   const [attendance, setAttendance] = useState<Record<string, AttendanceStatus>>({});
   const [isSaved, setIsSaved] = useState(false);
   const [clearConfirm, setClearConfirm] = useState(false);
 
-  const today = new Date().toISOString().split("T")[0];
   const initialized = useRef(false);
 
   const { data: students, isLoading: studentsLoading } = useStudents(formClassId ?? "", "ACTIVE", user?.id);
@@ -35,8 +52,8 @@ export const TeacherAttendance = () => {
   );
 
   const cachedAttendance = useLiveQuery(
-    () => formClassId ? db.attendance.where({ date: today, schoolId: user?.schoolId ?? "" }).toArray() : [],
-    [formClassId, today, user?.schoolId],
+    () => formClassId ? db.attendance.where({ date: today, schoolId: user?.schoolId ?? "", className: formClass ?? "" }).toArray() : [],
+    [formClassId, today, user?.schoolId, formClass],
   );
 
   useEffect(() => {
@@ -197,6 +214,9 @@ export const TeacherAttendance = () => {
 
   const markedCount = Object.keys(attendance).length;
   const totalStudents = students?.length ?? 0;
+  const sortedStudents = [...(students ?? [])].sort((a, b) =>
+    a.name.toLowerCase().localeCompare(b.name.toLowerCase()),
+  );
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -213,7 +233,7 @@ export const TeacherAttendance = () => {
           <div className="flex items-center gap-3">
             <div className="flex bg-gray-100 rounded-lg p-0.5">
               <button
-                onClick={() => setTab("mark")}
+                onClick={() => handleTabChange("mark")}
                 className={`px-3 py-1.5 rounded-md text-xs font-medium transition-colors ${
                   tab === "mark" ? "bg-white shadow-sm text-gray-800" : "text-gray-500"
                 }`}
@@ -221,7 +241,7 @@ export const TeacherAttendance = () => {
                 Mark
               </button>
               <button
-                onClick={() => setTab("history")}
+                onClick={() => handleTabChange("history")}
                 className={`px-3 py-1.5 rounded-md text-xs font-medium transition-colors ${
                   tab === "history" ? "bg-white shadow-sm text-gray-800" : "text-gray-500"
                 }`}
@@ -239,7 +259,7 @@ export const TeacherAttendance = () => {
       <main className="max-w-3xl mx-auto px-6 py-6">
         {tab === "history" ? (
           formClassId ? (
-            <AttendanceHistoryView classId={formClassId} formClass={formClass} />
+            <AttendanceHistoryView classId={formClassId} formClass={formClass} date={historyDate} onDateChange={handleDateChange} />
           ) : (
             <p className="text-sm text-gray-400 text-center py-8">No class assigned.</p>
           )
@@ -320,7 +340,7 @@ export const TeacherAttendance = () => {
 
             {view === "card" ? (
               <StudentSwipeCard
-                students={students}
+                students={sortedStudents}
                 onSwipe={(studentId, status) => handleMark(studentId, status)}
                 onUndo={handleUndo}
                 onSave={handleSave}
@@ -329,7 +349,7 @@ export const TeacherAttendance = () => {
               />
             ) : (
               <AttendanceListView
-                students={students}
+                students={sortedStudents}
                 attendance={attendance}
                 onMark={handleMark}
               />
