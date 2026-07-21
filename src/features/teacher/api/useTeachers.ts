@@ -60,7 +60,7 @@ export const useTeachers = () => {
       });
       return data;
     },
-    staleTime: 5 * 60 * 1000,
+    staleTime: Infinity,
     retry: false,
     enabled: !!userId,
   });

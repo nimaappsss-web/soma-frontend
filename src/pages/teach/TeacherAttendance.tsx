@@ -46,7 +46,7 @@ export const TeacherAttendance = () => {
 
   const initialized = useRef(false);
 
-  const { data: students, isLoading: studentsLoading } = useStudents(formClassId ?? "", "ACTIVE", user?.id);
+  const { data: students } = useStudents(formClassId ?? "", "ACTIVE", user?.id, user?.schoolId);
   const { data: existingAttendance } = useAttendance(
     { classId: formClassId ?? "", date: today },
   );
@@ -57,24 +57,23 @@ export const TeacherAttendance = () => {
   );
 
   useEffect(() => {
-    if (existingAttendance?.records && cachedAttendance) {
-      const hasLocalChanges = cachedAttendance.some(
-        (r) => r.syncStatus === "pending" || r.syncStatus === "failed",
+    if (!existingAttendance?.records || !cachedAttendance || !formClass || !user?.schoolId) return;
+    const hasLocalChanges = cachedAttendance.some(
+      (r) => r.syncStatus === "pending" || r.syncStatus === "failed",
+    );
+    if (!hasLocalChanges) {
+      db.attendance.bulkPut(
+        existingAttendance.records.map((r) => ({
+          id: r.id,
+          studentId: r.studentId,
+          className: formClass,
+          schoolId: user.schoolId ?? "",
+          status: r.status,
+          date: r.date ?? today,
+          syncStatus: "synced" as const,
+          createdAt: Date.now(),
+        })),
       );
-      if (!hasLocalChanges) {
-        db.attendance.bulkPut(
-          existingAttendance.records.map((r) => ({
-            id: r.id,
-            studentId: r.studentId,
-            className: formClass ?? "",
-            schoolId: user?.schoolId ?? "",
-            status: r.status,
-            date: r.date ?? today,
-            syncStatus: "synced" as const,
-            createdAt: Date.now(),
-          })),
-        );
-      }
     }
   }, [existingAttendance, cachedAttendance, formClass, user?.schoolId, today]);
 
@@ -169,7 +168,7 @@ export const TeacherAttendance = () => {
   const handleClearAll = async () => {
     if (!formClassId) return;
 
-    await db.attendance.where({ date: today, schoolId: user?.schoolId ?? "" }).delete();
+    await db.attendance.where({ date: today }).filter((r) => r.schoolId === user?.schoolId).delete();
 
     await db.syncQueue
       .where("userId")
@@ -191,7 +190,7 @@ export const TeacherAttendance = () => {
     setAttendance({});
   };
 
-  if (profileLoading || studentsLoading || cachedAttendance === undefined) {
+  if (profileLoading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <p className="text-gray-400">Loading...</p>
@@ -259,7 +258,7 @@ export const TeacherAttendance = () => {
       <main className="max-w-3xl mx-auto px-6 py-6">
         {tab === "history" ? (
           formClassId ? (
-            <AttendanceHistoryView classId={formClassId} formClass={formClass} date={historyDate} onDateChange={handleDateChange} />
+            <AttendanceHistoryView classId={formClassId} formClass={formClass} />
           ) : (
             <p className="text-sm text-gray-400 text-center py-8">No class assigned.</p>
           )

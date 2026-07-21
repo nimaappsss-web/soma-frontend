@@ -19,7 +19,7 @@ export const schoolFormSchema = z.object({
     .regex(/^[A-Z0-9]*$/, "Only letters and numbers allowed")
     .optional()
     .or(z.literal("")),
-  arms: z.string().optional().or(z.literal("")),
+  arms: z.array(z.string()).optional(),
 });
 
 export const loginPasswordSchema = z.object({

@@ -5,6 +5,7 @@ import { liveQuery } from "dexie";
 import { fetchData } from "../../../utils/fetchData";
 import { classKeys } from "../utils/query-keys";
 import { db } from "../../../db/db";
+import { useAuth } from "../../../contexts/AuthContext";
 import type { ClassCache } from "../../../db/db";
 
 export type Class = ClassCache;
@@ -15,16 +16,23 @@ export interface ClassesResponse {
 }
 
 export const useClasses = (schoolId?: string) => {
+  const { user } = useAuth();
   const isPublic = !!schoolId;
+  const userSchoolId = schoolId || user?.schoolId;
   const [cached, setCached] = useState<Class[]>([]);
 
   useEffect(() => {
     if (isPublic) return;
-    const sub = liveQuery(() => db.classes.toArray()).subscribe({
+    const sub = liveQuery(async () => {
+      const data = await db.classes.toArray();
+      return userSchoolId
+        ? (data as ClassCache[]).filter((c) => c.schoolId === userSchoolId)
+        : (data as ClassCache[]);
+    }).subscribe({
       next: (data) => setCached(data as Class[]),
     });
     return () => sub.unsubscribe();
-  }, [isPublic]);
+  }, [isPublic, userSchoolId]);
 
   const queryKey = isPublic ? [...classKeys.lists(), "public", schoolId] : classKeys.lists();
 
@@ -39,12 +47,12 @@ export const useClasses = (schoolId?: string) => {
       if (!isPublic) {
         await db.transaction("rw", db.classes, async () => {
           await db.classes.clear();
-          await db.classes.bulkAdd(data.classes);
+          await db.classes.bulkAdd(data.classes.map((c) => ({ ...c, schoolId: userSchoolId })));
         });
       }
       return data;
     },
-    staleTime: isPublic ? 0 : 5 * 60 * 1000,
+    staleTime: isPublic ? 0 : Infinity,
     enabled: true,
     retry: false,
   });

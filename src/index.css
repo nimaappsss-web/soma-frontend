@@ -16,14 +16,17 @@
     --accent-foreground: 222.2 47.4% 11.2%;
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 210 40% 98%;
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
-    --ring: 222.2 84% 4.9%;
     --radius: 0.5rem;
   }
 }
 
 @theme inline {
+  --font-sans: "Geist", sans-serif;
+  --color-black: #0D0D0D;
+  --color-pureWhite: #FAFAFA;
+  --color-offWhite: #F7F7F8;
+  --color-placeholder: #B3B3B3;
+  --color-white: #EDEDED;
   --color-background: hsl(var(--background));
   --color-foreground: hsl(var(--foreground));
   --color-card: hsl(var(--card));
@@ -38,9 +41,18 @@
   --color-accent-foreground: hsl(var(--accent-foreground));
   --color-destructive: hsl(var(--destructive));
   --color-destructive-foreground: hsl(var(--destructive-foreground));
-  --color-border: hsl(var(--border));
-  --color-input: hsl(var(--input));
+  --color-border: color-mix(in srgb, var(--color-black) 10%, transparent);
+  --color-input: color-mix(in srgb, var(--color-black) 10%, transparent);
   --color-ring: hsl(var(--ring));
   --radius: var(--radius);
 }
+
+@supports (corner-shape: squircle) {
+  .squircle {
+    corner-shape: squircle;
+  }
+}
+
+
+
 

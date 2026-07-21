@@ -1,18 +1,27 @@
-import { useEffect } from "react";
-import { useLiveQuery } from "dexie-react-hooks";
+import { useEffect, useState } from "react";
+import { liveQuery } from "dexie";
 
 import { Avatar } from "../../../components/ui/Avatar";
-import { useAttendance } from "../api";
 import { useAuth } from "../../../contexts/AuthContext";
 import { db } from "../../../db/db";
-import type { AttendanceRecord } from "../../../db/db";
+import type { AttendanceRecord } from "../types";
 
 interface AttendanceHistoryViewProps {
   classId: string;
-  formClass: string;
-  date: string;
-  onDateChange: (date: string) => void;
+  formClass?: string;
+  date?: string;
+  onDateChange?: (date: string) => void;
 }
+
+type HistoryRecord = {
+  id: string;
+  studentId: string;
+  studentName: string;
+  admissionNo: string | null;
+  status: AttendanceRecord["status"];
+  remarks: string | null;
+  date: string;
+};
 
 const statusColors: Record<string, string> = {
   present: "text-green-600 bg-green-50",
@@ -20,83 +29,53 @@ const statusColors: Record<string, string> = {
   late: "text-amber-600 bg-amber-50",
 };
 
-export const AttendanceHistoryView = ({ classId, formClass, date, onDateChange }: AttendanceHistoryViewProps) => {
+export const AttendanceHistoryView = ({ classId, formClass }: AttendanceHistoryViewProps) => {
   const { user } = useAuth();
-
-  const { data, isLoading } = useAttendance({ classId, date });
-
-  const cachedRecords = useLiveQuery(
-    () => db.attendance.where({ date, schoolId: user?.schoolId ?? "", className: formClass }).toArray(),
-    [date, user?.schoolId, formClass],
-  );
-
-  const students = useLiveQuery(
-    () => db.students.where("classId").equals(classId).toArray(),
-    [classId],
-  );
+  const today = new Date().toISOString().split("T")[0];
+  const [date, setDate] = useState(today);
+  const [records, setRecords] = useState<HistoryRecord[]>([]);
 
   useEffect(() => {
-    if (data?.records && cachedRecords) {
-      const hasLocalChanges = cachedRecords.some(
-        (r) => r.syncStatus === "pending" || r.syncStatus === "failed",
+    if (!classId || !date) return;
+    const sub = liveQuery(async () => {
+      let attendanceRecords = await db.attendance
+        .where({ date })
+        .toArray();
+      if (user?.schoolId) {
+        attendanceRecords = attendanceRecords.filter((r) => r.schoolId === user.schoolId);
+      }
+      if (formClass) {
+        attendanceRecords = attendanceRecords.filter((r) => r.className === formClass);
+      }
+      const seen = new Set<string>();
+      attendanceRecords = attendanceRecords.filter((r) => {
+        if (seen.has(r.studentId)) return false;
+        seen.add(r.studentId);
+        return true;
+      });
+      const studentIds = [...new Set(attendanceRecords.map((r) => r.studentId))];
+      const students = studentIds.length > 0
+        ? await db.students.bulkGet(studentIds)
+        : [];
+      const studentMap = new Map(
+        students.filter(Boolean).map((s) => [s!.id, { name: s!.name, admissionNo: (s as any).admissionNo ?? null }]),
       );
-      if (!hasLocalChanges) {
-        const records: AttendanceRecord[] = data.records.map((r) => ({
+      return attendanceRecords
+        .map((r) => ({
           id: r.id,
           studentId: r.studentId,
-          className: formClass,
-          schoolId: user?.schoolId ?? "",
-          status: r.status,
-          date: r.date ?? date,
-          syncStatus: "synced" as const,
-          createdAt: Date.now(),
-        }));
-        db.attendance.bulkPut(records);
-      }
-    }
-  }, [data, cachedRecords, formClass, user?.schoolId, date]);
-
-  const toDisplay = (records: typeof cachedRecords) => {
-    const seen = new Set<string>();
-    return records?.filter((r) => {
-      if (seen.has(r.studentId)) return false;
-      seen.add(r.studentId);
-      return true;
-    }).map((r) => ({
-      id: r.id,
-      studentId: r.studentId,
-      studentName: undefined as string | undefined,
-      admissionNo: null as string | null,
-      status: r.status,
-      remarks: null as string | null,
-      date: r.date,
-      classId,
-    })) ?? [];
-  };
-
-  const hasLocalChanges = cachedRecords?.some(
-    (r) => r.syncStatus === "pending" || r.syncStatus === "failed",
-  );
-
-  const displayRecords = hasLocalChanges && cachedRecords?.length
-    ? toDisplay(cachedRecords)
-    : data?.records?.length
-      ? data.records
-      : !isLoading && cachedRecords?.length
-        ? toDisplay(cachedRecords)
-        : [];
-
-  const studentMap = new Map(students?.map((s) => [s.id, s.name]) ?? []);
-
-  const sortedRecords = [...displayRecords].sort((a, b) => {
-    const nameA = (a.studentName ?? studentMap.get(a.studentId) ?? a.studentId).toLowerCase();
-    const nameB = (b.studentName ?? studentMap.get(b.studentId) ?? b.studentId).toLowerCase();
-    return nameA.localeCompare(nameB);
-  });
-
-  if (isLoading && !cachedRecords?.length) {
-    return <p className="text-sm text-gray-400 text-center py-8">Loading...</p>;
-  }
+          studentName: studentMap.get(r.studentId)?.name ?? r.studentId,
+          admissionNo: studentMap.get(r.studentId)?.admissionNo ?? null,
+          status: r.status as AttendanceRecord["status"],
+          remarks: null as string | null,
+          date: r.date,
+        }))
+        .sort((a, b) => a.studentName.toLowerCase().localeCompare(b.studentName.toLowerCase()));
+    }).subscribe({
+      next: (data) => setRecords(data),
+    });
+    return () => sub.unsubscribe();
+  }, [classId, date, user?.schoolId, formClass]);
 
   return (
     <div>
@@ -104,30 +83,30 @@ export const AttendanceHistoryView = ({ classId, formClass, date, onDateChange }
         <input
           type="date"
           value={date}
-          onChange={(e) => onDateChange(e.target.value)}
+          onChange={(e) => setDate(e.target.value)}
           className="h-10 rounded-md border border-gray-200 px-3 text-sm"
         />
         <span className="text-xs text-gray-400">
-          {sortedRecords.length} record(s)
+          {records.length} record(s)
         </span>
       </div>
 
-      {!sortedRecords.length ? (
+      {!records.length ? (
         <p className="text-sm text-gray-400 text-center py-8">
           No attendance records for {date}.
         </p>
       ) : (
         <div className="bg-white rounded-xl shadow-sm border border-gray-100 divide-y divide-gray-100">
-          {sortedRecords.map((r) => (
+          {records.map((r) => (
             <div
               key={r.id}
               className="px-5 py-3 flex items-center justify-between"
             >
               <div className="flex items-center gap-3">
-                <Avatar name={r.studentName ?? studentMap.get(r.studentId) ?? r.studentId} size={28} />
+                <Avatar name={r.studentName} size={28} />
                 <div>
                   <span className="text-gray-800 font-medium text-sm">
-                    {r.studentName ?? studentMap.get(r.studentId) ?? r.studentId}
+                    {r.studentName}
                   </span>
                   {r.admissionNo && (
                     <span className="ml-2 text-xs text-gray-400">{r.admissionNo}</span>
@@ -151,10 +130,10 @@ export const AttendanceHistoryView = ({ classId, formClass, date, onDateChange }
         </div>
       )}
 
-      {data && data.totalPages > 1 && (
+      {records.length > 0 && (
         <div className="flex items-center justify-center gap-4 mt-4">
           <span className="text-xs text-gray-400">
-            Page {data.page} of {data.totalPages}
+            {records.length} record(s)
           </span>
         </div>
       )}

@@ -19,7 +19,7 @@ import toast from "react-hot-toast";
 export const AdminStudents = () => {
   const { user, logout } = useAuth();
   const { data: classesData } = useClasses();
-  const { data: allStudents, isLoading } = useAllStudents(user?.id ?? "");
+  const { data: allStudents, isLoading } = useAllStudents(user?.id ?? "", user?.schoolId);
   const [classFilter, setClassFilter] = useState("");
   const createMutation = useCreateStudent();
   const [showForm, setShowForm] = useState(false);

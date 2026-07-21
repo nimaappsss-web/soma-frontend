@@ -8,7 +8,7 @@ export const useMe = () => {
   return useQuery<User>({
     queryKey: authKeys.details(),
     queryFn: () => fetchData("/auth/me", "GET"),
-    staleTime: 5 * 60 * 1000,
+    staleTime: Infinity,
     retry: false,
   });
 };

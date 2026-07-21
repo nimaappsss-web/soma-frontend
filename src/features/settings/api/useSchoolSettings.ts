@@ -39,7 +39,7 @@ export const useSchoolSettings = () => {
       });
       return settings;
     },
-    staleTime: 5 * 60 * 1000,
+    staleTime: Infinity,
   });
 
   return {

@@ -17,6 +17,8 @@ import { Button } from "../components/ui/button";
 
 const NIGERIAN_STATES = ["Lagos", "Abuja", "Rivers", "Kano", "Oyo", "Kaduna"];
 
+
+
 interface SchoolSettings {
   id: string;
   name: string;
