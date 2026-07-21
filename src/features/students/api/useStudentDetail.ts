@@ -26,10 +26,11 @@ export const useStudentDetail = (id: string) => {
     queryKey: studentKeys.detail(id),
     queryFn: async () => {
       const res: StudentDetailResponse = await fetchData(`/students/${id}`, "GET");
-      await db.students.put({ ...res.student, createdAt: Date.now() } as any, res.student.id);
+      const existing = await db.students.get(res.student.id);
+      await db.students.put({ ...existing, ...res.student, createdAt: Date.now() } as any, res.student.id);
       return res.student;
     },
-    staleTime: 5 * 60 * 1000,
+    staleTime: Infinity,
     enabled: !!id,
     retry: false,
   });

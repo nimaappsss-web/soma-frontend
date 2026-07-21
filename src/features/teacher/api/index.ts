@@ -8,3 +8,4 @@ export { useResendInvite } from "./useResendInvite";
 export { useMarkAttendance } from "./useMarkAttendance";
 export { useAttendance } from "./useAttendance";
 export { useStudentAttendanceHistory } from "./useStudentAttendanceHistory";
+export { attendanceKeys } from "../utils/query-keys";

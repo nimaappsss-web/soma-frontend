@@ -94,7 +94,7 @@ export const useCurriculumSubjects = (className: string) => {
       return res.subjects ?? [];
     },
     enabled: !!className,
-    staleTime: 10 * 60 * 1000,
+    staleTime: Infinity,
   });
 };
 
@@ -110,7 +110,7 @@ export const useCurriculumTopics = (className: string, subjectName: string) => {
       return res.topics ?? [];
     },
     enabled: !!className && !!subjectName,
-    staleTime: 10 * 60 * 1000,
+    staleTime: Infinity,
   });
 };
 

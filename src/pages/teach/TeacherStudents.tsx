@@ -3,10 +3,12 @@ import { Link } from "react-router";
 import { Avatar } from "../../components/ui/Avatar";
 import { useTeacherProfile } from "../../features/teacher/api";
 import { useStudents } from "../../features/students/api";
+import { useAuth } from "../../contexts/AuthContext";
 
 export const TeacherStudents = () => {
+  const { user } = useAuth();
   const { formClass, formClassId, isLoading: profileLoading } = useTeacherProfile();
-  const { data: students, isLoading: studentsLoading } = useStudents(formClassId ?? "");
+  const { data: students, isLoading: studentsLoading } = useStudents(formClassId ?? "", "ACTIVE", undefined, user?.schoolId);
 
   if (profileLoading) {
     return (

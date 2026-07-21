@@ -1,3 +1,4 @@
+export { useCheckIdentifier } from "./useCheckIdentifier";
 export { useLogin } from "./useLogin";
 export { useRegisterPrincipal } from "./useRegisterPrincipal";
 export { useRegisterSchool } from "./useRegisterSchool";

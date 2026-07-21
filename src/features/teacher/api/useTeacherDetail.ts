@@ -38,7 +38,7 @@ export const useTeacherDetail = (id: string) => {
       });
       return data;
     },
-    staleTime: 5 * 60 * 1000,
+    staleTime: Infinity,
     retry: false,
     enabled: !!id,
   });

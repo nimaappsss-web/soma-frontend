@@ -40,7 +40,7 @@ export const useMyAssignments = (userId: string) => {
       });
       return assignments;
     },
-    staleTime: 5 * 60 * 1000,
+    staleTime: Infinity,
     retry: false,
     enabled: !!userId,
   });

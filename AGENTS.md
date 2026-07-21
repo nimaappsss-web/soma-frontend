@@ -352,3 +352,13 @@ Route groups:
 6. Add barrel export `api/index.ts`
 7. Create page in `src/pages/` or feature-specific `components/`
 8. Register route in `src/App.tsx`
+
+---
+
+## Critical Rules
+
+### Always Stash Before Destructive Git Operations
+
+Before running any command that could discard uncommitted work (`git checkout HEAD`, `git checkout --`, `git reset --hard`, `git restore`, etc.), ALWAYS run `git stash push -m "<description>"` first. If the operation is cancelled or errors, apply the stash back with `git stash pop`.
+
+This guards against losing user work that wasn't committed.

@@ -13,7 +13,7 @@ export const useParentProfile = () => {
   const query = useQuery<ParentProfileResponse>({
     queryKey: ["parent", "me"],
     queryFn: () => fetchData("/parents/me", "GET"),
-    staleTime: 5 * 60 * 1000,
+    staleTime: Infinity,
     retry: false,
   });
 

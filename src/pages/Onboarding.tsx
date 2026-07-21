@@ -1,12 +1,18 @@
 import { useState, useEffect, useCallback } from "react";
-import { useSearchParams } from "react-router";
-import { useForm } from "react-hook-form";
+import { useSearchParams, Link } from "react-router";
+import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../components/ui/card";
+import { transformError } from "../utils/transformError";
+import { AuthLayout } from "../layouts/AuthLayout";
 import { Input } from "../components/ui/input";
+import { SelectDropdown } from "../components/ui/select-dropdown";
+import { MultiSelect } from "../components/ui/multi-select";
+import { TagInput } from "../components/ui/tag-input";
 import { Label } from "../components/ui/label";
 import { Button } from "../components/ui/button";
+import { OtpInputField } from "../components/ui/otp-input";
+import { ErrorMessage } from "../components/others/ErrorMessage";
 import { useRegisterPrincipal, useSendOTP, useSendOTPByEmail, useVerifyOTP, useRegisterSchool } from "../features/auth/api";
 import { useAuth } from "../contexts/AuthContext";
 import { principalFormSchema, schoolFormSchema, type PrincipalFormData, type SchoolFormData } from "../features/auth/utils/validationSchema";
@@ -17,6 +23,7 @@ const RESEND_COOLDOWN = 30;
 export const Onboarding = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const stepFromUrl = Number(searchParams.get("step")) || 1;
+  const emailFromUrl = searchParams.get("email") || "";
   const [step, setStep] = useState(stepFromUrl);
   const [phone, setPhone] = useState("");
   const [otp, setOtp] = useState("");
@@ -24,12 +31,12 @@ export const Onboarding = () => {
 
   const principalForm = useForm<PrincipalFormData>({
     resolver: zodResolver(principalFormSchema),
-    defaultValues: { name: "", email: "", phone: "", password: "" },
+    defaultValues: { name: "", email: emailFromUrl, phone: "", password: "" },
   });
 
   const schoolForm = useForm<SchoolFormData>({
     resolver: zodResolver(schoolFormSchema),
-    defaultValues: { name: "", state: "", lga: "", schoolType: ["primary"], address: "", schoolCode: "", arms: "" },
+    defaultValues: { name: "", state: "", lga: "", schoolType: ["primary"], address: "", schoolCode: "", arms: [] },
   });
 
   const registerPrincipalMutation = useRegisterPrincipal();
@@ -37,7 +44,7 @@ export const Onboarding = () => {
   const sendOTPEmailMutation = useSendOTPByEmail();
   const verifyOTPMutation = useVerifyOTP();
   const registerSchoolMutation = useRegisterSchool();
-  const { user, setTokens, logout } = useAuth();
+  const { user, setTokens } = useAuth();
 
   useEffect(() => {
     setStep(stepFromUrl);
@@ -67,6 +74,23 @@ export const Onboarding = () => {
     const timer = setInterval(() => setCooldown((prev) => prev - 1), 1000);
     return () => clearInterval(timer);
   }, [cooldown]);
+
+  useEffect(() => {
+    if (otp.length === 6) {
+      const email = principalForm.getValues("email");
+      if (!email) return;
+      verifyOTPMutation.mutate(
+        { email, code: otp },
+        {
+          onSuccess: (data) => {
+            if (!data.accessToken || !data.user) return;
+            setTokens(data.accessToken, data.refreshToken, data.user);
+            setStep(3);
+          },
+        },
+      );
+    }
+  }, [otp]);
 
   const handlePrincipalSubmit = (data: PrincipalFormData) => {
     registerPrincipalMutation.mutate(
@@ -126,9 +150,7 @@ export const Onboarding = () => {
         schoolType: data.schoolType,
         address: data.address || undefined,
         schoolCode: data.schoolCode || undefined,
-        arms: data.arms
-          ? data.arms.split(",").map((a) => a.trim()).filter(Boolean)
-          : undefined,
+        arms: data.arms?.length ? data.arms : undefined,
       },
       {
         onSuccess: (res) => {
@@ -140,217 +162,235 @@ export const Onboarding = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 p-4">
-      <Card className="w-full max-w-md">
-        <CardHeader>
-          <div className="flex items-center justify-between mb-2">
-            <div className="flex gap-2 flex-1">
+    <AuthLayout reverse>
+      <div className="lg:max-w-85.5">
+        {registerPrincipalMutation.isError && (
+          <div className="mb-4">
+            <ErrorMessage>{transformError(registerPrincipalMutation.error)}</ErrorMessage>
+          </div>
+        )}
+
+        {step === 1 && (
+          <>
+            <div>
+              <h1 className="text-2xl font-medium text-gray-900">Create Account</h1>
+              <p className="text-sm text-black/50 mt-2">Step 1 — Principal details</p>
+            </div>
+
+            <div className="mt-5.25 flex gap-2">
               {[1, 2, 3].map((s) => (
-                <div key={s} className={`h-2 w-full rounded ${step >= s ? "bg-primary" : "bg-muted"}`} />
+                <div key={s} className={`h-1.5 flex-1 rounded-full ${step >= s ? "bg-black" : "bg-white"}`} />
               ))}
             </div>
-            {user && (
-              <button
-                type="button"
-                onClick={logout}
-                className="ml-2 text-xs text-red-400 hover:text-red-600 shrink-0"
-              >
-                Sign out
-              </button>
-            )}
-          </div>
-          <CardTitle className="text-xl">
-            {step === 1 ? "Create Account" : step === 2 ? "Verify Email" : "Register School"}
-          </CardTitle>
-          <CardDescription>
-            {step === 1
-              ? "Step 1 — Principal details"
-              : step === 2
-                ? `Step 2 — Enter the code sent to ${principalForm.getValues("email")}`
-                : "Step 3 — School details"}
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          {step === 1 && (
-            <form onSubmit={principalForm.handleSubmit(handlePrincipalSubmit)} className="space-y-4">
-              {registerPrincipalMutation.isError && (
-                <p className="text-sm text-destructive">{(registerPrincipalMutation.error as Error)?.message}</p>
-              )}
-              <div className="space-y-2">
-                <Label htmlFor="name">Full Name</Label>
-                <Input id="name" {...principalForm.register("name")} />
-                {principalForm.formState.errors.name && (
-                  <p className="text-sm text-destructive">{principalForm.formState.errors.name.message}</p>
-                )}
+
+            <form onSubmit={principalForm.handleSubmit(handlePrincipalSubmit)} className="mt-5.25 space-y-5">
+              <div>
+                <Input
+                  type="text"
+                  placeholder="Full name"
+                  registration={principalForm.register("name")}
+                  hasError={principalForm.formState.errors.name}
+                />
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="email">Email</Label>
-                <Input id="email" type="email" {...principalForm.register("email")} />
-                {principalForm.formState.errors.email && (
-                  <p className="text-sm text-destructive">{principalForm.formState.errors.email.message}</p>
-                )}
+              <div>
+                <Input
+                  type="email"
+                  placeholder="Email"
+                  registration={principalForm.register("email")}
+                  hasError={principalForm.formState.errors.email}
+                />
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="phone">Phone</Label>
-                <Input id="phone" type="tel" {...principalForm.register("phone")} />
-                {principalForm.formState.errors.phone && (
-                  <p className="text-sm text-destructive">{principalForm.formState.errors.phone.message}</p>
-                )}
+              <div>
+                <Input
+                  type="tel"
+                  placeholder="Phone"
+                  registration={principalForm.register("phone")}
+                  hasError={principalForm.formState.errors.phone}
+                />
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="password">Password</Label>
-                <Input id="password" type="password" {...principalForm.register("password")} />
-                {principalForm.formState.errors.password && (
-                  <p className="text-sm text-destructive">{principalForm.formState.errors.password.message}</p>
-                )}
+              <div>
+                <Input
+                  type="password"
+                  placeholder="Password"
+                  showPasswordToggle
+                  registration={principalForm.register("password")}
+                  hasError={principalForm.formState.errors.password}
+                />
               </div>
+
               <Button type="submit" disabled={registerPrincipalMutation.isPending} className="w-full">
                 {registerPrincipalMutation.isPending ? "Creating..." : "Next"}
               </Button>
             </form>
-          )}
+          </>
+        )}
 
-          {step === 2 && (
-            <form onSubmit={handleOTPSubmit} className="space-y-4">
-              {verifyOTPMutation.isError && (
-                <p className="text-sm text-destructive">{(verifyOTPMutation.error as Error)?.message}</p>
-              )}
-              <div className="space-y-2">
-                <Label htmlFor="otp">OTP Code</Label>
-                <Input
-                  id="otp"
-                  value={otp}
-                  onChange={(e) => setOtp(e.target.value)}
-                  placeholder="Enter 6-digit code"
-                  required
-                />
+        {step === 2 && (
+          <>
+            <div>
+              <h1 className="text-2xl font-medium text-gray-900">Verify Email</h1>
+              <p className="text-sm text-black/50 mt-2">
+                Step 2 — Enter the code sent to {principalForm.getValues("email")}
+              </p>
+            </div>
+
+            {verifyOTPMutation.isError && (
+              <div className="mt-5.25 mb-4">
+                <ErrorMessage>{transformError(verifyOTPMutation.error)}</ErrorMessage>
               </div>
-              <Button type="submit" disabled={verifyOTPMutation.isPending} className="w-full">
-                {verifyOTPMutation.isPending ? "Verifying..." : "Verify"}
-              </Button>
-              <Button
+            )}
+
+            <div className="mt-5.25">
+              <OtpInputField
+                value={otp}
+                onChange={(val) => setOtp(val)}
+                numDigits={6}
+              />
+            </div>
+
+            <Button type="submit" disabled={verifyOTPMutation.isPending} className="w-full mt-5.25">
+              {verifyOTPMutation.isPending ? "Verifying..." : "Verify"}
+            </Button>
+
+            <div className="mt-4 text-center">
+              <span className="text-sm text-gray-500">
+                Didn't get the code?{" "}
+              </span>
+              <button
                 type="button"
-                variant="link"
                 onClick={handleResendOTP}
                 disabled={sendOTPMutation.isPending || cooldown > 0}
-                className="w-full text-sm"
+                className="text-sm font-medium underline"
               >
                 {sendOTPMutation.isPending
                   ? "Sending..."
                   : cooldown > 0
                     ? `Resend via SMS in ${cooldown}s`
                     : "Resend via SMS"}
-              </Button>
-              {principalForm.getValues("email") && (
-                <Button
+              </button>
+            </div>
+
+            {principalForm.getValues("email") && (
+              <div className="mt-2 text-center">
+                <button
                   type="button"
-                  variant="link"
                   onClick={handleResendOTPEmail}
                   disabled={sendOTPEmailMutation.isPending || cooldown > 0}
-                  className="w-full text-sm"
+                  className="text-sm underline"
                 >
                   {sendOTPEmailMutation.isPending
                     ? "Sending..."
                     : cooldown > 0
                       ? `Resend via email in ${cooldown}s`
                       : "Send to email"}
-                </Button>
-              )}
-            </form>
-          )}
-
-          {step === 3 && (
-            <form onSubmit={schoolForm.handleSubmit(handleSchoolSubmit)} className="space-y-4">
-              {registerSchoolMutation.isError && (
-                <p className="text-sm text-destructive">{(registerSchoolMutation.error as Error)?.message}</p>
-              )}
-              <div className="space-y-2">
-                <Label htmlFor="schoolName">School Name</Label>
-                <Input id="schoolName" {...schoolForm.register("name")} />
-                {schoolForm.formState.errors.name && (
-                  <p className="text-sm text-destructive">{schoolForm.formState.errors.name.message}</p>
-                )}
+                </button>
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="schoolCode">School Code <span className="text-gray-400 font-normal">(optional)</span></Label>
+            )}
+          </>
+        )}
+
+        {step === 3 && (
+          <>
+            <div>
+              <h1 className="text-2xl font-medium text-gray-900">Register School</h1>
+              <p className="text-sm text-black/50 mt-2">Step 3 — School details</p>
+            </div>
+
+            <form onSubmit={schoolForm.handleSubmit(handleSchoolSubmit)} className="mt-5.25 space-y-5">
+              {registerSchoolMutation.isError && (
+                <div className="mb-4">
+                  <ErrorMessage>{transformError(registerSchoolMutation.error)}</ErrorMessage>
+                </div>
+              )}
+
+              <div>
                 <Input
-                  id="schoolCode"
-                  placeholder="e.g. ATH"
+                  type="text"
+                  placeholder="School name"
+                  registration={schoolForm.register("name")}
+                  hasError={schoolForm.formState.errors.name}
+                />
+              </div>
+              <div>
+                <Input
+                  type="text"
+                  placeholder="School code (e.g. ATH)"
                   maxLength={10}
-                  {...schoolForm.register("schoolCode", {
+                  registration={schoolForm.register("schoolCode", {
                     onChange: (e) => { e.target.value = e.target.value.toUpperCase(); },
                   })}
+                  hasError={schoolForm.formState.errors.schoolCode}
                 />
-                {schoolForm.formState.errors.schoolCode && (
-                  <p className="text-sm text-destructive">{schoolForm.formState.errors.schoolCode.message}</p>
-                )}
-                <p className="text-xs text-gray-400">Used as prefix for auto-generated admission numbers</p>
+                <p className="text-xs text-placeholder mt-1.5">Prefix for auto-generated admission numbers</p>
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="arms">Arms <span className="text-gray-400 font-normal">(optional, comma-separated)</span></Label>
+              <div>
+                <Controller
+                  name="arms"
+                  control={schoolForm.control}
+                  render={({ field, fieldState }) => (
+                    <TagInput
+                      value={field.value ?? []}
+                      onChange={field.onChange}
+                      placeholder="Type arm and press Enter (e.g. A)"
+                    />
+                  )}
+                />
+                <p className="text-xs text-placeholder mt-1.5">Press Enter or comma after each arm. Defaults to A, B, C if not provided.</p>
+              </div>
+              <div>
+                <Controller
+                  name="state"
+                  control={schoolForm.control}
+                  render={({ field, fieldState }) => (
+                    <SelectDropdown
+                      options={NIGERIAN_STATES.map((s) => ({ value: s, label: s }))}
+                      value={field.value}
+                      onChange={field.onChange}
+                      placeholder="Select state"
+                      hasError={fieldState.error}
+                    />
+                  )}
+                />
+              </div>
+              <div>
                 <Input
-                  id="arms"
-                  placeholder="e.g. A, B, C or 1, 2, 3"
-                  {...schoolForm.register("arms")}
+                  type="text"
+                  placeholder="LGA"
+                  registration={schoolForm.register("lga")}
+                  hasError={schoolForm.formState.errors.lga}
                 />
-                <p className="text-xs text-gray-400">Defaults to A, B, C if not provided.</p>
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="state">State</Label>
-                <select
-                  id="state"
-                  className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm"
-                  {...schoolForm.register("state")}
-                >
-                  <option value="">Select state</option>
-                  {NIGERIAN_STATES.map((s) => (
-                    <option key={s} value={s}>{s}</option>
-                  ))}
-                </select>
-                {schoolForm.formState.errors.state && (
-                  <p className="text-sm text-destructive">{schoolForm.formState.errors.state.message}</p>
-                )}
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="lga">LGA</Label>
-                <Input id="lga" {...schoolForm.register("lga")} />
-                {schoolForm.formState.errors.lga && (
-                  <p className="text-sm text-destructive">{schoolForm.formState.errors.lga.message}</p>
-                )}
-              </div>
-              <div className="space-y-2">
+              <div>
                 <Label>School Type</Label>
-                {(["creche", "kg", "primary", "secondary"] as const).map((opt) => {
-                  const selected = (schoolForm.watch("schoolType") ?? []).includes(opt);
-                  return (
-                    <button
-                      key={opt}
-                      type="button"
-                      onClick={() => {
-                        const current = schoolForm.getValues("schoolType") ?? [];
-                        const next = selected
-                          ? current.filter((v) => v !== opt)
-                          : [...current, opt];
-                        schoolForm.setValue("schoolType", next, { shouldValidate: true });
-                      }}
-                      className={`px-3 py-1.5 rounded-lg text-sm border transition-colors mr-2 mb-2 ${
-                        selected
-                          ? "bg-blue-600 text-white border-blue-600"
-                          : "bg-white text-gray-600 border-gray-200 hover:border-blue-300"
-                      }`}
-                    >
-                      {opt === "kg" ? "Kindergarten" : opt.charAt(0).toUpperCase() + opt.slice(1)}
-                    </button>
-                  );
-                })}
-                {schoolForm.formState.errors.schoolType && (
-                  <p className="text-sm text-destructive">{schoolForm.formState.errors.schoolType.message}</p>
-                )}
+                <div className="mt-2">
+                  <Controller
+                    name="schoolType"
+                    control={schoolForm.control}
+                    render={({ field, fieldState }) => (
+                      <MultiSelect
+                        options={[
+                          { value: "creche", label: "Creche" },
+                          { value: "kg", label: "Kindergarten" },
+                          { value: "primary", label: "Primary" },
+                          { value: "secondary", label: "Secondary" },
+                        ]}
+                        selected={field.value}
+                        onChange={field.onChange}
+                        placeholder="Select school type"
+                        hasError={fieldState.error}
+                      />
+                    )}
+                  />
+                </div>
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="address">Address</Label>
-                <Input id="address" {...schoolForm.register("address")} />
+              <div>
+                <Input
+                  type="text"
+                  placeholder="Address"
+                  registration={schoolForm.register("address")}
+                />
               </div>
+
               <div className="flex gap-2">
                 <Button type="button" variant="outline" onClick={() => setStep(2)} className="w-full">
                   Back
@@ -360,9 +400,16 @@ export const Onboarding = () => {
                 </Button>
               </div>
             </form>
-          )}
-        </CardContent>
-      </Card>
-    </div>
+          </>
+        )}
+
+        <p className="text-center text-sm text-gray-500 mt-5.25">
+          Already have an account?{" "}
+          <Link to="/login" className="text-gray-900 font-medium underline hover:text-gray-700">
+            Log in
+          </Link>
+        </p>
+      </div>
+    </AuthLayout>
   );
 };

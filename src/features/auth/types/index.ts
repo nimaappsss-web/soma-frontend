@@ -1,3 +1,13 @@
+export interface CheckIdentifierRequest {
+  identifier: string;
+}
+
+export interface CheckIdentifierResponse {
+  exists: boolean;
+  name?: string;
+  hasPassword: boolean;
+}
+
 export interface LoginRequest {
   identifier: string;
   password: string;

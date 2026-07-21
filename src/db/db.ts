@@ -48,6 +48,7 @@ export interface SubjectCache {
   id: string;
   name: string;
   code?: string;
+  schoolId?: string;
 }
 
 export interface ClassCache {
@@ -55,6 +56,7 @@ export interface ClassCache {
   name: string;
   level: string;
   arm?: string;
+  schoolId?: string;
 }
 
 export interface TeacherFormClassCache {
@@ -100,6 +102,7 @@ export interface ParentCache {
   emailVerified: boolean;
   hasAccount: boolean;
   status: "active" | "pending";
+  schoolId?: string;
   students: Array<{ id: string; name: string; admissionNo: string }>;
   createdAt: string;
   updatedAt: string;
@@ -233,6 +236,23 @@ db.version(15).stores({
   pendingInvites: "id, userId",
   teacherDetails: "id",
   parents: "id, status",
+  syncQueue: "++id, status, createdAt, table, userId",
+  lessonNotes: "id, userId",
+  schoolSettings: "id",
+});
+
+db.version(16).stores({
+  students: "id, name, classId, status, schoolId",
+  attendance: "id, studentId, className, schoolId, date, syncStatus",
+  caScores: "id, studentId, className, schoolId, term, session, syncStatus",
+  subjects: "id, schoolId",
+  classes: "id, level, schoolId",
+  teacherFormClass: "id",
+  teacherAssignments: "id",
+  teachers: "id, userId",
+  pendingInvites: "id, userId",
+  teacherDetails: "id",
+  parents: "id, status, schoolId",
   syncQueue: "++id, status, createdAt, table, userId",
   lessonNotes: "id, userId",
   schoolSettings: "id",

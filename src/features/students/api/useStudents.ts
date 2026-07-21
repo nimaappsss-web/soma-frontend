@@ -15,22 +15,25 @@ interface PaginatedResponse {
   totalPages: number;
 }
 
-export const useStudents = (classId: string, status: string = "ACTIVE", userId?: string) => {
+export const useStudents = (classId: string, status: string = "ACTIVE", userId?: string, schoolId?: string) => {
   const [cached, setCached] = useState<Student[]>([]);
 
   useEffect(() => {
     if (!classId) return;
-    const sub = liveQuery(() =>
-      db.students
+    const sub = liveQuery(async () => {
+      const data = await db.students
         .where("classId")
         .equals(classId)
         .filter((s) => s.status === status)
-        .toArray(),
-    ).subscribe({
+        .toArray();
+      return schoolId
+        ? data.filter((s) => s.schoolId === schoolId)
+        : data;
+    }).subscribe({
       next: (data) => setCached(data as Student[]),
     });
     return () => sub.unsubscribe();
-  }, [classId, status]);
+  }, [classId, status, schoolId]);
 
   const query = useQuery<Student[]>({
     queryKey: [...studentKeys.lists(), classId, status],
@@ -58,20 +61,30 @@ export const useStudents = (classId: string, status: string = "ACTIVE", userId?:
           .toArray();
         const toDelete = existing.filter((s) => !pendingSet.has(s.id)).map((s) => s.id);
         if (toDelete.length > 0) await db.students.bulkDelete(toDelete);
-        const toAdd = apiStudents
+        const toPut = apiStudents
           .filter((s) => !pendingSet.has(s.id))
-          .map((s) => ({ ...s, createdAt: Date.now() }) as StudentCache);
-        if (toAdd.length > 0) await db.students.bulkAdd(toAdd);
+          .map((s) => {
+            const existingStudent = existing.find((e) => e.id === s.id);
+            const merged = existingStudent
+              ? { ...existingStudent, ...s, schoolId: schoolId ?? s.schoolId, createdAt: Date.now() }
+              : { ...s, schoolId: schoolId ?? s.schoolId, createdAt: Date.now() };
+            return merged as StudentCache;
+          });
+        if (toPut.length > 0) await db.students.bulkPut(toPut);
       });
       return apiStudents;
     },
-    staleTime: 5 * 60 * 1000,
+    staleTime: Infinity,
     enabled: !!classId,
     retry: false,
   });
 
+  const sortByName = (a: Student, b: Student) => a.name.localeCompare(b.name);
+
+  const source = cached.length > 0 ? cached : query.data ?? [];
+
   return {
-    data: cached.length > 0 ? cached : query.data ?? [],
+    data: [...source].sort(sortByName),
     isLoading: query.isLoading && cached.length === 0,
     error: cached.length > 0 ? undefined : query.error,
   };
