@@ -1,17 +1,20 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useRef, useMemo } from "react";
 import { Link, useSearchParams } from "react-router";
 import { useLiveQuery } from "dexie-react-hooks";
+import { useQuery } from "@tanstack/react-query";
 
-import { useTeacherProfile, useAttendance } from "../../features/teacher/api";
-import { useStudents } from "../../features/students/api";
 import { useAuth } from "../../contexts/AuthContext";
+import { useTeacherProfile } from "../../features/teacher/api";
+import { useStudents } from "../../features/students/api";
 import { AttendanceListView } from "../../features/teacher/components/AttendanceListView";
 import { AttendanceHistoryView } from "../../features/teacher/components/AttendanceHistoryView";
 import { StudentSwipeCard } from "../../components/ui/StudentSwipeCard";
 import { addToQueue } from "../../sync/syncQueue";
 import { db } from "../../db/db";
+import { fetchData } from "../../utils/fetchData";
 import { Button } from "../../components/ui/button";
 import type { AttendanceStatus } from "../../features/teacher/types";
+import type { AttendanceQueryResponse } from "../../features/teacher/types";
 
 type Tab = "mark" | "history";
 type ViewMode = "list" | "card";
@@ -23,7 +26,6 @@ export const TeacherAttendance = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const tabParam = searchParams.get("tab");
   const tab: Tab = tabParam === "history" ? "history" : "mark";
-  const dateParam = searchParams.get("date");
   const today = new Date().toISOString().split("T")[0];
   const [view, setView] = useState<ViewMode>("list");
 
@@ -35,67 +37,67 @@ export const TeacherAttendance = () => {
     }
   };
 
-  const handleDateChange = (date: string) => {
-    setSearchParams({ tab: "history", date });
-  };
-  const historyDate = dateParam ?? today;
-
   const [attendance, setAttendance] = useState<Record<string, AttendanceStatus>>({});
-  const [isSaved, setIsSaved] = useState(false);
   const [clearConfirm, setClearConfirm] = useState(false);
+  const [modifyMode, setModifyMode] = useState(false);
+  const [userMarked, setUserMarked] = useState(false);
 
   const initialized = useRef(false);
 
-  const { data: students } = useStudents(formClassId ?? "", "ACTIVE", user?.id, user?.schoolId);
-  const { data: existingAttendance } = useAttendance(
-    { classId: formClassId ?? "", date: today },
-  );
+  const { data: students, isLoading: studentsLoading } = useStudents(formClassId ?? "", "ACTIVE");
 
   const cachedAttendance = useLiveQuery(
-    () => formClassId ? db.attendance.where({ date: today, schoolId: user?.schoolId ?? "", className: formClass ?? "" }).toArray() : [],
-    [formClassId, today, user?.schoolId, formClass],
+    () => formClassId ? db.attendance.where("[date+className]").equals([today, formClass ?? ""]).toArray() : [],
+    [formClassId, today, formClass],
   );
 
-  useEffect(() => {
-    if (!existingAttendance?.records || !cachedAttendance || !formClass || !user?.schoolId) return;
-    const hasLocalChanges = cachedAttendance.some(
-      (r) => r.syncStatus === "pending" || r.syncStatus === "failed",
-    );
-    if (!hasLocalChanges) {
-      db.attendance.bulkPut(
-        existingAttendance.records.map((r) => ({
-          id: r.id,
-          studentId: r.studentId,
-          className: formClass,
-          schoolId: user.schoolId ?? "",
-          status: r.status,
-          date: r.date ?? today,
-          syncStatus: "synced" as const,
-          createdAt: Date.now(),
-        })),
+  useQuery({
+    queryKey: ["attendance", formClassId, today],
+    queryFn: async () => {
+      if (!formClassId) throw new Error("no class");
+      const res = await fetchData<AttendanceQueryResponse>(
+        `/attendance?classId=${formClassId}&date=${today}`,
+        "GET",
       );
-    }
-  }, [existingAttendance, cachedAttendance, formClass, user?.schoolId, today]);
-
-  useEffect(() => {
-    if (initialized.current) return;
-
-    const src = cachedAttendance?.length
-      ? cachedAttendance
-      : existingAttendance?.records?.length
-        ? existingAttendance.records
-        : null;
-
-    if (src) {
-      initialized.current = true;
-      const prefill: Record<string, AttendanceStatus> = {};
-      for (const r of src) {
-        prefill[r.studentId] = r.status;
+      if (res.records?.length) {
+        const hasPending = await db.attendance
+          .where("[date+className]").equals([today, formClass ?? ""])
+          .filter((r) => r.syncStatus === "pending")
+          .count();
+        if (hasPending === 0) {
+          await db.attendance
+            .where("[date+className]").equals([today, formClass ?? ""])
+            .delete();
+          await db.attendance.bulkAdd(
+            res.records.map((r) => ({
+              id: r.id,
+              studentId: r.studentId,
+              className: formClass ?? "",
+              schoolId: user?.schoolId ?? "",
+              status: r.status,
+              date: today,
+              syncStatus: "synced" as const,
+            createdAt: Date.now(),
+            })),
+          );
+        }
       }
-      setAttendance(prefill);
-      setIsSaved(true);
+      return res;
+    },
+    enabled: !!formClassId,
+    staleTime: 5 * 60 * 1000,
+  });
+
+  const hasSavedData = cachedAttendance !== undefined && cachedAttendance.length > 0;
+
+  if (!initialized.current && hasSavedData && !userMarked) {
+    initialized.current = true;
+    const prefill: Record<string, AttendanceStatus> = {};
+    for (const r of cachedAttendance) {
+      prefill[r.studentId] = r.status;
     }
-  }, [existingAttendance, cachedAttendance]);
+    setAttendance(prefill);
+  }
 
   const handleMark = (studentId: string, status: AttendanceStatus) => {
     setAttendance((prev) => {
@@ -124,7 +126,7 @@ export const TeacherAttendance = () => {
 
     const queueId = `attendance_${formClassId}_${today}`;
     await addToQueue({
-      userId: user!.id,
+      userId: formClassId,
       table: "attendance",
       recordId: queueId,
       endpoint: "/attendance/bulk",
@@ -145,20 +147,16 @@ export const TeacherAttendance = () => {
       })),
     );
 
-    setIsSaved(true);
+    setModifyMode(false);
+    setUserMarked(true);
   };
 
   const handleModify = () => {
-    setIsSaved(false);
+    setModifyMode(true);
     setView("list");
-    const src = cachedAttendance?.length
-      ? cachedAttendance
-      : existingAttendance?.records?.length
-        ? existingAttendance.records
-        : null;
-    if (src) {
+    if (cachedAttendance?.length) {
       const prefill: Record<string, AttendanceStatus> = {};
-      for (const r of src) {
+      for (const r of cachedAttendance) {
         prefill[r.studentId] = r.status;
       }
       setAttendance(prefill);
@@ -168,16 +166,16 @@ export const TeacherAttendance = () => {
   const handleClearAll = async () => {
     if (!formClassId) return;
 
-    await db.attendance.where({ date: today }).filter((r) => r.schoolId === user?.schoolId).delete();
+    await db.attendance
+      .where("[date+className]").equals([today, formClass ?? ""])
+      .delete();
 
     await db.syncQueue
-      .where("userId")
-      .equals(user!.id)
       .filter((i) => i.table === "attendance" && (i.status === "pending" || i.status === "failed"))
       .delete();
 
     await addToQueue({
-      userId: user!.id,
+      userId: formClassId,
       table: "attendance",
       recordId: `attendance_clear_${formClassId}_${today}`,
       endpoint: "/attendance/bulk",
@@ -186,11 +184,21 @@ export const TeacherAttendance = () => {
     });
 
     setClearConfirm(false);
-    setIsSaved(false);
+    setModifyMode(false);
     setAttendance({});
+    setUserMarked(false);
   };
 
-  if (profileLoading) {
+  const sortedStudents = useMemo(
+    () => [...(students ?? [])].sort((a, b) => {
+      const na = a.name?.toLowerCase() ?? "";
+      const nb = b.name?.toLowerCase() ?? "";
+      return na < nb ? -1 : na > nb ? 1 : 0;
+    }),
+    [students],
+  );
+
+  if (profileLoading || cachedAttendance === undefined) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <p className="text-gray-400">Loading...</p>
@@ -213,9 +221,6 @@ export const TeacherAttendance = () => {
 
   const markedCount = Object.keys(attendance).length;
   const totalStudents = students?.length ?? 0;
-  const sortedStudents = [...(students ?? [])].sort((a, b) =>
-    a.name.toLowerCase().localeCompare(b.name.toLowerCase()),
-  );
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -225,9 +230,9 @@ export const TeacherAttendance = () => {
             <h1 className="text-xl font-bold text-blue-700">
               Attendance — {formClass}
             </h1>
-            <p className="text-xs text-gray-400 mt-0.5">
-              {tab === "history" ? "View history" : isSaved ? "Marked for today" : `${markedCount} / ${totalStudents} marked`}
-            </p>
+              <p className="text-xs text-gray-400 mt-0.5">
+                {tab === "history" ? "View history" : userMarked && !modifyMode ? "Marked for today" : `${markedCount} / ${totalStudents} marked`}
+              </p>
           </div>
           <div className="flex items-center gap-3">
             <div className="flex bg-gray-100 rounded-lg p-0.5">
@@ -262,7 +267,7 @@ export const TeacherAttendance = () => {
           ) : (
             <p className="text-sm text-gray-400 text-center py-8">No class assigned.</p>
           )
-        ) : isSaved ? (
+        ) : userMarked && !modifyMode ? (
           <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-8 max-w-sm mx-auto text-center">
             <div className="text-4xl mb-4">✅</div>
             <h3 className="text-lg font-semibold text-gray-800 mb-2">Attendance Marked</h3>
@@ -294,6 +299,10 @@ export const TeacherAttendance = () => {
                 </button>
               )}
             </div>
+          </div>
+        ) : studentsLoading ? (
+          <div className="flex items-center justify-center h-64">
+            <p className="text-gray-400">Loading students...</p>
           </div>
         ) : !students || students.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-64 gap-4">

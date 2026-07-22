@@ -1,43 +1,17 @@
-import { useEffect, useState } from "react";
-import { useQuery } from "@tanstack/react-query";
-import { liveQuery } from "dexie";
+import { useLiveQuery } from "dexie-react-hooks";
 
-import { fetchData } from "../../../utils/fetchData";
-import { studentKeys } from "../utils/query-keys";
 import { db } from "../../../db/db";
 import type { Student } from "../types";
 
-interface StudentDetailResponse {
-  student: Student;
-}
-
 export const useStudentDetail = (id: string) => {
-  const [cached, setCached] = useState<Student | undefined>(undefined);
-
-  useEffect(() => {
-    if (!id) return;
-    const sub = liveQuery(() => db.students.get(id)).subscribe({
-      next: (data) => setCached(data as Student | undefined),
-    });
-    return () => sub.unsubscribe();
-  }, [id]);
-
-  const query = useQuery<Student>({
-    queryKey: studentKeys.detail(id),
-    queryFn: async () => {
-      const res: StudentDetailResponse = await fetchData(`/students/${id}`, "GET");
-      const existing = await db.students.get(res.student.id);
-      await db.students.put({ ...existing, ...res.student, createdAt: Date.now() } as any, res.student.id);
-      return res.student;
-    },
-    staleTime: Infinity,
-    enabled: !!id,
-    retry: false,
-  });
+  const data = useLiveQuery(
+    () => (id ? db.students.get(id) : Promise.resolve(undefined)) as Promise<Student | undefined>,
+    [id],
+  );
 
   return {
-    data: cached !== undefined ? cached : query.data,
-    isLoading: query.isLoading && cached === undefined,
-    error: cached !== undefined ? undefined : query.error,
+    data,
+    isLoading: data === undefined,
+    error: undefined,
   };
 };

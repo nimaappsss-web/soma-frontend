@@ -1,79 +1,40 @@
-import { useEffect, useState } from "react";
+import { useLiveQuery } from "dexie-react-hooks";
 import { useQuery } from "@tanstack/react-query";
-import { liveQuery } from "dexie";
 
-import { fetchData } from "../../../utils/fetchData";
-import { studentKeys } from "../utils/query-keys";
 import { db } from "../../../db/db";
-import type { Student as StudentCache } from "../../../db/db";
+import { fetchData } from "../../../utils/fetchData";
 import type { Student } from "../types";
 
-interface PaginatedResponse {
-  students: Student[];
-  total: number;
-  page: number;
-  totalPages: number;
-}
+export const useAllStudents = (_userId: string, schoolId?: string) => {
+  const cached = useLiveQuery(
+    () => db.students.toArray() as Promise<Student[]>,
+    [],
+  );
 
-export const useAllStudents = (userId: string, schoolId?: string) => {
-  const [cached, setCached] = useState<Student[]>([]);
-
-  useEffect(() => {
-    const sub = liveQuery(() => {
-      let query = db.students.toArray();
-      return query.then((data) =>
-        schoolId ? data.filter((s) => s.schoolId === schoolId) : data,
-      );
-    }).subscribe({
-      next: (data) => setCached(data as Student[]),
-    });
-    return () => sub.unsubscribe();
-  }, [schoolId]);
-
-  const query = useQuery<Student[]>({
-    queryKey: [...studentKeys.lists(), "all", userId],
+  const query = useQuery({
+    queryKey: ["students", "all"],
     queryFn: async () => {
-      const res: PaginatedResponse = await fetchData("/students?limit=200", "GET");
-      const apiStudents = res.students;
-
-      const pendingIds = (
-        await db.syncQueue
-          .where("userId")
-          .equals(userId)
-          .filter((item) => item.table === "students" && (item.status === "pending" || item.status === "syncing" || item.status === "failed"))
-          .toArray()
-      ).map((item) => item.recordId);
-      const pendingSet = new Set(pendingIds);
-
-      await db.transaction("rw", db.students, async () => {
-        const existing = (await db.students.toArray())
-          .filter((s) => !schoolId || s.schoolId === schoolId);
-        const toDelete = existing.filter((s) => !pendingSet.has(s.id)).map((s) => s.id);
-        if (toDelete.length > 0) await db.students.bulkDelete(toDelete);
-        const toPut = apiStudents
-          .filter((s) => !pendingSet.has(s.id))
-          .map((s) => {
-            const existingStudent = existing.find((e) => e.id === s.id);
-            const merged = existingStudent
-              ? { ...existingStudent, ...s, schoolId: schoolId ?? s.schoolId, createdAt: Date.now() }
-              : { ...s, schoolId: schoolId ?? s.schoolId, createdAt: Date.now() };
-            return merged as StudentCache;
-          });
-        if (toPut.length > 0) await db.students.bulkPut(toPut);
-      });
-      return apiStudents;
+      const res = await fetchData<{ students: Student[] }>("/students?limit=200", "GET");
+      if (res.students?.length) {
+        await db.students.clear();
+        await db.students.bulkAdd(res.students.map((s) => ({ ...s, createdAt: Date.now() })));
+      }
+      return res;
     },
-    staleTime: Infinity,
-    retry: false,
+    staleTime: 5 * 60 * 1000,
   });
 
-  const sortByName = (a: Student, b: Student) => a.name.localeCompare(b.name);
-
-  const source = cached.length > 0 ? cached : query.data ?? [];
+  const fromCache = cached
+    ? schoolId
+      ? cached.filter((s) => s.schoolId === schoolId)
+      : cached
+    : [];
 
   return {
-    data: [...source].sort(sortByName),
-    isLoading: query.isLoading && cached.length === 0,
-    error: cached.length > 0 ? undefined : query.error,
+    data: fromCache.length > 0
+      ? [...fromCache].sort((a, b) => a.name.localeCompare(b.name))
+      : (query.data?.students ?? []),
+    isLoading: fromCache.length === 0 && query.isLoading,
+    error: query.error ?? undefined,
   };
 };

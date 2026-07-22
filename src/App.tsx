@@ -25,6 +25,7 @@ import { AuthProvider } from "./contexts/AuthContext";
 import { SyncProvider } from "./contexts/SyncContext";
 import { SyncIndicator } from "./components/SyncIndicator";
 import { InstallPWA } from "./components/InstallPWA";
+import { InitialSyncProvider } from "./sync/InitialSyncProvider";
 import { AdminSettings } from "./pages/AdminSettings";
 import { AdminProfile } from "./pages/admin/AdminProfile";
 import { Onboarding } from "./pages/Onboarding";
@@ -39,6 +40,7 @@ function App() {
   return (
     <AuthProvider>
       <SyncProvider>
+      <InitialSyncProvider>
       <Routes>
         <Route
           path="/login"
@@ -224,6 +226,7 @@ function App() {
       </Routes>
       <SyncIndicator />
       <InstallPWA />
+      </InitialSyncProvider>
       </SyncProvider>
     </AuthProvider>
   );

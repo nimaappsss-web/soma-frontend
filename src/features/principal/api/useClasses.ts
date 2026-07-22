@@ -1,12 +1,11 @@
-import { useEffect, useState } from "react";
+import { useLiveQuery } from "dexie-react-hooks";
 import { useQuery } from "@tanstack/react-query";
-import { liveQuery } from "dexie";
 
-import { fetchData } from "../../../utils/fetchData";
-import { classKeys } from "../utils/query-keys";
-import { db } from "../../../db/db";
 import { useAuth } from "../../../contexts/AuthContext";
+import { db } from "../../../db/db";
+import { fetchData } from "../../../utils/fetchData";
 import type { ClassCache } from "../../../db/db";
+import type { AxiosErrorResponse } from "../types";
 
 export type Class = ClassCache;
 
@@ -19,59 +18,40 @@ export const useClasses = (schoolId?: string) => {
   const { user } = useAuth();
   const isPublic = !!schoolId;
   const userSchoolId = schoolId || user?.schoolId;
-  const [cached, setCached] = useState<Class[]>([]);
 
-  useEffect(() => {
-    if (isPublic) return;
-    const sub = liveQuery(async () => {
-      const data = await db.classes.toArray();
-      return userSchoolId
-        ? (data as ClassCache[]).filter((c) => c.schoolId === userSchoolId)
-        : (data as ClassCache[]);
-    }).subscribe({
-      next: (data) => setCached(data as Class[]),
-    });
-    return () => sub.unsubscribe();
-  }, [isPublic, userSchoolId]);
-
-  const queryKey = isPublic ? [...classKeys.lists(), "public", schoolId] : classKeys.lists();
-
-  const query = useQuery<ClassesResponse>({
-    queryKey,
-    queryFn: async () => {
-      const url = isPublic ? `/classes?schoolId=${schoolId}` : "/classes";
-      const res = await fetchData<ClassesResponse | Class[]>(url, "GET");
-      const data: ClassesResponse = Array.isArray(res)
-        ? { classes: res, levels: [...new Set(res.map((c) => c.level))] }
-        : res;
-      if (!isPublic) {
-        await db.transaction("rw", db.classes, async () => {
-          await db.classes.clear();
-          await db.classes.bulkAdd(data.classes.map((c) => ({ ...c, schoolId: userSchoolId })));
-        });
-      }
-      return data;
-    },
-    staleTime: isPublic ? 0 : Infinity,
-    enabled: true,
-    retry: false,
+  const publicQuery = useQuery<ClassesResponse, AxiosErrorResponse>({
+    queryKey: ["classes", "public", schoolId],
+    queryFn: () => fetchData(`/classes?schoolId=${schoolId}`, "GET"),
+    enabled: isPublic,
   });
+
+  const data = useLiveQuery(
+    () => {
+      if (isPublic) return Promise.resolve([] as Class[]);
+      return db.classes.toArray() as Promise<Class[]>;
+    },
+    [isPublic],
+  );
 
   if (isPublic) {
     return {
-      data: query.data,
-      isLoading: query.isLoading,
-      error: query.error,
+      data: publicQuery.data,
+      isLoading: publicQuery.isLoading,
+      error: publicQuery.error,
     };
   }
 
-  const levels = cached.length > 0
-    ? [...new Set(cached.map((c) => c.level))]
+  const filtered = data
+    ? userSchoolId
+      ? data.filter((c) => c.schoolId === userSchoolId)
+      : data
     : [];
 
+  const valid = filtered.length > 0 ? filtered : (data ?? []);
+
   return {
-    data: { classes: cached, levels },
-    isLoading: query.isLoading && cached.length === 0,
-    error: cached.length > 0 ? undefined : query.error,
+    data: { classes: valid, levels: [...new Set(valid.map((c) => c.level))] },
+    isLoading: data === undefined,
+    error: undefined,
   };
 };
