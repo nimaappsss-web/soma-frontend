@@ -13,7 +13,7 @@ import { addToQueue } from "../../sync/syncQueue";
 import { db } from "../../db/db";
 import { fetchData } from "../../utils/fetchData";
 import { Button } from "../../components/ui/button";
-import type { AttendanceStatus } from "../../features/teacher/types";
+import type { AttendanceStatus, AttendanceRecord as ApiAttendanceRecord } from "../../features/teacher/types";
 import type { AttendanceQueryResponse } from "../../features/teacher/types";
 
 type Tab = "mark" | "history";
@@ -47,8 +47,11 @@ export const TeacherAttendance = () => {
   const { data: students, isLoading: studentsLoading } = useStudents(formClassId ?? "", "ACTIVE");
 
   const cachedAttendance = useLiveQuery(
-    () => formClassId ? db.attendance.where("[date+className]").equals([today, formClass ?? ""]).toArray() : [],
-    [formClassId, today, formClass],
+    () => {
+      if (!formClassId || !user?.id) return Promise.resolve([] as import("../../db/db").AttendanceRecord[]);
+      return db.attendance.where("[userId+date+className]").equals([user.id, today, formClass ?? ""]).toArray();
+    },
+    [formClassId, today, formClass, user?.id],
   );
 
   useQuery({
@@ -61,25 +64,28 @@ export const TeacherAttendance = () => {
       );
       if (res.records?.length) {
         const hasPending = await db.attendance
-          .where("[date+className]").equals([today, formClass ?? ""])
+          .where("[userId+date+className]").equals([user!.id, today, formClass ?? ""])
           .filter((r) => r.syncStatus === "pending")
           .count();
         if (hasPending === 0) {
-          await db.attendance
-            .where("[date+className]").equals([today, formClass ?? ""])
-            .delete();
-          await db.attendance.bulkAdd(
-            res.records.map((r) => ({
-              id: r.id,
-              studentId: r.studentId,
-              className: formClass ?? "",
-              schoolId: user?.schoolId ?? "",
-              status: r.status,
-              date: today,
-              syncStatus: "synced" as const,
-            createdAt: Date.now(),
-            })),
-          );
+          await db.transaction("rw", db.attendance, async () => {
+            await db.attendance
+              .where("[userId+date+className]").equals([user!.id, today, formClass ?? ""])
+              .delete();
+            await db.attendance.bulkPut(
+              (res.records as ApiAttendanceRecord[]).map((r) => ({
+                id: r.id,
+                userId: user!.id,
+                studentId: r.studentId,
+                className: formClass ?? "",
+                schoolId: user?.schoolId ?? "",
+                status: r.status,
+                date: today,
+                syncStatus: "synced" as const,
+                createdAt: Date.now(),
+              })),
+            );
+          });
         }
       }
       return res;
@@ -137,6 +143,7 @@ export const TeacherAttendance = () => {
     await db.attendance.bulkPut(
       records.map((r) => ({
         id: `att_${formClassId}_${today}_${r.studentId}`,
+        userId: user!.id,
         studentId: r.studentId,
         className: formClass ?? "",
         schoolId: user?.schoolId ?? "",
@@ -167,10 +174,11 @@ export const TeacherAttendance = () => {
     if (!formClassId) return;
 
     await db.attendance
-      .where("[date+className]").equals([today, formClass ?? ""])
+      .where("[userId+date+className]").equals([user!.id, today, formClass ?? ""])
       .delete();
 
     await db.syncQueue
+      .where("userId").equals(user!.id)
       .filter((i) => i.table === "attendance" && (i.status === "pending" || i.status === "failed"))
       .delete();
 

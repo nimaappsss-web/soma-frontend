@@ -20,12 +20,27 @@ export const useSubjects = (schoolId?: string) => {
     enabled: isPublic,
   });
 
+  const networkQuery = useQuery<{ subjects: SubjectCache[] }, AxiosErrorResponse>({
+    queryKey: ["subjects", user?.id],
+    queryFn: async () => {
+      const res = await fetchData<{ subjects: SubjectCache[] }>("/subjects?limit=200", "GET");
+      if (res.subjects?.length && user) {
+        await db.subjects.bulkPut(
+          (res.subjects as SubjectCache[]).map((s) => ({ ...s, userId: user.id, schoolId: user.schoolId ?? "" })),
+        );
+      }
+      return res;
+    },
+    enabled: !isPublic && !!user?.id,
+    staleTime: 5 * 60 * 1000,
+  });
+
   const data = useLiveQuery(
     () => {
-      if (isPublic) return Promise.resolve([] as Subject[]);
-      return db.subjects.toArray() as Promise<Subject[]>;
+      if (isPublic || !user) return Promise.resolve([] as Subject[]);
+      return db.subjects.where("userId").equals(user.id).toArray() as Promise<Subject[]>;
     },
-    [isPublic],
+    [isPublic, user?.id],
   );
 
   if (isPublic) {
@@ -36,15 +51,15 @@ export const useSubjects = (schoolId?: string) => {
     };
   }
 
-  const filtered = data
-    ? userSchoolId
-      ? data.filter((s) => s.schoolId === userSchoolId)
-      : data
-    : [];
+  const cached = data ?? [];
+  const filtered = userSchoolId
+    ? cached.filter((s) => s.schoolId === userSchoolId)
+    : cached;
+  const valid = filtered.length > 0 ? filtered : (networkQuery.data?.subjects ?? []);
 
   return {
-    data: filtered.length > 0 ? filtered : data ?? [],
-    isLoading: data === undefined,
-    error: undefined,
+    data: valid,
+    isLoading: data === undefined && networkQuery.isLoading,
+    error: networkQuery.error ?? undefined,
   };
 };

@@ -1,13 +1,22 @@
 import { useState } from "react";
 import { useLiveQuery } from "dexie-react-hooks";
 
+import { useAuth } from "../contexts/AuthContext";
 import { db } from "../db/db";
 import { StudentCACard } from "../components/ui/StudentCACard";
 
 const ASSESSMENT_TYPES = ["Quiz", "Test", "Assignment", "Project", "Exam"];
 
 export const ContinuousAssessment = () => {
-  const students = useLiveQuery(() => db.students.toArray());
+  const { user } = useAuth();
+  const userId = user?.id ?? "";
+  const students = useLiveQuery(
+    () => {
+      if (!userId) return [];
+      return db.students.where("userId").equals(userId).toArray();
+    },
+    [userId],
+  );
   const [selectedClass, setSelectedClass] = useState("");
   const [assessmentType, setAssessmentType] = useState(ASSESSMENT_TYPES[0]);
   const [maxScore, setMaxScore] = useState(30);
@@ -44,6 +53,7 @@ export const ContinuousAssessment = () => {
     const session = "2025/2026";
     const entries = Object.entries(scores).map(([studentId, score]) => ({
       id: `${studentId}_${session}_${term}_${assessmentType}_${Date.now()}`,
+      userId,
       studentId,
       className: selectedClass,
       schoolId: "school_1",

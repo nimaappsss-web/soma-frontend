@@ -6,8 +6,8 @@ import { Avatar } from "../../../components/ui/Avatar";
 import { useAuth } from "../../../contexts/AuthContext";
 import { db } from "../../../db/db";
 import { fetchData } from "../../../utils/fetchData";
-import type { AttendanceQueryResponse } from "../types";
-import type { Student } from "../../students/types";
+import type { AttendanceQueryResponse, AttendanceRecord as ApiAttendanceRecord } from "../types";
+import type { Student as ApiStudent } from "../../students/types";
 
 interface AttendanceHistoryViewProps {
   classId: string;
@@ -34,25 +34,28 @@ export const AttendanceHistoryView = ({ classId, formClass }: AttendanceHistoryV
       );
       if (res.records?.length) {
         const hasPending = await db.attendance
-          .where("[date+className]").equals([date, formClass ?? ""])
+          .where("[userId+date+className]").equals([user!.id, date, formClass ?? ""])
           .filter((r) => r.syncStatus === "pending")
           .count();
         if (hasPending === 0) {
-          await db.attendance
-            .where("[date+className]").equals([date, formClass ?? ""])
-            .delete();
-          await db.attendance.bulkAdd(
-            res.records.map((r) => ({
-              id: r.id,
-              studentId: r.studentId,
-              className: formClass ?? "",
-              schoolId: user?.schoolId ?? "",
-              status: r.status,
-              date,
-              syncStatus: "synced" as const,
-              createdAt: Date.now(),
-            })),
-          );
+          await db.transaction("rw", db.attendance, async () => {
+            await db.attendance
+              .where("[userId+date+className]").equals([user!.id, date, formClass ?? ""])
+              .delete();
+            await db.attendance.bulkPut(
+              (res.records as ApiAttendanceRecord[]).map((r) => ({
+                id: r.id,
+                userId: user!.id,
+                studentId: r.studentId,
+                className: formClass ?? "",
+                schoolId: user?.schoolId ?? "",
+                status: r.status,
+                date,
+                syncStatus: "synced" as const,
+                createdAt: Date.now(),
+              })),
+            );
+          });
         }
       }
       return res;
@@ -62,14 +65,20 @@ export const AttendanceHistoryView = ({ classId, formClass }: AttendanceHistoryV
   });
 
   const records = useLiveQuery(
-    () => db.attendance.where("[date+className]").equals([date, formClass ?? ""]).toArray(),
-    [date, formClass],
+    () => {
+      if (!user?.id) return Promise.resolve([] as import("../../../db/db").AttendanceRecord[]);
+      return db.attendance.where("[userId+date+className]").equals([user.id, date, formClass ?? ""]).toArray();
+    },
+    [date, formClass, user?.id],
   );
 
   const studentIds = [...new Set((records ?? []).map((r) => r.studentId))];
   const cachedStudents = useLiveQuery(
-    () => studentIds.length > 0 ? db.students.bulkGet(studentIds) : Promise.resolve([]),
-    [studentIds.join(",")],
+    () => {
+      if (!user?.id || studentIds.length === 0) return Promise.resolve([] as (import("../../../db/db").Student | undefined)[]);
+      return db.students.where("[userId+classId]").equals([user.id, classId]).toArray();
+    },
+    [studentIds.join(","), user?.id, classId],
   );
 
   const studentMap = new Map<string, { name: string; admissionNo: string | null }>();
@@ -82,13 +91,14 @@ export const AttendanceHistoryView = ({ classId, formClass }: AttendanceHistoryV
   useQuery({
     queryKey: ["students", "class", classId],
     queryFn: async () => {
-      const res = await fetchData<{ students: Student[] }>(
+      const res = await fetchData<{ students: ApiStudent[] }>(
         `/students?classId=${classId}&status=ACTIVE&limit=200`,
         "GET",
       );
       if (res.students?.length) {
+        const userId = user!.id;
         await db.students.bulkPut(
-          res.students.map((s) => ({ ...s, createdAt: Date.now() })),
+          (res.students as ApiStudent[]).map((s) => ({ ...s, userId, createdAt: Date.now() }) as any),
         );
       }
       return res;

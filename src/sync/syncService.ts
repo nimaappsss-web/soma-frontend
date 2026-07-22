@@ -18,9 +18,9 @@ const classesTask: SyncTask = {
   name: "classes",
   run: async (user) => {
     const res = await fetchData<{ classes: ClassCache[] } | ClassCache[]>("/classes", "GET");
-    const classes = Array.isArray(res) ? res : res.classes;
+    const classes: ClassCache[] = Array.isArray(res) ? res : res.classes ?? [];
     await db.classes.clear();
-    await db.classes.bulkAdd(classes.map((c) => ({ ...c, schoolId: user.schoolId ?? "" })));
+    await db.classes.bulkAdd(classes.map((c) => ({ ...c, userId: user.id, schoolId: user.schoolId ?? "" })));
   },
 };
 
@@ -31,9 +31,9 @@ const subjectsTask: SyncTask = {
       `/subjects?limit=200`,
       "GET",
     );
-    const subjects = Array.isArray(res) ? res : res.subjects;
+    const subjects: SubjectCache[] = Array.isArray(res) ? res : res.subjects ?? [];
     await db.subjects.clear();
-    await db.subjects.bulkAdd(subjects.map((s) => ({ ...s, schoolId: user.schoolId ?? "" })));
+    await db.subjects.bulkAdd(subjects.map((s) => ({ ...s, userId: user.id, schoolId: user.schoolId ?? "" })));
   },
 };
 
@@ -46,32 +46,36 @@ const teachersTask: SyncTask = {
     );
     if (res.teachers?.length) {
       await db.teachers.clear();
-      await db.teachers.bulkAdd(res.teachers);
+      await db.teachers.bulkAdd(
+        (res.teachers as TeacherCache[]).map((t) => ({ ...t, userId: user.id })),
+      );
     }
     if (res.pendingInvites?.length) {
       await db.pendingInvites.clear();
-      await db.pendingInvites.bulkAdd(res.pendingInvites as any);
+      await db.pendingInvites.bulkAdd(
+        (res.pendingInvites as any[]).map((i) => ({ ...i, userId: user.id })),
+      );
     }
   },
 };
 
 const parentsTask: SyncTask = {
   name: "parents",
-  run: async () => {
+  run: async (user) => {
     const res = await fetchData<{ parents: unknown[] }>("/parents?limit=200", "GET");
     if (res.parents?.length) {
       await db.parents.clear();
-      await db.parents.bulkAdd(res.parents as any);
+      await db.parents.bulkAdd((res.parents as any[]).map((p) => ({ ...p, userId: user.id })));
     }
   },
 };
 
 const schoolSettingsTask: SyncTask = {
   name: "schoolSettings",
-  run: async () => {
+  run: async (user) => {
     const res = await fetchData<SchoolSettingsCache>("/school/settings", "GET");
     if (res) {
-      await db.schoolSettings.put({ ...res, id: "default", updatedAt: Date.now() });
+      await db.schoolSettings.put({ ...res, id: "default", userId: user.id, updatedAt: Date.now() });
     }
   },
 };
@@ -98,6 +102,7 @@ const teacherAssignmentsTask: SyncTask = {
     const assignments = res?.assignments ?? [];
     await db.teacherAssignments.put({
       id: user.id,
+      userId: user.id,
       assignmentsJson: JSON.stringify(assignments),
     });
   },

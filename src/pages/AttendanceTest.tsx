@@ -76,6 +76,7 @@ export const AttendanceTest = () => {
             name: "Test Student",
             classId: "JSS 2B",
             status: "ACTIVE",
+            userId: "",
             schoolId: "school_1",
             createdAt: Date.now(),
           })
