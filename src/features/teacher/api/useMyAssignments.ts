@@ -1,53 +1,21 @@
-import { useEffect, useState } from "react";
-import { useQuery } from "@tanstack/react-query";
-import { liveQuery } from "dexie";
+import { useLiveQuery } from "dexie-react-hooks";
 
-import { fetchData } from "../../../utils/fetchData";
-import { teacherKeys } from "../utils/query-keys";
 import { db } from "../../../db/db";
 import type { SubjectAssignment } from "../types";
 
 export const useMyAssignments = (userId: string) => {
-  const [cached, setCached] = useState<SubjectAssignment[] | undefined>(
-    undefined,
+  const data = useLiveQuery(
+    () => (userId ? db.teacherAssignments.get(userId) : Promise.resolve(undefined)),
+    [userId],
   );
 
-  useEffect(() => {
-    const sub = liveQuery(() => db.teacherAssignments.get(userId)).subscribe({
-      next: (data) => {
-        if (data?.assignmentsJson) {
-          try {
-            setCached(JSON.parse(data.assignmentsJson));
-          } catch {
-            setCached([]);
-          }
-        } else {
-          setCached([]);
-        }
-      },
-    });
-    return () => sub.unsubscribe();
-  }, [userId]);
-
-  const query = useQuery<SubjectAssignment[]>({
-    queryKey: teacherKeys.details(),
-    queryFn: async () => {
-      const res: { assignments: SubjectAssignment[] } = await fetchData("/teachers/assignments", "GET");
-      const assignments: SubjectAssignment[] = res?.assignments ?? [];
-      await db.teacherAssignments.put({
-        id: userId,
-        assignmentsJson: JSON.stringify(assignments),
-      });
-      return assignments;
-    },
-    staleTime: Infinity,
-    retry: false,
-    enabled: !!userId,
-  });
+  const parsed: SubjectAssignment[] = data?.assignmentsJson
+    ? JSON.parse(data.assignmentsJson)
+    : [];
 
   return {
-    data: cached !== undefined ? cached : query.data ?? [],
-    isLoading: query.isLoading && cached === undefined,
-    error: cached !== undefined ? undefined : query.error,
+    data: parsed,
+    isLoading: data === undefined,
+    error: undefined,
   };
 };

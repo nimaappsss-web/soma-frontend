@@ -258,4 +258,21 @@ db.version(16).stores({
   schoolSettings: "id",
 });
 
+db.version(17).stores({
+  students: "id, name, classId, status, schoolId",
+  attendance: "id, studentId, className, schoolId, date, syncStatus, [date+className]",
+  caScores: "id, studentId, className, schoolId, term, session, syncStatus",
+  subjects: "id, schoolId",
+  classes: "id, level, schoolId",
+  teacherFormClass: "id",
+  teacherAssignments: "id",
+  teachers: "id, userId",
+  pendingInvites: "id, userId",
+  teacherDetails: "id",
+  parents: "id, status, schoolId",
+  syncQueue: "++id, status, createdAt, table, userId",
+  lessonNotes: "id, userId",
+  schoolSettings: "id",
+});
+
 

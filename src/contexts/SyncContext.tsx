@@ -8,8 +8,6 @@ import {
   type ReactNode,
 } from "react";
 
-import { useQueryClient } from "@tanstack/react-query";
-
 import { db } from "../db/db";
 import { fetchData } from "../utils/fetchData";
 import { useAuth } from "./AuthContext";
@@ -28,12 +26,10 @@ const SyncContext = createContext<SyncContextType | null>(null);
 
 const POLL_INTERVAL = 30000;
 const FLUSH_INTERVAL = 60000;
-const PULL_INTERVAL = 300000;
 const MAX_RETRIES = 3;
 
 export const SyncProvider = ({ children }: { children: ReactNode }) => {
   const { user } = useAuth();
-  const queryClient = useQueryClient();
   const [pendingCount, setPendingCount] = useState(0);
   const [failedCount, setFailedCount] = useState(0);
   const [isSyncing, setIsSyncing] = useState(false);
@@ -75,15 +71,12 @@ export const SyncProvider = ({ children }: { children: ReactNode }) => {
       setSyncTotal(total);
       setSyncProgress(0);
 
-      let flushedAny = false;
-
       for (const item of pending) {
         await db.syncQueue.update(item.id!, { status: "syncing" });
 
         try {
           await fetchData(item.endpoint, item.method, item.payload as Record<string, unknown>);
           await db.syncQueue.update(item.id!, { status: "synced" });
-          flushedAny = true;
           setPendingCount((c) => Math.max(0, c - 1));
         } catch {
           const nextRetry = item.retryCount + 1;
@@ -100,9 +93,6 @@ export const SyncProvider = ({ children }: { children: ReactNode }) => {
       }
 
       setLastSyncedAt(new Date().toISOString());
-      if (flushedAny) {
-        queryClient.invalidateQueries();
-      }
     } finally {
       setIsSyncing(false);
       setSyncProgress(0);
@@ -127,30 +117,7 @@ export const SyncProvider = ({ children }: { children: ReactNode }) => {
     };
   }, [user, flush]);
 
-  const pull = useCallback(() => {
-    if (!user) return;
-    queryClient.invalidateQueries();
-  }, [user, queryClient]);
-
   const triggerSync = useCallback(() => { flush(); }, [flush]);
-
-  useEffect(() => {
-    if (!user) return;
-
-    const pullInterval = setInterval(pull, PULL_INTERVAL);
-
-    const onVisibility = () => {
-      if (document.visibilityState === "visible") {
-        pull();
-      }
-    };
-    document.addEventListener("visibilitychange", onVisibility);
-
-    return () => {
-      clearInterval(pullInterval);
-      document.removeEventListener("visibilitychange", onVisibility);
-    };
-  }, [user, pull]);
 
   return (
     <SyncContext value={{ pendingCount, failedCount, isSyncing, syncProgress, syncTotal, lastSyncedAt, triggerSync }}>

@@ -1,26 +1,25 @@
 import { useEffect, useState } from "react";
-import { useQuery } from "@tanstack/react-query";
 
-import { fetchData } from "../../../utils/fetchData";
 import { db } from "../../../db/db";
 import type { Parent } from "../../principal/types";
 
-interface ParentProfileResponse {
-  parent: Parent;
-}
-
 export const useParentProfile = () => {
-  const query = useQuery<ParentProfileResponse>({
-    queryKey: ["parent", "me"],
-    queryFn: () => fetchData("/parents/me", "GET"),
-    staleTime: Infinity,
-    retry: false,
-  });
+  const [data, setData] = useState<{ parent: Parent } | undefined>(undefined);
+
+  useEffect(() => {
+    const load = async () => {
+      const parents = await db.parents.toArray();
+      if (parents.length > 0) {
+        setData({ parent: parents[0] as unknown as Parent });
+      }
+    };
+    load();
+  }, []);
 
   return {
-    parent: query.data?.parent ?? null,
-    isLoading: query.isLoading,
-    error: query.error,
+    parent: data?.parent ?? null,
+    isLoading: data === undefined,
+    error: undefined,
   };
 };
 
