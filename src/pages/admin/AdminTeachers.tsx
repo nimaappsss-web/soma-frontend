@@ -54,8 +54,8 @@ export const AdminTeachers = () => {
         if (value !== "" && value !== undefined) payload[key] = value;
         if (key === "formClassId" && value === "") payload[key] = null;
       }
-      const existing = await db.teachers.get(id);
-      const merged = { ...existing, ...payload } as TeacherCache;
+      const existing = await db.teachers.where({ id, userId: user!.id }).first();
+      const merged = { ...existing, ...payload, userId: user!.id } as TeacherCache;
       await db.teachers.put(merged, id);
       await addToQueue({
         userId: user!.id,

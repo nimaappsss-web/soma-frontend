@@ -2,6 +2,7 @@ import Dexie, { type EntityTable } from "dexie";
 
 export interface Student {
   id: string;
+  userId: string;
   name: string;
   admissionNo?: string;
   classId: string;
@@ -21,6 +22,7 @@ export type SyncStatus = "pending" | "syncing" | "synced" | "failed";
 
 export interface AttendanceRecord {
   id: string;
+  userId: string;
   studentId: string;
   className: string;
   schoolId: string;
@@ -32,6 +34,7 @@ export interface AttendanceRecord {
 
 export interface CAScore {
   id: string;
+  userId: string;
   studentId: string;
   className: string;
   schoolId: string;
@@ -46,6 +49,7 @@ export interface CAScore {
 
 export interface SubjectCache {
   id: string;
+  userId: string;
   name: string;
   code?: string;
   schoolId?: string;
@@ -53,6 +57,7 @@ export interface SubjectCache {
 
 export interface ClassCache {
   id: string;
+  userId: string;
   name: string;
   level: string;
   arm?: string;
@@ -67,6 +72,7 @@ export interface TeacherFormClassCache {
 
 export interface TeacherAssignmentCache {
   id: string;
+  userId: string;
   assignmentsJson: string;
 }
 
@@ -91,11 +97,13 @@ export interface PendingInviteCache {
 
 export interface TeacherDetailCache {
   id: string;
+  userId: string;
   detailJson: string;
 }
 
 export interface ParentCache {
   id: string;
+  userId: string;
   name: string;
   email: string;
   phone: string | null;
@@ -142,6 +150,7 @@ export interface LessonNoteCache {
 
 export interface SchoolSettingsCache {
   id: string;
+  userId: string;
   settingsJson: string;
   updatedAt: number;
 }
@@ -273,6 +282,35 @@ db.version(17).stores({
   syncQueue: "++id, status, createdAt, table, userId",
   lessonNotes: "id, userId",
   schoolSettings: "id",
+});
+
+db.version(18).stores({
+  students: "id, name, classId, status, schoolId, userId, [userId+classId]",
+  attendance: "id, studentId, className, schoolId, date, syncStatus, userId, [date+className], [userId+date+className]",
+  caScores: "id, studentId, className, schoolId, term, session, syncStatus, userId",
+  subjects: "id, schoolId, userId",
+  classes: "id, level, schoolId, userId, [userId+level]",
+  teacherFormClass: "id",
+  teacherAssignments: "id, userId",
+  teachers: "id, userId",
+  pendingInvites: "id, userId",
+  teacherDetails: "id, userId",
+  parents: "id, status, schoolId, userId",
+  syncQueue: "++id, status, createdAt, table, userId",
+  lessonNotes: "id, userId",
+  schoolSettings: "id, userId",
+}).upgrade(async (tx) => {
+  const students = await tx.table("students").toArray();
+  const staleStudents = students.filter((s: any) => !s.userId).map((s: any) => s.id);
+  if (staleStudents.length) await tx.table("students").bulkDelete(staleStudents);
+
+  const attendance = await tx.table("attendance").toArray();
+  const staleAttendance = attendance.filter((r: any) => !r.userId).map((r: any) => r.id);
+  if (staleAttendance.length) await tx.table("attendance").bulkDelete(staleAttendance);
+
+  const caScores = await tx.table("caScores").toArray();
+  const staleCAScores = caScores.filter((c: any) => !c.userId).map((c: any) => c.id);
+  if (staleCAScores.length) await tx.table("caScores").bulkDelete(staleCAScores);
 });
 
 

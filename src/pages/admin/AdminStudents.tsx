@@ -19,7 +19,7 @@ import toast from "react-hot-toast";
 export const AdminStudents = () => {
   const { user, logout } = useAuth();
   const { data: classesData } = useClasses();
-  const { data: allStudents, isLoading } = useAllStudents(user?.id ?? "", user?.schoolId);
+  const { data: allStudents, isLoading } = useAllStudents(user?.id ?? "");
   const [classFilter, setClassFilter] = useState("");
   const createMutation = useCreateStudent();
   const [showForm, setShowForm] = useState(false);
@@ -128,8 +128,8 @@ export const AdminStudents = () => {
       for (const [key, value] of Object.entries(formData)) {
         if (value !== "" && value !== undefined) payload[key] = value;
       }
-      const existing = await db.students.get(id);
-      const merged = { ...existing, ...payload, createdAt: Date.now() } as StudentCache;
+      const existing = await db.students.where({ id, userId: user!.id }).first();
+      const merged = { ...existing, ...payload, userId: user!.id, createdAt: Date.now() } as StudentCache;
       await db.students.put(merged, id);
       await addToQueue({
         userId: user!.id,

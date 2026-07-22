@@ -68,10 +68,10 @@ export const TeacherSettings = () => {
         return;
       }
 
-      const existing = await db.teacherDetails.get(teacher.id);
+      const existing = await db.teacherDetails.where({ id: teacher.id, userId: user!.id }).first();
       if (existing?.detailJson) {
         const merged = { ...JSON.parse(existing.detailJson), ...payload };
-        await db.teacherDetails.put({ id: teacher.id, detailJson: JSON.stringify(merged) });
+        await db.teacherDetails.put({ id: teacher.id, userId: user!.id, detailJson: JSON.stringify(merged) });
       }
 
       await addToQueue({

@@ -27,10 +27,11 @@ export const useUpdateStudent = () => {
     mutationFn: async ({ id, data }) => {
       const result = await Promise.race([
         (async () => {
-          const existing = await db.students.get(id);
+          const existing = await db.students.where({ id, userId: user!.id }).first();
           const merged = {
             ...existing,
             ...data,
+            userId: user!.id,
             createdAt: Date.now(),
           } as StudentCache;
           await db.students.put(merged, id);

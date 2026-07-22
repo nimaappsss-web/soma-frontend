@@ -5,30 +5,28 @@ import { db } from "../../../db/db";
 import { fetchData } from "../../../utils/fetchData";
 import type { Student } from "../types";
 
-export const useAllStudents = (_userId: string, schoolId?: string) => {
+export const useAllStudents = (userId: string) => {
   const cached = useLiveQuery(
-    () => db.students.toArray() as Promise<Student[]>,
-    [],
+    () => (userId ? db.students.where("userId").equals(userId).toArray() : Promise.resolve([])) as Promise<Student[]>,
+    [userId],
   );
 
-  const query = useQuery({
-    queryKey: ["students", "all"],
+  const query = useQuery<{ students: Student[] }>({
+    queryKey: ["students", "all", userId],
     queryFn: async () => {
       const res = await fetchData<{ students: Student[] }>("/students?limit=200", "GET");
       if (res.students?.length) {
-        await db.students.clear();
-        await db.students.bulkAdd(res.students.map((s) => ({ ...s, createdAt: Date.now() })));
+        await db.students.bulkPut(
+          res.students.map((s: Record<string, unknown>) => ({ ...s, userId, createdAt: Date.now() }) as any),
+        );
       }
       return res;
     },
+    enabled: !!userId,
     staleTime: 5 * 60 * 1000,
   });
 
-  const fromCache = cached
-    ? schoolId
-      ? cached.filter((s) => s.schoolId === schoolId)
-      : cached
-    : [];
+  const fromCache = cached ?? [];
 
   return {
     data: fromCache.length > 0

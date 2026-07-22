@@ -53,6 +53,18 @@ export const useLessonNotes = (userId: string) => {
     return () => sub.unsubscribe();
   }, [userId]);
 
+  useQuery({
+    queryKey: ["lessonNotes", userId],
+    queryFn: async () => {
+      const res = await fetchData<{ notes: LessonNote[] }>("/lesson-notes", "GET");
+      const cached = (res.notes ?? []).map(toCache);
+      await db.lessonNotes.bulkPut(cached);
+      return res;
+    },
+    enabled: !!userId,
+    staleTime: 5 * 60 * 1000,
+  });
+
   return notes;
 };
 
@@ -71,6 +83,8 @@ export const saveLessonNote = async (note: LessonNote) => {
 };
 
 export const deleteLessonNote = async (id: string, userId: string) => {
+  const existing = await db.lessonNotes.where({ id, userId }).first();
+  if (!existing) return;
   await db.lessonNotes.delete(id);
   await addToQueue({
     userId,

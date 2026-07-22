@@ -19,9 +19,10 @@ export const ParentDashboard = () => {
 
   const attendanceMap = useLiveQuery(
     () => db.attendance
+      .where("userId").equals(user!.id)
       .filter((r) => studentIds.includes(r.studentId) && r.date.startsWith(thisMonth))
       .toArray(),
-    [studentIds, thisMonth],
+    [user?.id, studentIds, thisMonth],
   );
 
   const childAttendance = useMemo(() => {

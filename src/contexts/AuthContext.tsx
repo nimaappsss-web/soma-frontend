@@ -32,9 +32,11 @@ const AuthContext = createContext<AuthContextType | null>(null);
 
 const AUTH_EVENT = "soma:auth-change";
 
+const cachedUser = userStorage.get();
+
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
-  const [user, setUser] = useState<User | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const [user, setUser] = useState<User | null>(cachedUser);
+  const [isLoading, setIsLoading] = useState(!cachedUser);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -46,14 +48,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       return;
     }
 
-    const cached = userStorage.get();
-    if (cached) {
-      setUser(cached);
-      setIsLoading(false);
-    }
-
     const mergeUser = (fromServer: User) => {
-      const merged = { ...cached, ...fromServer };
+      const merged = { ...cachedUser, ...fromServer };
       userStorage.set(merged);
       setUser(merged);
     };
@@ -67,7 +63,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         .then(mergeUser)
         .catch((err) => {
           if (!isServerRejection(err)) {
-            if (!cached) setIsLoading(false);
+            if (!cachedUser) setIsLoading(false);
             return;
           }
 
@@ -85,24 +81,24 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
                   if (isServerRejection(refreshErr)) {
                     storage.clear();
                     setUser(null);
-                  } else if (!cached) {
+                  } else if (!cachedUser) {
                     setIsLoading(false);
                   }
                 })
                 .finally(() => {
-                  if (!cached) setIsLoading(false);
+                  if (!cachedUser) setIsLoading(false);
                 });
             } else {
               storage.clear();
               setUser(null);
-              if (!cached) setIsLoading(false);
+              if (!cachedUser) setIsLoading(false);
             }
-          } else if (!cached) {
+          } else if (!cachedUser) {
             setIsLoading(false);
           }
         })
         .finally(() => {
-          if (!cached) setIsLoading(false);
+          if (!cachedUser) setIsLoading(false);
         });
     } else if (refreshToken) {
       authApi
@@ -119,7 +115,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           }
         })
         .finally(() => {
-          if (!cached) setIsLoading(false);
+          if (!cachedUser) setIsLoading(false);
         });
     }
 

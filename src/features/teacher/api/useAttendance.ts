@@ -5,19 +5,19 @@ import { useAuth } from "../../../contexts/AuthContext";
 import { db } from "../../../db/db";
 import { fetchData } from "../../../utils/fetchData";
 import type { AttendanceRecord } from "../../../db/db";
-import type { AttendanceQueryResponse } from "../types";
+import type { AttendanceQueryResponse, AttendanceRecord as ApiAttendanceRecord } from "../types";
 
 export const useAttendance = ({ classId, date }: { classId: string; date: string }) => {
   const { user } = useAuth();
 
   const cached = useLiveQuery(
     () => {
-      if (!classId || !date) return Promise.resolve([] as AttendanceRecord[]);
+      if (!classId || !date || !user?.id) return Promise.resolve([] as AttendanceRecord[]);
       return db.attendance
-        .where({ date, schoolId: user?.schoolId ?? "", className: user?.formClass ?? "" })
+        .where("[userId+date+className]").equals([user.id, date, user?.formClass ?? ""])
         .toArray();
     },
-    [classId, date, user?.schoolId, user?.formClass],
+    [classId, date, user?.id, user?.formClass],
   );
 
   const query = useQuery({
@@ -29,25 +29,28 @@ export const useAttendance = ({ classId, date }: { classId: string; date: string
       );
       if (res.records?.length) {
         const hasPending = await db.attendance
-          .where("[date+className]").equals([date, user?.formClass ?? ""])
+          .where("[userId+date+className]").equals([user!.id, date, user?.formClass ?? ""])
           .filter((r) => r.syncStatus === "pending")
           .count();
         if (hasPending === 0) {
-          await db.attendance
-            .where("[date+className]").equals([date, user?.formClass ?? ""])
-            .delete();
-          await db.attendance.bulkAdd(
-            res.records.map((r) => ({
-              id: r.id,
-              studentId: r.studentId,
-              className: user?.formClass ?? "",
-              schoolId: user?.schoolId ?? "",
-              status: r.status,
-              date,
-              syncStatus: "synced" as const,
-              createdAt: Date.now(),
-            })),
-          );
+          await db.transaction("rw", db.attendance, async () => {
+            await db.attendance
+              .where("[userId+date+className]").equals([user!.id, date, user?.formClass ?? ""])
+              .delete();
+            await db.attendance.bulkPut(
+              (res.records as ApiAttendanceRecord[]).map((r) => ({
+                id: r.id,
+                userId: user!.id,
+                studentId: r.studentId,
+                className: user?.formClass ?? "",
+                schoolId: user?.schoolId ?? "",
+                status: r.status,
+                date,
+                syncStatus: "synced" as const,
+                createdAt: Date.now(),
+              })),
+            );
+          });
         }
       }
       return res;
