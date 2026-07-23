@@ -14,3 +14,7 @@ export { useAcceptParentInvite } from "./useAcceptParentInvite";
 export { useForgotPassword } from "./useForgotPassword";
 export { useResetPassword } from "./useResetPassword";
 export { useChangePassword } from "./useChangePassword";
+export { useStartRegistration } from "./useStartRegistration";
+export { useVerifyRegistrationOTP } from "./useVerifyRegistrationOTP";
+export { useCompleteProfile } from "./useCompleteProfile";
+export { useGoogleAuth } from "./useGoogleAuth";

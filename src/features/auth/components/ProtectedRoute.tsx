@@ -4,7 +4,7 @@ import { Navigate, useLocation } from "react-router";
 import { useAuth } from "../../../contexts/AuthContext";
 import { getPostAuthPath, isFullyRegistered } from "../utils/routing";
 
-const ONBOARDING_FLOW = ["/onboarding", "/complete-registration"];
+const ONBOARDING_FLOW = ["/onboarding"];
 
 export const ProtectedRoute = ({ children }: { children: ReactNode }) => {
   const { user, isAuthenticated, isLoading } = useAuth();

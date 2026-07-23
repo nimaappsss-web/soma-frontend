@@ -4,7 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "../../../contexts/AuthContext";
 import { db } from "../../../db/db";
 import { fetchData } from "../../../utils/fetchData";
-import type { SchoolSetting } from "../types";
+import type { SchoolSetting, SchoolSettingsResponse } from "../types";
 
 const parseSettings = (json: string | undefined): SchoolSetting[] => {
   if (!json) return [];
@@ -21,9 +21,9 @@ export const useSchoolSettings = () => {
   useQuery({
     queryKey: ["schoolSettings", user?.id],
     queryFn: async () => {
-      const res = await fetchData<{ settingsJson?: string }>("/school/settings", "GET");
+      const res = await fetchData<SchoolSettingsResponse>("/school/settings", "GET");
       if (res && user) {
-        await db.schoolSettings.put({ id: "default", userId: user.id, settingsJson: JSON.stringify(res), updatedAt: Date.now() });
+        await db.schoolSettings.put({ id: "default", userId: user.id, settingsJson: JSON.stringify(res.settings), updatedAt: Date.now() });
       }
       return res;
     },

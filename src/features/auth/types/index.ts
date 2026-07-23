@@ -89,6 +89,8 @@ export interface User {
   emailVerified?: boolean;
   hasSchool?: boolean;
   needsRegistration?: boolean;
+  needsSchoolSetup?: boolean;
+  needsPhoneSetup?: boolean;
   formClassId?: string;
   formClass?: string;
   assignments?: Array<{
@@ -136,9 +138,55 @@ export interface AcceptParentInviteRequest {
   password: string;
 }
 
+export interface StartRegistrationRequest {
+  email: string;
+}
+
+export interface StartRegistrationResponse {
+  message: string;
+  expiresIn: number;
+}
+
+export interface VerifyRegistrationOTPRequest {
+  email: string;
+  code: string;
+}
+
+export interface VerifyRegistrationOTPResponse {
+  message: string;
+  registrationToken: string;
+}
+
+export interface CompleteProfileRequest {
+  registrationToken: string;
+  name: string;
+  phone: string;
+  password: string;
+}
+
+export interface CompleteProfileResponse {
+  message: string;
+  user: User;
+  accessToken: string;
+  refreshToken: string;
+}
+
+export interface GoogleAuthRequest {
+  idToken: string;
+  deviceId?: string;
+  deviceName?: string;
+}
+
+export interface GoogleAuthResponse {
+  message: string;
+  user: User;
+  accessToken: string;
+  refreshToken: string;
+}
+
 export type AxiosErrorResponse = {
   response?: {
-    data?: { message?: string };
+    data?: { message?: string; error?: string };
     status?: number;
   };
   message?: string;

@@ -1,11 +1,15 @@
 import { useState, useRef } from "react";
 import { useNavigate, Link } from "react-router";
+import { GoogleLogin } from "@react-oauth/google";
+import toast from "react-hot-toast";
+
 import { useAuth } from "../contexts/AuthContext";
 import {
   useCheckIdentifier,
   useLogin,
   useSendOTPByEmail,
   useVerifyOTP,
+  useGoogleAuth,
 } from "../features/auth/api";
 import { getPostAuthPath } from "../features/auth/utils/routing";
 import { transformError } from "../utils/transformError";
@@ -34,6 +38,7 @@ export const Login = () => {
   const loginMutation = useLogin();
   const sendOTPMutation = useSendOTPByEmail();
   const verifyOTPMutation = useVerifyOTP();
+  const googleAuthMutation = useGoogleAuth();
 
   const isPasswordStep = step === "password";
   const isOTPStep = step === "otp";
@@ -143,6 +148,26 @@ export const Login = () => {
         navigate(`/onboarding?step=2&email=${encodeURIComponent(identifier)}`);
       },
     });
+  };
+
+  const googleBtnRef = useRef<HTMLDivElement>(null);
+
+  const handleGoogleSuccess = (credentialResponse: { credential?: string }) => {
+    if (!credentialResponse.credential) return;
+    googleAuthMutation.mutate(
+      { idToken: credentialResponse.credential, deviceId: "web-1", deviceName: navigator.userAgent },
+      {
+        onSuccess: (res) => {
+          login(res);
+          navigate(getPostAuthPath(res.user));
+        },
+      },
+    );
+  };
+
+  const triggerGoogleLogin = () => {
+    const btn = googleBtnRef.current?.querySelector("div[role='button']") as HTMLElement | null;
+    btn?.click();
   };
 
   return (
@@ -265,14 +290,23 @@ export const Login = () => {
           </div>
         </div>
 
-        <Button
-          type="button"
-          variant="outline"
-          className="w-full text-black/30 bg-pureWhite flex items-center justify-center gap-2.5"
-        >
-          <img src="/icons/googleIcon.svg" alt="Google" className="w-4 h-4" />
-          Continue with Google
-        </Button>
+        <div className="mt-4 mb-4.25 relative">
+          <Button
+            type="button"
+            variant="outline"
+            className="w-full h-11 rounded-full bg-pureWhite flex items-center justify-center gap-2.5 border-gray-200"
+            onClick={triggerGoogleLogin}
+          >
+            <img src="/icons/googleIcon.svg" alt="Google" className="w-4 h-4" />
+            Continue with Google
+          </Button>
+          <div ref={googleBtnRef} className="absolute opacity-0 pointer-events-none overflow-hidden w-0 h-0">
+            <GoogleLogin
+              onSuccess={handleGoogleSuccess}
+              onError={() => toast.error("Google sign-in failed")}
+            />
+          </div>
+        </div>
 
         <p className="text-center text-sm text-gray-500 mt-5.25">
           Don't have an account?{" "}
