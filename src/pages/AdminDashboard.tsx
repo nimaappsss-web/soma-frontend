@@ -6,13 +6,22 @@ import { useAuth } from "../contexts/AuthContext";
 import { TeacherListSection } from "../features/principal/components/TeacherListSection";
 import { Button } from "../components/ui/button";
 import { InviteTeacherModal } from "../features/principal/components/InviteTeacherModal";
+import { SchoolSetupWizard } from "../features/principal/components/SchoolSetupWizard";
+import { PhoneSetupDialog } from "../features/principal/components/PhoneSetupDialog";
 
 export const AdminDashboard = () => {
   const { user, logout } = useAuth();
   const [showInvite, setShowInvite] = useState(false);
 
+  const needsSchoolSetup = user?.needsSchoolSetup ?? user?.hasSchool === false;
+
+  if (needsSchoolSetup) {
+    return <SchoolSetupWizard />;
+  }
+
   return (
     <div className="min-h-screen bg-gray-50">
+      {user?.needsPhoneSetup && <PhoneSetupDialog />}
       <header className="bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between">
         <h1 className="text-xl font-bold text-blue-700">Soma</h1>
         <div className="flex items-center gap-4">

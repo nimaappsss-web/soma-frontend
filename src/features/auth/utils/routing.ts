@@ -5,9 +5,8 @@ function normalizeRole(role: string): string {
 }
 
 export function getPostAuthPath(user: User): string {
-  if (user.emailVerified === false) return "/onboarding?step=2";
-  if (user.hasSchool === false) return "/onboarding?step=3";
-  if (user.needsRegistration) return "/complete-registration";
+  if (user.emailVerified === false) return "/onboarding";
+  if (user.hasSchool === false) return "/admin";
 
   switch (normalizeRole(user.role)) {
     case "principal": return "/admin";
@@ -19,11 +18,7 @@ export function getPostAuthPath(user: User): string {
 }
 
 export function isFullyRegistered(user: User): boolean {
-  return (
-    user.emailVerified !== false &&
-    user.hasSchool !== false &&
-    !user.needsRegistration
-  );
+  return user.emailVerified !== false;
 }
 
 export function getRoleDashboard(role: string): string {

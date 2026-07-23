@@ -23,7 +23,6 @@ export const InitialSyncProvider = ({ children }: { children: ReactNode }) => {
     if (!isAuthenticated || !user) return;
     if (user.emailVerified === false) return;
     if (user.hasSchool === false) return;
-    if (user.needsRegistration) return;
 
     let cancelled = false;
 

@@ -1,73 +1,48 @@
-import { useState, useEffect, useCallback } from "react";
-import { useSearchParams, Link } from "react-router";
-import { useForm, Controller } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
+import { useState, useEffect, useCallback, useRef } from "react";
+import { useNavigate, useSearchParams } from "react-router";
+import { GoogleLogin } from "@react-oauth/google";
+import toast from "react-hot-toast";
 
-import { transformError } from "../utils/transformError";
-import { AuthLayout } from "../layouts/AuthLayout";
-import { Input } from "../components/ui/input";
-import { SelectDropdown } from "../components/ui/select-dropdown";
-import { MultiSelect } from "../components/ui/multi-select";
-import { TagInput } from "../components/ui/tag-input";
-import { Label } from "../components/ui/label";
-import { Button } from "../components/ui/button";
-import { OtpInputField } from "../components/ui/otp-input";
-import { ErrorMessage } from "../components/others/ErrorMessage";
-import { useRegisterPrincipal, useSendOTP, useSendOTPByEmail, useVerifyOTP, useRegisterSchool } from "../features/auth/api";
+import { Step1Email } from "../features/auth/components/Step1Email";
+import { Step2OTP } from "../features/auth/components/Step2OTP";
+import { Step3Profile } from "../features/auth/components/Step3Profile";
+import {
+  useStartRegistration,
+  useVerifyRegistrationOTP,
+  useCompleteProfile,
+  useGoogleAuth,
+} from "../features/auth/api";
 import { useAuth } from "../contexts/AuthContext";
-import { principalFormSchema, schoolFormSchema, type PrincipalFormData, type SchoolFormData } from "../features/auth/utils/validationSchema";
+import { getPostAuthPath } from "../features/auth/utils/routing";
+import { transformError } from "../utils/transformError";
 
-const NIGERIAN_STATES = ["Lagos", "Abuja", "Rivers", "Kano", "Oyo", "Kaduna"];
 const RESEND_COOLDOWN = 30;
 
 export const Onboarding = () => {
   const [searchParams, setSearchParams] = useSearchParams();
-  const stepFromUrl = Number(searchParams.get("step")) || 1;
-  const emailFromUrl = searchParams.get("email") || "";
-  const [step, setStep] = useState(stepFromUrl);
-  const [phone, setPhone] = useState("");
+  const initialStep = Number(searchParams.get("step")) || 1;
+  const savedEmail = searchParams.get("email") || "";
+
+  const [step, setStep] = useState(initialStep);
+  const [email, setEmail] = useState(savedEmail);
   const [otp, setOtp] = useState("");
+  const [registrationToken, setRegistrationToken] = useState("");
   const [cooldown, setCooldown] = useState(0);
 
-  const principalForm = useForm<PrincipalFormData>({
-    resolver: zodResolver(principalFormSchema),
-    defaultValues: { name: "", email: emailFromUrl, phone: "", password: "" },
-  });
+  const updateStep = (newStep: number, extras?: Record<string, string>) => {
+    setStep(newStep);
+    const params: Record<string, string> = { step: String(newStep) };
+    if (extras) Object.assign(params, extras);
+    setSearchParams(params);
+  };
 
-  const schoolForm = useForm<SchoolFormData>({
-    resolver: zodResolver(schoolFormSchema),
-    defaultValues: { name: "", state: "", lga: "", schoolType: ["primary"], address: "", schoolCode: "", arms: [] },
-  });
-
-  const registerPrincipalMutation = useRegisterPrincipal();
-  const sendOTPMutation = useSendOTP();
-  const sendOTPEmailMutation = useSendOTPByEmail();
-  const verifyOTPMutation = useVerifyOTP();
-  const registerSchoolMutation = useRegisterSchool();
-  const { user, setTokens, isAuthenticated } = useAuth();
-
-  useEffect(() => {
-    setStep(stepFromUrl);
-  }, [stepFromUrl]);
-
-  useEffect(() => {
-    if (step !== stepFromUrl) {
-      if (step === 1) {
-        setSearchParams({}, { replace: true });
-      } else {
-        setSearchParams({ step: String(step) }, { replace: true });
-      }
-    }
-  }, [step]);
-
-  useEffect(() => {
-    if (user?.email) {
-      principalForm.setValue("email", user.email);
-    }
-    if (user?.phone) {
-      principalForm.setValue("phone", user.phone);
-    }
-  }, [user?.email, user?.phone]);
+  const startRegistrationMutation = useStartRegistration();
+  const verifyOTPMutation = useVerifyRegistrationOTP();
+  const completeProfileMutation = useCompleteProfile();
+  const googleAuthMutation = useGoogleAuth();
+  const { setTokens } = useAuth();
+  const navigate = useNavigate();
+  const googleBtnRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (cooldown <= 0) return;
@@ -77,341 +52,163 @@ export const Onboarding = () => {
 
   useEffect(() => {
     if (otp.length === 6) {
-      const email = principalForm.getValues("email");
-      if (!email) return;
       verifyOTPMutation.mutate(
         { email, code: otp },
         {
           onSuccess: (data) => {
-            if (!data.accessToken || !data.user) return;
-            setTokens(data.accessToken, "", data.user);
-            setStep(3);
+            setRegistrationToken(data.registrationToken);
+            updateStep(3, { email });
           },
         },
       );
     }
   }, [otp]);
 
-  const handlePrincipalSubmit = (data: PrincipalFormData) => {
-    registerPrincipalMutation.mutate(
+  const handleEmailSubmit = (data: { email: string }) => {
+    setEmail(data.email);
+    startRegistrationMutation.mutate(
+      { email: data.email },
       {
-        principalName: data.name,
-        principalPhone: data.phone,
-        principalEmail: data.email || undefined,
+        onSuccess: () => {
+          setCooldown(RESEND_COOLDOWN);
+          updateStep(2, { email: data.email });
+        },
+      },
+    );
+  };
+
+  const handleResend = useCallback(() => {
+    if (cooldown > 0) return;
+    startRegistrationMutation.mutate(
+      { email },
+      { onSuccess: () => setCooldown(RESEND_COOLDOWN) },
+    );
+  }, [cooldown, email, startRegistrationMutation]);
+
+  const handleVerify = () => {
+    if (otp.length === 6) {
+      verifyOTPMutation.mutate(
+        { email, code: otp },
+        {
+          onSuccess: (data) => {
+            setRegistrationToken(data.registrationToken);
+            updateStep(3, { email });
+          },
+        },
+      );
+    }
+  };
+
+  const handleProfileSubmit = (data: {
+    firstName: string;
+    lastName: string;
+    phone: string;
+    password: string;
+  }) => {
+    if (!registrationToken) return;
+    completeProfileMutation.mutate(
+      {
+        registrationToken,
+        name: `${data.firstName} ${data.lastName}`,
+        phone: data.phone,
         password: data.password,
       },
       {
         onSuccess: (res) => {
-          setPhone(res.phone);
-          setCooldown(RESEND_COOLDOWN);
-          setStep(2);
+          setTokens(res.accessToken, res.refreshToken, res.user);
+          navigate(getPostAuthPath(res.user));
         },
       },
     );
   };
 
-  const handleResendOTP = useCallback(() => {
-    if (cooldown > 0) return;
-    sendOTPMutation.mutate(phone, {
-      onSuccess: () => setCooldown(RESEND_COOLDOWN),
-    });
-  }, [cooldown, phone, sendOTPMutation]);
-
-  const handleResendOTPEmail = useCallback(() => {
-    const email = principalForm.getValues("email");
-    if (!email || cooldown > 0) return;
-    sendOTPEmailMutation.mutate(email, {
-      onSuccess: () => setCooldown(RESEND_COOLDOWN),
-    });
-  }, [cooldown, principalForm, sendOTPEmailMutation]);
-
-  const handleOTPSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    const email = principalForm.getValues("email");
-    if (!email || !otp) return;
-    verifyOTPMutation.mutate(
-      { email, code: otp },
-      {
-        onSuccess: (data) => {
-          if (!data.accessToken || !data.user) return;
-          setTokens(data.accessToken, "", data.user);
-          setStep(3);
-        },
-      },
+  const handleGoBackToOTP = () => {
+    completeProfileMutation.reset();
+    setOtp("");
+    setRegistrationToken("");
+    updateStep(2, { email });
+    startRegistrationMutation.mutate(
+      { email },
+      { onSuccess: () => setCooldown(RESEND_COOLDOWN) },
     );
   };
 
-  const handleSchoolSubmit = (data: SchoolFormData) => {
-    registerSchoolMutation.mutate(
-      {
-        schoolName: data.name,
-        state: data.state,
-        lga: data.lga,
-        schoolType: data.schoolType,
-        address: data.address || undefined,
-        schoolCode: data.schoolCode || undefined,
-        arms: data.arms?.length ? data.arms : undefined,
-      },
+  const handleGoogleSuccess = (credentialResponse: { credential?: string }) => {
+    if (!credentialResponse.credential) return;
+    googleAuthMutation.mutate(
+      { idToken: credentialResponse.credential, deviceId: "web-1", deviceName: navigator.userAgent },
       {
         onSuccess: (res) => {
           setTokens(res.accessToken, res.refreshToken, res.user);
-          window.location.href = "/dashboard";
+          navigate(getPostAuthPath(res.user));
         },
       },
     );
   };
 
+  const triggerGoogleLogin = () => {
+    const btn = googleBtnRef.current?.querySelector("div[role='button']") as HTMLElement | null;
+    btn?.click();
+  };
+
+  const profileError = completeProfileMutation.error;
+  const profileErrorMessage = profileError ? transformError(profileError) : null;
+  const isTokenError = profileErrorMessage?.toLowerCase().includes("registration token");
+
+  const stepError =
+    startRegistrationMutation.error ||
+    verifyOTPMutation.error ||
+    profileError;
+
+  const errorMessage = stepError ? transformError(stepError) : null;
+
+  if (step === 1) {
+    return (
+      <>
+        <Step1Email
+          onSubmit={handleEmailSubmit}
+          onGoogleClick={triggerGoogleLogin}
+          isPending={startRegistrationMutation.isPending}
+          error={errorMessage}
+        />
+        <div ref={googleBtnRef} className="absolute opacity-0 pointer-events-none overflow-hidden w-0 h-0">
+          <GoogleLogin
+            onSuccess={handleGoogleSuccess}
+            onError={() => toast.error("Google sign-in failed")}
+          />
+        </div>
+      </>
+    );
+  }
+
+  if (step === 2) {
+    return (
+      <Step2OTP
+        email={email}
+        otp={otp}
+        onOtpChange={setOtp}
+        onVerify={handleVerify}
+        onResend={handleResend}
+        isPending={verifyOTPMutation.isPending}
+        isResending={startRegistrationMutation.isPending}
+        cooldown={cooldown}
+        error={errorMessage}
+      />
+    );
+  }
+
   return (
-    <AuthLayout reverse>
-      <div className="lg:max-w-85.5">
-        {registerPrincipalMutation.isError && (
-          <div className="mb-4">
-            <ErrorMessage>{transformError(registerPrincipalMutation.error)}</ErrorMessage>
-          </div>
-        )}
-
-        {step === 1 && (
-          <>
-            <div>
-              <h1 className="text-2xl font-medium text-gray-900">Create Account</h1>
-              <p className="text-sm text-black/50 mt-2">Step 1 — Principal details</p>
-            </div>
-
-            <div className="mt-5.25 flex gap-2">
-              {[1, 2, 3].map((s) => (
-                <div key={s} className={`h-1.5 flex-1 rounded-full ${step >= s ? "bg-black" : "bg-white"}`} />
-              ))}
-            </div>
-
-            <form onSubmit={principalForm.handleSubmit(handlePrincipalSubmit)} className="mt-5.25 space-y-5">
-              <div>
-                <Input
-                  type="text"
-                  placeholder="Full name"
-                  registration={principalForm.register("name")}
-                  hasError={principalForm.formState.errors.name}
-                />
-              </div>
-              <div>
-                <Input
-                  type="email"
-                  placeholder="Email"
-                  registration={principalForm.register("email")}
-                  hasError={principalForm.formState.errors.email}
-                />
-              </div>
-              <div>
-                <Input
-                  type="tel"
-                  placeholder="Phone"
-                  registration={principalForm.register("phone")}
-                  hasError={principalForm.formState.errors.phone}
-                />
-              </div>
-              <div>
-                <Input
-                  type="password"
-                  placeholder="Password"
-                  showPasswordToggle
-                  registration={principalForm.register("password")}
-                  hasError={principalForm.formState.errors.password}
-                />
-              </div>
-
-              <Button type="submit" disabled={registerPrincipalMutation.isPending} className="w-full">
-                {registerPrincipalMutation.isPending ? "Creating..." : "Next"}
-              </Button>
-            </form>
-          </>
-        )}
-
-        {step === 2 && (
-          <>
-            <div>
-              <h1 className="text-2xl font-medium text-gray-900">Verify Email</h1>
-              <p className="text-sm text-black/50 mt-2">
-                Step 2 — Enter the code sent to {principalForm.getValues("email")}
-              </p>
-            </div>
-
-            {verifyOTPMutation.isError && (
-              <div className="mt-5.25 mb-4">
-                <ErrorMessage>{transformError(verifyOTPMutation.error)}</ErrorMessage>
-              </div>
-            )}
-
-            <div className="mt-5.25">
-              <OtpInputField
-                value={otp}
-                onChange={(val) => setOtp(val)}
-                numDigits={6}
-              />
-            </div>
-
-            <Button type="submit" disabled={verifyOTPMutation.isPending} className="w-full mt-5.25">
-              {verifyOTPMutation.isPending ? "Verifying..." : "Verify"}
-            </Button>
-
-            <div className="mt-4 text-center">
-              <span className="text-sm text-gray-500">
-                Didn't get the code?{" "}
-              </span>
-              <button
-                type="button"
-                onClick={handleResendOTP}
-                disabled={sendOTPMutation.isPending || cooldown > 0}
-                className="text-sm font-medium underline"
-              >
-                {sendOTPMutation.isPending
-                  ? "Sending..."
-                  : cooldown > 0
-                    ? `Resend via SMS in ${cooldown}s`
-                    : "Resend via SMS"}
-              </button>
-            </div>
-
-            {principalForm.getValues("email") && (
-              <div className="mt-2 text-center">
-                <button
-                  type="button"
-                  onClick={handleResendOTPEmail}
-                  disabled={sendOTPEmailMutation.isPending || cooldown > 0}
-                  className="text-sm underline"
-                >
-                  {sendOTPEmailMutation.isPending
-                    ? "Sending..."
-                    : cooldown > 0
-                      ? `Resend via email in ${cooldown}s`
-                      : "Send to email"}
-                </button>
-              </div>
-            )}
-          </>
-        )}
-
-        {step === 3 && (
-          <>
-            <div>
-              <h1 className="text-2xl font-medium text-gray-900">Register School</h1>
-              <p className="text-sm text-black/50 mt-2">Step 3 — School details</p>
-            </div>
-
-            <form onSubmit={schoolForm.handleSubmit(handleSchoolSubmit)} className="mt-5.25 space-y-5">
-              {registerSchoolMutation.isError && (
-                <div className="mb-4">
-                  <ErrorMessage>{transformError(registerSchoolMutation.error)}</ErrorMessage>
-                </div>
-              )}
-
-              <div>
-                <Input
-                  type="text"
-                  placeholder="School name"
-                  registration={schoolForm.register("name")}
-                  hasError={schoolForm.formState.errors.name}
-                />
-              </div>
-              <div>
-                <Input
-                  type="text"
-                  placeholder="School code (e.g. ATH)"
-                  maxLength={10}
-                  registration={schoolForm.register("schoolCode", {
-                    onChange: (e) => { e.target.value = e.target.value.toUpperCase(); },
-                  })}
-                  hasError={schoolForm.formState.errors.schoolCode}
-                />
-                <p className="text-xs text-placeholder mt-1.5">Prefix for auto-generated admission numbers</p>
-              </div>
-              <div>
-                <Controller
-                  name="arms"
-                  control={schoolForm.control}
-                  render={({ field, fieldState }) => (
-                    <TagInput
-                      value={field.value ?? []}
-                      onChange={field.onChange}
-                      placeholder="Type arm and press Enter (e.g. A)"
-                    />
-                  )}
-                />
-                <p className="text-xs text-placeholder mt-1.5">Press Enter or comma after each arm. Defaults to A, B, C if not provided.</p>
-              </div>
-              <div>
-                <Controller
-                  name="state"
-                  control={schoolForm.control}
-                  render={({ field, fieldState }) => (
-                    <SelectDropdown
-                      options={NIGERIAN_STATES.map((s) => ({ value: s, label: s }))}
-                      value={field.value}
-                      onChange={field.onChange}
-                      placeholder="Select state"
-                      hasError={fieldState.error}
-                    />
-                  )}
-                />
-              </div>
-              <div>
-                <Input
-                  type="text"
-                  placeholder="LGA"
-                  registration={schoolForm.register("lga")}
-                  hasError={schoolForm.formState.errors.lga}
-                />
-              </div>
-              <div>
-                <Label>School Type</Label>
-                <div className="mt-2">
-                  <Controller
-                    name="schoolType"
-                    control={schoolForm.control}
-                    render={({ field, fieldState }) => (
-                      <MultiSelect
-                        options={[
-                          { value: "creche", label: "Creche" },
-                          { value: "kg", label: "Kindergarten" },
-                          { value: "primary", label: "Primary" },
-                          { value: "secondary", label: "Secondary" },
-                        ]}
-                        selected={field.value}
-                        onChange={field.onChange}
-                        placeholder="Select school type"
-                        hasError={fieldState.error}
-                      />
-                    )}
-                  />
-                </div>
-              </div>
-              <div>
-                <Input
-                  type="text"
-                  placeholder="Address"
-                  registration={schoolForm.register("address")}
-                />
-              </div>
-
-              <div className="flex gap-2">
-                <Button type="button" variant="outline" onClick={() => setStep(2)} className="w-full">
-                  Back
-                </Button>
-                <Button type="submit" disabled={registerSchoolMutation.isPending} className="w-full">
-                  {registerSchoolMutation.isPending ? "Registering..." : "Complete"}
-                </Button>
-              </div>
-            </form>
-          </>
-        )}
-
-        {!isAuthenticated && (
-          <p className="text-center text-sm text-gray-500 mt-5.25">
-            Already have an account?{" "}
-            <Link to="/login" className="text-gray-900 font-medium underline hover:text-gray-700">
-              Log in
-            </Link>
-          </p>
-        )}
-      </div>
-    </AuthLayout>
+    <Step3Profile
+      email={email}
+      onSubmit={handleProfileSubmit}
+      isPending={completeProfileMutation.isPending}
+      error={isTokenError ? null : errorMessage}
+      errorActionMessage={isTokenError ? profileErrorMessage ?? undefined : undefined}
+      errorAction={isTokenError ? (
+        <button onClick={handleGoBackToOTP} className="text-sm font-medium underline">
+          Verify email again
+        </button>
+      ) : undefined}
+    />
   );
 };
