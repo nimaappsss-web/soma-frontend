@@ -5,6 +5,7 @@ import { Link } from "react-router";
 import { Avatar } from "../components/ui/Avatar";
 import { useAuth } from "../contexts/AuthContext";
 import { useParentProfile, useChildrenWithDetails } from "../features/parent/api";
+import { useAnnouncements } from "../features/announcements/api";
 import { db } from "../db/db";
 
 export const ParentDashboard = () => {
@@ -122,7 +123,51 @@ export const ParentDashboard = () => {
             })}
           </div>
         )}
+
+        <AnnouncementsSection />
       </main>
+    </div>
+  );
+};
+
+const priorityStyles: Record<string, string> = {
+  URGENT: "bg-red-100 text-red-700",
+  IMPORTANT: "bg-amber-100 text-amber-700",
+  NORMAL: "bg-gray-100 text-gray-600",
+};
+
+const AnnouncementsSection = () => {
+  const { data, isLoading } = useAnnouncements({ limit: 10 });
+  const announcements = data?.announcements ?? [];
+
+  if (!announcements.length && !isLoading) return null;
+
+  return (
+    <div className="mt-8">
+      <h2 className="text-lg font-bold text-gray-800 mb-3">Announcements</h2>
+      {isLoading ? (
+        <p className="text-sm text-gray-400">Loading...</p>
+      ) : (
+        <div className="space-y-3">
+          {announcements.map((a) => (
+            <div key={a.id} className="bg-white rounded-xl border border-gray-100 p-4">
+              <div className="flex items-center gap-2 mb-1">
+                <span className="text-sm font-semibold text-gray-900">{a.title}</span>
+                {a.priority !== "NORMAL" && (
+                  <span className={`text-[11px] font-medium px-2 py-0.5 rounded-full ${priorityStyles[a.priority] ?? ""}`}>
+                    {a.priority}
+                  </span>
+                )}
+              </div>
+              <p className="text-sm text-gray-600 whitespace-pre-wrap">{a.message}</p>
+              <div className="flex items-center gap-3 mt-2 text-xs text-gray-400">
+                <span>{a.createdBy.name}</span>
+                <span>{new Date(a.createdAt).toLocaleDateString()}</span>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 };

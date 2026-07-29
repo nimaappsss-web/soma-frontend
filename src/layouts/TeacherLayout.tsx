@@ -1,5 +1,5 @@
 import { Link, NavLink, Outlet, useLocation } from "react-router";
-import { LayoutDashboard, GraduationCap, ClipboardCheck, BookOpen, Settings, LogOut } from "lucide-react";
+import { LayoutDashboard, GraduationCap, ClipboardCheck, BookOpen, Megaphone, Settings, LogOut } from "lucide-react";
 
 import { useAuth } from "../contexts/AuthContext";
 import { Avatar } from "../components/ui/Avatar";
@@ -10,6 +10,7 @@ const navItems = [
   { label: "Attendance", to: "/teach/attendance", icon: <ClipboardCheck size={18} /> },
   { label: "Students", to: "/teach/students", icon: <GraduationCap size={18} /> },
   { label: "Lesson Notes", to: "/teach/lesson-notes", icon: <BookOpen size={18} /> },
+  { label: "Announcements", to: "/teach/announcements", icon: <Megaphone size={18} /> },
 ];
 
 export const TeacherLayout = () => {

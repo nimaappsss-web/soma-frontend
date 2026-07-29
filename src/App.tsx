@@ -4,6 +4,7 @@ import { AdminLayout } from "./layouts/AdminLayout";
 import { TeacherLayout } from "./layouts/TeacherLayout";
 import { TeacherAttendance } from "./pages/teach/TeacherAttendance";
 import { TeacherLessonNotes } from "./pages/teach/TeacherLessonNotes";
+import { TeacherAnnouncements } from "./pages/teach/TeacherAnnouncements";
 import { TeacherSettings } from "./pages/teach/TeacherSettings";
 import { OnboardingRoute } from "./features/auth/components/OnboardingRoute";
 import { ContinuousAssessment } from "./pages/ContinuousAssessment";
@@ -122,6 +123,7 @@ function App() {
           <Route path="students" element={<TeacherStudents />} />
           <Route path="attendance" element={<TeacherAttendance />} />
           <Route path="lesson-notes" element={<TeacherLessonNotes />} />
+          <Route path="announcements" element={<TeacherAnnouncements />} />
           <Route path="settings" element={<TeacherSettings />} />
         </Route>
         <Route
