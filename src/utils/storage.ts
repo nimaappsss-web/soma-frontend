@@ -74,5 +74,6 @@ export const storage = {
     roleStorage.clearRole();
     userStorage.clear();
     loginTimestampStorage.clear();
+    localStorage.removeItem("soma_initial_sync_done");
   },
 };

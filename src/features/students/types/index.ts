@@ -61,3 +61,72 @@ export interface BulkCreateResponse {
     reason: string;
   }>;
 }
+
+export interface StudentStats {
+  total: number;
+  active: number;
+  byClass: Array<{ classId: string; className: string; count: number }>;
+  byGender: { male: number; female: number };
+  byStatus: { active: number; transferred: number; withdrawn: number; graduated: number };
+}
+
+export interface TimelineEvent {
+  id: string;
+  type: "ADMISSION" | "PROMOTION" | "STATUS_CHANGE" | "CLASS_TRANSFER";
+  description: string;
+  date: string;
+}
+
+export interface StudentTimeline {
+  studentId: string;
+  events: TimelineEvent[];
+}
+
+export interface SubjectScore {
+  subjectId: string;
+  subjectName: string;
+  scores: Array<{ type: string; score: number; maxScore: number }>;
+  caTotal: number;
+  examScore: number;
+  total: number;
+  grade: string;
+  teacherName: string;
+}
+
+export interface StudentAcademics {
+  studentId: string;
+  term: string;
+  session: string;
+  average: number;
+  bestSubject: { name: string; score: number };
+  worstSubject: { name: string; score: number };
+  attendancePercentage: number;
+  subjects: SubjectScore[];
+  position: number;
+  classSize: number;
+}
+
+export interface MonthlyAttendanceDay {
+  date: string;
+  status: "present" | "absent" | "holiday";
+}
+
+export interface StudentMonthlyAttendance {
+  studentId: string;
+  month: number;
+  year: number;
+  schoolDays: number;
+  present: number;
+  absent: number;
+  percentage: number;
+  days: MonthlyAttendanceDay[];
+}
+
+export interface ReserveBatchRequest {
+  count: number;
+  classId: string;
+}
+
+export interface ReserveBatchResponse {
+  reservedAdmissions: string[];
+}

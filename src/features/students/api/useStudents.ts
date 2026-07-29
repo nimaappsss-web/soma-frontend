@@ -30,11 +30,27 @@ export const useStudents = (classId: string, status: string = "ACTIVE", _userId?
         `/students?classId=${classId}&status=${status}&limit=200`,
         "GET",
       );
-      if (res.students?.length) {
-        await db.students.bulkPut(
-          res.students.map((s: Record<string, unknown>) => ({ ...s, userId, createdAt: Date.now() }) as any),
-        );
-      }
+
+      const hasPending = await db.syncQueue
+        .where("userId")
+        .equals(userId)
+        .filter((i) => i.table === "students" && i.status === "pending")
+        .count();
+
+      await db.transaction("rw", db.students, async () => {
+        if (hasPending === 0) {
+          await db.students
+            .where("[userId+classId]")
+            .equals([userId, classId])
+            .delete();
+        }
+        if (res.students?.length) {
+          await db.students.bulkPut(
+            res.students.map((s: Record<string, unknown>) => ({ ...s, userId, createdAt: Date.now() }) as any),
+          );
+        }
+      });
+
       return res;
     },
     enabled: !!classId && !!userId,

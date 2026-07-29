@@ -1,5 +1,5 @@
 import { useState, useMemo } from "react";
-import { Link } from "react-router";
+import toast from "react-hot-toast";
 
 import { useAuth } from "../../contexts/AuthContext";
 import { useTeacherProfile } from "../../features/teacher/api";
@@ -12,7 +12,6 @@ import {
   useGenerateLessonNote,
 } from "../../features/lesson-notes/api";
 import type { LessonNote, GenerateResponse } from "../../features/lesson-notes/types";
-import toast from "react-hot-toast";
 
 const genId = () => crypto.randomUUID();
 
@@ -41,8 +40,8 @@ const FIELD_ORDER: Array<{ key: keyof GenerateResponse; label: string; type: Fie
 ];
 
 export const TeacherLessonNotes = () => {
-  const { user, logout } = useAuth();
-  const { formClass, schoolName, name, role } = useTeacherProfile();
+  const { user } = useAuth();
+  const { formClass } = useTeacherProfile();
   const notes = useLessonNotes(user?.id ?? "");
 
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -245,132 +244,119 @@ export const TeacherLessonNotes = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <header className="bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between">
-        <h1 className="text-xl font-bold text-blue-700">Soma</h1>
-        <div className="flex items-center gap-4">
-          <span className="text-sm text-gray-500">{schoolName}</span>
-          <span className="text-sm text-gray-700">{name}</span>
-          <span className="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded capitalize">{role}</span>
-          <button onClick={logout} className="text-sm text-red-500 hover:text-red-600">Sign out</button>
+    <div className="p-8">
+      <h2 className="text-2xl font-bold text-gray-800 mb-6">Lesson Notes</h2>
+
+      <div className="flex gap-6">
+        <div className="w-56 shrink-0">
+          <button
+            onClick={newNote}
+            className="w-full mb-4 px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700"
+          >
+            + New Note
+          </button>
+          <div className="space-y-1">
+            {notes.map((note) => (
+              <button
+                key={note.id}
+                onClick={() => openNote(note)}
+                className={`w-full text-left px-3 py-2 rounded-lg text-sm transition-colors ${
+                  editingId === note.id
+                    ? "bg-blue-100 text-blue-700"
+                    : "hover:bg-gray-100 text-gray-700"
+                }`}
+              >
+                <p className="font-medium truncate">{note.topic || "Untitled"}</p>
+                <p className="text-xs text-gray-400 truncate">{note.subjectName} · Wk {note.week}</p>
+              </button>
+            ))}
+            {notes.length === 0 && (
+              <p className="text-xs text-gray-400 text-center py-4">No notes yet</p>
+            )}
+          </div>
         </div>
-      </header>
 
-      <main className="max-w-6xl mx-auto px-6 py-8">
-        <Link to="/teach" className="text-sm text-gray-400 hover:text-gray-600">&larr; Dashboard</Link>
-        <h2 className="text-2xl font-bold text-gray-800 mt-1 mb-6">Lesson Notes</h2>
-
-        <div className="flex gap-6">
-          <div className="w-56 shrink-0">
-            <button
-              onClick={newNote}
-              className="w-full mb-4 px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700"
-            >
-              + New Note
-            </button>
-            <div className="space-y-1">
-              {notes.map((note) => (
-                <button
-                  key={note.id}
-                  onClick={() => openNote(note)}
-                  className={`w-full text-left px-3 py-2 rounded-lg text-sm transition-colors ${
-                    editingId === note.id
-                      ? "bg-blue-100 text-blue-700"
-                      : "hover:bg-gray-100 text-gray-700"
-                  }`}
+        <div className="flex-1 min-w-0">
+          <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-3 mb-6">
+              <div>
+                <label className="block text-xs text-gray-500 mb-1">Class</label>
+                <select
+                  value={className}
+                  onChange={(e) => { setClassName(e.target.value); setSubjectName(""); setWeek(0); }}
+                  className="w-full h-10 rounded-md border border-gray-200 px-3 text-sm"
                 >
-                  <p className="font-medium truncate">{note.topic || "Untitled"}</p>
-                  <p className="text-xs text-gray-400 truncate">{note.subjectName} · Wk {note.week}</p>
+                  <option value="">Select class</option>
+                  {formClass && <option value={formClass}>{formClass}</option>}
+                </select>
+              </div>
+              <div>
+                <label className="block text-xs text-gray-500 mb-1">Subject</label>
+                <select
+                  value={subjectName}
+                  onChange={(e) => { setSubjectName(e.target.value); setWeek(0); }}
+                  disabled={!className}
+                  className="w-full h-10 rounded-md border border-gray-200 px-3 text-sm disabled:opacity-50"
+                >
+                  <option value="">Select subject</option>
+                  {subjects.map((s) => (
+                    <option key={s} value={s}>{s}</option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="block text-xs text-gray-500 mb-1">Week</label>
+                <select
+                  value={week}
+                  onChange={(e) => setWeek(Number(e.target.value))}
+                  disabled={!subjectName}
+                  className="w-full h-10 rounded-md border border-gray-200 px-3 text-sm disabled:opacity-50"
+                >
+                  <option value={0}>Select week</option>
+                  {weekOptions.map((t: { week: number; topic: string }) => (
+                    <option key={t.week} value={t.week}>Week {t.week} — {t.topic}</option>
+                  ))}
+                </select>
+              </div>
+              <div className="flex items-end">
+                <button
+                  onClick={handleGenerate}
+                  disabled={generating || !online || !week}
+                  className="w-full h-10 px-4 bg-blue-600 text-white rounded-lg text-sm font-medium disabled:opacity-50 hover:bg-blue-700"
+                >
+                  {generating ? "Generating..." : online ? "Generate with AI" : "Offline"}
                 </button>
-              ))}
-              {notes.length === 0 && (
-                <p className="text-xs text-gray-400 text-center py-4">No notes yet</p>
+              </div>
+            </div>
+
+            {content.topic && (
+              <div className="mb-4 p-3 bg-blue-50 rounded-lg">
+                <p className="text-sm font-medium text-blue-800">{content.topic}</p>
+                <p className="text-xs text-blue-600">{content.subject} · {content.className} · {content.term} · Week {content.week} · {content.duration}</p>
+              </div>
+            )}
+
+            <div className="space-y-4">
+              {FIELD_ORDER.map(renderField)}
+            </div>
+
+            <div className="flex gap-3 mt-6 pt-4 border-t border-gray-100">
+              <button
+                onClick={handleSave}
+                disabled={saving}
+                className="px-4 py-2 bg-green-600 text-white rounded-lg text-sm font-medium disabled:opacity-50 hover:bg-green-700"
+              >
+                {saving ? "Saving..." : "Save"}
+              </button>
+              {editingId && (
+                <button onClick={handleDelete} className="px-4 py-2 text-red-500 text-sm hover:text-red-600">
+                  Delete
+                </button>
               )}
             </div>
           </div>
-
-          <div className="flex-1 min-w-0">
-            <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-3 mb-6">
-                <div>
-                  <label className="block text-xs text-gray-500 mb-1">Class</label>
-                  <select
-                    value={className}
-                    onChange={(e) => { setClassName(e.target.value); setSubjectName(""); setWeek(0); }}
-                    className="w-full h-10 rounded-md border border-gray-200 px-3 text-sm"
-                  >
-                    <option value="">Select class</option>
-                    {formClass && <option value={formClass}>{formClass}</option>}
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-xs text-gray-500 mb-1">Subject</label>
-                  <select
-                    value={subjectName}
-                    onChange={(e) => { setSubjectName(e.target.value); setWeek(0); }}
-                    disabled={!className}
-                    className="w-full h-10 rounded-md border border-gray-200 px-3 text-sm disabled:opacity-50"
-                  >
-                    <option value="">Select subject</option>
-                    {subjects.map((s) => (
-                      <option key={s} value={s}>{s}</option>
-                    ))}
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-xs text-gray-500 mb-1">Week</label>
-                  <select
-                    value={week}
-                    onChange={(e) => setWeek(Number(e.target.value))}
-                    disabled={!subjectName}
-                    className="w-full h-10 rounded-md border border-gray-200 px-3 text-sm disabled:opacity-50"
-                  >
-                    <option value={0}>Select week</option>
-                    {weekOptions.map((t: { week: number; topic: string }) => (
-                      <option key={t.week} value={t.week}>Week {t.week} — {t.topic}</option>
-                    ))}
-                  </select>
-                </div>
-                <div className="flex items-end">
-                  <button
-                    onClick={handleGenerate}
-                    disabled={generating || !online || !week}
-                    className="w-full h-10 px-4 bg-blue-600 text-white rounded-lg text-sm font-medium disabled:opacity-50 hover:bg-blue-700"
-                  >
-                    {generating ? "Generating..." : online ? "Generate with AI" : "Offline"}
-                  </button>
-                </div>
-              </div>
-
-              {content.topic && (
-                <div className="mb-4 p-3 bg-blue-50 rounded-lg">
-                  <p className="text-sm font-medium text-blue-800">{content.topic}</p>
-                  <p className="text-xs text-blue-600">{content.subject} · {content.className} · {content.term} · Week {content.week} · {content.duration}</p>
-                </div>
-              )}
-
-              <div className="space-y-4">
-                {FIELD_ORDER.map(renderField)}
-              </div>
-
-              <div className="flex gap-3 mt-6 pt-4 border-t border-gray-100">
-                <button
-                  onClick={handleSave}
-                  disabled={saving}
-                  className="px-4 py-2 bg-green-600 text-white rounded-lg text-sm font-medium disabled:opacity-50 hover:bg-green-700"
-                >
-                  {saving ? "Saving..." : "Save"}
-                </button>
-                {editingId && (
-                  <button onClick={handleDelete} className="px-4 py-2 text-red-500 text-sm hover:text-red-600">
-                    Delete
-                  </button>
-                )}
-              </div>
-            </div>
-          </div>
         </div>
-      </main>
+      </div>
     </div>
   );
 };

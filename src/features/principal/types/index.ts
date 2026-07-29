@@ -9,9 +9,10 @@ export type AxiosErrorResponse = {
 };
 
 export interface InviteInfo {
-  email: string;
+  email: string | null;
   role: string;
   schoolId: string;
+  schoolName?: string;
 }
 
 export interface AcceptInviteRequest {
@@ -23,6 +24,13 @@ export interface AcceptInviteRequest {
     classIds: string[];
   }>;
   formClassId?: string;
+  email?: string;
+}
+
+export interface GenerateInviteLinkResponse {
+  token: string;
+  link: string;
+  expiresAt: string;
 }
 
 export interface AcceptInviteResponse {
@@ -126,4 +134,75 @@ export interface ParentsResponse {
   total: number;
   page: number;
   totalPages: number;
+}
+
+export interface ParentStats {
+  total: number;
+  active: number;
+  pending: number;
+}
+
+export interface InviteParentRequest {
+  name: string;
+  email: string;
+  studentId: string;
+}
+
+export interface InviteParentResponse {
+  invite: {
+    id: string;
+    invitedName: string;
+    invitedEmail: string;
+    role: string;
+    expiresAt: string;
+  };
+}
+
+export interface ClassDetail {
+  id: string;
+  name: string;
+  level: string;
+  arm?: string;
+  studentCount: number;
+  formTeacher: { id: string; name: string } | null;
+}
+
+export interface ClassDetailResponse {
+  class: ClassDetail;
+}
+
+export interface UpdateClassPayload {
+  name?: string;
+  level?: string;
+  arm?: string;
+  formTeacherId?: string;
+}
+
+export interface UpdateSubjectPayload {
+  name?: string;
+  code?: string;
+}
+
+export interface DashboardStats {
+  students: { total: number; active: number; male: number; female: number };
+  teachers: { total: number; active: number; pendingInvites: number };
+  classes: { total: number };
+  parents: { total: number; active: number; pending: number };
+  subjects: { total: number };
+  attendance: { today: { present: number; absent: number; percentage: number; dayOfWeek: string }; isHoliday: boolean };
+  finance: { collectedThisTerm: number; outstanding: number; paymentRate: number };
+}
+
+export interface SchoolInfo {
+  id: string;
+  name: string;
+  logo?: string;
+  state: string;
+  lga: string;
+  schoolType: string[];
+  address?: string;
+  arms?: string[];
+  admissionPattern?: string;
+  schoolCode?: string;
+  admissionCounter?: number;
 }

@@ -29,11 +29,24 @@ export const useClasses = (schoolId?: string) => {
     queryKey: ["classes", user?.id],
     queryFn: async () => {
       const res = await fetchData<{ classes: ClassCache[] }>("/classes", "GET");
-      if (res.classes?.length && user) {
-        await db.classes.bulkPut(
-          (res.classes as ClassCache[]).map((c) => ({ ...c, userId: user.id, schoolId: user.schoolId ?? "" })),
-        );
-      }
+
+      const hasPending = await db.syncQueue
+        .where("userId")
+        .equals(user!.id)
+        .filter((i) => i.table === "classes" && i.status === "pending")
+        .count();
+
+      await db.transaction("rw", db.classes, async () => {
+        if (hasPending === 0) {
+          await db.classes.where("userId").equals(user!.id).delete();
+        }
+        if (res.classes?.length && user) {
+          await db.classes.bulkPut(
+            (res.classes as ClassCache[]).map((c) => ({ ...c, userId: user.id, schoolId: user.schoolId ?? "" })),
+          );
+        }
+      });
+
       return res;
     },
     enabled: !isPublic && !!user?.id,

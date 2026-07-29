@@ -1,11 +1,11 @@
-import { useState, useMemo, useEffect } from "react";
-import { Link } from "react-router";
+import { useState, useMemo, useEffect, useCallback } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { Trash2 } from "lucide-react";
 
 import { Avatar } from "../../components/ui/Avatar";
 import { useAuth } from "../../contexts/AuthContext";
-import { useAllStudents, useCreateStudent, useStudentDetail } from "../../features/students/api";
+import { useAllStudents, useCreateStudent, useStudentDetail, useDeleteStudent, useBulkDeleteStudents } from "../../features/students/api";
 import { BulkAddStudents } from "../../features/students/components/BulkAddStudents";
 import { useClasses } from "../../features/principal/api";
 import { createStudentSchema, editStudentSchema, type CreateStudentFormData, type EditStudentFormData } from "../../features/students/utils/validationSchema";
@@ -17,11 +17,14 @@ import { transformError } from "../../utils/transformError";
 import toast from "react-hot-toast";
 
 export const AdminStudents = () => {
-  const { user, logout } = useAuth();
+  const { user } = useAuth();
   const { data: classesData } = useClasses();
   const { data: allStudents, isLoading } = useAllStudents(user?.id ?? "");
   const [classFilter, setClassFilter] = useState("");
   const createMutation = useCreateStudent();
+  const deleteMutation = useDeleteStudent();
+  const bulkDeleteMutation = useBulkDeleteStudents();
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [showForm, setShowForm] = useState(false);
   const [showBulk, setShowBulk] = useState(false);
   const [editingStudent, setEditingStudent] = useState<Student | null>(null);
@@ -34,6 +37,38 @@ export const AdminStudents = () => {
       : allStudents,
     [allStudents, classFilter],
   );
+
+  const allSelected = filtered.length > 0 && selectedIds.size === filtered.length;
+
+  const toggleSelect = useCallback((id: string) => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id); else next.add(id);
+      return next;
+    });
+  }, []);
+
+  const toggleSelectAll = useCallback(() => {
+    setSelectedIds((prev) =>
+      prev.size === filtered.length ? new Set() : new Set(filtered.map((s) => s.id)),
+    );
+  }, [filtered]);
+
+  const handleDelete = (s: Student) => {
+    if (!window.confirm(`Delete ${s.name}? This cannot be undone.`)) return;
+    deleteMutation.mutate(s.id);
+  };
+
+  const handleBulkDelete = () => {
+    if (selectedIds.size === 0) return;
+    const count = selectedIds.size;
+    if (!window.confirm(`Delete ${count} student${count > 1 ? "s" : ""}? This cannot be undone.`)) return;
+    bulkDeleteMutation.mutate(Array.from(selectedIds), {
+      onSuccess: () => setSelectedIds(new Set()),
+    });
+  };
+
+  useEffect(() => { setSelectedIds(new Set()); }, [classFilter]);
 
   const {
     register,
@@ -183,206 +218,231 @@ export const AdminStudents = () => {
   );
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <header className="bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between">
-        <h1 className="text-xl font-bold text-blue-700">Soma</h1>
-        <div className="flex items-center gap-4">
-          <span className="text-sm text-gray-500">{user?.schoolName}</span>
-          <Avatar name={user?.name ?? ""} size={24} className="inline-block align-middle" />
-          <span className="text-sm text-gray-700">{user?.name}</span>
-          <span className="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded capitalize">
-            {user?.role}
-          </span>
-          <button onClick={logout} className="text-sm text-red-500 hover:text-red-600">Sign out</button>
+    <div className="p-6 max-w-4xl">
+      <div className="flex items-center justify-between mb-6">
+        <h1 className="text-2xl font-semibold text-gray-900">Students</h1>
+        <div className="flex gap-3">
+          <select
+            value={classFilter}
+            onChange={(e) => setClassFilter(e.target.value)}
+            className="h-10 rounded-md border border-gray-200 px-3 text-sm w-56"
+          >
+            <option value="">All classes</option>
+            {classesData?.classes.map((c) => (
+              <option key={c.id} value={c.id}>{c.name}</option>
+            ))}
+          </select>
+          <button
+            onClick={() => { setShowBulk(true); setShowForm(false); }}
+            className="px-4 py-2 border border-blue-600 text-blue-600 rounded-lg text-sm font-medium hover:bg-blue-50"
+          >
+            Bulk Add
+          </button>
+          <button
+            onClick={() => { if (!classFilter) return; setShowForm(true); setShowBulk(false); }}
+            disabled={!classFilter}
+            className="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 disabled:opacity-50"
+          >
+            Add Student
+          </button>
         </div>
-      </header>
+      </div>
 
-      <main className="max-w-4xl mx-auto px-6 py-8">
-        <div className="flex items-center justify-between mb-6">
-          <div>
-            <Link to="/admin" className="text-sm text-gray-400 hover:text-gray-600">&larr; Dashboard</Link>
-            <h2 className="text-2xl font-bold text-gray-800 mt-1">Students</h2>
+      {showBulk && (
+        <BulkAddStudents
+          classes={classesData?.classes ?? []}
+          onClose={() => setShowBulk(false)}
+        />
+      )}
+
+      {showForm && (
+        <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100 mb-6">
+          <h3 className="font-semibold text-gray-800 mb-4">New Student — {classesData?.classes.find(c => c.id === classFilter)?.name}</h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {field("Full Name *", "name", "Chidi Okonkwo")}
+            {field("Gender", "gender", "")}
+            {field("Date of Birth", "dateOfBirth", "", "date")}
+            {field("Address", "address", "15 Awolowo Road, Ikoyi")}
+            <div className="md:col-span-2 border-t border-gray-100 pt-4">
+              <p className="text-xs font-medium text-gray-500 mb-3 uppercase tracking-wide">Parent/Guardian</p>
+            </div>
+            {field("Parent Name", "parentName", "Mr. Okonkwo")}
+            {field("Parent Phone *", "parentPhone", "08012345678")}
+            {field("Parent Email", "parentEmail", "okonkwo@email.com")}
           </div>
-          <div className="flex gap-3">
-            <select
-              value={classFilter}
-              onChange={(e) => setClassFilter(e.target.value)}
-              className="h-10 rounded-md border border-gray-200 px-3 text-sm w-56"
-            >
-              <option value="">All classes</option>
-              {classesData?.classes.map((c) => (
-                <option key={c.id} value={c.id}>{c.name}</option>
-              ))}
-            </select>
+          <div className="flex gap-3 mt-6">
             <button
-              onClick={() => { setShowBulk(true); setShowForm(false); }}
-              className="px-4 py-2 border border-blue-600 text-blue-600 rounded-lg text-sm font-medium hover:bg-blue-50"
+              onClick={handleSubmit(onAdd)}
+              disabled={createMutation.isPending}
+              className="px-4 py-2 bg-green-600 text-white rounded-lg text-sm font-medium disabled:opacity-50 hover:bg-green-700"
             >
-              Bulk Add
+              {createMutation.isPending ? "Saving..." : "Save"}
+            </button>
+            <button onClick={closeForm} className="px-4 py-2 text-gray-500 text-sm hover:text-gray-700">
+              Cancel
+            </button>
+          </div>
+        </div>
+      )}
+
+      {editingStudent && (
+        <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100 mb-6">
+          <h3 className="font-semibold text-gray-800 mb-4">Edit Student — {editingStudent.name}</h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-xs text-gray-500 mb-1">Full Name *</label>
+              <input type="text" {...editRegister("name")} className="w-full h-10 rounded-md border border-gray-200 px-3 text-sm" />
+              {editErrors.name && <p className="text-xs text-destructive mt-1">{editErrors.name.message}</p>}
+            </div>
+            <div>
+              <label className="block text-xs text-gray-500 mb-1">Class *</label>
+              <select {...editRegister("classId")} className="w-full h-10 rounded-md border border-gray-200 px-3 text-sm">
+                <option value="">Select class</option>
+                {classesData?.classes.map((c) => (
+                  <option key={c.id} value={c.id}>{c.name}</option>
+                ))}
+              </select>
+              {editErrors.classId && <p className="text-xs text-destructive mt-1">{editErrors.classId.message}</p>}
+            </div>
+            <div>
+              <label className="block text-xs text-gray-500 mb-1">Gender</label>
+              <select {...editRegister("gender")} className="w-full h-10 rounded-md border border-gray-200 px-3 text-sm">
+                <option value="">Select</option>
+                <option value="M">Male</option>
+                <option value="F">Female</option>
+              </select>
+            </div>
+            <div>
+              <label className="block text-xs text-gray-500 mb-1">Date of Birth</label>
+              <input type="date" {...editRegister("dateOfBirth")} className="w-full h-10 rounded-md border border-gray-200 px-3 text-sm" />
+            </div>
+            <div>
+              <label className="block text-xs text-gray-500 mb-1">Status</label>
+              <select {...editRegister("status")} className="w-full h-10 rounded-md border border-gray-200 px-3 text-sm">
+                <option value="ACTIVE">Active</option>
+                <option value="TRANSFERRED">Transferred</option>
+                <option value="WITHDRAWN">Withdrawn</option>
+                <option value="GRADUATED">Graduated</option>
+              </select>
+            </div>
+            <div>
+              <label className="block text-xs text-gray-500 mb-1">Address</label>
+              <input type="text" {...editRegister("address")} placeholder="15 Awolowo Road, Ikoyi" className="w-full h-10 rounded-md border border-gray-200 px-3 text-sm" />
+            </div>
+            <div className="md:col-span-2 border-t border-gray-100 pt-4">
+              <p className="text-xs font-medium text-gray-500 mb-3 uppercase tracking-wide">Parent/Guardian</p>
+            </div>
+            <div>
+              <label className="block text-xs text-gray-500 mb-1">Parent Name</label>
+              <input type="text" {...editRegister("parentName")} className="w-full h-10 rounded-md border border-gray-200 px-3 text-sm" />
+            </div>
+            <div>
+              <label className="block text-xs text-gray-500 mb-1">Parent Phone</label>
+              <input type="tel" {...editRegister("parentPhone")} className="w-full h-10 rounded-md border border-gray-200 px-3 text-sm" />
+            </div>
+            <div>
+              <label className="block text-xs text-gray-500 mb-1">Parent Email</label>
+              <input type="email" {...editRegister("parentEmail")} className="w-full h-10 rounded-md border border-gray-200 px-3 text-sm" />
+              {editErrors.parentEmail && <p className="text-xs text-destructive mt-1">{editErrors.parentEmail.message}</p>}
+            </div>
+          </div>
+          <div className="flex gap-3 mt-6">
+            <button
+              onClick={handleEditSubmit(onEdit)}
+              disabled={savingEdit}
+              className="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium disabled:opacity-50 hover:bg-blue-700"
+            >
+              {savingEdit ? "Saving..." : "Update"}
+            </button>
+            <button onClick={cancelEdit} className="px-4 py-2 text-gray-500 text-sm hover:text-gray-700">
+              Cancel
+            </button>
+          </div>
+        </div>
+      )}
+
+      <div className="bg-white rounded-xl shadow-sm border border-gray-100">
+        {selectedIds.size > 0 && (
+          <div className="px-6 py-3 border-b border-gray-100 flex items-center gap-3">
+            <span className="text-sm text-gray-500">{selectedIds.size} selected</span>
+            <button
+              onClick={handleBulkDelete}
+              disabled={bulkDeleteMutation.isPending}
+              className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-red-600 bg-red-50 rounded-full hover:bg-red-100 disabled:opacity-50"
+            >
+              <Trash2 size={14} />
+              {bulkDeleteMutation.isPending ? "Deleting..." : `Delete (${selectedIds.size})`}
             </button>
             <button
-              onClick={() => { if (!classFilter) return; setShowForm(true); setShowBulk(false); }}
-              disabled={!classFilter}
-              className="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 disabled:opacity-50"
+              onClick={() => setSelectedIds(new Set())}
+              className="text-xs text-gray-400 hover:text-gray-600"
             >
-              Add Student
+              Cancel
             </button>
           </div>
-        </div>
-
-        {showBulk && (
-          <BulkAddStudents
-            classes={classesData?.classes ?? []}
-            onClose={() => setShowBulk(false)}
-          />
         )}
 
-        {showForm && (
-          <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100 mb-6">
-            <h3 className="font-semibold text-gray-800 mb-4">New Student — {classesData?.classes.find(c => c.id === classFilter)?.name}</h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {field("Full Name *", "name", "Chidi Okonkwo")}
-              {field("Gender", "gender", "")}
-              {field("Date of Birth", "dateOfBirth", "", "date")}
-              {field("Address", "address", "15 Awolowo Road, Ikoyi")}
-              <div className="md:col-span-2 border-t border-gray-100 pt-4">
-                <p className="text-xs font-medium text-gray-500 mb-3 uppercase tracking-wide">Parent/Guardian</p>
-              </div>
-              {field("Parent Name", "parentName", "Mr. Okonkwo")}
-              {field("Parent Phone *", "parentPhone", "08012345678")}
-              {field("Parent Email", "parentEmail", "okonkwo@email.com")}
+        {isLoading ? (
+          <p className="text-sm text-gray-400 p-6 text-center">Loading...</p>
+        ) : filtered.length === 0 ? (
+          <p className="text-sm text-gray-400 p-6 text-center">
+            {classFilter ? "No students in this class." : "No students yet."}
+          </p>
+        ) : (
+          <div className="divide-y divide-gray-100">
+            <div className="px-6 py-3 flex items-center gap-3 text-xs text-gray-400 font-medium">
+              <input
+                type="checkbox"
+                checked={allSelected}
+                onChange={toggleSelectAll}
+                className="h-4 w-4 rounded border-gray-300 accent-black"
+              />
+              <span>{allSelected ? "Deselect all" : "Select all"}</span>
             </div>
-            <div className="flex gap-3 mt-6">
-              <button
-                onClick={handleSubmit(onAdd)}
-                disabled={createMutation.isPending}
-                className="px-4 py-2 bg-green-600 text-white rounded-lg text-sm font-medium disabled:opacity-50 hover:bg-green-700"
-              >
-                {createMutation.isPending ? "Saving..." : "Save"}
-              </button>
-              <button onClick={closeForm} className="px-4 py-2 text-gray-500 text-sm hover:text-gray-700">
-                Cancel
-              </button>
-            </div>
-          </div>
-        )}
-
-        {editingStudent && (
-          <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100 mb-6">
-            <h3 className="font-semibold text-gray-800 mb-4">Edit Student — {editingStudent.name}</h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-xs text-gray-500 mb-1">Full Name *</label>
-                <input type="text" {...editRegister("name")} className="w-full h-10 rounded-md border border-gray-200 px-3 text-sm" />
-                {editErrors.name && <p className="text-xs text-destructive mt-1">{editErrors.name.message}</p>}
-              </div>
-              <div>
-                <label className="block text-xs text-gray-500 mb-1">Class *</label>
-                <select {...editRegister("classId")} className="w-full h-10 rounded-md border border-gray-200 px-3 text-sm">
-                  <option value="">Select class</option>
-                  {classesData?.classes.map((c) => (
-                    <option key={c.id} value={c.id}>{c.name}</option>
-                  ))}
-                </select>
-                {editErrors.classId && <p className="text-xs text-destructive mt-1">{editErrors.classId.message}</p>}
-              </div>
-              <div>
-                <label className="block text-xs text-gray-500 mb-1">Gender</label>
-                <select {...editRegister("gender")} className="w-full h-10 rounded-md border border-gray-200 px-3 text-sm">
-                  <option value="">Select</option>
-                  <option value="M">Male</option>
-                  <option value="F">Female</option>
-                </select>
-              </div>
-              <div>
-                <label className="block text-xs text-gray-500 mb-1">Date of Birth</label>
-                <input type="date" {...editRegister("dateOfBirth")} className="w-full h-10 rounded-md border border-gray-200 px-3 text-sm" />
-              </div>
-              <div>
-                <label className="block text-xs text-gray-500 mb-1">Status</label>
-                <select {...editRegister("status")} className="w-full h-10 rounded-md border border-gray-200 px-3 text-sm">
-                  <option value="ACTIVE">Active</option>
-                  <option value="TRANSFERRED">Transferred</option>
-                  <option value="WITHDRAWN">Withdrawn</option>
-                  <option value="GRADUATED">Graduated</option>
-                </select>
-              </div>
-              <div>
-                <label className="block text-xs text-gray-500 mb-1">Address</label>
-                <input type="text" {...editRegister("address")} placeholder="15 Awolowo Road, Ikoyi" className="w-full h-10 rounded-md border border-gray-200 px-3 text-sm" />
-              </div>
-              <div className="md:col-span-2 border-t border-gray-100 pt-4">
-                <p className="text-xs font-medium text-gray-500 mb-3 uppercase tracking-wide">Parent/Guardian</p>
-              </div>
-              <div>
-                <label className="block text-xs text-gray-500 mb-1">Parent Name</label>
-                <input type="text" {...editRegister("parentName")} className="w-full h-10 rounded-md border border-gray-200 px-3 text-sm" />
-              </div>
-              <div>
-                <label className="block text-xs text-gray-500 mb-1">Parent Phone</label>
-                <input type="tel" {...editRegister("parentPhone")} className="w-full h-10 rounded-md border border-gray-200 px-3 text-sm" />
-              </div>
-              <div>
-                <label className="block text-xs text-gray-500 mb-1">Parent Email</label>
-                <input type="email" {...editRegister("parentEmail")} className="w-full h-10 rounded-md border border-gray-200 px-3 text-sm" />
-                {editErrors.parentEmail && <p className="text-xs text-destructive mt-1">{editErrors.parentEmail.message}</p>}
-              </div>
-            </div>
-            <div className="flex gap-3 mt-6">
-              <button
-                onClick={handleEditSubmit(onEdit)}
-                disabled={savingEdit}
-                className="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium disabled:opacity-50 hover:bg-blue-700"
-              >
-                {savingEdit ? "Saving..." : "Update"}
-              </button>
-              <button onClick={cancelEdit} className="px-4 py-2 text-gray-500 text-sm hover:text-gray-700">
-                Cancel
-              </button>
-            </div>
-          </div>
-        )}
-
-        <div className="bg-white rounded-xl shadow-sm border border-gray-100">
-          {isLoading ? (
-            <p className="text-sm text-gray-400 p-6 text-center">Loading...</p>
-          ) : filtered.length === 0 ? (
-            <p className="text-sm text-gray-400 p-6 text-center">
-              {classFilter ? "No students in this class." : "No students yet."}
-            </p>
-          ) : (
-            <div className="divide-y divide-gray-100">
-              {filtered.map((s) => {
-                const className = classesData?.classes.find(c => c.id === s.classId)?.name;
-                return (
-                  <div key={s.id} className="px-6 py-3 flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      <Avatar name={s.name} size={32} />
-                      <div>
-                        <span className="text-gray-800 font-medium">{s.name}</span>
-                        {s.admissionNo && <span className="ml-2 text-xs text-gray-400">{s.admissionNo}</span>}
-                        {className && <span className="ml-2 text-xs text-blue-500">{className}</span>}
-                        {s.parentPhone && (
-                          <span className="ml-3 text-xs text-gray-400">{s.parentName ?? "—"} · {s.parentPhone}</span>
-                        )}
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <span className="text-xs text-gray-400">{s.gender ?? "—"}</span>
-                      <button
-                        onClick={() => startEditing(s)}
-                        className="text-xs text-blue-600 hover:text-blue-700 underline"
-                      >
-                        Edit
-                      </button>
+            {filtered.map((s) => {
+              const className = classesData?.classes.find(c => c.id === s.classId)?.name;
+              return (
+                <div key={s.id} className="px-6 py-3 flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <input
+                      type="checkbox"
+                      checked={selectedIds.has(s.id)}
+                      onChange={() => toggleSelect(s.id)}
+                      className="h-4 w-4 rounded border-gray-300 accent-black shrink-0"
+                    />
+                    <Avatar name={s.name} size={32} />
+                    <div>
+                      <span className="text-gray-800 font-medium">{s.name}</span>
+                      {s.admissionNo && <span className="ml-2 text-xs text-gray-400">{s.admissionNo}</span>}
+                      {className && <span className="ml-2 text-xs text-blue-500">{className}</span>}
+                      {s.parentPhone && (
+                        <span className="ml-3 text-xs text-gray-400">{s.parentName ?? "—"} · {s.parentPhone}</span>
+                      )}
                     </div>
                   </div>
-                );
-              })}
-            </div>
-          )}
-        </div>
-      </main>
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs text-gray-400">{s.gender ?? "—"}</span>
+                    <button
+                      onClick={() => startEditing(s)}
+                      className="text-xs text-blue-600 hover:text-blue-700 underline"
+                    >
+                      Edit
+                    </button>
+                    <button
+                      onClick={() => handleDelete(s)}
+                      disabled={deleteMutation.isPending}
+                      className="p-1.5 text-gray-400 hover:text-red-500 transition-colors disabled:opacity-40"
+                      title="Delete student"
+                    >
+                      <Trash2 size={16} />
+                    </button>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </div>
     </div>
   );
 };

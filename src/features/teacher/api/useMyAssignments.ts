@@ -6,12 +6,12 @@ import { fetchData } from "../../../utils/fetchData";
 import type { SubjectAssignment } from "../types";
 
 export const useMyAssignments = (userId: string) => {
-  const data = useLiveQuery(
+  const liveData = useLiveQuery(
     () => (userId ? db.teacherAssignments.get(userId) : Promise.resolve(undefined)),
     [userId],
   );
 
-  useQuery({
+  const query = useQuery({
     queryKey: ["teacherAssignments", userId],
     queryFn: async () => {
       const res = await fetchData<{ assignments: unknown[] }>("/teachers/assignments", "GET");
@@ -19,16 +19,25 @@ export const useMyAssignments = (userId: string) => {
       return res;
     },
     enabled: !!userId,
-    staleTime: 5 * 60 * 1000,
+    staleTime: 0,
   });
 
-  const parsed: SubjectAssignment[] = data?.assignmentsJson
-    ? JSON.parse(data.assignmentsJson)
-    : [];
+  const apiHasData = query.data !== undefined;
+
+  let parsed: SubjectAssignment[];
+  if (query.data?.assignments) {
+    parsed = query.data.assignments as SubjectAssignment[];
+  } else if (liveData?.assignmentsJson) {
+    parsed = JSON.parse(liveData.assignmentsJson);
+  } else {
+    parsed = [];
+  }
+
+  const isLoading = !apiHasData && (liveData === undefined || query.isLoading) && !query.isError;
 
   return {
     data: parsed,
-    isLoading: data === undefined,
-    error: undefined,
+    isLoading,
+    error: query.error ?? undefined,
   };
 };

@@ -17,11 +17,16 @@ export const useSendOTP = () => {
   });
 };
 
+export interface SendOTPResponse {
+  message: string;
+  expiresIn: number;
+}
+
 export const useSendOTPByEmail = () => {
-  return useMutation({
+  return useMutation<SendOTPResponse, AxiosErrorResponse, string>({
     mutationFn: (email: string) => fetchData("/auth/send-otp", "POST", { email }),
-    onSuccess: async () => {
-      toast.success("OTP sent to email!");
+    onSuccess: async (data) => {
+      toast.success(data.message || "OTP sent to email!");
     },
     onError: async (error) => {
       toast.error(transformError(error));

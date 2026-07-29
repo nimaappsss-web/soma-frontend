@@ -123,3 +123,86 @@ export interface AttendanceQueryResponse {
   page: number;
   totalPages: number;
 }
+
+export interface TeacherStats {
+  total: number;
+  active: number;
+  pendingInvites: number;
+  byGender: { male: number; female: number };
+}
+
+export interface AttendanceSummaryByClass {
+  classId: string;
+  className: string;
+  total: number;
+  present: number;
+  absent: number;
+}
+
+export interface AttendanceSummary {
+  date: string;
+  isHoliday: boolean;
+  totalStudents: number;
+  present: number;
+  absent: number;
+  percentage: number;
+  byClass: AttendanceSummaryByClass[];
+}
+
+export interface DailyStat {
+  present: number;
+  absent: number;
+  total: number;
+}
+
+export interface AttendanceClassSummary {
+  classId: string;
+  className: string;
+  from: string;
+  to: string;
+  totalStudents: number;
+  present: number;
+  absent: number;
+  percentage: number;
+  schoolDays: number;
+  dailyStats: Record<string, DailyStat>;
+}
+
+export interface AttendanceTeacherSummary {
+  teacherId: string;
+  teacherName: string;
+  from: string;
+  to: string;
+  totalMarked: number;
+  present: number;
+  absent: number;
+  percentage: number;
+}
+
+export interface AttendanceCalendarDay {
+  date: string;
+  dayOfWeek: string;
+  isSchoolDay: boolean;
+  isHoliday: boolean;
+  present: number;
+  absent: number;
+  percentage: number;
+}
+
+export interface AttendanceCalendar {
+  month: number;
+  year: number;
+  schoolDays: number;
+  holidayDates: string[];
+  days: AttendanceCalendarDay[];
+}
+
+export interface ClearAttendanceRequest {
+  classId: string;
+  date: string;
+}
+
+export interface ClearAttendanceResponse {
+  message: string;
+  count: number;
+}

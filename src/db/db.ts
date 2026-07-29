@@ -155,6 +155,48 @@ export interface SchoolSettingsCache {
   updatedAt: number;
 }
 
+export interface AnnouncementCache {
+  id: string;
+  userId: string;
+  title: string;
+  message: string;
+  audience: string;
+  priority: string;
+  createdBy: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CalendarEventCache {
+  id: string;
+  userId: string;
+  title: string;
+  description: string | null;
+  date: string;
+  type: string;
+  audience: string;
+  createdBy: string;
+  createdAt: number;
+}
+
+export interface HolidayCache {
+  id: string;
+  userId: string;
+  date: string;
+  reason: string;
+  createdAt: number;
+}
+
+export interface AcademicTermCache {
+  id: string;
+  userId: string;
+  term: string;
+  session: string;
+  startDate: string;
+  endDate: string;
+  isCurrent: boolean;
+}
+
 export const db = new Dexie("somaDB") as Dexie & {
   students: EntityTable<Student, "id">;
   attendance: EntityTable<AttendanceRecord, "id">;
@@ -170,6 +212,10 @@ export const db = new Dexie("somaDB") as Dexie & {
   syncQueue: EntityTable<SyncQueueItem, "id">;
   lessonNotes: EntityTable<LessonNoteCache, "id">;
   schoolSettings: EntityTable<SchoolSettingsCache, "id">;
+  calendarEvents: EntityTable<CalendarEventCache, "id">;
+  holidays: EntityTable<HolidayCache, "id">;
+  academicTerms: EntityTable<AcademicTermCache, "id">;
+  announcements: EntityTable<AnnouncementCache, "id">;
 };
 
 db.version(11).stores({
@@ -284,6 +330,26 @@ db.version(17).stores({
   schoolSettings: "id",
 });
 
+db.version(19).stores({
+  students: "id, name, classId, status, schoolId, userId, [userId+classId]",
+  attendance: "id, studentId, className, schoolId, date, syncStatus, userId, [date+className], [userId+date+className]",
+  caScores: "id, studentId, className, schoolId, term, session, syncStatus, userId",
+  subjects: "id, schoolId, userId",
+  classes: "id, level, schoolId, userId, [userId+level]",
+  teacherFormClass: "id",
+  teacherAssignments: "id, userId",
+  teachers: "id, userId",
+  pendingInvites: "id, userId",
+  teacherDetails: "id, userId",
+  parents: "id, status, schoolId, userId",
+  syncQueue: "++id, status, createdAt, table, userId",
+  lessonNotes: "id, userId",
+  schoolSettings: "id, userId",
+  calendarEvents: "id, userId",
+  holidays: "id, userId",
+  academicTerms: "id, userId",
+});
+
 db.version(18).stores({
   students: "id, name, classId, status, schoolId, userId, [userId+classId]",
   attendance: "id, studentId, className, schoolId, date, syncStatus, userId, [date+className], [userId+date+className]",
@@ -311,6 +377,27 @@ db.version(18).stores({
   const caScores = await tx.table("caScores").toArray();
   const staleCAScores = caScores.filter((c: any) => !c.userId).map((c: any) => c.id);
   if (staleCAScores.length) await tx.table("caScores").bulkDelete(staleCAScores);
+});
+
+db.version(20).stores({
+  students: "id, name, classId, status, schoolId, userId, [userId+classId]",
+  attendance: "id, studentId, className, schoolId, date, syncStatus, userId, [date+className], [userId+date+className]",
+  caScores: "id, studentId, className, schoolId, term, session, syncStatus, userId",
+  subjects: "id, schoolId, userId",
+  classes: "id, level, schoolId, userId, [userId+level]",
+  teacherFormClass: "id",
+  teacherAssignments: "id, userId",
+  teachers: "id, userId",
+  pendingInvites: "id, userId",
+  teacherDetails: "id, userId",
+  parents: "id, status, schoolId, userId",
+  syncQueue: "++id, status, createdAt, table, userId",
+  lessonNotes: "id, userId",
+  schoolSettings: "id, userId",
+  calendarEvents: "id, userId",
+  holidays: "id, userId",
+  academicTerms: "id, userId",
+  announcements: "id, userId",
 });
 
 

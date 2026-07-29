@@ -1,4 +1,3 @@
-import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 import * as React from "react";
 import type { DefaultOptions } from "@tanstack/react-query";
 import {
@@ -38,9 +37,9 @@ const ReactQueryProvider: React.FunctionComponent<ReactQueryProviderProps> = ({
   return (
     <QueryClientProvider client={queryClient}>
       {children}
-      {import.meta.env.DEV && (
+      {/* {import.meta.env.DEV && (
         <ReactQueryDevtools initialIsOpen={false} />
-      )}
+      )} */}
     </QueryClientProvider>
   );
 };

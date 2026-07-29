@@ -207,22 +207,16 @@ export const TeacherAttendance = () => {
   );
 
   if (profileLoading || cachedAttendance === undefined) {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <p className="text-gray-400">Loading...</p>
-      </div>
-    );
+    return <p className="text-sm text-gray-400 p-8">Loading...</p>;
   }
 
   if (!formClass) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <p className="text-gray-400 mb-4">You are not a class teacher.</p>
-          <Link to="/teach" className="text-blue-600 hover:underline text-sm">
-            &larr; Back to Dashboard
-          </Link>
-        </div>
+      <div className="p-8 text-center">
+        <p className="text-gray-400 mb-4">You are not a class teacher.</p>
+        <Link to="/teach" className="text-blue-600 hover:underline text-sm">
+          &larr; Back to Dashboard
+        </Link>
       </div>
     );
   }
@@ -231,148 +225,141 @@ export const TeacherAttendance = () => {
   const totalStudents = students?.length ?? 0;
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <header className="bg-white border-b border-gray-200 px-6 py-4">
-        <div className="max-w-3xl mx-auto flex items-center justify-between">
-          <div>
-            <h1 className="text-xl font-bold text-blue-700">
-              Attendance — {formClass}
-            </h1>
-              <p className="text-xs text-gray-400 mt-0.5">
-                {tab === "history" ? "View history" : userMarked && !modifyMode ? "Marked for today" : `${markedCount} / ${totalStudents} marked`}
-              </p>
-          </div>
-          <div className="flex items-center gap-3">
-            <div className="flex bg-gray-100 rounded-lg p-0.5">
-              <button
-                onClick={() => handleTabChange("mark")}
-                className={`px-3 py-1.5 rounded-md text-xs font-medium transition-colors ${
-                  tab === "mark" ? "bg-white shadow-sm text-gray-800" : "text-gray-500"
-                }`}
-              >
-                Mark
-              </button>
-              <button
-                onClick={() => handleTabChange("history")}
-                className={`px-3 py-1.5 rounded-md text-xs font-medium transition-colors ${
-                  tab === "history" ? "bg-white shadow-sm text-gray-800" : "text-gray-500"
-                }`}
-              >
-                History
-              </button>
-            </div>
-            <Link to="/teach" className="text-sm text-gray-500 hover:text-gray-700">
-              &larr;
-            </Link>
+    <div className="p-6 max-w-4xl">
+      <div className="mb-4 flex items-center justify-between">
+        <div>
+          <h1 className="text-xl font-bold text-gray-800">
+            Attendance — {formClass}
+          </h1>
+          <p className="text-xs text-gray-400 mt-0.5">
+            {tab === "history" ? "View history" : userMarked && !modifyMode ? "Marked for today" : `${markedCount} / ${totalStudents} marked`}
+          </p>
+        </div>
+        <div className="flex items-center gap-3">
+          <div className="flex bg-gray-100 rounded-lg p-0.5">
+            <button
+              onClick={() => handleTabChange("mark")}
+              className={`px-3 py-1.5 rounded-md text-xs font-medium transition-colors ${
+                tab === "mark" ? "bg-white shadow-sm text-gray-800" : "text-gray-500"
+              }`}
+            >
+              Mark
+            </button>
+            <button
+              onClick={() => handleTabChange("history")}
+              className={`px-3 py-1.5 rounded-md text-xs font-medium transition-colors ${
+                tab === "history" ? "bg-white shadow-sm text-gray-800" : "text-gray-500"
+              }`}
+            >
+              History
+            </button>
           </div>
         </div>
-      </header>
+      </div>
 
-      <main className="max-w-3xl mx-auto px-6 py-6">
-        {tab === "history" ? (
-          formClassId ? (
-            <AttendanceHistoryView classId={formClassId} formClass={formClass} />
-          ) : (
-            <p className="text-sm text-gray-400 text-center py-8">No class assigned.</p>
-          )
-        ) : userMarked && !modifyMode ? (
-          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-8 max-w-sm mx-auto text-center">
-            <div className="text-4xl mb-4">✅</div>
-            <h3 className="text-lg font-semibold text-gray-800 mb-2">Attendance Marked</h3>
-            <p className="text-sm text-gray-400 mb-2">
-              {markedCount} students marked for today
-            </p>
-            <p className="text-xs text-gray-400 mb-6">
-              Tap Modify to change individual records
-            </p>
-            <div className="space-y-2">
-              <Button onClick={handleModify} variant="outline" className="w-full">
-                Modify
-              </Button>
-              {clearConfirm ? (
-                <div className="flex gap-2">
-                  <Button onClick={handleClearAll} variant="destructive" className="flex-1">
-                    Yes, clear all
-                  </Button>
-                  <Button onClick={() => setClearConfirm(false)} variant="ghost" className="flex-1">
-                    Cancel
-                  </Button>
-                </div>
-              ) : (
-                <button
-                  onClick={() => setClearConfirm(true)}
-                  className="w-full text-xs text-red-400 hover:text-red-600 py-2 transition-colors"
-                >
-                  Clear all attendance for today
-                </button>
-              )}
-            </div>
-          </div>
-        ) : studentsLoading ? (
-          <div className="flex items-center justify-center h-64">
-            <p className="text-gray-400">Loading students...</p>
-          </div>
-        ) : !students || students.length === 0 ? (
-          <div className="flex flex-col items-center justify-center h-64 gap-4">
-            <p className="text-gray-400">No students in this class yet.</p>
-            <Link
-              to="/teach/students"
-              className="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700"
-            >
-              View Students
-            </Link>
-          </div>
+      {tab === "history" ? (
+        formClassId ? (
+          <AttendanceHistoryView classId={formClassId} formClass={formClass} />
         ) : (
-          <>
-            {view === "list" && (
-              <div className="flex justify-end mb-4">
-                <Button
-                  onClick={handleSave}
-                  disabled={markedCount === 0}
-                >
-                  Save ({markedCount})
+          <p className="text-sm text-gray-400 text-center py-8">No class assigned.</p>
+        )
+      ) : userMarked && !modifyMode ? (
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-8 max-w-sm mx-auto text-center">
+          <div className="text-4xl mb-4">✅</div>
+          <h3 className="text-lg font-semibold text-gray-800 mb-2">Attendance Marked</h3>
+          <p className="text-sm text-gray-400 mb-2">
+            {markedCount} students marked for today
+          </p>
+          <p className="text-xs text-gray-400 mb-6">
+            Tap Modify to change individual records
+          </p>
+          <div className="space-y-2">
+            <Button onClick={handleModify} variant="outline" className="w-full">
+              Modify
+            </Button>
+            {clearConfirm ? (
+              <div className="flex gap-2">
+                <Button onClick={handleClearAll} variant="destructive" className="flex-1">
+                  Yes, clear all
+                </Button>
+                <Button onClick={() => setClearConfirm(false)} variant="ghost" className="flex-1">
+                  Cancel
                 </Button>
               </div>
-            )}
-
-            <div className="flex justify-center gap-2 mb-4">
-              <button
-                onClick={() => setView("list")}
-                className={`px-3 py-1.5 rounded-md text-xs font-medium transition-colors ${
-                  view === "list" ? "bg-blue-600 text-white" : "bg-gray-100 text-gray-500 hover:text-gray-700"
-                }`}
-              >
-                List View
-              </button>
-              <button
-                onClick={() => setView("card")}
-                className={`px-3 py-1.5 rounded-md text-xs font-medium transition-colors ${
-                  view === "card" ? "bg-blue-600 text-white" : "bg-gray-100 text-gray-500 hover:text-gray-700"
-                }`}
-              >
-                Card View
-              </button>
-            </div>
-
-            {view === "card" ? (
-              <StudentSwipeCard
-                students={sortedStudents}
-                onSwipe={(studentId, status) => handleMark(studentId, status)}
-                onUndo={handleUndo}
-                onSave={handleSave}
-                markedCount={markedCount}
-                totalStudents={totalStudents}
-              />
             ) : (
-              <AttendanceListView
-                students={sortedStudents}
-                attendance={attendance}
-                onMark={handleMark}
-              />
+              <button
+                onClick={() => setClearConfirm(true)}
+                className="w-full text-xs text-red-400 hover:text-red-600 py-2 transition-colors"
+              >
+                Clear all attendance for today
+              </button>
             )}
-          </>
-        )}
-      </main>
+          </div>
+        </div>
+      ) : studentsLoading ? (
+        <div className="flex items-center justify-center h-64">
+          <p className="text-gray-400">Loading students...</p>
+        </div>
+      ) : !students || students.length === 0 ? (
+        <div className="flex flex-col items-center justify-center h-64 gap-4">
+          <p className="text-gray-400">No students in this class yet.</p>
+          <Link
+            to="/teach/students"
+            className="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700"
+          >
+            View Students
+          </Link>
+        </div>
+      ) : (
+        <>
+          {view === "list" && (
+            <div className="flex justify-end mb-4">
+              <Button
+                onClick={handleSave}
+                disabled={markedCount === 0}
+              >
+                Save ({markedCount})
+              </Button>
+            </div>
+          )}
+
+          <div className="flex justify-center gap-2 mb-4">
+            <button
+              onClick={() => setView("list")}
+              className={`px-3 py-1.5 rounded-md text-xs font-medium transition-colors ${
+                view === "list" ? "bg-blue-600 text-white" : "bg-gray-100 text-gray-500 hover:text-gray-700"
+              }`}
+            >
+              List View
+            </button>
+            <button
+              onClick={() => setView("card")}
+              className={`px-3 py-1.5 rounded-md text-xs font-medium transition-colors ${
+                view === "card" ? "bg-blue-600 text-white" : "bg-gray-100 text-gray-500 hover:text-gray-700"
+              }`}
+            >
+              Card View
+            </button>
+          </div>
+
+          {view === "card" ? (
+            <StudentSwipeCard
+              students={sortedStudents}
+              onSwipe={(studentId, status) => handleMark(studentId, status)}
+              onUndo={handleUndo}
+              onSave={handleSave}
+              markedCount={markedCount}
+              totalStudents={totalStudents}
+            />
+          ) : (
+            <AttendanceListView
+              students={sortedStudents}
+              attendance={attendance}
+              onMark={handleMark}
+            />
+          )}
+        </>
+      )}
     </div>
   );
 };

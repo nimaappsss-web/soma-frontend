@@ -33,7 +33,7 @@ export const fetchData = async <T>(
       return data;
     }
     if (method === DELETE) {
-      const { data } = await axiosInstance.delete(url, { headers });
+      const { data } = await axiosInstance.delete(url, { headers, data: payload });
       return data;
     }
   } catch (error) {

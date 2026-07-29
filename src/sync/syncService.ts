@@ -135,9 +135,16 @@ function getTasksForRole(role: string): SyncTask[] {
   return [];
 }
 
+const SYNC_DONE_KEY = "soma_initial_sync_done";
+
 export async function needsInitialSync(): Promise<boolean> {
+  if (localStorage.getItem(SYNC_DONE_KEY) === "true") return false;
   const count = await db.classes.count();
-  return count === 0;
+  if (count > 0) {
+    localStorage.setItem(SYNC_DONE_KEY, "true");
+    return false;
+  }
+  return true;
 }
 
 export async function performSync(
@@ -152,4 +159,6 @@ export async function performSync(
     onProgress?.({ current: i + 1, total, table: task.name });
     await task.run(user);
   }
+
+  localStorage.setItem(SYNC_DONE_KEY, "true");
 }

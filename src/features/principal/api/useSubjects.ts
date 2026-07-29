@@ -24,11 +24,24 @@ export const useSubjects = (schoolId?: string) => {
     queryKey: ["subjects", user?.id],
     queryFn: async () => {
       const res = await fetchData<{ subjects: SubjectCache[] }>("/subjects?limit=200", "GET");
-      if (res.subjects?.length && user) {
-        await db.subjects.bulkPut(
-          (res.subjects as SubjectCache[]).map((s) => ({ ...s, userId: user.id, schoolId: user.schoolId ?? "" })),
-        );
-      }
+
+      const hasPending = await db.syncQueue
+        .where("userId")
+        .equals(user!.id)
+        .filter((i) => i.table === "subjects" && i.status === "pending")
+        .count();
+
+      await db.transaction("rw", db.subjects, async () => {
+        if (hasPending === 0) {
+          await db.subjects.where("userId").equals(user!.id).delete();
+        }
+        if (res.subjects?.length && user) {
+          await db.subjects.bulkPut(
+            (res.subjects as SubjectCache[]).map((s) => ({ ...s, userId: user.id, schoolId: user.schoolId ?? "" })),
+          );
+        }
+      });
+
       return res;
     },
     enabled: !isPublic && !!user?.id,

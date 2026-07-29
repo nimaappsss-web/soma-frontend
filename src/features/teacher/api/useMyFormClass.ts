@@ -10,29 +10,44 @@ interface FormClassResult {
 }
 
 export const useMyFormClass = (userId: string) => {
-  const data = useLiveQuery(
+  const liveData = useLiveQuery(
     () => (userId ? db.teacherFormClass.get(userId) : Promise.resolve(undefined)),
     [userId],
   );
 
-  useQuery({
+  const query = useQuery({
     queryKey: ["teacherFormClass", userId],
     queryFn: async () => {
-      const res = await fetchData<{ formClassId?: string; formClass?: { id: string; name: string } | null }>("/teachers/form-class", "GET");
-      await db.teacherFormClass.put({ id: userId, ...res }, userId);
+      const res = await fetchData<{ formClassId?: string | null; formClass?: { id: string; name: string } | null }>("/teachers/form-class", "GET");
+      await db.teacherFormClass.put({
+        id: userId,
+        formClassId: res?.formClassId ?? res?.formClass?.id ?? null,
+        formClass: res?.formClass?.name ?? null,
+      }, userId);
       return res;
     },
     enabled: !!userId,
-    staleTime: 5 * 60 * 1000,
+    staleTime: 0,
   });
 
-  const result: FormClassResult = data
-    ? { formClassId: data.formClassId, formClass: data.formClass }
-    : { formClassId: null, formClass: null };
+  const apiHasData = query.data !== undefined;
+  const apiFormClassId = query.data ? (query.data.formClassId ?? query.data.formClass?.id ?? null) : undefined;
+  const apiFormClass = query.data ? (query.data.formClass?.name ?? null) : undefined;
+
+  let result: FormClassResult;
+  if (apiFormClassId !== undefined) {
+    result = { formClassId: apiFormClassId, formClass: apiFormClass ?? null };
+  } else if (liveData) {
+    result = { formClassId: liveData.formClassId, formClass: liveData.formClass };
+  } else {
+    result = { formClassId: null, formClass: null };
+  }
+
+  const isLoading = !apiHasData && (liveData === undefined || query.isLoading) && !query.isError;
 
   return {
     data: result,
-    isLoading: data === undefined,
-    error: undefined,
+    isLoading,
+    error: query.error ?? undefined,
   };
 };

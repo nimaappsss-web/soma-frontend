@@ -9,4 +9,12 @@ export { useDeleteClass } from "./useDeleteClass";
 export { useUpdateSchool } from "./useUpdateSchool";
 export { useParents } from "./useParents";
 export { useResendParentInvite } from "./useResendParentInvite";
+export { useSchoolInfo } from "./useSchoolInfo";
+export { useClassDetail } from "./useClassDetail";
+export { useUpdateClass } from "./useUpdateClass";
+export { useUpdateSubject } from "./useUpdateSubject";
+export { useParentStats } from "./useParentStats";
+export { useInviteParent } from "./useInviteParent";
+export { useDashboardStats } from "./useDashboardStats";
+export { useGenerateInviteLink } from "./useGenerateInviteLink";
 

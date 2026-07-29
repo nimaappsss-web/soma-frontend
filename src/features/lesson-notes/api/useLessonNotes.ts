@@ -57,8 +57,22 @@ export const useLessonNotes = (userId: string) => {
     queryKey: ["lessonNotes", userId],
     queryFn: async () => {
       const res = await fetchData<{ notes: LessonNote[] }>("/lesson-notes", "GET");
-      const cached = (res.notes ?? []).map(toCache);
-      await db.lessonNotes.bulkPut(cached);
+
+      const hasPending = await db.syncQueue
+        .where("userId")
+        .equals(userId)
+        .filter((i) => i.table === "lessonNotes" && i.status === "pending")
+        .count();
+
+      await db.transaction("rw", db.lessonNotes, async () => {
+        if (hasPending === 0) {
+          await db.lessonNotes.where("userId").equals(userId).delete();
+        }
+        if (res.notes?.length) {
+          await db.lessonNotes.bulkPut(res.notes.map(toCache));
+        }
+      });
+
       return res;
     },
     enabled: !!userId,

@@ -1,20 +1,35 @@
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation } from "@tanstack/react-query";
 import toast from "react-hot-toast";
 
 import { transformError } from "../../../utils/transformError";
-import { fetchData } from "../../../utils/fetchData";
-import { teacherKeys } from "../utils/query-keys";
-import type { AxiosErrorResponse } from "../types";
+import { useAuth } from "../../../contexts/AuthContext";
+import { addToQueue } from "../../../sync/syncQueue";
+
+const TIMEOUT = 3000;
 
 export const useResendInvite = () => {
-  const queryClient = useQueryClient();
+  const { user } = useAuth();
 
-  return useMutation<{ message: string }, AxiosErrorResponse, string>({
-    mutationFn: (inviteId) => fetchData(`/teachers/${inviteId}/resend-invite`, "POST"),
+  return useMutation<void, Error, string>({
+    mutationFn: async (inviteId) => {
+      await Promise.race([
+        (async () => {
+          await addToQueue({
+            userId: user!.id,
+            table: "pendingInvites",
+            recordId: inviteId,
+            endpoint: `/teachers/${inviteId}/resend-invite`,
+            method: "POST",
+            payload: {},
+          });
+        })(),
+        new Promise<never>((_, reject) =>
+          setTimeout(() => reject(new Error("Dexie operation timed out")), TIMEOUT),
+        ),
+      ]);
+    },
     onSuccess: async () => {
       toast.success("Invitation resent!");
-      queryClient.invalidateQueries({ queryKey: teacherKeys.lists() });
-      queryClient.invalidateQueries({ queryKey: teacherKeys.details() });
     },
     onError: async (error) => {
       toast.error(transformError(error));

@@ -21,9 +21,9 @@ export const useStudentDetail = (id: string) => {
   useQuery({
     queryKey: ["studentDetail", id, userId],
     queryFn: async () => {
-      const res = await fetchData<Student>(`/students/${id}`, "GET");
-      await db.students.put({ ...res, userId }, id);
-      return res;
+      const res = await fetchData<{ student: Student }>(`/students/${id}`, "GET");
+      await db.students.put({ ...res.student, userId }, id);
+      return res.student;
     },
     enabled: !!id && !!userId,
     staleTime: 5 * 60 * 1000,

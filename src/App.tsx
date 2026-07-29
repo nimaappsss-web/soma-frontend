@@ -1,5 +1,7 @@
 import { Routes, Route, Navigate } from "react-router";
 
+import { AdminLayout } from "./layouts/AdminLayout";
+import { TeacherLayout } from "./layouts/TeacherLayout";
 import { TeacherAttendance } from "./pages/teach/TeacherAttendance";
 import { TeacherLessonNotes } from "./pages/teach/TeacherLessonNotes";
 import { TeacherSettings } from "./pages/teach/TeacherSettings";
@@ -19,7 +21,6 @@ import { GuestRoute } from "./features/auth/components/GuestRoute";
 import { AdminClasses } from "./pages/admin/AdminClasses";
 import { AdminParents } from "./pages/admin/AdminParents";
 import { StaffDashboard } from "./pages/StaffDashboard";
-import { AdminDashboard } from "./pages/AdminDashboard";
 import { VerifyTeacher } from "./pages/VerifyTeacher";
 import { AuthProvider } from "./contexts/AuthContext";
 import { SyncProvider } from "./contexts/SyncContext";
@@ -33,6 +34,16 @@ import { Login } from "./pages/Login";
 import { ForgotPassword } from "./pages/ForgotPassword";
 import { ResetPassword } from "./pages/ResetPassword";
 import { Settings } from "./pages/Settings";
+import { DashboardHome } from "./features/principal/components/DashboardHome";
+import { StaffManagement } from "./features/staff/components/StaffManagement";
+import { FinanceManagement } from "./features/finance/components/FinanceManagement";
+import { AnnouncementsManagement } from "./features/announcements/components/AnnouncementsManagement";
+import { MomentsManagement } from "./features/moments/components/MomentsManagement";
+import { TimetableManagement } from "./features/timetable/components/TimetableManagement";
+import { AttendanceOverview } from "./features/attendance/components/AttendanceOverview";
+import { ExaminationsManagement } from "./features/examinations/components/ExaminationsManagement";
+import { CalendarLayout, CalendarEvents, CalendarHolidays, CalendarTerms } from "./features/calendar/components/CalendarManagement";
+import { ReportsManagement } from "./features/reports/components/ReportsManagement";
 
 function App() {
   useAnimatedFavicon(["/favicon2.svg", "/favicon.svg"], [3000, 600]);
@@ -82,110 +93,37 @@ function App() {
             </ProtectedRoute>
           }
         />
-        <Route
-          path="/admin"
-          element={
-            <ProtectedRoute>
-              <AdminDashboard />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/teach"
-          element={
-            <ProtectedRoute>
-              <TeacherDashboard />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/admin/students"
-          element={
-            <ProtectedRoute>
-              <AdminStudents />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/admin/parents"
-          element={
-            <ProtectedRoute>
-              <AdminParents />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/admin/teachers"
-          element={
-            <ProtectedRoute>
-              <AdminTeachers />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/admin/classes"
-          element={
-            <ProtectedRoute>
-              <AdminClasses />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/admin/subjects"
-          element={
-            <ProtectedRoute>
-              <AdminSubjects />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/admin/settings"
-          element={
-            <ProtectedRoute>
-              <AdminSettings />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/admin/profile"
-          element={
-            <ProtectedRoute>
-              <AdminProfile />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/teach/students"
-          element={
-            <ProtectedRoute>
-              <TeacherStudents />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/teach/attendance"
-          element={
-            <ProtectedRoute>
-              <TeacherAttendance />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/teach/lesson-notes"
-          element={
-            <ProtectedRoute>
-              <TeacherLessonNotes />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/teach/settings"
-          element={
-            <ProtectedRoute>
-              <TeacherSettings />
-            </ProtectedRoute>
-          }
-        />
+        <Route path="/admin" element={<ProtectedRoute><AdminLayout /></ProtectedRoute>}>
+          <Route index element={<DashboardHome />} />
+          <Route path="students" element={<AdminStudents />} />
+          <Route path="teachers" element={<AdminTeachers />} />
+          <Route path="staff" element={<StaffManagement />} />
+          <Route path="parents" element={<AdminParents />} />
+          <Route path="finance" element={<FinanceManagement />} />
+          <Route path="announcements" element={<AnnouncementsManagement />} />
+          <Route path="moments" element={<MomentsManagement />} />
+          <Route path="timetable" element={<TimetableManagement />} />
+          <Route path="attendance" element={<AttendanceOverview />} />
+          <Route path="examinations" element={<ExaminationsManagement />} />
+          <Route path="calendar" element={<CalendarLayout />}>
+            <Route index element={<Navigate to="events" replace />} />
+            <Route path="events" element={<CalendarEvents />} />
+            <Route path="holidays" element={<CalendarHolidays />} />
+            <Route path="terms" element={<CalendarTerms />} />
+          </Route>
+          <Route path="reports" element={<ReportsManagement />} />
+          <Route path="classes" element={<AdminClasses />} />
+          <Route path="subjects" element={<AdminSubjects />} />
+          <Route path="settings" element={<AdminSettings />} />
+          <Route path="profile" element={<AdminProfile />} />
+        </Route>
+        <Route path="/teach" element={<ProtectedRoute><TeacherLayout /></ProtectedRoute>}>
+          <Route index element={<TeacherDashboard />} />
+          <Route path="students" element={<TeacherStudents />} />
+          <Route path="attendance" element={<TeacherAttendance />} />
+          <Route path="lesson-notes" element={<TeacherLessonNotes />} />
+          <Route path="settings" element={<TeacherSettings />} />
+        </Route>
         <Route
           path="/parent"
           element={
@@ -212,6 +150,7 @@ function App() {
         />
         <Route path="/invite/:token" element={<VerifyTeacher />} />
         <Route path="/verify-teacher" element={<VerifyTeacher />} />
+        <Route path="/register" element={<VerifyTeacher />} />
         <Route path="/parent/setup" element={<ParentSetup />} />
         <Route path="/settings" element={<Navigate to="/settings/account" replace />} />
         <Route

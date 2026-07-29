@@ -1,59 +1,271 @@
-import { useEffect } from "react";
-import { useQuery } from "@tanstack/react-query";
-import { useForm } from "react-hook-form";
+import { useState, useRef, useEffect } from "react";
+import { useForm, useWatch, type Control } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Link } from "react-router";
+import { z } from "zod";
+import toast from "react-hot-toast";
+import { User, Building2 } from "lucide-react";
 
-import { Avatar } from "../components/ui/Avatar";
 import { useAuth } from "../contexts/AuthContext";
-import { useUpdateSchool } from "../features/principal/api/useUpdateSchool";
+import { useUpdateSchool, useSchoolInfo } from "../features/principal/api";
 import { useGenerateAdmission } from "../features/students/api";
-import { fetchData } from "../utils/fetchData";
+import { useChangePassword } from "../features/auth/api";
 import { schoolUpdateSchema, type SchoolUpdateFormData } from "../features/principal/utils/validationSchema";
+import { uploadFile } from "../utils/upload";
+import { addToQueue } from "../sync/syncQueue";
+import { transformError } from "../utils/transformError";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../components/ui/card";
 import { Input } from "../components/ui/input";
 import { Label } from "../components/ui/label";
 import { Button } from "../components/ui/button";
+import { Avatar } from "../components/ui/Avatar";
+import { cn } from "../lib/utils";
+import { TagInput } from "../components/ui/tag-input";
 
 const NIGERIAN_STATES = ["Lagos", "Abuja", "Rivers", "Kano", "Oyo", "Kaduna"];
 
+const accountSchema = z.object({
+  name: z.string().min(1, "Name is required"),
+  phone: z.string().optional(),
+});
 
+type AccountForm = z.infer<typeof accountSchema>;
 
-interface SchoolSettings {
-  id: string;
-  name: string;
-  address: string;
-  state: string;
-  lga: string;
-  schoolType: string;
-  logo: string | null;
-  schoolCode: string | null;
-  admissionPattern: string;
-  admissionCounter: number;
-  arms: string[];
-}
+const passwordSchema = z.object({
+  currentPassword: z.string().min(1, "Current password is required"),
+  newPassword: z.string().min(6, "New password must be at least 6 characters"),
+  confirmPassword: z.string().min(1, "Please confirm your password"),
+}).refine((d) => d.newPassword === d.confirmPassword, {
+  message: "Passwords don't match",
+  path: ["confirmPassword"],
+});
+
+type PasswordForm = z.infer<typeof passwordSchema>;
+
+const tabs = [
+  { id: "account", label: "Account", icon: User },
+  { id: "school", label: "School", icon: Building2 },
+] as const;
+
+type Tab = (typeof tabs)[number]["id"];
 
 export const AdminSettings = () => {
-  const { user, logout } = useAuth();
-  const updateSchool = useUpdateSchool();
+  const [activeTab, setActiveTab] = useState<Tab>("account");
 
-  const { data, isLoading } = useQuery<{ school: SchoolSettings }>({
-    queryKey: ["school"],
-    queryFn: () => fetchData("/school", "GET"),
+  return (
+    <div className="p-6 max-w-4xl">
+      <h1 className="text-2xl font-semibold text-gray-900">Settings</h1>
+
+      <div className="flex gap-3 mt-6 border-b border-gray-200">
+        {tabs.map((tab) => {
+          const Icon = tab.icon;
+          return (
+            <button
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id)}
+              className={cn(
+                "flex items-center gap-2 px-4 py-2.5 text-sm font-medium border-b-2 transition-colors -mb-px",
+                activeTab === tab.id
+                  ? "border-gray-900 text-gray-900"
+                  : "border-transparent text-gray-400 hover:text-gray-600",
+              )}
+            >
+              <Icon size={16} />
+              {tab.label}
+            </button>
+          );
+        })}
+      </div>
+
+      <div className="mt-6">
+        {activeTab === "account" && <AccountSection />}
+        {activeTab === "school" && <SchoolSection />}
+      </div>
+    </div>
+  );
+};
+
+const AccountSection = () => {
+  const { user } = useAuth();
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [pendingImage, setPendingImage] = useState<File | null>(null);
+  const [saving, setSaving] = useState(false);
+  const changePassword = useChangePassword();
+
+  const accountForm = useForm<AccountForm>({
+    resolver: zodResolver(accountSchema),
+    defaultValues: { name: user?.name ?? "", phone: user?.phone ?? "" },
   });
 
-  const school = data?.school;
+  const passwordForm = useForm<PasswordForm>({
+    resolver: zodResolver(passwordSchema),
+    defaultValues: { currentPassword: "", newPassword: "", confirmPassword: "" },
+  });
+
+  const onSaveAccount = async (data: AccountForm) => {
+    if (!user) return;
+    setSaving(true);
+    try {
+      let imageUrl: string | null | undefined;
+      if (pendingImage) {
+        imageUrl = await uploadFile(pendingImage);
+      }
+      const payload: Record<string, unknown> = {};
+      if (data.name !== user.name) payload.name = data.name;
+      if (data.phone !== (user.phone ?? "")) payload.phone = data.phone || null;
+      if (imageUrl) payload.image = imageUrl;
+      if (Object.keys(payload).length === 0) {
+        toast.success("Nothing to update");
+        return;
+      }
+      await addToQueue({
+        userId: user.id,
+        table: "users",
+        recordId: user.id,
+        endpoint: "/auth/me",
+        method: "PATCH",
+        payload,
+      });
+      setPendingImage(null);
+      toast.success("Profile updated!");
+    } catch (err) {
+      toast.error(transformError(err));
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const onChangePassword = (data: PasswordForm) => {
+    changePassword.mutate(
+      { currentPassword: data.currentPassword, newPassword: data.newPassword },
+      {
+        onSuccess: () => {
+          toast.success("Password changed!");
+          passwordForm.reset();
+        },
+        onError: (err) => toast.error(transformError(err)),
+      },
+    );
+  };
+
+  const previewUrl = pendingImage ? URL.createObjectURL(pendingImage) : null;
+  const imageToShow = previewUrl || user?.image;
+
+  return (
+    <div className="space-y-6">
+      <Card>
+        <CardHeader>
+          <CardTitle>Profile Picture</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="flex items-center gap-6">
+            <Avatar name={user?.name ?? "?"} imageUrl={imageToShow} size={80} className="border-2 border-gray-200" />
+            <div>
+              <Button type="button" onClick={() => fileInputRef.current?.click()} variant="outline" size="sm">
+                {pendingImage || user?.image ? "Change" : "Upload"}
+              </Button>
+              <input ref={fileInputRef} type="file" accept="image/*" onChange={(e) => {
+                const file = e.target.files?.[0];
+                if (file) setPendingImage(file);
+              }} className="hidden" />
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Personal Information</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <form onSubmit={accountForm.handleSubmit(onSaveAccount)} className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label>Full Name</Label>
+                <Input {...accountForm.register("name")} />
+                {accountForm.formState.errors.name && (
+                  <p className="text-sm text-destructive">{accountForm.formState.errors.name.message}</p>
+                )}
+              </div>
+              <div className="space-y-2">
+                <Label>Email</Label>
+                <Input value={user?.email ?? ""} disabled className="bg-gray-50 text-gray-400" />
+              </div>
+              <div className="space-y-2">
+                <Label>Phone</Label>
+                <Input type="tel" {...accountForm.register("phone")} />
+              </div>
+            </div>
+            <Button type="submit" disabled={saving} size="sm">
+              {saving ? "Saving..." : "Save Changes"}
+            </Button>
+          </form>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Change Password</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <form onSubmit={passwordForm.handleSubmit(onChangePassword)} className="space-y-4">
+            <div className="space-y-2">
+              <Label>Current Password</Label>
+              <Input type="password" {...passwordForm.register("currentPassword")} />
+              {passwordForm.formState.errors.currentPassword && (
+                <p className="text-sm text-destructive">{passwordForm.formState.errors.currentPassword.message}</p>
+              )}
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label>New Password</Label>
+                <Input type="password" {...passwordForm.register("newPassword")} />
+                {passwordForm.formState.errors.newPassword && (
+                  <p className="text-sm text-destructive">{passwordForm.formState.errors.newPassword.message}</p>
+                )}
+              </div>
+              <div className="space-y-2">
+                <Label>Confirm Password</Label>
+                <Input type="password" {...passwordForm.register("confirmPassword")} />
+                {passwordForm.formState.errors.confirmPassword && (
+                  <p className="text-sm text-destructive">{passwordForm.formState.errors.confirmPassword.message}</p>
+                )}
+              </div>
+            </div>
+            <Button type="submit" disabled={changePassword.isPending} size="sm">
+              {changePassword.isPending ? "Changing..." : "Change Password"}
+            </Button>
+          </form>
+        </CardContent>
+      </Card>
+    </div>
+  );
+};
+
+const SchoolSection = () => {
+  const updateSchool = useUpdateSchool();
+
+  const { data: school, isLoading } = useSchoolInfo();
+  const [arms, setArms] = useState<string[]>([]);
+
+  useEffect(() => {
+    if (school) setArms(school.arms ?? []);
+  }, [school?.id]);
+
+  const isArmsDirty = arms.length !== (school?.arms?.length ?? 0) ||
+    arms.some((a, i) => a !== (school?.arms ?? [])[i]);
 
   const {
     register,
     handleSubmit,
     reset,
+    setValue,
+    control,
     formState: { errors, isDirty },
   } = useForm<SchoolUpdateFormData>({
     resolver: zodResolver(schoolUpdateSchema),
     defaultValues: {
       name: "", admissionPattern: "",
-      state: "", lga: "", schoolType: "", address: "", arms: "",
+      state: "", lga: "", schoolType: [], address: "",
     },
   });
 
@@ -62,21 +274,19 @@ export const AdminSettings = () => {
       const year = String(new Date().getFullYear());
       const example = school.admissionPattern === "{year}/{seq}"
         ? `ATH/${year}/001`
-        : school.admissionPattern
-            .replace("{year}", year)
-            .replace("{seq}", "001");
-
+        : school.admissionPattern.replace("{year}", year).replace("{seq}", "001");
+      const raw = school.schoolType;
+      const types = Array.isArray(raw) ? raw : typeof raw === "string" && raw ? raw.split(",").map((s) => s.trim()).filter(Boolean) : [];
       reset({
         name: school.name,
         admissionPattern: example,
         state: school.state,
         lga: school.lga,
-        schoolType: school.schoolType,
+        schoolType: types,
         address: school.address,
-        arms: school.arms?.join(", ") ?? "",
       });
     }
-  }, [school, reset]);
+  }, [school?.id, reset]);
 
   const { data: preview } = useGenerateAdmission(true);
 
@@ -88,120 +298,119 @@ export const AdminSettings = () => {
       lga: data.lga,
       schoolType: data.schoolType,
       address: data.address || undefined,
-      arms: data.arms
-        ? data.arms.split(",").map((a) => a.trim()).filter(Boolean)
-        : undefined,
+      arms: arms.length ? arms : undefined,
     });
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <header className="bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between">
-        <h1 className="text-xl font-bold text-blue-700">Soma</h1>
-        <div className="flex items-center gap-4">
-          <span className="text-sm text-gray-500">{user?.schoolName}</span>
-          <Avatar name={user?.name ?? ""} size={24} className="inline-block align-middle" />
-          <span className="text-sm text-gray-700">{user?.name}</span>
-          <span className="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded capitalize">{user?.role}</span>
-          <button onClick={logout} className="text-sm text-red-500 hover:text-red-600">Sign out</button>
-        </div>
-      </header>
+    <Card>
+      <CardHeader>
+        <CardTitle>School Details</CardTitle>
+        <CardDescription>Edit your school's information</CardDescription>
+      </CardHeader>
+      <CardContent>
+        {isLoading ? (
+          <p className="text-sm text-gray-400">Loading...</p>
+        ) : !school ? (
+          <p className="text-sm text-gray-400">Could not load school data.</p>
+        ) : (
+          <form onSubmit={handleSubmit(onSave)} className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="name">School Name</Label>
+              <Input id="name" {...register("name")} />
+              {errors.name && <p className="text-sm text-destructive">{errors.name.message}</p>}
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="admissionPattern">Admission Pattern</Label>
+              <Input id="admissionPattern" placeholder={`e.g. ATH/${new Date().getFullYear()}/001`} {...register("admissionPattern")} />
+              {errors.admissionPattern && <p className="text-sm text-destructive">{errors.admissionPattern.message}</p>}
+              <p className="text-xs text-gray-400">
+                Type an example of how you want admission numbers to look.{" "}
+                Next number: <code className="bg-gray-100 px-1 rounded">{preview?.admissionNo ?? "—"}</code>
+              </p>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="state">State</Label>
+                <select id="state" className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm" {...register("state")}>
+                  <option value="">Select state</option>
+                  {NIGERIAN_STATES.map((s) => <option key={s} value={s}>{s}</option>)}
+                </select>
+                {errors.state && <p className="text-sm text-destructive">{errors.state.message}</p>}
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="lga">LGA</Label>
+                <Input id="lga" {...register("lga")} />
+                {errors.lga && <p className="text-sm text-destructive">{errors.lga.message}</p>}
+              </div>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <SchoolTypeCheckboxes control={control} setValue={setValue} />
+              <div className="space-y-2">
+                <Label>Arms</Label>
+                <TagInput
+                  value={arms}
+                  onChange={setArms}
+                  placeholder="Type arm and press Enter"
+                />
+                <p className="text-xs text-gray-400">Each arm becomes a class section (e.g. JSS 1A, JSS 1B).</p>
+              </div>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="address">Address</Label>
+              <Input id="address" {...register("address")} />
+            </div>
+            <Button type="submit" disabled={(!isDirty && !isArmsDirty) || updateSchool.isPending} className="w-full">
+              {updateSchool.isPending ? "Saving..." : "Save Changes"}
+            </Button>
+          </form>
+        )}
+      </CardContent>
+    </Card>
+  );
+};
 
-      <main className="max-w-2xl mx-auto px-6 py-8">
-        <Link to="/admin" className="text-sm text-gray-400 hover:text-gray-600">&larr; Dashboard</Link>
-        <h2 className="text-2xl font-bold text-gray-800 mt-2 mb-6">School Settings</h2>
+const SCHOOL_TYPE_OPTIONS = [
+  { value: "creche", label: "Creche" },
+  { value: "kg", label: "Kindergarten" },
+  { value: "primary", label: "Primary" },
+  { value: "secondary", label: "Secondary" },
+] as const;
 
-        <Card>
-          <CardHeader>
-            <CardTitle>School Details</CardTitle>
-            <CardDescription>Edit your school's information</CardDescription>
-          </CardHeader>
-          <CardContent>
-            {isLoading ? (
-              <p className="text-sm text-gray-400">Loading...</p>
-            ) : !school ? (
-              <p className="text-sm text-gray-400">Could not load school data.</p>
-            ) : (
-              <form onSubmit={handleSubmit(onSave)} className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="name">School Name</Label>
-                  <Input id="name" {...register("name")} />
-                  {errors.name && <p className="text-sm text-destructive">{errors.name.message}</p>}
-                </div>
+const SchoolTypeCheckboxes = ({
+  control,
+  setValue,
+}: {
+  control: Control<SchoolUpdateFormData>;
+  setValue: ReturnType<typeof useForm<SchoolUpdateFormData>>["setValue"];
+}) => {
+  const selected = useWatch({ control, name: "schoolType" }) ?? [];
 
-                <div className="space-y-2">
-                  <Label htmlFor="admissionPattern">Admission Pattern</Label>
-                  <Input
-                    id="admissionPattern"
-                    placeholder={`e.g. ATH/${new Date().getFullYear()}/001`}
-                    {...register("admissionPattern")}
-                  />
-                  {errors.admissionPattern && <p className="text-sm text-destructive">{errors.admissionPattern.message}</p>}
-                  <p className="text-xs text-gray-400">
-                    Type an example of how you want admission numbers to look.{" "}
-                    Next number: <code className="bg-gray-100 px-1 rounded">{preview?.admissionNo ?? "—"}</code>
-                  </p>
-                </div>
+  const toggle = (value: string) => {
+    const next = selected.includes(value)
+      ? selected.filter((v: string) => v !== value)
+      : [...selected, value];
+    setValue("schoolType", next, { shouldDirty: true });
+  };
 
-                <div className="space-y-2">
-                  <Label htmlFor="state">State</Label>
-                  <select
-                    id="state"
-                    className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm"
-                    {...register("state")}
-                  >
-                    <option value="">Select state</option>
-                    {NIGERIAN_STATES.map((s) => (
-                      <option key={s} value={s}>{s}</option>
-                    ))}
-                  </select>
-                  {errors.state && <p className="text-sm text-destructive">{errors.state.message}</p>}
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="lga">LGA</Label>
-                  <Input id="lga" {...register("lga")} />
-                  {errors.lga && <p className="text-sm text-destructive">{errors.lga.message}</p>}
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="schoolType">School Type</Label>
-                  <select
-                    id="schoolType"
-                    className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm"
-                    {...register("schoolType")}
-                  >
-                    <option value="secondary">Secondary</option>
-                    <option value="primary">Primary</option>
-                    <option value="BOTH">Both</option>
-                  </select>
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="arms">
-                    Arms <span className="text-gray-400 font-normal">(comma-separated)</span>
-                  </Label>
-                  <Input
-                    id="arms"
-                    placeholder="e.g. A, B, C or 1, 2, 3"
-                    {...register("arms")}
-                  />
-                  <p className="text-xs text-gray-400">Each arm becomes a class section (e.g. JSS 1A, JSS 1B).</p>
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="address">Address</Label>
-                  <Input id="address" {...register("address")} />
-                </div>
-
-                <Button type="submit" disabled={!isDirty || updateSchool.isPending} className="w-full">
-                  {updateSchool.isPending ? "Saving..." : "Save Changes"}
-                </Button>
-              </form>
-            )}
-          </CardContent>
-        </Card>
-      </main>
+  return (
+    <div className="space-y-2">
+      <Label>School Type</Label>
+      <div className="flex flex-wrap gap-4">
+        {SCHOOL_TYPE_OPTIONS.map((opt) => (
+          <label key={opt.value} className="flex items-center gap-2 text-sm cursor-pointer">
+            <input
+              type="checkbox"
+              checked={selected.includes(opt.value)}
+              onChange={() => toggle(opt.value)}
+              className="accent-black size-4"
+            />
+            {opt.label}
+          </label>
+        ))}
+      </div>
     </div>
   );
 };
+
+

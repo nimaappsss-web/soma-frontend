@@ -1,9 +1,11 @@
+import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 
 import { Input } from "../../../components/ui/input";
 import { Button } from "../../../components/ui/button";
+import { TagInput } from "../../../components/ui/tag-input";
 import { ErrorMessage } from "../../../components/others/ErrorMessage";
 import { useRegisterSchool } from "../../auth/api";
 import { useAuth } from "../../../contexts/AuthContext";
@@ -19,6 +21,7 @@ const schoolSchema = z.object({
 type SchoolFormData = z.infer<typeof schoolSchema>;
 
 export const SchoolSetupWizard = () => {
+  const [arms, setArms] = useState<string[]>([]);
   const registerSchool = useRegisterSchool();
   const { setTokens } = useAuth();
 
@@ -38,6 +41,7 @@ export const SchoolSetupWizard = () => {
         lga: data.lga,
         schoolType: [],
         address: data.address || undefined,
+        arms: arms.length ? arms : undefined,
       },
       {
         onSuccess: (res) => {
@@ -90,6 +94,13 @@ export const SchoolSetupWizard = () => {
               placeholder="Address (optional)"
               registration={register("address")}
               hasError={errors.address}
+            />
+          </div>
+          <div>
+            <TagInput
+              value={arms}
+              onChange={setArms}
+              placeholder="Type arm and press Enter (e.g. A, B, C)"
             />
           </div>
 

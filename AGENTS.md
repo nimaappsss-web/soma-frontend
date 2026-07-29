@@ -189,28 +189,79 @@ export { Button, buttonVariants };
 - Set `displayName` on every compound component
 - Export both component and variants object
 
-### 8. Offline-First Dexie Cache (student/lessons pattern)
+### 8. Offline-First Dexie Cache (query hooks)
 
 For cache-first reads: subscribe to Dexie `liveQuery`, then fetch from API and merge:
 
 ```ts
-const [cached, setCached] = useState<Student[]>([]);
+import { useLiveQuery } from "dexie-react-hooks";
+import { useQuery } from "@tanstack/react-query";
+import { db } from "../../../db/db";
+import { fetchData } from "../../../utils/fetchData";
+import { useAuth } from "../../../contexts/AuthContext";
 
-useEffect(() => {
-  const sub = liveQuery(() => db.students.where("classId").equals(classId).toArray())
-    .subscribe({ next: (data) => setCached(data) });
-  return () => sub.unsubscribe();
-}, [classId]);
+export const useXyz = () => {
+  const { user } = useAuth();
+  const userId = user?.id ?? "";
 
-const query = useQuery({
-  queryFn: async () => {
-    const res = await fetchData(`/students?classId=...`, "GET");
-    await db.transaction("rw", db.students, async () => { /* merge logic */ });
-    return res;
-  },
-});
+  const cached = useLiveQuery(
+    () => {
+      if (!userId) return Promise.resolve(undefined);
+      return db.xyz.where("userId").equals(userId).toArray();
+    },
+    [userId],
+  );
 
-return { data: cached.length > 0 ? cached : query.data ?? [], ... };
+  const query = useQuery({
+    queryKey: ["xyz", userId],
+    queryFn: async () => {
+      const res = await fetchData<{ items: Item[] }>("/xyz", "GET");
+
+      const hasPending = await db.syncQueue
+        .where("userId")
+        .equals(userId)
+        .filter((i) => i.table === "xyz" && i.status === "pending")
+        .count();
+
+      await db.transaction("rw", db.xyz, async () => {
+        if (hasPending === 0) {
+          await db.xyz.where("userId").equals(userId).delete();
+        }
+        if (res.items?.length) {
+          await db.xyz.bulkPut(
+            res.items.map((item) => ({ ...item, userId })),
+          );
+        }
+      });
+
+      return res;
+    },
+    enabled: !!userId,
+    staleTime: 5 * 60 * 1000,
+  });
+
+  const isEmpty = (cached ?? []).length === 0;
+
+  return {
+    data: cached !== undefined ? cached : (query.data?.items ?? []),
+    isLoading: cached === undefined || (isEmpty && query.isLoading),
+    error: query.error ?? undefined,
+  };
+};
+```
+
+Key rules:
+- **Stale-cache guard**: Check `db.syncQueue` for pending items before deleting. This prevents reverting local edits made while offline.
+- **Delete + rewrite**: When `hasPending === 0`, delete all cached records for this userId first, then write fresh data. This fixes stale cache when the server returns an empty array (the `if (array?.length)` guard would skip the write and leave stale data).
+- **Transaction**: Wrap delete+write in `db.transaction("rw", ...)` for atomicity.
+- **Loading state**: Use `cached === undefined || (isEmpty && query.isLoading)` to avoid flashing empty state while the server fetch is in flight.
+- **Error fallback**: Propagate `query.error` so the hook consumer can show error states.
+
+For **paginated** or **filter-scoped** hooks (e.g., `useParents`, `useAnnouncements`, `useCalendarEvents`), only delete on the first page or when no filters are active to avoid losing data from other pages:
+```ts
+if (hasPending === 0 && page === 1) {
+  await db.xyz.where("userId").equals(userId).delete();
+}
 ```
 
 ### 9. Sync Queue (`src/sync/syncQueue.ts`)

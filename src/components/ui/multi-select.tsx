@@ -1,7 +1,7 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useMemo } from "react";
 import { cn } from "../../lib/utils";
+import { Search, X } from "lucide-react";
 import type { FieldError } from "react-hook-form";
-import { X } from "lucide-react";
 
 export interface SelectOption {
   value: string;
@@ -15,6 +15,7 @@ interface MultiSelectProps {
   placeholder?: string;
   className?: string;
   hasError?: FieldError;
+  searchable?: boolean;
 }
 
 export const MultiSelect = ({
@@ -24,9 +25,19 @@ export const MultiSelect = ({
   placeholder = "Select...",
   className,
   hasError,
+  searchable,
 }: MultiSelectProps) => {
   const [open, setOpen] = useState(false);
+  const [filter, setFilter] = useState("");
   const ref = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (open && searchable) {
+      setFilter("");
+      setTimeout(() => inputRef.current?.focus(), 0);
+    }
+  }, [open, searchable]);
 
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
@@ -37,6 +48,14 @@ export const MultiSelect = ({
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
+
+  const filteredOptions = useMemo(
+    () =>
+      searchable && filter
+        ? options.filter((o) => o.label.toLowerCase().includes(filter.toLowerCase()))
+        : options,
+    [options, filter, searchable],
+  );
 
   const toggle = (value: string) => {
     onChange(
@@ -99,24 +118,41 @@ export const MultiSelect = ({
 
       {open && (
         <div className="absolute z-50 mt-1 w-full rounded-xl border border-input bg-background shadow-lg">
-          {options.length === 0 ? (
-            <p className="p-3 text-sm text-placeholder">No options available</p>
-          ) : (
-            options.map((option) => (
-              <label
-                key={option.value}
-                className="flex cursor-pointer items-center gap-2 px-4 py-2.5 text-sm transition-colors first:rounded-t-xl last:rounded-b-xl hover:bg-accent"
-              >
+          {searchable && (
+            <div className="p-2 pb-0">
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-placeholder pointer-events-none" />
                 <input
-                  type="checkbox"
-                  checked={selected.includes(option.value)}
-                  onChange={() => toggle(option.value)}
-                  className="h-4 w-4 rounded border-gray-300 accent-black"
+                  ref={inputRef}
+                  type="text"
+                  value={filter}
+                  onChange={(e) => setFilter(e.target.value)}
+                  placeholder="Search..."
+                  className="w-full h-9 rounded-full border border-input bg-background pl-9 pr-4 text-sm placeholder:text-placeholder focus-visible:outline-none"
                 />
-                {option.label}
-              </label>
-            ))
+              </div>
+            </div>
           )}
+          <div className="max-h-60 overflow-y-auto">
+            {filteredOptions.length === 0 ? (
+              <p className="p-3 text-sm text-placeholder">No options available</p>
+            ) : (
+              filteredOptions.map((option) => (
+                <label
+                  key={option.value}
+                  className="flex cursor-pointer items-center gap-2 px-4 py-2.5 text-sm transition-colors hover:bg-accent"
+                >
+                  <input
+                    type="checkbox"
+                    checked={selected.includes(option.value)}
+                    onChange={() => toggle(option.value)}
+                    className="h-4 w-4 rounded border-gray-300 accent-black"
+                  />
+                  {option.label}
+                </label>
+              ))
+            )}
+          </div>
         </div>
       )}
 

@@ -19,9 +19,9 @@ export const schoolUpdateSchema = z.object({
   admissionPattern: z.string().optional().or(z.literal("")),
   state: z.string().min(1, "State is required"),
   lga: z.string().min(1, "LGA is required"),
-  schoolType: z.string().min(1, "School type is required"),
+  schoolType: z.array(z.enum(["creche", "kg", "primary", "secondary"])).min(1, "Select at least one school type"),
   address: z.string().optional().or(z.literal("")),
-  arms: z.string().optional().or(z.literal("")),
+  arms: z.array(z.string()).optional(),
 });
 
 export type CreateClassFormData = z.infer<typeof createClassSchema>;

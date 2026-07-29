@@ -20,12 +20,13 @@ interface SyncContextType {
   syncTotal: number;
   lastSyncedAt: string | null;
   triggerSync: () => void;
+  clearFailed: () => void;
 }
 
 const SyncContext = createContext<SyncContextType | null>(null);
 
-const POLL_INTERVAL = 30000;
-const FLUSH_INTERVAL = 60000;
+const POLL_INTERVAL = 10000;
+const FLUSH_INTERVAL = 15000;
 const MAX_RETRIES = 3;
 
 export const SyncProvider = ({ children }: { children: ReactNode }) => {
@@ -75,8 +76,29 @@ export const SyncProvider = ({ children }: { children: ReactNode }) => {
         await db.syncQueue.update(item.id!, { status: "syncing" });
 
         try {
-          await fetchData(item.endpoint, item.method, item.payload as Record<string, unknown>);
+          const response = await fetchData(item.endpoint, item.method, item.payload as Record<string, unknown>);
           await db.syncQueue.update(item.id!, { status: "synced" });
+
+          if (item.endpoint === "/students/bulk" && response && typeof response === "object" && "failed" in response) {
+            const failed = (response as { failed: Array<{ index: number; reason: string }> }).failed;
+            if (failed?.length) {
+              const students = (item.payload as { students: Array<{ id: string }> }).students;
+              for (const f of failed) {
+                if (students[f.index]?.id) {
+                  await db.students.delete(students[f.index].id);
+                }
+              }
+            }
+          } else if (item.method === "POST" || item.method === "PUT") {
+            const table = db[item.table as keyof typeof db] as any;
+            if (table && response && typeof response === "object" && "id" in response) {
+              await table.put({ ...response, userId: item.userId });
+              if (response.id !== item.recordId) {
+                await table.delete(item.recordId);
+              }
+            }
+          }
+
           setPendingCount((c) => Math.max(0, c - 1));
         } catch {
           const nextRetry = item.retryCount + 1;
@@ -119,8 +141,14 @@ export const SyncProvider = ({ children }: { children: ReactNode }) => {
 
   const triggerSync = useCallback(() => { flush(); }, [flush]);
 
+  const clearFailed = useCallback(async () => {
+    if (!user) return;
+    await db.syncQueue.where({ userId: user.id, status: "failed" }).delete();
+    setFailedCount(0);
+  }, [user]);
+
   return (
-    <SyncContext value={{ pendingCount, failedCount, isSyncing, syncProgress, syncTotal, lastSyncedAt, triggerSync }}>
+    <SyncContext value={{ pendingCount, failedCount, isSyncing, syncProgress, syncTotal, lastSyncedAt, triggerSync, clearFailed }}>
       {children}
     </SyncContext>
   );

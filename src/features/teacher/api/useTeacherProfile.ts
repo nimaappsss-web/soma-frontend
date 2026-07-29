@@ -33,10 +33,11 @@ export const useTeacherProfile = (): TeacherProfile => {
   const error = (formClassQuery.error ?? assignmentsQuery.error) ?? null;
 
   return {
-    formClassId: formClassQuery.data?.formClassId ?? null,
+    formClassId: formClassQuery.data?.formClassId ?? user?.formClassId ?? null,
     formClass:
       formClassQuery.data?.formClass ??
-      toFormClassString(user?.formClass),
+      toFormClassString(user?.formClass) ??
+      null,
     name: user?.name ?? "",
     email: user?.email ?? "",
     schoolName: user?.schoolName ?? "",

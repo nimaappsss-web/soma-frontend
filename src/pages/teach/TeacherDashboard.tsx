@@ -5,77 +5,56 @@ import { useTeacherProfile } from "../../features/teacher/api";
 import { FormClassCard, SubjectAssignmentsCard } from "../../features/teacher/components";
 
 export const TeacherDashboard = () => {
-  const { logout } = useAuth();
   const { formClass, assignments, schoolName, name, role, isLoading } =
     useTeacherProfile();
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <header className="bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between">
-        <h1 className="text-xl font-bold text-blue-700">Soma</h1>
-        <div className="flex items-center gap-4">
-          <span className="text-sm text-gray-500">{schoolName}</span>
-          <span className="text-sm text-gray-700">{name}</span>
-          <span className="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded capitalize">
-            {role}
-          </span>
+    <div className="p-8 max-w-5xl">
+      {isLoading && (
+        <p className="text-sm text-gray-400 mb-4">Loading...</p>
+      )}
+
+      <div className="mb-1">
+        <p className="text-xs text-gray-400">{schoolName}</p>
+        <h1 className="text-2xl font-bold text-gray-800 mt-0.5">
+          Welcome, {name}
+        </h1>
+      </div>
+
+      <FormClassCard formClass={formClass} />
+      <SubjectAssignmentsCard assignments={assignments} />
+
+      {formClass && (
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-6">
           <Link
-            to="/settings"
-            className="text-sm text-gray-500 hover:text-gray-700"
+            to="/teach/students"
+            className="bg-white rounded-xl p-6 shadow-sm border border-gray-100 hover:border-blue-200 transition-colors"
           >
-            Settings
+            <p className="text-sm text-gray-400">Students</p>
+            <p className="text-lg font-semibold text-blue-600 mt-1">
+              View class
+            </p>
           </Link>
-          <button
-            onClick={logout}
-            className="text-sm text-red-500 hover:text-red-600"
+          <Link
+            to="/teach/attendance"
+            className="bg-white rounded-xl p-6 shadow-sm border border-gray-100 hover:border-blue-200 transition-colors"
           >
-            Sign out
-          </button>
+            <p className="text-sm text-gray-400">Attendance</p>
+            <p className="text-lg font-semibold text-blue-600 mt-1">
+              Mark today's
+            </p>
+          </Link>
+          <Link
+            to="/teach/lesson-notes"
+            className="bg-white rounded-xl p-6 shadow-sm border border-gray-100 hover:border-blue-200 transition-colors"
+          >
+            <p className="text-sm text-gray-400">Lesson Notes</p>
+            <p className="text-lg font-semibold text-blue-600 mt-1">
+              Create / Edit
+            </p>
+          </Link>
         </div>
-      </header>
-
-      <main className="max-w-5xl mx-auto px-6 py-8">
-        {isLoading && (
-          <p className="text-sm text-gray-400 mb-4">Loading...</p>
-        )}
-
-        <h2 className="text-2xl font-bold text-gray-800 mb-6">Dashboard</h2>
-
-        <FormClassCard formClass={formClass} />
-        <SubjectAssignmentsCard assignments={assignments} />
-
-        {formClass && (
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-6">
-            <Link
-              to="/teach/students"
-              className="bg-white rounded-xl p-6 shadow-sm border border-gray-100 hover:border-blue-200 transition-colors"
-            >
-              <p className="text-sm text-gray-400">Students</p>
-              <p className="text-lg font-semibold text-blue-600 mt-1">
-                View class
-              </p>
-            </Link>
-            <Link
-              to="/teach/attendance"
-              className="bg-white rounded-xl p-6 shadow-sm border border-gray-100 hover:border-blue-200 transition-colors"
-            >
-              <p className="text-sm text-gray-400">Attendance</p>
-              <p className="text-lg font-semibold text-blue-600 mt-1">
-                Mark today's
-              </p>
-            </Link>
-            <Link
-              to="/teach/lesson-notes"
-              className="bg-white rounded-xl p-6 shadow-sm border border-gray-100 hover:border-blue-200 transition-colors"
-            >
-              <p className="text-sm text-gray-400">Lesson Notes</p>
-              <p className="text-lg font-semibold text-blue-600 mt-1">
-                Create / Edit
-              </p>
-            </Link>
-          </div>
-        )}
-      </main>
+      )}
     </div>
   );
 };
