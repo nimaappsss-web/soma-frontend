@@ -114,14 +114,14 @@ const SidebarNav = ({
               to={item.children![0].to}
               className={({ isActive }) =>
                 cn(
-                  "flex items-center justify-center h-[45px] rounded-full transition-colors",
+                  "flex items-center justify-start h-[45px] w-[48px] transition-colors",
                   isActive || active
-                    ? "bg-gray900 text-white font-medium"
-                    : "text-gray700 hover:bg-gray50 hover:text-gray900",
+                    ? "bg-gray900 text-white font-medium rounded-xl"
+                    : "text-gray700 hover:bg-gray50 hover:text-gray900 rounded-full",
                 )
               }
             >
-              <item.Icon variant="Bold" size={24} color="currentColor" />
+              <span className="ml-[12px]"><item.Icon variant="Bold" size={24} color="currentColor" /></span>
             </NavLink>
           );
         }
@@ -187,15 +187,16 @@ const SidebarNav = ({
           end={item.to === "/admin"}
           className={({ isActive }) =>
             cn(
-              "flex items-center h-[45px] rounded-full text-sm transition-colors",
-              collapsed ? "justify-center" : "gap-3 px-4",
-              isActive
-                ? "bg-gray900 text-white font-medium"
-                : "text-gray700 hover:bg-gray50 hover:text-gray900",
+              "flex items-center h-[45px] text-sm transition-colors",
+              collapsed ? "justify-start w-[48px] px-0" : "gap-3 px-4 rounded-full",
+              collapsed && isActive && "bg-gray900 text-white font-medium rounded-xl",
+              collapsed && !isActive && "text-gray700 hover:bg-gray50 hover:text-gray900 rounded-full",
+              !collapsed && isActive && "bg-gray900 text-white font-medium rounded-full",
+              !collapsed && !isActive && "text-gray700 hover:bg-gray50 hover:text-gray900 rounded-full",
             )
           }
         >
-          <span className="shrink-0"><item.Icon variant="Bold" size={24} color="currentColor" /></span>
+          <span className={cn("shrink-0", collapsed ? "ml-[12px]" : "")}><item.Icon variant="Bold" size={24} color="currentColor" /></span>
           {!collapsed && <span className="flex-1">{item.label}</span>}
         </NavLink>
       );
@@ -229,30 +230,40 @@ export const AdminLayout = () => {
       {/* Sidebar — full height */}
       <aside
         className={cn(
-          "h-full bg-pureWhite flex flex-col border-r border-gray100 transition-[width] duration-300 shrink-0 overflow-hidden",
+          "h-full bg-pureWhite flex flex-col border-r border-gray100 transition-[width] duration-300 shrink-0 overflow-hidden relative",
           collapsed ? "w-[72px]" : "w-[264px]",
         )}
       >
-        {/* Top: Logo + collapse button */}
+        {/* Top: Logo / collapse trigger */}
         <div className={cn("flex items-center h-[62px] shrink-0 border-b border-gray100", collapsed ? "justify-center px-2" : "justify-between px-5")}>
-          {!collapsed && (
-            <img src="/icons/somawordmark_black.svg" alt="Soma" className="w-[107px] h-[23px]" />
+          {collapsed ? (
+            <div className="group relative flex items-center justify-center w-[26px] h-[26px] cursor-pointer" onClick={toggle}>
+              <img
+                src="/blackLogo.png"
+                alt="Soma"
+                className="absolute inset-0 w-full h-full object-contain opacity-100 group-hover:opacity-0 transition-opacity duration-200"
+              />
+              <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                <div className="flex items-center justify-center w-[26px] h-[26px] rounded-lg bg-gray900">
+                  <ArrowLeft2 variant="Bold" size={14} color="#FFFFFF" className="rotate-180" />
+                </div>
+              </div>
+            </div>
+          ) : (
+            <>
+              <img src="/icons/somawordmark_black.svg" alt="Soma" className="w-[107px] h-[23px]" />
+              <button
+                onClick={toggle}
+                className="flex items-center justify-center w-[26px] h-[26px] rounded-lg bg-gray900 hover:bg-gray800 transition-colors"
+              >
+                <ArrowLeft2 variant="Bold" size={14} color="#FFFFFF" />
+              </button>
+            </>
           )}
-          <button
-            onClick={toggle}
-            className="flex items-center justify-center w-[26px] h-[26px] rounded-lg bg-gray900 hover:bg-gray800 transition-colors"
-          >
-            <ArrowLeft2
-              variant="Bold"
-              size={14}
-              color="#FFFFFF"
-              className={cn("transition-transform duration-300", collapsed && "rotate-180")}
-            />
-          </button>
         </div>
 
         {/* Nav */}
-        <nav className={cn("flex-1 py-4 space-y-0.5 overflow-y-auto", collapsed ? "px-2" : "px-3")}>
+        <nav className={cn("flex-1 py-4 space-y-0.5 overflow-y-auto", collapsed ? "px-[12px]" : "px-3")}>
           <SidebarNav items={group1} expandedItems={expandedItems} toggleExpanded={toggleExpanded} isChildActive={isChildActive} collapsed={collapsed} />
           <div className="border-t border-gray100 my-2" />
           <SidebarNav items={group2} expandedItems={expandedItems} toggleExpanded={toggleExpanded} isChildActive={isChildActive} collapsed={collapsed} />
@@ -263,10 +274,10 @@ export const AdminLayout = () => {
         </nav>
 
         {/* Bottom: School info */}
-        <div className={cn("border-t border-gray100 mt-1 shrink-0", collapsed ? "px-2 pb-4 pt-3" : "px-3 pb-4 pt-3")}>
+        <div className={cn("border-t border-gray100 mt-1 shrink-0", collapsed ? "px-[12px] pb-4 pt-3" : "px-3 pb-4 pt-3")}>
           {collapsed ? (
-            <div className="flex items-center justify-center h-[45px]">
-              <Building variant="Bold" size={20} className="text-gray300" />
+            <div className="flex items-center justify-start h-[45px] w-[48px]">
+              <Building variant="Bold" size={20} className="ml-[12px] text-gray300" />
             </div>
           ) : (
             <div className="flex items-center gap-3 px-4 h-[45px]">

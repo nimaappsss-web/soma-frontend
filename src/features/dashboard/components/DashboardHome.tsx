@@ -10,7 +10,7 @@ export const DashboardHome = () => {
   const { data: stats, isLoading } = useDashboardStats();
 
   return (
-    <div className="p-6 max-w-6xl">
+    <div className="p-6 w-full">
       <ProgressSection percentage={30} />
       <SetupChecklist />
       <DateFilterBar />
