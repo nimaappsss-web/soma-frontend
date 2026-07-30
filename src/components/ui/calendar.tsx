@@ -21,7 +21,7 @@ export const Calendar = ({ value, onChange, onClose }: CalendarProps) => {
   const today = new Date();
   const selected = value ? new Date(value) : null;
 
-  const [viewDate, setViewDate] = useState(selected || today);
+  const [viewDate] = useState(selected || today);
   const [viewMonth, setViewMonth] = useState(viewDate.getMonth());
   const [viewYear, setViewYear] = useState(viewDate.getFullYear());
 

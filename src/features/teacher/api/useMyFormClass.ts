@@ -1,7 +1,7 @@
 import { useLiveQuery } from "dexie-react-hooks";
 import { useQuery } from "@tanstack/react-query";
 
-import { db } from "../../../db/db";
+import { db, type TeacherFormClassCache } from "../../../db/db";
 import { fetchData } from "../../../utils/fetchData";
 
 interface FormClassResult {
@@ -13,7 +13,7 @@ export const useMyFormClass = (userId: string) => {
   const liveData = useLiveQuery(
     () => (userId ? db.teacherFormClass.get(userId) : Promise.resolve(undefined)),
     [userId],
-  );
+  ) as TeacherFormClassCache | undefined;
 
   const query = useQuery({
     queryKey: ["teacherFormClass", userId],

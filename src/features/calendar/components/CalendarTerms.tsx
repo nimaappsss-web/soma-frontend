@@ -52,9 +52,9 @@ const TermRow = ({
   index,
   total,
   onSetCurrent,
+  onSetInactive,
   onEdit,
   onDelete,
-  onSetInactive,
   isPending,
   editingId,
   editForm,
@@ -66,6 +66,7 @@ const TermRow = ({
   index: number;
   total: number;
   onSetCurrent: () => void;
+  onSetInactive: () => void;
   onEdit: () => void;
   onDelete: () => void;
   isPending: boolean;

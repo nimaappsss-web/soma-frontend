@@ -44,7 +44,7 @@ export const useAllStudents = (userId: string) => {
         if (!hasPendingNonDelete) {
           await db.students.where("userId").equals(userId).delete();
         }
-        const studentsToWrite = (res.students ?? []).filter((s) => !pendingDeleteIds.has(s.id));
+        const studentsToWrite = (res.students ?? []).filter((s: Student) => !pendingDeleteIds.has(s.id));
         if (studentsToWrite.length) {
           await db.students.bulkPut(
             studentsToWrite.map((s: Record<string, unknown>) => ({ ...s, userId, createdAt: Date.now() }) as any),

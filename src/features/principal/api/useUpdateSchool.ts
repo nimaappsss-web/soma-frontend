@@ -17,6 +17,7 @@ interface UpdateSchoolPayload {
   address?: string;
   logoUrl?: string;
   arms?: string[];
+  admissionPattern?: string;
 }
 
 export const useUpdateSchool = () => {

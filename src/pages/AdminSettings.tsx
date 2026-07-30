@@ -272,11 +272,13 @@ const SchoolSection = () => {
   useEffect(() => {
     if (school) {
       const year = String(new Date().getFullYear());
-      const example = school.admissionPattern === "{year}/{seq}"
+      const example = !school.admissionPattern
         ? `ATH/${year}/001`
-        : school.admissionPattern.replace("{year}", year).replace("{seq}", "001");
+        : school.admissionPattern === "{year}/{seq}"
+          ? `ATH/${year}/001`
+          : school.admissionPattern.replace("{year}", year).replace("{seq}", "001");
       const raw = school.schoolType;
-      const types = Array.isArray(raw) ? raw : typeof raw === "string" && raw ? raw.split(",").map((s) => s.trim()).filter(Boolean) : [];
+      const types = Array.isArray(raw) ? raw as ("secondary" | "creche" | "kg" | "primary")[] : [];
       reset({
         name: school.name,
         admissionPattern: example,
@@ -387,10 +389,10 @@ const SchoolTypeCheckboxes = ({
   const selected = useWatch({ control, name: "schoolType" }) ?? [];
 
   const toggle = (value: string) => {
-    const next = selected.includes(value)
-      ? selected.filter((v: string) => v !== value)
-      : [...selected, value];
-    setValue("schoolType", next, { shouldDirty: true });
+    const next = selected.includes(value as "secondary" | "creche" | "kg" | "primary")
+      ? selected.filter((v) => v !== value)
+      : [...selected, value as "secondary" | "creche" | "kg" | "primary"];
+    setValue("schoolType", next as ("secondary" | "creche" | "kg" | "primary")[], { shouldDirty: true });
   };
 
   return (

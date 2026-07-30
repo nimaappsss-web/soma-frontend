@@ -18,7 +18,7 @@ const OtpInputField = ({ value, onChange, numDigits = 6, disabled, className }: 
       numInputs={numDigits}
       inputType="text"
       containerStyle={cn("flex gap-2 justify-center", className)}
-      renderInput={(inputProps, index) => (
+      renderInput={(inputProps, _index) => (
         <input
           {...inputProps}
           disabled={disabled}

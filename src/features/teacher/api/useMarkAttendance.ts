@@ -11,7 +11,7 @@ export const useMarkAttendance = () => {
 
   return useMutation<MarkAttendanceResponse, AxiosErrorResponse, MarkAttendancePayload>({
     mutationFn: (payload) => fetchData("/attendance/bulk", "POST", payload),
-    onSuccess: (data, variables) => {
+    onSuccess: (data, _variables) => {
       toast.success(`Attendance saved: ${data.count} student(s)`);
       queryClient.invalidateQueries({ queryKey: attendanceKeys.lists() });
       queryClient.invalidateQueries({ queryKey: attendanceKeys.details() });

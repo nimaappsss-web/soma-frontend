@@ -205,7 +205,7 @@ const SidebarNav = ({
 );
 
 export const AdminLayout = () => {
-  const { user, logout } = useAuth();
+  const { user } = useAuth();
   const location = useLocation();
   const [expandedItems, setExpandedItems] = useState<Record<string, boolean>>({});
   const { collapsed, toggle } = useSidebarCollapse();

@@ -1,11 +1,9 @@
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import toast from "react-hot-toast";
 
 import { Avatar } from "../../components/ui/Avatar";
 import { Button } from "../../components/ui/button";
-import { useAuth } from "../../contexts/AuthContext";
 import { useTeachers, useResendInvite, useUpdateTeacher } from "../../features/teacher/api";
 import { useClasses } from "../../features/principal/api";
 import { InviteTeacherModal } from "../../features/principal/components/InviteTeacherModal";
@@ -13,7 +11,6 @@ import { editTeacherSchema, type EditTeacherFormData } from "../../features/teac
 import type { Teacher } from "../../features/teacher/types";
 
 export const AdminTeachers = () => {
-  const { user } = useAuth();
   const { data: teachersData, isLoading } = useTeachers();
   const { data: classesData } = useClasses();
   const resendMutation = useResendInvite();

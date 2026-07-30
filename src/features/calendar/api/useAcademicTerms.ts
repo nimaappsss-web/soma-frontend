@@ -40,7 +40,7 @@ export const useAcademicTerms = () => {
             .toArray())
             .map((q) => q.recordId),
         );
-        const merged = res.terms.map((t) => {
+        const merged = res.terms.map((t: AcademicTerm) => {
           const match = local.find((l) => l.id === t.id);
           if (match) {
             return {
@@ -50,7 +50,7 @@ export const useAcademicTerms = () => {
           }
           return { ...t, userId, isCurrent: (t as any).isCurrent ?? false };
         });
-        const localOnly = local.filter((l) => !res.terms!.some((t) => t.id === l.id));
+        const localOnly = local.filter((l) => !res.terms!.some((t: AcademicTerm) => t.id === l.id));
         await db.academicTerms.bulkPut([...merged, ...localOnly]);
       }
       return res;

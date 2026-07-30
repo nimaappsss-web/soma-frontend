@@ -10,7 +10,7 @@ export const useGenerateInviteLink = () => {
   const queryClient = useQueryClient();
 
   return useMutation<GenerateInviteLinkResponse, AxiosErrorResponse, { role: string }>({
-    mutationFn: (payload) => fetchData<GenerateInviteLinkResponse>("/auth/generate-invite-link", "POST", payload),
+    mutationFn: (payload) => fetchData<GenerateInviteLinkResponse>("/auth/generate-invite-link", "POST", payload as any),
     onSuccess: async () => {
       toast.success("Invite link generated!");
       queryClient.invalidateQueries({ queryKey: teacherKeys.lists() });

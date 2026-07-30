@@ -44,8 +44,6 @@ export const CalendarEvents = () => {
   const [selectedTermId, setSelectedTermId] = useState<string | "all">(activeTerm?.id ?? "all");
 
   const selectedTerm = selectedTermId === "all" ? null : terms.find((t) => t.id === selectedTermId) ?? null;
-  const from = selectedTerm ? selectedTerm.startDate : fullYearFrom;
-  const to = selectedTerm ? selectedTerm.endDate : fullYearTo;
 
   const { data: eventsData, isLoading: eventsLoading } = useCalendarEvents({ from: fullYearFrom, to: fullYearTo });
   const { data: holidaysData } = useHolidays({ from: fullYearFrom, to: fullYearTo });

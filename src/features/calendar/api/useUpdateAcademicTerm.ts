@@ -31,7 +31,7 @@ export const useUpdateAcademicTerm = () => {
             method: "PATCH",
             payload: data,
           });
-          return { id, ...merged } as AcademicTerm;
+          return { ...merged } as AcademicTerm;
         })(),
         new Promise<never>((_, reject) =>
           setTimeout(() => reject(new Error("Dexie operation timed out")), TIMEOUT),

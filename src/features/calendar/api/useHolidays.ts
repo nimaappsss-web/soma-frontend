@@ -51,7 +51,7 @@ export const useHolidays = ({ from, to }: UseHolidaysParams = {}) => {
         }
         if (res.holidays?.length) {
           await db.holidays.bulkPut(
-            res.holidays.map((h) => ({ id: h.id, userId, date: h.date, reason: h.reason, createdAt: Date.now() })),
+            res.holidays.map((h: Holiday) => ({ id: h.id, userId, date: h.date, reason: h.reason, createdAt: Date.now() })),
           );
         }
       });

@@ -32,7 +32,7 @@ export const useUpdateHoliday = () => {
             method: "PATCH",
             payload: data,
           });
-          return { id, ...merged } as Holiday;
+          return { ...merged, createdBy: "" } as unknown as Holiday;
         })(),
         new Promise<never>((_, reject) =>
           setTimeout(() => reject(new Error("Dexie operation timed out")), TIMEOUT),

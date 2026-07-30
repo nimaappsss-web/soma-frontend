@@ -85,4 +85,5 @@ export interface UpdateAcademicTermPayload {
   session?: string;
   startDate?: string;
   endDate?: string;
+  isCurrent?: boolean;
 }

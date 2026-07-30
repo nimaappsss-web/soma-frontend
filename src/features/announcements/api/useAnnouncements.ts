@@ -70,7 +70,7 @@ export const useAnnouncements = ({ page = 1, limit = 20, audience, priority }: U
         }
         if (res.announcements?.length) {
           await db.announcements.bulkPut(
-            res.announcements.map((a) => toCache(a, userId)),
+            res.announcements.map((a: Announcement) => toCache(a, userId)),
           );
         }
       });

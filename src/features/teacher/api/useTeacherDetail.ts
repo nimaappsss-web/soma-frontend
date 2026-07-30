@@ -2,7 +2,7 @@ import { useLiveQuery } from "dexie-react-hooks";
 import { useQuery } from "@tanstack/react-query";
 
 import { useAuth } from "../../../contexts/AuthContext";
-import { db } from "../../../db/db";
+import { db, type TeacherDetailCache } from "../../../db/db";
 import { fetchData } from "../../../utils/fetchData";
 import type { TeacherDetail } from "../types";
 
@@ -11,7 +11,7 @@ export const useTeacherDetail = (id: string) => {
   const data = useLiveQuery(
     () => (id && user?.id ? db.teacherDetails.where({ id, userId: user.id }).first() : Promise.resolve(undefined)),
     [id, user?.id],
-  );
+  ) as TeacherDetailCache | undefined;
 
   useQuery({
     queryKey: ["teacherDetail", id],

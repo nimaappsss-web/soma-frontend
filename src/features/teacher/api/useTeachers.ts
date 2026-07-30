@@ -2,7 +2,7 @@ import { useLiveQuery } from "dexie-react-hooks";
 import { useQuery } from "@tanstack/react-query";
 
 import { useAuth } from "../../../contexts/AuthContext";
-import { db } from "../../../db/db";
+import { db, type TeacherCache, type PendingInviteCache } from "../../../db/db";
 import { fetchData } from "../../../utils/fetchData";
 import type { AxiosErrorResponse, TeachersResponse } from "../types";
 
@@ -21,10 +21,10 @@ export const useTeachers = () => {
     [userId],
   );
 
-  const query = useQuery<{ teachers: unknown[]; pendingInvites: unknown[] }, AxiosErrorResponse>({
+  const query = useQuery<TeachersResponse, AxiosErrorResponse>({
     queryKey: ["teachers", userId],
     queryFn: async () => {
-      const res = await fetchData<{ teachers: unknown[]; pendingInvites: unknown[] }>(
+      const res = await fetchData<TeachersResponse>(
         "/teachers?limit=200",
         "GET",
       );
@@ -42,12 +42,12 @@ export const useTeachers = () => {
         }
         if (res.teachers?.length) {
           await db.teachers.bulkPut(
-            res.teachers.map((t: Record<string, unknown>) => ({ ...t, userId }) as any),
+            res.teachers.map((t: TeacherCache) => ({ ...t, userId }) as any),
           );
         }
         if (res.pendingInvites?.length) {
           await db.pendingInvites.bulkPut(
-            res.pendingInvites.map((i: Record<string, unknown>) => ({ ...i, userId }) as any),
+            res.pendingInvites.map((i: PendingInviteCache) => ({ ...i, userId }) as any),
           );
         }
       });

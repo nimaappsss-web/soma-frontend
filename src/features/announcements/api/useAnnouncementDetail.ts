@@ -24,7 +24,7 @@ export const useAnnouncementDetail = (id: string) => {
       return db.announcements.get(id) ?? null;
     },
     [id],
-  );
+  ) as AnnouncementCache | null | undefined;
 
   const query = useQuery<Announcement, AxiosErrorResponse>({
     queryKey: announcementKeys.detail(id),
@@ -42,7 +42,7 @@ export const useAnnouncementDetail = (id: string) => {
   });
 
   return {
-    data: cached !== undefined ? (cached ? fromCache(cached) : null) : (query.data ?? null),
+    data: cached !== undefined ? (cached ? fromCache(cached as AnnouncementCache) : null) : (query.data ?? null),
     isLoading: (cached === undefined || (!cached && query.isLoading)),
     error: query.error ?? undefined,
   };

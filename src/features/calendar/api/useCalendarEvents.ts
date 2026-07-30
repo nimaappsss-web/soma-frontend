@@ -68,7 +68,7 @@ export const useCalendarEvents = ({ from, to, type }: UseCalendarEventsParams = 
         }
         if (res.events?.length) {
           await db.calendarEvents.bulkPut(
-            res.events.map((e) => toCache(e, userId)),
+            res.events.map((e: CalendarEvent) => toCache(e, userId)),
           );
         }
       });

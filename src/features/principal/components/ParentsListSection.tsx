@@ -58,11 +58,6 @@ export const ParentsListSection = ({ limit = 10 }: ParentsListSectionProps) => {
     );
   }
 
-  const formatDate = (iso: string) => {
-    const d = new Date(iso);
-    return d.toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" });
-  };
-
   const formatExpiry = (seconds: number) => {
     if (seconds < 60) return "Expiring soon";
     const hours = Math.round(seconds / 3600);

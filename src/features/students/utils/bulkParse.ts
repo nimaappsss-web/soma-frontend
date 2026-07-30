@@ -98,7 +98,7 @@ export const parseTextarea = (
 };
 
 export const toBulkPayload = (rows: BulkStudentRow[]): { students: CreateStudentPayload[] } => ({
-  students: rows.map(({ _key: _, ...rest }) => rest),
+  students: rows.filter((r) => r.classId).map(({ _key: _, ...rest }) => rest as CreateStudentPayload),
 });
 
 export const isValidRow = (r: BulkStudentRow) => r.name.trim().length >= 2 && !!r.classId;

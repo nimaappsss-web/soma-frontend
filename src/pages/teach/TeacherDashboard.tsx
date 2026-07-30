@@ -1,11 +1,10 @@
 import { Link } from "react-router";
 
-import { useAuth } from "../../contexts/AuthContext";
 import { useTeacherProfile } from "../../features/teacher/api";
 import { FormClassCard, SubjectAssignmentsCard } from "../../features/teacher/components";
 
 export const TeacherDashboard = () => {
-  const { formClass, assignments, schoolName, name, role, isLoading } =
+  const { formClass, assignments, schoolName, name, isLoading } =
     useTeacherProfile();
 
   return (

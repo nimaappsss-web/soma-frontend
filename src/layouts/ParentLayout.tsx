@@ -32,7 +32,7 @@ const navItems: NavItem[] = [
 ];
 
 export const ParentLayout = () => {
-  const { user, logout } = useAuth();
+  const { user } = useAuth();
   const { collapsed, toggle } = useSidebarCollapse();
 
   return (

@@ -2,7 +2,7 @@ import { useLiveQuery } from "dexie-react-hooks";
 import { useQuery } from "@tanstack/react-query";
 
 import { useAuth } from "../../../contexts/AuthContext";
-import { db } from "../../../db/db";
+import { db, type SchoolSettingsCache } from "../../../db/db";
 import { fetchData } from "../../../utils/fetchData";
 import { principalKeys } from "../utils/query-keys";
 import type { SchoolInfo, AxiosErrorResponse } from "../types";
@@ -17,7 +17,7 @@ export const useSchoolInfo = () => {
       return db.schoolSettings.where("id").equals("school-info").first();
     },
     [userId],
-  );
+  ) as SchoolSettingsCache | undefined;
 
   const query = useQuery<{ school: SchoolInfo }, AxiosErrorResponse>({
     queryKey: [...principalKeys.all, "school"],
