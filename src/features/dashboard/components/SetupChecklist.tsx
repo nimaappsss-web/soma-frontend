@@ -1,4 +1,4 @@
-import { CalendarTick, Book, RulerPen, Briefcase, Profile2User } from "iconsax-react";
+import { CalendarTick, Book, RulerPen, Briefcase, Teacher } from "iconsax-react";
 import { SetupCard } from "./SetupCard";
 
 const setupItems = [
@@ -37,21 +37,21 @@ const setupItems = [
   {
     title: "Add Students & Parents",
     subtitle: "Upload student records and link primary guardian contacts.",
-    icon: Profile2User,
+    icon: Teacher,
     bgColor: "bg-gray-100",
-    iconColor: "text-gray-600",
+    iconColor: "text-black",
     to: "/admin/students",
   },
 ];
 
 export const SetupChecklist = () => (
-  <div className="grid grid-cols-2 gap-[15px] mt-5">
+  <div className="grid grid-cols-2 gap-3.75 mt-5">
     {setupItems.map((item) => (
       <SetupCard
         key={item.title}
         title={item.title}
         subtitle={item.subtitle}
-        icon={<item.icon variant="Bold" size={18} color="currentColor" />}
+        icon={<item.icon variant="Bold" size={24} color="currentColor" />}
         bgColor={item.bgColor}
         iconColor={item.iconColor}
         completed={item.completed}

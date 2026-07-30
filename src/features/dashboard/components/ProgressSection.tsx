@@ -5,10 +5,10 @@ export const ProgressSection = ({ percentage = 30 }: { percentage?: number }) =>
       <p className="text-sm text-gray500 mt-0.5">Let's set up your school.</p>
     </div>
     <div className="flex-1 flex items-center gap-3">
-      <div className="flex-1 h-1.5 bg-gray100 rounded-full overflow-hidden">
+      <div className="flex-1 h-2 bg-gray100 rounded-full overflow-hidden">
         <div className="h-full bg-gray900 rounded-full transition-all duration-500" style={{ width: `${percentage}%` }} />
       </div>
-      <span className="text-sm font-medium text-gray900 shrink-0">{percentage}%</span>
+      <span className="text-sm text-black shrink-0">{percentage}%</span>
     </div>
   </div>
 );
