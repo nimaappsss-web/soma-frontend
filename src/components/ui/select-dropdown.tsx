@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect, useMemo } from "react";
 import { cn } from "@/lib/utils";
-import { Search } from "lucide-react";
+import { SearchNormal } from "iconsax-react";
 import type { FieldError } from "react-hook-form";
 
 export interface SelectOption {
@@ -94,7 +94,7 @@ export const SelectDropdown = ({
           {searchable && (
             <div className="p-2 pb-0">
               <div className="relative">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-placeholder pointer-events-none" />
+                <SearchNormal className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-placeholder pointer-events-none" variant="Bold" />
                 <input
                   ref={inputRef}
                   type="text"

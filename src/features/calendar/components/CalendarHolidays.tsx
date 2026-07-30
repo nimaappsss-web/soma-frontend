@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Pencil, Trash2 } from "lucide-react";
+import { Edit, Trash } from "iconsax-react";
 
 import { Input } from "../../../components/ui/input";
 import { Button } from "../../../components/ui/button";
@@ -129,13 +129,13 @@ export const CalendarHolidays = () => {
                       onClick={() => startEditing(h.id, h.date, h.reason)}
                       className="p-2 text-gray-400 hover:text-gray-600 transition-colors"
                     >
-                      <Pencil size={16} />
+                      <Edit size={16} variant="Bold" />
                     </button>
                     <button
                       onClick={() => deleteMutation.mutate(h.id)}
                       className="p-2 text-gray-400 hover:text-red-500 transition-colors"
                     >
-                      <Trash2 size={16} />
+                      <Trash size={16} variant="Bold" />
                     </button>
                   </div>
                 </div>

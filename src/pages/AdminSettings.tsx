@@ -3,7 +3,7 @@ import { useForm, useWatch, type Control } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import toast from "react-hot-toast";
-import { User, Building2 } from "lucide-react";
+import { User, Building } from "iconsax-react";
 
 import { useAuth } from "../contexts/AuthContext";
 import { useUpdateSchool, useSchoolInfo } from "../features/principal/api";
@@ -43,7 +43,7 @@ type PasswordForm = z.infer<typeof passwordSchema>;
 
 const tabs = [
   { id: "account", label: "Account", icon: User },
-  { id: "school", label: "School", icon: Building2 },
+  { id: "school", label: "School", icon: Building },
 ] as const;
 
 type Tab = (typeof tabs)[number]["id"];

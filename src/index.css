@@ -22,11 +22,46 @@
 
 @theme inline {
   --font-sans: "Geist", sans-serif;
-  --color-black: #0D0D0D;
+
+  --color-white: #FFFFFF;
   --color-pureWhite: #FAFAFA;
   --color-offWhite: #F7F7F8;
+  --color-gray50: #F7F6F6;
+  --color-gray100: #EDEDED;
+  --color-gray150: #E9E9E9;
+  --color-gray200: #E3E0DE;
+  --color-gray300: #BBBBBB;
+  --color-gray500: #8C8C8C;
+  --color-gray600: #404040;
+  --color-gray700: #242425;
+  --color-gray800: #1E1E1E;
+  --color-gray900: #0D0D0D;
+  --color-black: #000000;
+
   --color-placeholder: #B3B3B3;
-  --color-white: #EDEDED;
+
+  --color-red400: #EB4335;
+  --color-red500: #CD432F;
+
+  --color-rose400: #F2592D;
+  --color-rose800: #2A2727;
+
+  --color-crimson400: #E34149;
+  --color-crimson500: #CF2129;
+
+  --color-amber400: #F3CD58;
+  --color-amber500: #FBBC05;
+
+  --color-springgreen600: #34A853;
+  --color-mint800: #0A6A30;
+
+  --color-azure400: #9098AC;
+  --color-azure500: #4285F4;
+  --color-azure600: #1D4ED8;
+
+  --color-indigo500: #8C37C3;
+  --color-purple900: #19101A;
+
   --color-background: hsl(var(--background));
   --color-foreground: hsl(var(--foreground));
   --color-card: hsl(var(--card));
@@ -41,8 +76,8 @@
   --color-accent-foreground: hsl(var(--accent-foreground));
   --color-destructive: hsl(var(--destructive));
   --color-destructive-foreground: hsl(var(--destructive-foreground));
-  --color-border: color-mix(in srgb, var(--color-black) 10%, transparent);
-  --color-input: color-mix(in srgb, var(--color-black) 10%, transparent);
+  --color-border: color-mix(in srgb, var(--color-gray900) 10%, transparent);
+  --color-input: color-mix(in srgb, var(--color-gray900) 10%, transparent);
   --color-ring: hsl(var(--ring));
   --radius: var(--radius);
 }
@@ -52,7 +87,3 @@
     corner-shape: squircle;
   }
 }
-
-
-
-

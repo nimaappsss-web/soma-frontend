@@ -1,6 +1,6 @@
 import { useState } from "react";
 import type { FieldError, UseFormRegisterReturn } from "react-hook-form";
-import { Eye, EyeOff } from "lucide-react";
+import { Eye, EyeSlash } from "iconsax-react";
 
 import { cn } from "@/lib/utils"
 
@@ -35,7 +35,7 @@ const Input = ({ className, type, registration, hasError, showPasswordToggle, ..
             onClick={() => setShowPassword(!showPassword)}
             className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
           >
-            {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+            {showPassword ? <EyeSlash size={18} variant="Bold" /> : <Eye size={18} variant="Bold" />}
           </button>
         )}
       </div>

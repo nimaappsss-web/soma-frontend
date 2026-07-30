@@ -1,9 +1,7 @@
 import { NavLink, Link, Outlet } from "react-router";
 import {
   Home,
-  ClipboardTick,
-  Profile2User,
-  Book1,
+  Teacher,
   Speaker,
   Setting,
   NotificationBing,
@@ -26,20 +24,18 @@ interface NavItem {
 }
 
 const navItems: NavItem[] = [
-  { label: "Home", to: "/teach", Icon: Home, end: true },
-  { label: "Attendance", to: "/teach/attendance", Icon: ClipboardTick },
-  { label: "Students", to: "/teach/students", Icon: Profile2User },
-  { label: "Lesson Notes", to: "/teach/lesson-notes", Icon: Book1 },
-  { label: "Announcements", to: "/teach/announcements", Icon: Speaker },
+  { label: "Home", to: "/parent", Icon: Home, end: true },
+  { label: "Children", to: "/parent/children", Icon: Teacher },
+  { label: "Announcements", to: "/parent/announcements", Icon: Speaker },
 ];
 
-export const TeacherLayout = () => {
+export const ParentLayout = () => {
   const { user, logout } = useAuth();
 
   return (
     <div className="flex flex-col h-screen bg-offWhite">
       <header className="h-[62px] shrink-0 bg-pureWhite border-b border-gray100 flex items-center justify-between px-6">
-        <Link to="/teach">
+        <Link to="/parent">
           <img src="/icons/somawordmark_black.svg" alt="Soma" className="w-[107px] h-[23px]" />
         </Link>
         <div className="flex items-center gap-4">
@@ -81,7 +77,7 @@ export const TeacherLayout = () => {
 
           <div className="px-3 pt-1">
             <NavLink
-              to="/teach/settings"
+              to="/parent/settings"
               className={({ isActive }) =>
                 cn(
                   "flex items-center gap-3 px-4 h-[45px] rounded-full text-sm transition-colors",

@@ -1,25 +1,24 @@
-import { type ReactNode, useState } from "react";
+import { useState } from "react";
 import { NavLink, Link, Outlet, useLocation } from "react-router";
 import {
-  LayoutDashboard,
-  GraduationCap,
-  BookOpen,
-  Users,
-  Heart,
-  Wallet,
-  Megaphone,
-  Sparkles,
-  LayoutGrid,
-  BookMarked,
+  Home2,
+  Teacher,
+  Profile2User,
+  Briefcase,
+  Book,
   Calendar,
-  ClipboardCheck,
-  ClipboardList,
-  FileText,
-  Clock,
-  Settings,
-  LogOut,
-  ChevronDown,
-} from "lucide-react";
+  CalendarTick,
+  Card,
+  VolumeHigh,
+  Setting2,
+  MagicStar,
+  ClipboardTick,
+  ArrowRight,
+  Chart,
+  StatusUp,
+  NotificationBing,
+  Building,
+} from "iconsax-react";
 
 import { useAuth } from "../contexts/AuthContext";
 import { Avatar } from "../components/ui/Avatar";
@@ -27,50 +26,162 @@ import { SchoolSetupWizard } from "../features/principal/components/SchoolSetupW
 import { PhoneSetupDialog } from "../features/principal/components/PhoneSetupDialog";
 import { cn } from "../lib/utils";
 
+import type { IconProps } from "iconsax-react";
+
+type IconComponent = React.FC<IconProps>;
+
 interface NavItem {
   label: string;
   to: string;
-  icon: ReactNode;
+  Icon: IconComponent;
+  hasCaret?: boolean;
+  children?: { label: string; to: string }[];
 }
 
-interface NavGroup {
-  label: string;
-  icon: ReactNode;
-  children: NavItem[];
-}
-
-const navItems: (NavItem | NavGroup)[] = [
-  { label: "Dashboard", to: "/admin", icon: <LayoutDashboard size={18} /> },
-  { label: "Students", to: "/admin/students", icon: <GraduationCap size={18} /> },
-  { label: "Teachers", to: "/admin/teachers", icon: <BookOpen size={18} /> },
-  { label: "Non-Teachers", to: "/admin/staff", icon: <Users size={18} /> },
-  { label: "Parents", to: "/admin/parents", icon: <Heart size={18} /> },
-  { label: "Finance", to: "/admin/finance", icon: <Wallet size={18} /> },
-  { label: "Announcements", to: "/admin/announcements", icon: <Megaphone size={18} /> },
-  { label: "Moments", to: "/admin/moments", icon: <Sparkles size={18} /> },
-  { label: "Timetable", to: "/admin/timetable", icon: <Clock size={18} /> },
-  { label: "Attendance", to: "/admin/attendance", icon: <ClipboardCheck size={18} /> },
-  { label: "Examinations", to: "/admin/examinations", icon: <ClipboardList size={18} /> },
+const group1: NavItem[] = [
+  { label: "Home", to: "/admin", Icon: Home2 },
+  { label: "Students", to: "/admin/students", Icon: Teacher },
   {
-    label: "Calendar",
-    icon: <Calendar size={18} />,
+    label: "Staff",
+    to: "/admin/staff",
+    Icon: Briefcase,
+    hasCaret: true,
     children: [
-      { label: "Events", to: "/admin/calendar/events", icon: <Calendar size={18} /> },
-      { label: "Holidays", to: "/admin/calendar/holidays", icon: <Calendar size={18} /> },
-      { label: "Terms", to: "/admin/calendar/terms", icon: <Calendar size={18} /> },
+      { label: "Teachers", to: "/admin/teachers" },
+      { label: "Non-Teachers", to: "/admin/staff" },
     ],
   },
-  { label: "Reports", to: "/admin/reports", icon: <FileText size={18} /> },
-  { label: "Classes", to: "/admin/classes", icon: <LayoutGrid size={18} /> },
-  { label: "Subjects", to: "/admin/subjects", icon: <BookMarked size={18} /> },
+  { label: "Parents", to: "/admin/parents", Icon: Profile2User },
 ];
+
+const group2: NavItem[] = [
+  { label: "Classes", to: "/admin/classes", Icon: Teacher },
+  { label: "Subjects", to: "/admin/subjects", Icon: Book },
+  { label: "Timetable", to: "/admin/timetable", Icon: CalendarTick },
+  { label: "Attendance", to: "/admin/attendance", Icon: ClipboardTick },
+  { label: "Examinations", to: "/admin/examinations", Icon: StatusUp },
+  {
+    label: "Calendar",
+    to: "/admin/calendar",
+    Icon: Calendar,
+    hasCaret: true,
+    children: [
+      { label: "Events", to: "/admin/calendar/events" },
+      { label: "Holidays", to: "/admin/calendar/holidays" },
+      { label: "Terms", to: "/admin/calendar/terms" },
+    ],
+  },
+];
+
+const group3: NavItem[] = [
+  { label: "Finance", to: "/admin/finance", Icon: Card },
+  { label: "Moments", to: "/admin/moments", Icon: MagicStar },
+  { label: "Reports", to: "/admin/reports", Icon: Chart },
+];
+
+const group4: NavItem[] = [
+  { label: "Announcements", to: "/admin/announcements", Icon: VolumeHigh },
+  { label: "Settings", to: "/admin/settings", Icon: Setting2 },
+];
+
+const SidebarNav = ({
+  items,
+  expandedItems,
+  toggleExpanded,
+  isChildActive,
+}: {
+  items: NavItem[];
+  expandedItems: Record<string, boolean>;
+  toggleExpanded: (label: string) => void;
+  isChildActive: (children: { label: string; to: string }[]) => boolean;
+}) => (
+  <>
+    {items.map((item) => {
+      const isExpanded = expandedItems[item.label] ?? false;
+      const hasChildren = item.children && item.children.length > 0;
+
+      if (hasChildren) {
+        const active = isChildActive(item.children!);
+        return (
+          <div key={item.label}>
+            <button
+              onClick={() => toggleExpanded(item.label)}
+              className={cn(
+                "flex items-center gap-3 px-4 h-[45px] rounded-full text-sm transition-colors w-full",
+                active
+                  ? "bg-gray900 text-white font-medium"
+                  : "text-gray700 hover:bg-gray50 hover:text-gray900",
+              )}
+            >
+              <span className="shrink-0"><item.Icon variant="Bold" size={24} color="currentColor" /></span>
+              <span className="flex-1 text-left">{item.label}</span>
+              <ArrowRight
+                variant="Bold"
+                size={14}
+                color="currentColor"
+                className={cn(
+                  "shrink-0 text-gray400 transition-transform duration-300",
+                  isExpanded && "rotate-90",
+                )}
+              />
+            </button>
+            <div
+              className={cn(
+                "grid transition-[grid-template-rows] duration-300 ease-in-out",
+                isExpanded ? "grid-rows-[1fr]" : "grid-rows-[0fr]",
+              )}
+            >
+              <div className="overflow-hidden">
+                <div className="ml-4 py-0.5 space-y-0.5">
+                  {item.children!.map((child) => (
+                    <NavLink
+                      key={child.to}
+                      to={child.to}
+                      className={({ isActive }) =>
+                        cn(
+                          "flex items-center gap-3 pl-10 pr-4 h-[40px] rounded-full text-sm transition-colors",
+                          isActive
+                            ? "bg-gray900 text-white font-medium"
+                            : "text-gray700 hover:bg-gray50 hover:text-gray900",
+                        )
+                      }
+                    >
+                      <span className="flex-1">{child.label}</span>
+                    </NavLink>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+        );
+      }
+
+      return (
+        <NavLink
+          key={item.to}
+          to={item.to}
+          end={item.to === "/admin"}
+          className={({ isActive }) =>
+            cn(
+              "flex items-center gap-3 px-4 h-[45px] rounded-full text-sm transition-colors",
+              isActive
+                ? "bg-gray900 text-white font-medium"
+                : "text-gray700 hover:bg-gray50 hover:text-gray900",
+            )
+          }
+        >
+          <span className="shrink-0"><item.Icon variant="Bold" size={24} color="currentColor" /></span>
+          <span className="flex-1">{item.label}</span>
+        </NavLink>
+      );
+    })}
+  </>
+);
 
 export const AdminLayout = () => {
   const { user, logout } = useAuth();
   const location = useLocation();
-  const [expandedGroups, setExpandedGroups] = useState<Record<string, boolean>>(() => ({
-    Calendar: location.pathname.startsWith("/admin/calendar"),
-  }));
+  const [expandedItems, setExpandedItems] = useState<Record<string, boolean>>({});
 
   const needsSchoolSetup = user?.needsSchoolSetup ?? user?.hasSchool === false;
 
@@ -78,132 +189,62 @@ export const AdminLayout = () => {
     return <SchoolSetupWizard />;
   }
 
+  const toggleExpanded = (label: string) => {
+    setExpandedItems((prev) => ({ ...prev, [label]: !prev[label] }));
+  };
+
+  const isChildActive = (children: { label: string; to: string }[]) =>
+    children.some((child) => location.pathname.startsWith(child.to));
+
   return (
-    <div className="flex h-screen bg-offWhite">
+    <div className="flex flex-col h-screen bg-offWhite">
       {user?.needsPhoneSetup && <PhoneSetupDialog />}
 
-      <aside className="w-56 shrink-0 bg-black flex flex-col h-full">
-        <div className="px-5 pt-6 pb-4">
-          <Link to="/admin">
-            <img src="/icons/somawordmark_black.svg" alt="Soma" className="h-6 brightness-0 invert" />
-          </Link>
-        </div>
-
-        <nav className="flex-1 px-3 space-y-0.5 overflow-y-auto">
-          {navItems.map((item) => {
-            if ("children" in item) {
-              const isExpanded = expandedGroups[item.label];
-              const isActive = location.pathname.startsWith("/admin/calendar");
-              return (
-                <div key={item.label}>
-                  <button
-                    onClick={() =>
-                      setExpandedGroups((prev) => ({ ...prev, [item.label]: !prev[item.label] }))
-                    }
-                    className={cn(
-                      "flex items-center gap-3 w-full px-3 py-2.5 rounded-lg text-sm transition-colors",
-                      isActive
-                        ? "bg-white/10 text-white font-medium"
-                        : "text-white/60 hover:text-white hover:bg-white/5",
-                    )}
-                  >
-                    {item.icon}
-                    <span className="flex-1 text-left">{item.label}</span>
-                    <ChevronDown
-                      size={14}
-                      className={cn(
-                        "transition-transform",
-                        isExpanded ? "rotate-0" : "-rotate-90",
-                      )}
-                    />
-                  </button>
-                  {isExpanded && (
-                    <div className="ml-3 mt-0.5 space-y-0.5 border-l border-white/10 pl-3">
-                      {item.children.map((child) => (
-                        <NavLink
-                          key={child.to}
-                          to={child.to}
-                          className={({ isActive }) =>
-                            cn(
-                              "flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors",
-                              isActive
-                                ? "bg-white/10 text-white font-medium"
-                                : "text-white/60 hover:text-white hover:bg-white/5",
-                            )
-                          }
-                        >
-                          <span className="w-1.5 h-1.5 rounded-full bg-current shrink-0" />
-                          <span>{child.label}</span>
-                        </NavLink>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              );
-            }
-            return (
-              <NavLink
-                key={item.to}
-                to={item.to}
-                end={item.to === "/admin"}
-                className={({ isActive }) =>
-                  cn(
-                    "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-colors",
-                    isActive
-                      ? "bg-white/10 text-white font-medium"
-                      : "text-white/60 hover:text-white hover:bg-white/5",
-                  )
-                }
-              >
-                {item.icon}
-                <span>{item.label}</span>
-              </NavLink>
-            );
-          })}
-        </nav>
-
-        <div className="px-3 pt-2 pb-1">
-          <div className="border-t border-white/10" />
-        </div>
-
-        <div className="px-3 pb-1">
-          <NavLink
-            to="/admin/settings"
-            className={({ isActive }) =>
-              cn(
-                "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-colors",
-                isActive
-                  ? "bg-white/10 text-white font-medium"
-                  : "text-white/60 hover:text-white hover:bg-white/5",
-              )
-            }
-          >
-            <Settings size={18} />
-            <span>Settings</span>
-          </NavLink>
-        </div>
-
-        <div className="px-3 pb-4 pt-2 border-t border-white/10">
-          <div className="flex items-center gap-3 px-3 py-2">
-            <Avatar name={user?.name ?? ""} size={28} />
-            <div className="flex-1 min-w-0">
-              <p className="text-sm text-white truncate">{user?.name}</p>
-              <p className="text-xs text-white/40 truncate">{user?.schoolName ?? user?.email}</p>
+      <header className="h-[62px] shrink-0 bg-pureWhite border-b border-gray100 flex items-center justify-between px-6">
+        <Link to="/admin">
+          <img src="/icons/somawordmark_black.svg" alt="Soma" className="w-[107px] h-[23px]" />
+        </Link>
+        <div className="flex items-center gap-4">
+          <button className="relative text-gray500 hover:text-gray900 transition-colors">
+            <NotificationBing variant="Bold" size={22} />
+          </button>
+          <div className="flex items-center gap-2.5">
+            <Avatar name={user?.name ?? "?"} size={36} className="border border-gray100" />
+            <div>
+              <p className="text-sm font-medium text-gray900 leading-tight">{user?.name}</p>
+              <p className="text-[11px] text-gray500 capitalize leading-tight">{user?.role}</p>
             </div>
-            <button
-              onClick={logout}
-              className="text-white/40 hover:text-white transition-colors shrink-0"
-              title="Sign out"
-            >
-              <LogOut size={16} />
-            </button>
           </div>
         </div>
-      </aside>
+      </header>
 
-      <main className="flex-1 overflow-y-auto">
-        <Outlet />
-      </main>
+      <div className="flex flex-1 min-h-0">
+        <aside className="w-[264px] shrink-0 bg-pureWhite flex flex-col h-full border-r border-gray100">
+          <nav className="flex-1 px-3 py-4 space-y-0.5 overflow-y-auto">
+            <SidebarNav items={group1} expandedItems={expandedItems} toggleExpanded={toggleExpanded} isChildActive={isChildActive} />
+            <div className="border-t border-gray100 my-2" />
+            <SidebarNav items={group2} expandedItems={expandedItems} toggleExpanded={toggleExpanded} isChildActive={isChildActive} />
+            <div className="border-t border-gray100 my-2" />
+            <SidebarNav items={group3} expandedItems={expandedItems} toggleExpanded={toggleExpanded} isChildActive={isChildActive} />
+            <div className="border-t border-gray100 my-2" />
+            <SidebarNav items={group4} expandedItems={expandedItems} toggleExpanded={toggleExpanded} isChildActive={isChildActive} />
+          </nav>
+
+          <div className="px-3 pb-4 pt-3 border-t border-gray100 mt-1">
+            <div className="flex items-center gap-3 px-4 h-[45px]">
+              <Building variant="Bold" size={20} className="text-gray300 shrink-0" />
+              <div className="min-w-0 flex-1">
+                <p className="text-xs font-medium text-gray900 truncate">{user?.schoolName ?? "School"}</p>
+                <p className="text-[10px] text-gray500 truncate">School Address</p>
+              </div>
+            </div>
+          </div>
+        </aside>
+
+        <main className="flex-1 overflow-y-auto">
+          <Outlet />
+        </main>
+      </div>
     </div>
   );
 };

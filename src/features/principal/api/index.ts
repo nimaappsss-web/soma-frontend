@@ -15,6 +15,5 @@ export { useUpdateClass } from "./useUpdateClass";
 export { useUpdateSubject } from "./useUpdateSubject";
 export { useParentStats } from "./useParentStats";
 export { useInviteParent } from "./useInviteParent";
-export { useDashboardStats } from "./useDashboardStats";
 export { useGenerateInviteLink } from "./useGenerateInviteLink";
 

@@ -1,4 +1,4 @@
-import { AlertCircle } from "lucide-react";
+import { InfoCircle } from "iconsax-react";
 import React from "react";
 import clsx from "clsx";
 
@@ -39,7 +39,7 @@ const ErrorState: React.FC<ErrorStateProps> = ({
           <div
             className={clsx("p-3 bg-red-500/10 rounded-full", iconClassName)}
           >
-            <AlertCircle className="w-12 h-12 text-red-500" />
+            <InfoCircle className="w-12 h-12 text-red-500" variant="Bold" />
           </div>
         )}
         <p

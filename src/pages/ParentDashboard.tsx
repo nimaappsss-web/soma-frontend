@@ -1,15 +1,13 @@
 import { useMemo } from "react";
 import { useLiveQuery } from "dexie-react-hooks";
 
-import { Link } from "react-router";
-import { Avatar } from "../components/ui/Avatar";
 import { useAuth } from "../contexts/AuthContext";
 import { useParentProfile, useChildrenWithDetails } from "../features/parent/api";
 import { useAnnouncements } from "../features/announcements/api";
 import { db } from "../db/db";
 
 export const ParentDashboard = () => {
-  const { user, logout } = useAuth();
+  const { user } = useAuth();
   const { parent, isLoading } = useParentProfile();
   const children = useChildrenWithDetails(parent?.students);
 
@@ -39,101 +37,79 @@ export const ParentDashboard = () => {
   }, [attendanceMap]);
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <header className="bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between">
-        <h1 className="text-xl font-bold text-blue-700">Soma</h1>
-        <div className="flex items-center gap-4">
-          <span className="text-sm text-gray-500">{user?.schoolName}</span>
-          <Avatar name={user?.name ?? ""} size={24} className="inline-block align-middle" />
-          <span className="text-sm text-gray-700">{user?.name}</span>
-          <span className="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded capitalize">
-            {user?.role}
-          </span>
-          <Link to="/settings" className="text-sm text-gray-500 hover:text-gray-700">Settings</Link>
-          <button onClick={logout} className="text-sm text-red-500 hover:text-red-600">
-            Sign out
-          </button>
-        </div>
-      </header>
+    <div className="max-w-3xl mx-auto px-6 py-8">
+      <div className="mb-6">
+        <h2 className="text-2xl font-bold text-gray900">Parent Portal</h2>
+        <p className="text-sm text-gray500 mt-1">
+          {parent?.email} &middot; {parent?.phone ?? "No phone"}
+        </p>
+      </div>
 
-      <main className="max-w-3xl mx-auto px-6 py-8">
-        <div className="mb-6">
-          <h2 className="text-2xl font-bold text-gray-800">Parent Portal</h2>
-          <p className="text-sm text-gray-400 mt-1">
-            {parent?.email} &middot; {parent?.phone ?? "No phone"}
-          </p>
+      {isLoading ? (
+        <p className="text-sm text-gray500 text-center py-12">Loading...</p>
+      ) : !children.length ? (
+        <div className="bg-white rounded-xl p-8 border border-gray100 text-center">
+          <p className="text-gray500">No children linked to your account.</p>
         </div>
-
-        {isLoading ? (
-          <p className="text-sm text-gray-400 text-center py-12">Loading...</p>
-        ) : !children.length ? (
-          <div className="bg-white rounded-xl p-8 shadow-sm border border-gray-100 text-center">
-            <p className="text-gray-400">No children linked to your account.</p>
-          </div>
-        ) : (
-          <div className="space-y-4">
-            {children.map((child) => {
-              const att = childAttendance[child.id];
-              return (
-                <div
-                  key={child.id}
-                  className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden"
-                >
-                  <div className="px-6 py-4 border-b border-gray-50">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-3">
-                        <Avatar name={child.name} size={36} />
-                        <div>
-                          <h3 className="font-semibold text-gray-800">{child.name}</h3>
-                          <p className="text-xs text-gray-400 mt-0.5">
-                            {child.admissionNo} &middot; {child.className ?? child.classId ?? "No class"}
-                          </p>
-                        </div>
+      ) : (
+        <div className="space-y-4">
+          {children.map((child) => {
+            const att = childAttendance[child.id];
+            return (
+              <div
+                key={child.id}
+                className="bg-white rounded-xl border border-gray100 overflow-hidden"
+              >
+                <div className="px-6 py-4 border-b border-gray50">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className="w-9 h-9 rounded-full bg-gray900 text-white flex items-center justify-center text-sm font-medium shrink-0">
+                        {child.name.charAt(0).toUpperCase()}
                       </div>
-                      <span className="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded-full font-medium">
-                        {child.className ?? "—"}
-                      </span>
+                      <div>
+                        <h3 className="font-semibold text-gray900">{child.name}</h3>
+                        <p className="text-xs text-gray500 mt-0.5">
+                          {child.admissionNo} &middot; {child.className ?? child.classId ?? "No class"}
+                        </p>
+                      </div>
                     </div>
-                  </div>
-
-                  <div className="px-6 py-3 flex items-center justify-between text-sm">
-                    <span className="text-gray-500">
-                      Class Teacher:{" "}
-                      <span className="text-gray-700 font-medium">
-                        {child.teacherName ?? "—"}
-                      </span>
+                    <span className="text-xs bg-azure100 text-azure500 px-2 py-1 rounded-full font-medium">
+                      {child.className ?? "—"}
                     </span>
                   </div>
-
-                  {att && (
-                    <div className="px-6 py-3 bg-gray-50 border-t border-gray-100 flex gap-4 text-sm">
-                      <span className="text-green-600 font-medium">
-                        Present: {att.present}
-                      </span>
-                      <span className="text-red-500 font-medium">
-                        Absent: {att.absent}
-                      </span>
-                      <span className="text-gray-400">
-                        This month: {att.total} days
-                      </span>
-                    </div>
-                  )}
                 </div>
-              );
-            })}
-          </div>
-        )}
 
-        <AnnouncementsSection />
-      </main>
+                <div className="px-6 py-3 flex items-center justify-between text-sm">
+                  <span className="text-gray500">
+                    Class Teacher:{" "}
+                    <span className="text-gray700 font-medium">
+                      {child.teacherName ?? "—"}
+                    </span>
+                  </span>
+                </div>
+
+                {att && (
+                  <div className="px-6 py-3 bg-pureWhite border-t border-gray100 flex gap-4 text-sm">
+                    <span className="text-springgreen600 font-medium">
+                      Present: {att.present}
+                    </span>
+                    <span className="text-red500 font-medium">
+                      Absent: {att.absent}
+                    </span>
+                    <span className="text-gray500">
+                      This month: {att.total} days
+                    </span>
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      )}
+
+      <AnnouncementsSection />
     </div>
   );
-};
-
-const priorityStyles: Record<string, string> = {
-  URGENT: "bg-red-100 text-red-700",
-  IMPORTANT: "bg-amber-100 text-amber-700",
-  NORMAL: "bg-gray-100 text-gray-600",
 };
 
 const AnnouncementsSection = () => {
@@ -144,23 +120,18 @@ const AnnouncementsSection = () => {
 
   return (
     <div className="mt-8">
-      <h2 className="text-lg font-bold text-gray-800 mb-3">Announcements</h2>
+      <h2 className="text-lg font-bold text-gray900 mb-3">Announcements</h2>
       {isLoading ? (
-        <p className="text-sm text-gray-400">Loading...</p>
+        <p className="text-sm text-gray500">Loading...</p>
       ) : (
         <div className="space-y-3">
           {announcements.map((a) => (
-            <div key={a.id} className="bg-white rounded-xl border border-gray-100 p-4">
+            <div key={a.id} className="bg-white rounded-xl border border-gray100 p-4">
               <div className="flex items-center gap-2 mb-1">
-                <span className="text-sm font-semibold text-gray-900">{a.title}</span>
-                {a.priority !== "NORMAL" && (
-                  <span className={`text-[11px] font-medium px-2 py-0.5 rounded-full ${priorityStyles[a.priority] ?? ""}`}>
-                    {a.priority}
-                  </span>
-                )}
+                <span className="text-sm font-semibold text-gray900">{a.title}</span>
               </div>
-              <p className="text-sm text-gray-600 whitespace-pre-wrap">{a.message}</p>
-              <div className="flex items-center gap-3 mt-2 text-xs text-gray-400">
+              <p className="text-sm text-gray600 whitespace-pre-wrap">{a.message}</p>
+              <div className="flex items-center gap-3 mt-2 text-xs text-gray500">
                 <span>{a.createdBy.name}</span>
                 <span>{new Date(a.createdAt).toLocaleDateString()}</span>
               </div>

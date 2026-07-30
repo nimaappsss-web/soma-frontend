@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Megaphone } from "lucide-react";
+import { Speaker } from "iconsax-react";
 
 import { Input } from "../../../components/ui/input";
 import { Button } from "../../../components/ui/button";
@@ -111,7 +111,7 @@ export const AnnouncementsManagement = () => {
       ) : (
         <div className="bg-white rounded-xl border border-gray-100">
           <div className="p-6 text-center">
-            <Megaphone size={32} className="mx-auto text-gray-200 mb-3" />
+            <Speaker size={32} className="mx-auto text-gray-200 mb-3" variant="Bold" />
             <p className="text-sm text-gray-400">No announcements yet</p>
             <p className="text-xs text-gray-300 mt-1">Create your first announcement to get started</p>
           </div>

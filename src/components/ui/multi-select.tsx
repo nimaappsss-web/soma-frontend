@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect, useMemo } from "react";
 import { cn } from "../../lib/utils";
-import { Search, X } from "lucide-react";
+import { SearchNormal, CloseCircle } from "iconsax-react";
 import type { FieldError } from "react-hook-form";
 
 export interface SelectOption {
@@ -99,7 +99,7 @@ export const MultiSelect = ({
                 onClick={(e) => remove(opt.value, e)}
                 className="hover:text-black/70"
               >
-                <X size={14} />
+                <CloseCircle size={14} variant="Bold" />
               </button>
             </span>
           ))
@@ -121,7 +121,7 @@ export const MultiSelect = ({
           {searchable && (
             <div className="p-2 pb-0">
               <div className="relative">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-placeholder pointer-events-none" />
+                <SearchNormal className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-placeholder pointer-events-none" variant="Bold" />
                 <input
                   ref={inputRef}
                   type="text"

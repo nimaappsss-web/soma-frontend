@@ -2,6 +2,7 @@ import { Routes, Route, Navigate } from "react-router";
 
 import { AdminLayout } from "./layouts/AdminLayout";
 import { TeacherLayout } from "./layouts/TeacherLayout";
+import { ParentLayout } from "./layouts/ParentLayout";
 import { TeacherAttendance } from "./pages/teach/TeacherAttendance";
 import { TeacherLessonNotes } from "./pages/teach/TeacherLessonNotes";
 import { TeacherAnnouncements } from "./pages/teach/TeacherAnnouncements";
@@ -35,7 +36,7 @@ import { Login } from "./pages/Login";
 import { ForgotPassword } from "./pages/ForgotPassword";
 import { ResetPassword } from "./pages/ResetPassword";
 import { Settings } from "./pages/Settings";
-import { DashboardHome } from "./features/principal/components/DashboardHome";
+import { DashboardHome } from "./features/dashboard";
 import { StaffManagement } from "./features/staff/components/StaffManagement";
 import { FinanceManagement } from "./features/finance/components/FinanceManagement";
 import { AnnouncementsManagement } from "./features/announcements/components/AnnouncementsManagement";
@@ -126,14 +127,12 @@ function App() {
           <Route path="announcements" element={<TeacherAnnouncements />} />
           <Route path="settings" element={<TeacherSettings />} />
         </Route>
-        <Route
-          path="/parent"
-          element={
-            <ProtectedRoute>
-              <ParentDashboard />
-            </ProtectedRoute>
-          }
-        />
+        <Route path="/parent" element={<ProtectedRoute><ParentLayout /></ProtectedRoute>}>
+          <Route index element={<ParentDashboard />} />
+          <Route path="children" element={<ParentDashboard />} />
+          <Route path="announcements" element={<ParentDashboard />} />
+          <Route path="settings" element={<ParentDashboard />} />
+        </Route>
         <Route
           path="/staff"
           element={

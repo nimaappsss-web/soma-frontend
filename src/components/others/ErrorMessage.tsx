@@ -1,5 +1,5 @@
 import { cn } from "@/lib/utils";
-import { AlertCircle, X } from "lucide-react";
+import { InfoCircle, CloseCircle } from "iconsax-react";
 
 interface ErrorMessageProps {
   children: React.ReactNode;
@@ -19,7 +19,7 @@ export const ErrorMessage = ({ children, onDismiss, className, action }: ErrorMe
       )}
     >
       <div className="flex items-start gap-2">
-        <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
+        <InfoCircle className="mt-0.5 h-4 w-4 shrink-0" variant="Bold" />
         <span className="flex-1">{children}</span>
         {onDismiss && (
           <button
@@ -27,7 +27,7 @@ export const ErrorMessage = ({ children, onDismiss, className, action }: ErrorMe
             onClick={onDismiss}
             className="shrink-0 rounded-full p-0.5 hover:bg-red-500/20 transition-colors"
           >
-            <X className="h-3.5 w-3.5" />
+            <CloseCircle className="h-3.5 w-3.5" variant="Bold" />
           </button>
         )}
       </div>

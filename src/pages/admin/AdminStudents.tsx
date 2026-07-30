@@ -1,7 +1,7 @@
 import { useState, useMemo, useEffect, useCallback } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Trash2 } from "lucide-react";
+import { Trash } from "iconsax-react";
 
 import { Avatar } from "../../components/ui/Avatar";
 import { useAuth } from "../../contexts/AuthContext";
@@ -370,7 +370,7 @@ export const AdminStudents = () => {
               disabled={bulkDeleteMutation.isPending}
               className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-red-600 bg-red-50 rounded-full hover:bg-red-100 disabled:opacity-50"
             >
-              <Trash2 size={14} />
+              <Trash size={14} variant="Bold" />
               {bulkDeleteMutation.isPending ? "Deleting..." : `Delete (${selectedIds.size})`}
             </button>
             <button
@@ -434,7 +434,7 @@ export const AdminStudents = () => {
                       className="p-1.5 text-gray-400 hover:text-red-500 transition-colors disabled:opacity-40"
                       title="Delete student"
                     >
-                      <Trash2 size={16} />
+                      <Trash size={16} variant="Bold" />
                     </button>
                   </div>
                 </div>

@@ -1,5 +1,5 @@
 import { Outlet, useLocation } from "react-router";
-import { Calendar } from "lucide-react";
+import { Calendar } from "iconsax-react";
 
 export { CalendarEvents } from "./CalendarEvents";
 export { CalendarHolidays } from "./CalendarHolidays";

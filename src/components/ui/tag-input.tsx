@@ -1,7 +1,7 @@
 import { useState, useRef } from "react";
 import { cn } from "@/lib/utils";
 import type { FieldError } from "react-hook-form";
-import { X } from "lucide-react";
+import { CloseCircle } from "iconsax-react";
 
 interface TagInputProps {
   value: string[];
@@ -79,7 +79,7 @@ export const TagInput = ({
               disabled={disabled}
               className="hover:text-black/70"
             >
-              <X size={14} />
+              <CloseCircle size={14} variant="Bold" />
             </button>
           </span>
         ))}

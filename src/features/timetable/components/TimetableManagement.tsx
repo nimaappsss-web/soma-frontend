@@ -1,4 +1,4 @@
-import { CalendarDays } from "lucide-react";
+import { Calendar } from "iconsax-react";
 
 export const TimetableManagement = () => {
   return (
@@ -7,7 +7,7 @@ export const TimetableManagement = () => {
       <p className="text-sm text-gray-400 mt-1">Create and manage class schedules</p>
 
       <div className="bg-white rounded-xl border border-gray-100 p-6 mt-6 text-center">
-        <CalendarDays size={32} className="mx-auto text-gray-200 mb-3" />
+        <Calendar size={32} className="mx-auto text-gray-200 mb-3" variant="Bold" />
         <p className="text-sm text-gray-400">Timetable management coming soon</p>
         <p className="text-xs text-gray-300 mt-1">Assign subjects to periods, manage teacher schedules, and publish timetables</p>
       </div>

@@ -1,4 +1,4 @@
-import { Gift, PartyPopper } from "lucide-react";
+import { Gift, MagicStar } from "iconsax-react";
 import { useCelebrations } from "../api/useCelebrations";
 
 export const MomentsManagement = () => {
@@ -46,7 +46,7 @@ export const MomentsManagement = () => {
 
           <div className="bg-white rounded-xl border border-gray-100 p-6">
             <div className="flex items-center gap-2 mb-4">
-              <PartyPopper size={18} className="text-amber-500" />
+              <MagicStar size={18} className="text-amber-500" variant="Bold" />
               <h2 className="text-base font-medium text-gray-900">Work Anniversaries</h2>
               <span className="text-xs text-gray-400 ml-1">({anniversaries.length} upcoming)</span>
             </div>

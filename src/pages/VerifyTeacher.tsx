@@ -9,7 +9,7 @@ import { useInviteInfo, useSendOTPByEmail, useVerifyOTP } from "../features/auth
 import { useAuth } from "../contexts/AuthContext";
 import { getPostAuthPath } from "../features/auth/utils/routing";
 import { completeRegistrationSchema, type CompleteRegistrationFormData } from "../features/auth/utils/validationSchema";
-import { Trash2 } from "lucide-react";
+import { Trash } from "iconsax-react";
 import { MultiSelect, type SelectOption } from "../components/ui/multi-select";
 import { SelectDropdown } from "../components/ui/select-dropdown";
 import { Button } from "../components/ui/button";
@@ -381,7 +381,7 @@ export const VerifyTeacher = () => {
                   onClick={() => handleRemoveSubject(i)}
                   aria-label="Remove subject"
                 >
-                  <Trash2 size={16} />
+                  <Trash size={16} variant="Bold" />
                 </Button>
               </div>
             ))}
