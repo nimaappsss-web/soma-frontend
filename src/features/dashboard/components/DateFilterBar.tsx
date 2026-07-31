@@ -26,8 +26,8 @@ export const DateFilterBar = () => {
   const [term, setTerm] = useState("2025/2026-1");
 
   return (
-    <div className="flex items-center justify-between mt-6">
-      <div className="flex items-center gap-3">
+    <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 mt-6">
+      <div className="flex flex-wrap items-center gap-3">
         <DateRangeInput from={from} to={to} onFromChange={setFrom} onToChange={setTo} />
         <span className="text-sm text-gray400 font-medium">or</span>
         <TermDropdown options={termOptions} value={term} onChange={setTerm} />

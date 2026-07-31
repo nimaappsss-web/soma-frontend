@@ -10,12 +10,12 @@ export const DashboardHome = () => {
   const { data: stats, isLoading } = useDashboardStats();
 
   return (
-    <div className="p-6 w-full">
+    <div className="p-4 md:p-6 w-full">
       <ProgressSection percentage={30} />
       <SetupChecklist />
       <DateFilterBar />
       <StatsSection stats={stats} isLoading={isLoading} />
-      <div className="grid grid-cols-2 gap-4 mt-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
         <AcademicsSection />
         <OperationsSection stats={stats} isLoading={isLoading} />
       </div>

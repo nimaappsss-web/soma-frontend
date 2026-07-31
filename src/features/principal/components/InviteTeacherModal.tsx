@@ -2,11 +2,10 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 
-import { Modal } from "../../../components/others/Modal";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "../../../components/ui/dialog";
 import { Button } from "../../../components/ui/button";
 import { Input } from "../../../components/ui/input";
 import { Label } from "../../../components/ui/label";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "../../../components/ui/card";
 import { useInviteTeacher, useGenerateInviteLink } from "../api";
 import { inviteTeacherSchema, type InviteTeacherFormData } from "../utils/validationSchema";
 import { cn } from "../../../lib/utils";
@@ -74,15 +73,15 @@ export const InviteTeacherModal = ({ open, onClose }: InviteTeacherModalProps) =
   };
 
   return (
-    <Modal showDialog={open} closeModal={handleClose} variant="middle">
-      <Card className="mx-4 mt-12 sm:mx-auto sm:max-w-md">
-        <CardHeader>
-          <CardTitle>Invite Teacher</CardTitle>
-          <CardDescription>
+    <Dialog open={open} onOpenChange={handleClose}>
+      <DialogContent variant="middle" className="sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle>Invite Teacher</DialogTitle>
+          <DialogDescription>
             Invite a teacher by email, or generate a shareable link.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
+          </DialogDescription>
+        </DialogHeader>
+        <div className="px-6 pb-6">
           <div className="flex gap-1 mb-4 rounded-lg bg-gray-100 p-1 text-sm">
             <button
               onClick={() => setTab("email")}
@@ -179,8 +178,8 @@ export const InviteTeacherModal = ({ open, onClose }: InviteTeacherModalProps) =
               )}
             </div>
           )}
-        </CardContent>
-      </Card>
-    </Modal>
+        </div>
+      </DialogContent>
+    </Dialog>
   );
 };
