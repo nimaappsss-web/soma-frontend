@@ -1,10 +1,29 @@
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, createElement } from "react";
 import { useNavigate } from "react-router";
 import { Command } from "cmdk";
-import { SearchNormal } from "iconsax-react";
+import {
+  SearchNormal,
+  Home2, Teacher, Profile2User, Briefcase, Book, Book1,
+  Calendar, CalendarTick, ClipboardTick, StatusUp, Card,
+  MagicStar, Chart, VolumeHigh, Setting2, Setting,
+  UserAdd, DocumentUpload, Send, Link2, AddCircle, Trash,
+  Refresh, CalendarAdd, TickCircle, Lock, User, UserEdit,
+  Logout, Clock, Filter, ProfileTick, Document,
+} from "iconsax-react";
 import { Dialog, DialogContent } from "../ui/dialog";
 import { useAuth } from "../../contexts/AuthContext";
-import { searchIndex, type SearchItem } from "../../utils/searchIndex";
+import { searchIndex, type SearchItem, type IconName } from "../../utils/searchIndex";
+
+import type { IconProps } from "iconsax-react";
+
+const iconMap: Record<IconName, React.FC<IconProps>> = {
+  Home2, Teacher, Profile2User, Briefcase, Book, Book1,
+  Calendar, CalendarTick, ClipboardTick, StatusUp, Card,
+  MagicStar, Chart, VolumeHigh, Setting2, Setting,
+  UserAdd, DocumentUpload, Send, Link2, AddCircle, Trash,
+  Refresh, CalendarAdd, TickCircle, Lock, User, UserEdit,
+  Logout, Clock, Filter, ProfileTick, Document,
+};
 
 /* -------------------------------------------------------------------------- */
 /*                           Recent searches storage                           */
@@ -16,7 +35,14 @@ const MAX_RECENT = 5;
 function getRecentSearches(): SearchItem[] {
   try {
     const raw = localStorage.getItem(RECENT_KEY);
-    return raw ? JSON.parse(raw) : [];
+    if (!raw) return [];
+    const parsed = JSON.parse(raw);
+    // Purge stale entries (old format stored non-string icons)
+    if (!Array.isArray(parsed) || (parsed.length > 0 && typeof parsed[0]?.icon !== "string")) {
+      localStorage.removeItem(RECENT_KEY);
+      return [];
+    }
+    return parsed;
   } catch {
     return [];
   }
@@ -204,7 +230,7 @@ function CommandItem({
   item: SearchItem;
   onSelect: (item: SearchItem) => void;
 }) {
-  const Icon = item.icon;
+  const Icon = iconMap[item.icon];
 
   return (
     <Command.Item
@@ -213,7 +239,7 @@ function CommandItem({
       className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm text-gray700 cursor-pointer transition-colors aria-selected:bg-gray900 aria-selected:text-white group"
     >
       <span className="shrink-0 [&_svg]:size-5">
-        <Icon variant="Linear" size={20} color="currentColor" />
+        {Icon ? createElement(Icon, { variant: "Linear", size: 20, color: "currentColor" }) : null}
       </span>
       <div className="flex-1 min-w-0">
         <p className="font-medium truncate">{item.label}</p>
