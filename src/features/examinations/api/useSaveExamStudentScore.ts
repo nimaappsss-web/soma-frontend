@@ -4,16 +4,16 @@ import toast from "react-hot-toast";
 import { transformError } from "../../../utils/transformError";
 import { fetchData } from "../../../utils/fetchData";
 import { examKeys } from "../utils/query-keys";
-import type { SubmitScoresPayload, SubmitScoresResponse, AxiosErrorResponse } from "../types";
+import type { SaveStudentScorePayload, SaveStudentScoreResponse, AxiosErrorResponse } from "../types";
 
-export const useSubmitExamScores = (examId: string) => {
+export const useSaveExamStudentScore = (examId: string) => {
   const queryClient = useQueryClient();
 
-  return useMutation<SubmitScoresResponse, AxiosErrorResponse, SubmitScoresPayload>({
-    mutationFn: (payload) => fetchData(`/exams/${examId}/scores`, "POST", payload),
-    onSuccess: async (data) => {
-      toast.success(`Scores saved: ${data.count} student(s)`);
+  return useMutation<SaveStudentScoreResponse, AxiosErrorResponse, { studentId: string; data: SaveStudentScorePayload }>({
+    mutationFn: ({ studentId, data }) => fetchData(`/exams/${examId}/student/${studentId}`, "PUT", data),
+    onSuccess: async (_data, { studentId }) => {
       queryClient.invalidateQueries({ queryKey: examKeys.scores(examId) });
+      queryClient.invalidateQueries({ queryKey: examKeys.studentScore(examId, studentId) });
       queryClient.invalidateQueries({ queryKey: examKeys.detail(examId) });
     },
     onError: async (error) => {

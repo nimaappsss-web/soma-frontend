@@ -12,10 +12,15 @@ import { ContinuousAssessment } from "./pages/ContinuousAssessment";
 import { CompleteRegistration } from "./pages/CompleteRegistration";
 import { ProtectedRoute } from "./features/auth/components/ProtectedRoute";
 import { TeacherDashboard } from "./pages/teach/TeacherDashboard";
+import { TeacherExams } from "./pages/teach/TeacherExams";
+import { TeacherActiveAssessments } from "./pages/teach/TeacherActiveAssessments";
+import { TeacherResults } from "./pages/teach/TeacherResults";
+import { TeacherExaminationsLayout, TeacherExaminationsIndex } from "./features/examinations/components/TeacherExaminationsLayout";
 import { useAnimatedFavicon } from "./hooks/useAnimatedFavicon";
 import { TeacherStudents } from "./pages/teach/TeacherStudents";
 import { AdminStudents } from "./pages/admin/AdminStudents";
 import { AdminTeachers } from "./pages/admin/AdminTeachers";
+import { AdminTeacherDetails } from "./pages/admin/AdminTeacherDetails";
 import { AdminSubjects } from "./pages/admin/AdminSubjects";
 import { ParentDashboard } from "./pages/ParentDashboard";
 import { ParentSetup } from "./pages/ParentSetup";
@@ -45,7 +50,9 @@ import { TimetableManagement } from "./features/timetable/components/TimetableMa
 import { AttendanceOverview } from "./features/attendance/components/AttendanceOverview";
 import { AttendanceClasses } from "./features/attendance/components/AttendanceClasses";
 import { AttendanceAbsentees } from "./features/attendance/components/AttendanceAbsentees";
-import { ExaminationsManagement } from "./features/examinations/components/ExaminationsManagement";
+import { ExaminationsLayout, ExaminationsIndex } from "./features/examinations/components/ExaminationsLayout";
+import { SchemeConfig } from "./features/examinations/components/SchemeConfig";
+import { Scoring } from "./features/examinations/components/Scoring";
 import { CalendarLayout, CalendarEvents, CalendarHolidays, CalendarTerms } from "./features/calendar/components/CalendarManagement";
 import { ReportsManagement } from "./features/reports/components/ReportsManagement";
 
@@ -101,6 +108,7 @@ function App() {
           <Route index element={<DashboardHome />} />
           <Route path="students" element={<AdminStudents />} />
           <Route path="teachers" element={<AdminTeachers />} />
+          <Route path="teachers/:id" element={<AdminTeacherDetails />} />
           <Route path="staff" element={<StaffManagement />} />
           <Route path="parents" element={<AdminParents />} />
           <Route path="finance" element={<FinanceManagement />} />
@@ -110,7 +118,11 @@ function App() {
           <Route path="attendance" element={<AttendanceOverview />} />
           <Route path="attendance/classes" element={<AttendanceClasses />} />
           <Route path="attendance/absentees" element={<AttendanceAbsentees />} />
-          <Route path="examinations" element={<ExaminationsManagement />} />
+          <Route path="examinations" element={<ExaminationsLayout />}>
+            <Route index element={<ExaminationsIndex />} />
+            <Route path="scoring" element={<Scoring />} />
+            <Route path="configure" element={<SchemeConfig />} />
+          </Route>
           <Route path="calendar" element={<CalendarLayout />}>
             <Route index element={<Navigate to="events" replace />} />
             <Route path="events" element={<CalendarEvents />} />
@@ -127,6 +139,13 @@ function App() {
           <Route index element={<TeacherDashboard />} />
           <Route path="students" element={<TeacherStudents />} />
           <Route path="attendance" element={<TeacherAttendance />} />
+          <Route path="exams" element={<TeacherExaminationsLayout />}>
+            <Route index element={<TeacherExaminationsIndex />} />
+            <Route path="scoring" element={<TeacherExams />} />
+            <Route path="active" element={<TeacherActiveAssessments />} />
+            <Route path="results" element={<TeacherResults />} />
+          </Route>
+          <Route path="results" element={<Navigate to="/teach/exams/results" replace />} />
           <Route path="lesson-notes" element={<TeacherLessonNotes />} />
           <Route path="announcements" element={<TeacherAnnouncements />} />
           <Route path="settings" element={<TeacherSettings />} />

@@ -2,6 +2,7 @@ import { useMemo, useState } from "react";
 import { useSchoolAttendanceCalendar } from "../api";
 import { localDateKey } from "../../../utils/date";
 import { BottomSheet } from "../../../components/mobile/BottomSheet";
+import { ClassFilter } from "./ClassFilter";
 import { OfflineBanner } from "./OfflineBanner";
 import { SchoolCalendar } from "./SchoolCalendar";
 import { DayDetailPanel } from "./DayDetailPanel";
@@ -14,8 +15,9 @@ interface AttendanceCalendarViewProps {
 }
 
 export const AttendanceCalendarView = ({ month, year, onMonthChange }: AttendanceCalendarViewProps) => {
+  const [classId, setClassId] = useState("");
   const { data, savedAt, isLoading, isStale, isEmpty, error, refetch } =
-    useSchoolAttendanceCalendar(month, year);
+    useSchoolAttendanceCalendar(month, year, classId || undefined);
 
   const [selected, setSelected] = useState<string>(localDateKey());
   const [sheetOpen, setSheetOpen] = useState(false);
@@ -32,7 +34,7 @@ export const AttendanceCalendarView = ({ month, year, onMonthChange }: Attendanc
 
   return (
     <div className="mt-6">
-      <div className="mb-4">
+      <div className="mb-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <OfflineBanner
           isStale={isStale}
           savedAt={savedAt}
@@ -41,6 +43,7 @@ export const AttendanceCalendarView = ({ month, year, onMonthChange }: Attendanc
           }
           requestedDate={`${year}-${String(month).padStart(2, "0")}`}
         />
+        <ClassFilter value={classId} onChange={setClassId} />
       </div>
 
       {isEmpty ? (

@@ -1,23 +1,89 @@
 export type AxiosErrorResponse = {
   response?: {
-    data?: { message?: string };
+    data?: { message?: string; error?: string };
     status?: number;
   };
   message?: string;
 };
 
-export type ExamType = "QUIZ" | "TEST" | "ASSIGNMENT" | "PROJECT" | "EXAM";
+export type ExamComponentType =
+  | "TEST"
+  | "ASSIGNMENT"
+  | "PROJECT"
+  | "PRACTICAL"
+  | "EXAM"
+  | "PHYSICAL"
+  | "OTHER";
+
+export type ExamType = ExamComponentType;
+
 export type ExamStatus = "DRAFT" | "PUBLISHED" | "COMPLETED";
+
+export interface ExamComponent {
+  id: string;
+  name: string;
+  type: ExamComponentType;
+  maxScore: number;
+  sortOrder: number;
+}
+
+export interface ExamScheme {
+  term: string;
+  session: string;
+  components: ExamComponent[];
+  schemeTotal: number;
+  complete: boolean;
+  warning: string | null;
+}
+
+export interface CreateExamComponentPayload {
+  term: string;
+  name: string;
+  type: ExamComponentType;
+  maxScore: number;
+  sortOrder: number;
+  session?: string;
+}
+
+export type UpdateExamComponentPayload = Partial<
+  Pick<ExamComponent, "name" | "type" | "maxScore" | "sortOrder">
+>;
+
+export interface ComponentMutationResponse {
+  component: ExamComponent;
+  schemeTotal: number;
+  complete: boolean;
+  warning: string | null;
+}
+
+export interface CopySchemePayload {
+  term: string;
+  session?: string;
+  fromSession?: string;
+}
+
+export interface CopySchemeResponse {
+  message: string;
+  session: string;
+  components: ExamComponent[];
+  schemeTotal: number;
+  complete: boolean;
+  warning: string | null;
+}
 
 export interface Exam {
   id: string;
   name: string;
   type: ExamType;
+  subjectId: string;
+  subjectName: string;
+  classId: string;
+  className: string;
+  componentId?: string | null;
+  componentName?: string | null;
   term: string;
   session: string;
   maxScore: number;
-  subjectId: string;
-  subjectName: string;
   date: string;
   status: ExamStatus;
   scoreCount: number;
@@ -25,38 +91,101 @@ export interface Exam {
 
 export interface ExamListResponse {
   exams: Exam[];
+  total: number;
+  page: number;
+  totalPages: number;
 }
 
 export interface CreateExamPayload {
   name: string;
   type: ExamType;
-  term: string;
-  session: string;
-  maxScore: number;
   subjectId: string;
+  classId: string;
+  componentId?: string;
+  term: string;
+  session?: string;
+  maxScore?: number;
   date: string;
-  status: ExamStatus;
 }
 
 export interface UpdateExamPayload {
   name?: string;
   type?: ExamType;
+  subjectId?: string;
+  classId?: string;
+  componentId?: string | null;
+  term?: string;
+  session?: string;
   maxScore?: number;
   date?: string;
   status?: ExamStatus;
 }
 
-export interface ExamScore {
+export interface EnsureExamSessionPayload {
+  subjectId: string;
+  classId: string;
+  componentId: string;
+  term: string;
+  session?: string;
+}
+
+export interface EnsureExamSessionResponse {
+  exam: {
+    id: string;
+    name: string;
+    subjectId: string;
+    subjectName: string;
+    classId: string | null;
+    className: string | null;
+    componentId: string | null;
+    componentName: string | null;
+    maxScore: number;
+    status: ExamStatus;
+    date: string;
+  };
+}
+
+export type ExamDateRejection = "WEEKEND" | "HOLIDAY" | "OUT_OF_TERM";
+
+export interface ExamDateError {
+  error?: string;
+  reason?: { type: ExamDateRejection; message: string };
+}
+
+export interface ExamRosterStudent {
+  studentId: string;
+  studentName: string;
+  admissionNo: string;
+  score: number | null;
+  remarks: string | null;
+}
+
+export interface ExamRosterResponse {
+  examId: string;
+  examName: string;
+  subjectId: string;
+  subjectName: string;
+  classId: string;
+  className: string;
+  componentId: string | null;
+  componentName: string | null;
+  maxScore: number;
+  status: ExamStatus;
+  date: string;
+  roster: ExamRosterStudent[];
+}
+
+export interface SaveStudentScorePayload {
+  score: number;
+  remarks?: string;
+}
+
+export interface SaveStudentScoreResponse {
   studentId: string;
   studentName: string;
   admissionNo: string;
   score: number;
   remarks: string | null;
-}
-
-export interface ExamScoresResponse {
-  examId: string;
-  scores: ExamScore[];
 }
 
 export interface SubmitScoresPayload {
@@ -72,16 +201,44 @@ export interface SubmitScoresResponse {
   count: number;
 }
 
-export interface ExamStudentScoreResponse {
-  examId: string;
-  examName: string;
-  subjectName: string;
-  student: { id: string; name: string; admissionNo: string };
-  score: { score: number; remarks: string } | null;
+export interface SubmitScoresBulkPayload {
+  subjectId: string;
+  classId: string;
+  componentId: string;
+  term: string;
+  session?: string;
+  scores: Array<{
+    studentId: string;
+    score: number;
+    remarks?: string;
+  }>;
 }
 
-export interface TermResultsResponse {
+export interface SubmitScoresBulkResponse {
+  message: string;
+  count: number;
+  examId: string;
+}
+
+export interface GetScoresBulkResponse {
+  message: string;
+  examId: string;
+  scores: Array<{
+    studentId: string;
+    score: number;
+    remarks: string | null;
+  }>;
+}
+
+export interface ScoresBulkScope {
+  subjectId: string;
   classId: string;
+  componentId: string;
+  term: string;
+  session?: string;
+}
+
+export interface TermResultsResponse {  classId: string;
   className: string;
   term: string;
   session: string;

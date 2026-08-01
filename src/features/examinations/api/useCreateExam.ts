@@ -12,8 +12,9 @@ export const useCreateExam = () => {
   return useMutation<Exam, AxiosErrorResponse, CreateExamPayload>({
     mutationFn: (payload) => fetchData("/exams", "POST", payload),
     onSuccess: async () => {
-      toast.success("Exam created!");
+      toast.success("Assessment created!");
       queryClient.invalidateQueries({ queryKey: examKeys.lists() });
+      queryClient.invalidateQueries({ queryKey: examKeys.details() });
     },
     onError: async (error) => {
       toast.error(transformError(error));

@@ -11,10 +11,11 @@ export const useUpdateExam = () => {
 
   return useMutation<Exam, AxiosErrorResponse, { id: string; data: UpdateExamPayload }>({
     mutationFn: ({ id, data }) => fetchData(`/exams/${id}`, "PATCH", data),
-    onSuccess: async () => {
-      toast.success("Exam updated!");
+    onSuccess: async (_data, { id }) => {
+      toast.success("Assessment updated!");
       queryClient.invalidateQueries({ queryKey: examKeys.lists() });
       queryClient.invalidateQueries({ queryKey: examKeys.details() });
+      queryClient.invalidateQueries({ queryKey: examKeys.scores(id) });
     },
     onError: async (error) => {
       toast.error(transformError(error));

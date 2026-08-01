@@ -41,6 +41,8 @@ export interface TeacherDetail {
   gender?: "M" | "F" | null;
   dateOfBirth?: string | null;
   profilePictureUrl?: string | null;
+  active?: boolean;
+  createdAt?: string;
   formClassId?: string | null;
   formClass?: { id: string; name: string; level: string; arm?: string } | null;
   assignments: Array<{
@@ -66,6 +68,10 @@ export interface UpdateTeacherPayload {
   profilePictureUrl?: string | null;
   formClassId?: string | null;
   role?: string;
+  assignments?: Array<{
+    subjectId: string;
+    classIds: string[];
+  }>;
 }
 
 export interface TeachersResponse {

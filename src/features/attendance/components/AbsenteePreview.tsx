@@ -1,9 +1,9 @@
 import { Link } from "react-router";
 import { ArrowRight } from "iconsax-react";
-import type { AnalyticsAbsentee } from "../types";
+import type { AttendanceSummaryAbsentee } from "../types";
 
 interface AbsenteePreviewProps {
-  absentees: AnalyticsAbsentee[];
+  absentees: AttendanceSummaryAbsentee[];
   isLoading: boolean;
 }
 
@@ -35,7 +35,7 @@ export const AbsenteePreview = ({ absentees, isLoading }: AbsenteePreviewProps) 
           className="flex items-center gap-1 text-xs font-medium text-gray500 hover:text-gray700 transition-colors"
         >
           See all
-          <ArrowRight variant="Bold" size={14} className="text-gray300" />
+          <ArrowRight variant="Linear" size={14} className="text-gray900" />
         </Link>
       </div>
 

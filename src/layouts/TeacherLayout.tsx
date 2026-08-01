@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { NavLink, Outlet } from "react-router";
+import { useMemo, useState } from "react";
+import { NavLink, Outlet, useLocation } from "react-router";
 import {
   Home,
   ClipboardTick,
@@ -10,10 +10,13 @@ import {
   NotificationBing,
   Building,
   ArrowLeft2,
+  ArrowRight2,
   SearchNormal,
+  StatusUp,
 } from "iconsax-react";
 
 import { useAuth } from "../contexts/AuthContext";
+import { useMyFormClass } from "../features/teacher/api/useMyFormClass";
 import { Avatar } from "../components/ui/Avatar";
 import { useSidebarCollapse } from "../hooks/useSidebarCollapse";
 import { MobileHeader } from "../components/mobile";
@@ -29,49 +32,175 @@ interface NavItem {
   to: string;
   Icon: IconComponent;
   end?: boolean;
+  hasCaret?: boolean;
+  children?: { label: string; to: string }[];
 }
 
 const navItems: NavItem[] = [
   { label: "Home", to: "/teach", Icon: Home, end: true },
   { label: "Attendance", to: "/teach/attendance", Icon: ClipboardTick },
   { label: "Students", to: "/teach/students", Icon: Profile2User },
+  {
+    label: "CA & Exams",
+    to: "/teach/exams/scoring",
+    Icon: StatusUp,
+    hasCaret: true,
+    children: [
+      { label: "Mark Scores", to: "/teach/exams/scoring" },
+      { label: "My Class", to: "/teach/exams/results" },
+    ],
+  },
   { label: "Lesson Notes", to: "/teach/lesson-notes", Icon: Book1 },
   { label: "Announcements", to: "/teach/announcements", Icon: Speaker },
 ];
 
 export const TeacherLayout = () => {
   const { user } = useAuth();
+  const location = useLocation();
   const { collapsed, toggle } = useSidebarCollapse();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
+  const [expandedItems, setExpandedItems] = useState<Record<string, boolean>>({});
+
+  const { data: formClassInfo } = useMyFormClass(user?.id ?? "");
+  const isFormTeacher = !!formClassInfo?.formClassId;
+
+  const visibleNavItems: NavItem[] = useMemo(
+    () =>
+      navItems.map((item) => {
+        if (!item.children) return item;
+        return {
+          ...item,
+          children: isFormTeacher
+            ? item.children
+            : item.children.filter((child) => child.to !== "/teach/exams/results"),
+        };
+      }),
+    [isFormTeacher],
+  );
 
   const closeMobile = () => setMobileOpen(false);
+
+  const toggleExpanded = (label: string) => {
+    setExpandedItems((prev) => ({ ...prev, [label]: !prev[label] }));
+  };
+
+  const isChildActive = (children: { label: string; to: string }[]) => {
+    if (children.some((child) => child.to.startsWith("/teach/exams"))) {
+      return location.pathname.startsWith("/teach/exams");
+    }
+    return children.some((child) => location.pathname.startsWith(child.to));
+  };
 
   const sidebarContent = (
     <>
       {/* Nav */}
       <nav className={cn("flex-1 py-4 space-y-0.5 overflow-y-auto", collapsed ? "px-[12px]" : "px-3")}>
-        {navItems.map((item) => (
-          <NavLink
-            key={item.to}
-            to={item.to}
-            end={item.end}
-            onClick={closeMobile}
-            className={({ isActive }) =>
-              cn(
-                "flex items-center h-[45px] text-sm transition-colors",
-                collapsed ? "justify-start w-[48px] px-0" : "gap-3 px-4 rounded-[20px]",
-                collapsed && isActive && "bg-gray900 text-white font-medium rounded-xl",
-                collapsed && !isActive && "text-gray700 hover:bg-gray50 hover:text-gray900 rounded-[20px]",
-                !collapsed && isActive && "bg-gray900 text-white font-medium rounded-[20px]",
-                !collapsed && !isActive && "text-gray700 hover:bg-gray50 hover:text-gray900 rounded-[20px]",
-              )
+        {visibleNavItems.map((item) => {
+          const hasChildren = item.children && item.children.length > 0;
+
+          if (hasChildren) {
+            const active = isChildActive(item.children!);
+
+            if (collapsed) {
+              return (
+                <NavLink
+                  key={item.to}
+                  to={item.children![0].to}
+                  onClick={closeMobile}
+                  className={({ isActive }) =>
+                    cn(
+                      "flex items-center justify-start h-[45px] w-[48px] transition-colors",
+                      isActive || active
+                        ? "bg-gray900 text-white font-medium rounded-xl"
+                        : "text-gray700 hover:bg-gray50 hover:text-gray900 rounded-[20px]",
+                    )
+                  }
+                >
+                  <span className="ml-[12px]"><item.Icon variant="Bold" size={24} color="currentColor" /></span>
+                </NavLink>
+              );
             }
-          >
-            <span className={cn("shrink-0", collapsed ? "ml-[12px]" : "")}><item.Icon variant="Bold" size={24} color="currentColor" /></span>
-            {!collapsed && <span className="flex-1">{item.label}</span>}
-          </NavLink>
-        ))}
+
+            const isExpanded = expandedItems[item.label] ?? active;
+
+            return (
+              <div key={item.label}>
+                <button
+                  onClick={() => toggleExpanded(item.label)}
+                  className={cn(
+                    "flex items-center gap-3 px-4 h-[45px] rounded-[20px] text-sm transition-colors w-full",
+                    active
+                      ? "bg-gray900 text-white font-medium"
+                      : "text-gray700 hover:bg-gray50 hover:text-gray900",
+                  )}
+                >
+                  <span className="shrink-0"><item.Icon variant="Bold" size={24} color="currentColor" /></span>
+                  <span className="flex-1 text-left">{item.label}</span>
+                  <ArrowRight2
+                    variant="Linear"
+                    size={14}
+                    color="currentColor"
+                    className={cn(
+                      "shrink-0 text-gray400 transition-transform duration-300",
+                      isExpanded && "rotate-90",
+                    )}
+                  />
+                </button>
+                <div
+                  className={cn(
+                    "grid transition-[grid-template-rows] duration-300 ease-in-out",
+                    isExpanded ? "grid-rows-[1fr]" : "grid-rows-[0fr]",
+                  )}
+                >
+                  <div className="overflow-hidden">
+                    <div className="ml-4 py-0.5 space-y-0.5">
+                      {item.children!.map((child) => (
+                        <NavLink
+                          key={child.to}
+                          to={child.to}
+                          onClick={closeMobile}
+                          className={({ isActive }) =>
+                            cn(
+                              "flex items-center gap-3 pl-10 pr-4 h-[40px] rounded-[20px] text-sm transition-colors",
+                              isActive
+                                ? "bg-gray900 text-white font-medium"
+                                : "text-gray700 hover:bg-gray50 hover:text-gray900",
+                            )
+                          }
+                        >
+                          <span className="flex-1">{child.label}</span>
+                        </NavLink>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            );
+          }
+
+          return (
+            <NavLink
+              key={item.to}
+              to={item.to}
+              end={item.end}
+              onClick={closeMobile}
+              className={({ isActive }) =>
+                cn(
+                  "flex items-center h-[45px] text-sm transition-colors",
+                  collapsed ? "justify-start w-[48px] px-0" : "gap-3 px-4 rounded-[20px]",
+                  collapsed && isActive && "bg-gray900 text-white font-medium rounded-xl",
+                  collapsed && !isActive && "text-gray700 hover:bg-gray50 hover:text-gray900 rounded-[20px]",
+                  !collapsed && isActive && "bg-gray900 text-white font-medium rounded-[20px]",
+                  !collapsed && !isActive && "text-gray700 hover:bg-gray50 hover:text-gray900 rounded-[20px]",
+                )
+              }
+            >
+              <span className={cn("shrink-0", collapsed ? "ml-[12px]" : "")}><item.Icon variant="Bold" size={24} color="currentColor" /></span>
+              {!collapsed && <span className="flex-1">{item.label}</span>}
+            </NavLink>
+          );
+        })}
       </nav>
 
       {/* Settings */}

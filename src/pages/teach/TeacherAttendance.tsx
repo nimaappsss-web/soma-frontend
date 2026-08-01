@@ -10,6 +10,7 @@ import { useStudents } from "../../features/students/api";
 import { AttendanceListView } from "../../features/teacher/components/AttendanceListView";
 import { AttendanceHistoryView } from "../../features/teacher/components/AttendanceHistoryView";
 import { StudentSwipeCard } from "../../components/ui/StudentSwipeCard";
+import { Textarea } from "../../components/ui/textarea";
 import { addToQueue } from "../../sync/syncQueue";
 import { db } from "../../db/db";
 import { fetchData } from "../../utils/fetchData";
@@ -43,6 +44,8 @@ export const TeacherAttendance = () => {
   const [clearConfirm, setClearConfirm] = useState(false);
   const [modifyMode, setModifyMode] = useState(false);
   const [userMarked, setUserMarked] = useState(false);
+  const [dayNote, setDayNote] = useState("");
+  const [noteOpen, setNoteOpen] = useState(false);
 
   const initialized = useRef(false);
 
@@ -60,6 +63,14 @@ export const TeacherAttendance = () => {
     () => {
       if (!formClassId || !user?.id) return Promise.resolve([] as import("../../db/db").AttendanceRecord[]);
       return db.attendance.where("[userId+date+className]").equals([user.id, today, formClass ?? ""]).toArray();
+    },
+    [formClassId, today, formClass, user?.id],
+  );
+
+  const cachedNote = useLiveQuery(
+    () => {
+      if (!formClassId || !user?.id) return Promise.resolve(undefined as import("../../db/db").AttendanceNote | undefined);
+      return db.attendanceNotes.where("[userId+date+className]").equals([user.id, today, formClass ?? ""]).first();
     },
     [formClassId, today, formClass, user?.id],
   );
@@ -114,6 +125,10 @@ export const TeacherAttendance = () => {
       prefill[r.studentId] = r.status;
     }
     setAttendance(prefill);
+    if (cachedNote?.note) {
+      setDayNote(cachedNote.note);
+      setNoteOpen(true);
+    }
   }
 
   const handleMark = (studentId: string, status: AttendanceStatus) => {
@@ -148,7 +163,7 @@ export const TeacherAttendance = () => {
       recordId: queueId,
       endpoint: "/attendance/bulk",
       method: "POST",
-      payload: { classId: formClassId, date: today, records },
+      payload: { classId: formClassId, date: today, records, note: dayNote.trim() },
     });
 
     await db.attendance.bulkPut(
@@ -164,6 +179,21 @@ export const TeacherAttendance = () => {
         createdAt: Date.now(),
       })),
     );
+
+    const noteId = `note_${user!.id}_${formClassId}_${today}`;
+    const trimmed = dayNote.trim();
+    if (trimmed) {
+      await db.attendanceNotes.put({
+        id: noteId,
+        userId: user!.id,
+        className: formClass ?? "",
+        date: today,
+        note: trimmed,
+        createdAt: Date.now(),
+      });
+    } else {
+      await db.attendanceNotes.delete(noteId);
+    }
 
     setModifyMode(false);
     setUserMarked(true);
@@ -193,6 +223,8 @@ export const TeacherAttendance = () => {
       .filter((i) => i.table === "attendance" && (i.status === "pending" || i.status === "failed"))
       .delete();
 
+    await db.attendanceNotes.delete(`note_${user!.id}_${formClassId}_${today}`);
+
     await addToQueue({
       userId: user!.id,
       table: "attendance",
@@ -205,6 +237,8 @@ export const TeacherAttendance = () => {
     setClearConfirm(false);
     setModifyMode(false);
     setAttendance({});
+    setDayNote("");
+    setNoteOpen(false);
     setUserMarked(false);
   };
 
@@ -328,6 +362,12 @@ export const TeacherAttendance = () => {
               )}
             </div>
           </div>
+          {dayNote && (
+            <div className="rounded-lg border border-gray-100 bg-gray-50 px-4 py-3 mb-4">
+              <p className="text-[11px] font-semibold text-gray-500 uppercase tracking-wider mb-1">Note for today</p>
+              <p className="text-sm text-gray-700 whitespace-pre-wrap">{dayNote}</p>
+            </div>
+          )}
           <AttendanceListView
             students={sortedStudents}
             attendance={attendance}
@@ -361,6 +401,42 @@ export const TeacherAttendance = () => {
               ))}
             </div>
           )}
+          <div className="mb-4">
+            {!noteOpen ? (
+              <button
+                onClick={() => setNoteOpen(true)}
+                className="text-xs font-medium text-gray-500 hover:text-gray-700 py-2 transition-colors flex items-center gap-1.5"
+              >
+                <span className="text-sm leading-none">+</span> Add a note for today
+              </button>
+            ) : (
+              <div className="bg-white rounded-xl border border-gray-100 p-3">
+                <Textarea
+                  value={dayNote}
+                  onChange={(e) => setDayNote(e.target.value)}
+                  placeholder="Optional note for today (e.g. exam day, low turnout…)"
+                  rows={2}
+                  className="rounded-xl bg-gray-50 border-gray-100 text-sm"
+                />
+                <div className="flex items-center justify-end mt-2 gap-3">
+                  {dayNote && (
+                    <button
+                      onClick={() => { setDayNote(""); setNoteOpen(false); }}
+                      className="text-xs text-gray-400 hover:text-red-500 py-1 transition-colors"
+                    >
+                      Remove
+                    </button>
+                  )}
+                  <button
+                    onClick={() => setNoteOpen(false)}
+                    className="text-xs font-medium text-gray-500 hover:text-gray-700 py-1 transition-colors"
+                  >
+                    Done
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
           {view === "list" && (
             <div className="flex justify-end mb-4">
               <Button

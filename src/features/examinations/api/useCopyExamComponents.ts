@@ -4,17 +4,16 @@ import toast from "react-hot-toast";
 import { transformError } from "../../../utils/transformError";
 import { fetchData } from "../../../utils/fetchData";
 import { examKeys } from "../utils/query-keys";
-import type { AxiosErrorResponse } from "../types";
+import type { CopySchemePayload, CopySchemeResponse, AxiosErrorResponse } from "../types";
 
-export const useDeleteExam = () => {
+export const useCopyExamComponents = () => {
   const queryClient = useQueryClient();
 
-  return useMutation<{ message: string }, AxiosErrorResponse, string>({
-    mutationFn: (id) => fetchData(`/exams/${id}`, "DELETE"),
+  return useMutation<CopySchemeResponse, AxiosErrorResponse, CopySchemePayload>({
+    mutationFn: (payload) => fetchData("/exams/components/copy", "POST", payload),
     onSuccess: async () => {
-      toast.success("Assessment deleted!");
-      queryClient.invalidateQueries({ queryKey: examKeys.lists() });
-      queryClient.invalidateQueries({ queryKey: examKeys.details() });
+      toast.success("Previous scheme copied!");
+      queryClient.invalidateQueries({ queryKey: examKeys.schemes() });
     },
     onError: async (error) => {
       toast.error(transformError(error));

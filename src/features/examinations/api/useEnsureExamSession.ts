@@ -4,17 +4,15 @@ import toast from "react-hot-toast";
 import { transformError } from "../../../utils/transformError";
 import { fetchData } from "../../../utils/fetchData";
 import { examKeys } from "../utils/query-keys";
-import type { AxiosErrorResponse } from "../types";
+import type { EnsureExamSessionPayload, EnsureExamSessionResponse, AxiosErrorResponse } from "../types";
 
-export const useDeleteExam = () => {
+export const useEnsureExamSession = () => {
   const queryClient = useQueryClient();
 
-  return useMutation<{ message: string }, AxiosErrorResponse, string>({
-    mutationFn: (id) => fetchData(`/exams/${id}`, "DELETE"),
+  return useMutation<EnsureExamSessionResponse, AxiosErrorResponse, EnsureExamSessionPayload>({
+    mutationFn: (payload) => fetchData("/exams/ensure", "POST", payload),
     onSuccess: async () => {
-      toast.success("Assessment deleted!");
       queryClient.invalidateQueries({ queryKey: examKeys.lists() });
-      queryClient.invalidateQueries({ queryKey: examKeys.details() });
     },
     onError: async (error) => {
       toast.error(transformError(error));

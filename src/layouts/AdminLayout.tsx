@@ -64,7 +64,16 @@ const group2: NavItem[] = [
   { label: "Subjects", to: "/admin/subjects", Icon: Book },
   { label: "Timetable", to: "/admin/timetable", Icon: CalendarTick },
   { label: "Attendance", to: "/admin/attendance", Icon: ClipboardTick },
-  { label: "Examinations", to: "/admin/examinations", Icon: StatusUp },
+  {
+    label: "CA & Exams",
+    to: "/admin/examinations",
+    Icon: StatusUp,
+    hasCaret: true,
+    children: [
+      { label: "Scoring", to: "/admin/examinations/scoring" },
+      { label: "Configure", to: "/admin/examinations/configure" },
+    ],
+  },
   {
     label: "Calendar",
     to: "/admin/calendar",

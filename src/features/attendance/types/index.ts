@@ -24,6 +24,7 @@ export interface AnalyticsByClass {
   present: number;
   absent: number;
   absentees: AnalyticsAbsentee[];
+  note?: string | null;
 }
 
 export interface AttendanceAnalytics {
@@ -55,8 +56,45 @@ export interface AttendanceCalendarAnalytics {
   days: AnalyticsCalendarDay[];
 }
 
+export interface AttendanceSummaryByClass {
+  classId: string;
+  className: string;
+  total: number;
+  present: number;
+  absent: number;
+}
+
+export interface AttendanceSummaryAbsentee {
+  studentId: string;
+  studentName: string;
+  admissionNo: string;
+  parentName: string;
+}
+
+export interface AttendanceSummary {
+  date: string;
+  dayOfWeek: string;
+  isWeekend: boolean;
+  isHoliday: boolean;
+  totalStudents: number;
+  present: number;
+  absent: number;
+  percentage: number;
+  byClass: AttendanceSummaryByClass[];
+  absentees: AttendanceSummaryAbsentee[];
+}
+
+export interface AttendanceRangeDay {
+  date: string;
+  percentage: number;
+}
+
+export interface AttendanceRange {
+  days: AttendanceRangeDay[];
+}
+
 export interface AttendanceSnapshot {
   key: string;
-  data: AttendanceAnalytics | AttendanceCalendarAnalytics;
+  data: AttendanceAnalytics | AttendanceCalendarAnalytics | AttendanceSummary;
   savedAt: number;
 }

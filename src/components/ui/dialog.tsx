@@ -18,7 +18,7 @@ const contentStyles = cva(
         right:
           "inset-y-0 right-0 h-full w-[min(280px,80vw)] rounded-l-2xl overflow-y-auto data-[state=open]:translate-x-0 data-[state=closed]:translate-x-full",
         middle:
-          "left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 rounded-2xl w-[calc(100%-60px)] max-w-md max-h-[85vh] overflow-y-auto data-[state=open]:translate-y-0 data-[state=open]:opacity-100 data-[state=closed]:translate-y-4 data-[state=closed]:opacity-0",
+          "left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 rounded-2xl w-[calc(100%-60px)] max-w-md max-h-[85vh] overflow-y-auto data-[state=open]:opacity-100 data-[state=closed]:opacity-0",
       },
     },
     defaultVariants: { variant: "center" },

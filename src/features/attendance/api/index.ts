@@ -1,1 +1,6 @@
-export { useSchoolAttendanceToday, useSchoolAttendanceCalendar } from "./useSchoolAttendance";
+export {
+  useSchoolAttendanceToday,
+  useSchoolAttendanceSummary,
+  useSchoolAttendanceCalendar,
+  useSchoolAttendanceRange,
+} from "./useSchoolAttendance";

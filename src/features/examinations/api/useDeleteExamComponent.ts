@@ -6,15 +6,21 @@ import { fetchData } from "../../../utils/fetchData";
 import { examKeys } from "../utils/query-keys";
 import type { AxiosErrorResponse } from "../types";
 
-export const useDeleteExam = () => {
+interface DeleteComponentResponse {
+  message: string;
+  schemeTotal: number;
+  complete: boolean;
+  warning: string | null;
+}
+
+export const useDeleteExamComponent = () => {
   const queryClient = useQueryClient();
 
-  return useMutation<{ message: string }, AxiosErrorResponse, string>({
-    mutationFn: (id) => fetchData(`/exams/${id}`, "DELETE"),
+  return useMutation<DeleteComponentResponse, AxiosErrorResponse, string>({
+    mutationFn: (id) => fetchData(`/exams/components/${id}`, "DELETE"),
     onSuccess: async () => {
-      toast.success("Assessment deleted!");
-      queryClient.invalidateQueries({ queryKey: examKeys.lists() });
-      queryClient.invalidateQueries({ queryKey: examKeys.details() });
+      toast.success("Component removed!");
+      queryClient.invalidateQueries({ queryKey: examKeys.schemes() });
     },
     onError: async (error) => {
       toast.error(transformError(error));

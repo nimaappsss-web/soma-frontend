@@ -202,6 +202,41 @@ export interface AttendanceSnapshot {
   savedAt: number;
 }
 
+export interface AttendanceNote {
+  id: string;
+  userId: string;
+  className: string;
+  date: string;
+  note: string;
+  createdAt: number;
+}
+
+export interface ExamScoreCache {
+  id: string;
+  userId: string;
+  examKey: string;
+  subjectId: string;
+  classId: string;
+  componentId: string;
+  term: string;
+  session: string;
+  studentId: string;
+  studentName: string;
+  score: number;
+  remarks: string | null;
+  syncStatus: SyncStatus;
+  updatedAt: number;
+}
+
+export interface ExamSchemeCache {
+  id: string;
+  userId: string;
+  term: string;
+  session: string;
+  schemeJson: string;
+  updatedAt: number;
+}
+
 export const db = new Dexie("somaDB") as Dexie & {
   students: EntityTable<Student, "id">;
   attendance: EntityTable<AttendanceRecord, "id">;
@@ -222,6 +257,9 @@ export const db = new Dexie("somaDB") as Dexie & {
   academicTerms: EntityTable<AcademicTermCache, "id">;
   announcements: EntityTable<AnnouncementCache, "id">;
   attendanceSnapshots: EntityTable<AttendanceSnapshot, "key">;
+  attendanceNotes: EntityTable<AttendanceNote, "id">;
+  examScores: EntityTable<ExamScoreCache, "id">;
+  examScheme: EntityTable<ExamSchemeCache, "id">;
 };
 
 db.version(11).stores({
@@ -426,6 +464,54 @@ db.version(21).stores({
   academicTerms: "id, userId",
   announcements: "id, userId",
   attendanceSnapshots: "key",
+});
+
+db.version(22).stores({
+  students: "id, name, classId, status, schoolId, userId, [userId+classId]",
+  attendance: "id, studentId, className, schoolId, date, syncStatus, userId, [date+className], [userId+date+className]",
+  caScores: "id, studentId, className, schoolId, term, session, syncStatus, userId",
+  subjects: "id, schoolId, userId",
+  classes: "id, level, schoolId, userId, [userId+level]",
+  teacherFormClass: "id",
+  teacherAssignments: "id, userId",
+  teachers: "id, userId",
+  pendingInvites: "id, userId",
+  teacherDetails: "id, userId",
+  parents: "id, status, schoolId, userId",
+  syncQueue: "++id, status, createdAt, table, userId",
+  lessonNotes: "id, userId",
+  schoolSettings: "id, userId",
+  calendarEvents: "id, userId",
+  holidays: "id, userId",
+  academicTerms: "id, userId",
+  announcements: "id, userId",
+  attendanceSnapshots: "key",
+  attendanceNotes: "id, userId, [userId+date+className]",
+});
+
+db.version(23).stores({
+  students: "id, name, classId, status, schoolId, userId, [userId+classId]",
+  attendance: "id, studentId, className, schoolId, date, syncStatus, userId, [date+className], [userId+date+className]",
+  caScores: "id, studentId, className, schoolId, term, session, syncStatus, userId",
+  subjects: "id, schoolId, userId",
+  classes: "id, level, schoolId, userId, [userId+level]",
+  teacherFormClass: "id",
+  teacherAssignments: "id, userId",
+  teachers: "id, userId",
+  pendingInvites: "id, userId",
+  teacherDetails: "id, userId",
+  parents: "id, status, schoolId, userId",
+  syncQueue: "++id, status, createdAt, table, userId",
+  lessonNotes: "id, userId",
+  schoolSettings: "id, userId",
+  calendarEvents: "id, userId",
+  holidays: "id, userId",
+  academicTerms: "id, userId",
+  announcements: "id, userId",
+  attendanceSnapshots: "key",
+  attendanceNotes: "id, userId, [userId+date+className]",
+  examScores: "id, userId, examKey, studentId, syncStatus",
+  examScheme: "id, userId",
 });
 
 

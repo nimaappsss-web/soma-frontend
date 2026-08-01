@@ -1,9 +1,10 @@
 import { Sparklines, SparklinesLine } from "react-sparklines";
-import type { AttendanceAnalytics } from "../types";
+import type { AttendanceSummary } from "../types";
 
 interface StatCardsProps {
-  data?: AttendanceAnalytics;
+  data?: AttendanceSummary;
   isLoading: boolean;
+  sparklineData?: number[];
 }
 
 export const ratePillClass = (pct: number) => {
@@ -12,9 +13,10 @@ export const ratePillClass = (pct: number) => {
   return "bg-red500/10 text-red500";
 };
 
-export const StatCards = ({ data, isLoading }: StatCardsProps) => {
+export const StatCards = ({ data, isLoading, sparklineData }: StatCardsProps) => {
   const perClass = data?.byClass ?? [];
-  const sparklineData = perClass.map((c) => (c.total > 0 ? Math.round((c.present / c.total) * 100) : 0));
+  const trend = sparklineData ?? perClass.map((c) => (c.total > 0 ? Math.round((c.present / c.total) * 100) : 0));
+  const markedClasses = perClass.filter((c) => c.present + c.absent > 0).length;
 
   const LargeCard = ({
     label,
@@ -33,10 +35,10 @@ export const StatCards = ({ data, isLoading }: StatCardsProps) => {
       <p className="text-xs text-gray500 font-medium">{label}</p>
       <p className="text-2xl font-bold text-gray900 mt-1">{value}</p>
       {sub && <p className={`text-xs font-medium mt-1 ${textColor}`}>{sub}</p>}
-      {sparklineData.length > 0 && (
+      {trend.length > 1 && (
         <div className="w-full h-8 mt-3">
           <Sparklines
-            data={sparklineData}
+            data={trend}
             width={240}
             height={32}
             margin={2}
@@ -86,7 +88,7 @@ export const StatCards = ({ data, isLoading }: StatCardsProps) => {
           sub={
             isLoading
               ? undefined
-              : `${data?.byClass?.length ?? 0} classes marked`
+              : `${markedClasses} of ${perClass.length} classes marked`
           }
           sparkColor="#CD432F"
           textColor="text-red500"
@@ -106,9 +108,17 @@ export const StatCards = ({ data, isLoading }: StatCardsProps) => {
         <SmallCard
           label="Day"
           value={
-            isLoading ? "—" : data?.isHoliday ? "Holiday" : data?.dayOfWeek ? "School day" : "—"
+            isLoading
+              ? "—"
+              : data?.isHoliday
+                ? "Holiday"
+                : data?.isWeekend
+                  ? "Weekend"
+                  : data?.dayOfWeek || "School day"
           }
-          tone={data?.isHoliday ? "text-amber500" : "text-gray900"}
+          tone={
+            data?.isHoliday || data?.isWeekend ? "text-amber500" : "text-gray900"
+          }
         />
       </div>
     </>

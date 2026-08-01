@@ -76,6 +76,14 @@ export const AttendanceHistoryView = ({ classId, formClass }: AttendanceHistoryV
     [date, formClass, user?.id],
   );
 
+  const dayNote = useLiveQuery(
+    () => {
+      if (!user?.id) return Promise.resolve(undefined as import("../../../db/db").AttendanceNote | undefined);
+      return db.attendanceNotes.where("[userId+date+className]").equals([user.id, date, formClass ?? ""]).first();
+    },
+    [date, formClass, user?.id],
+  );
+
   const studentIds = [...new Set((records ?? []).map((r) => r.studentId))];
   const cachedStudents = useLiveQuery(
     () => {
@@ -123,7 +131,7 @@ export const AttendanceHistoryView = ({ classId, formClass }: AttendanceHistoryV
     });
   }, [records, cachedStudents]);
 
-  if (records === undefined || cachedStudents === undefined) {
+  if (records === undefined || cachedStudents === undefined || dayNote === undefined) {
     return (
       <div className="flex items-center justify-center py-8">
         <p className="text-sm text-gray-400">Loading...</p>
@@ -152,6 +160,13 @@ export const AttendanceHistoryView = ({ classId, formClass }: AttendanceHistoryV
           {records.length} record(s)
         </span>
       </div>
+
+      {dayNote?.note && (
+        <div className="bg-white rounded-xl shadow-sm border border-gray-100 px-4 py-3 mb-4">
+          <p className="text-[11px] font-semibold text-gray-500 uppercase tracking-wider mb-1">Note for {date}</p>
+          <p className="text-sm text-gray-700 whitespace-pre-wrap">{dayNote.note}</p>
+        </div>
+      )}
 
       {!records.length ? (
         blockedReason ? (

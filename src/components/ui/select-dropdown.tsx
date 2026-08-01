@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect, useMemo } from "react";
+import { createPortal } from "react-dom";
 import { cn } from "@/lib/utils";
 import { SearchNormal } from "iconsax-react";
 import type { FieldError } from "react-hook-form";
@@ -20,6 +21,12 @@ interface SelectDropdownProps {
   searchable?: boolean;
 }
 
+interface MenuRect {
+  top: number;
+  left: number;
+  width: number;
+}
+
 export const SelectDropdown = ({
   options,
   value,
@@ -33,7 +40,10 @@ export const SelectDropdown = ({
 }: SelectDropdownProps) => {
   const [open, setOpen] = useState(false);
   const [filter, setFilter] = useState("");
+  const [menuRect, setMenuRect] = useState<MenuRect | null>(null);
   const ref = useRef<HTMLDivElement>(null);
+  const btnRef = useRef<HTMLButtonElement>(null);
+  const menuRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -44,10 +54,28 @@ export const SelectDropdown = ({
   }, [open, searchable]);
 
   useEffect(() => {
+    if (!open) return;
+    const update = () => {
+      const el = btnRef.current;
+      if (!el) return;
+      const r = el.getBoundingClientRect();
+      setMenuRect({ top: r.bottom + 4, left: r.left, width: r.width });
+    };
+    update();
+    window.addEventListener("scroll", update, true);
+    window.addEventListener("resize", update);
+    return () => {
+      window.removeEventListener("scroll", update, true);
+      window.removeEventListener("resize", update);
+    };
+  }, [open]);
+
+  useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
-      if (ref.current && !ref.current.contains(e.target as Node)) {
-        setOpen(false);
-      }
+      const target = e.target as Node;
+      if (ref.current && ref.current.contains(target)) return;
+      if (menuRef.current && menuRef.current.contains(target)) return;
+      setOpen(false);
     };
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
@@ -63,6 +91,18 @@ export const SelectDropdown = ({
 
   const selectedLabel = options.find((o) => o.value === value)?.label || "";
 
+  const handleToggle = () => {
+    if (disabled) return;
+    if (!open) {
+      const el = btnRef.current;
+      if (el) {
+        const r = el.getBoundingClientRect();
+        setMenuRect({ top: r.bottom + 4, left: r.left, width: r.width });
+      }
+    }
+    setOpen(!open);
+  };
+
   const handleSelect = (optionValue: string) => {
     onChange(optionValue);
     setOpen(false);
@@ -71,8 +111,9 @@ export const SelectDropdown = ({
   return (
     <div ref={ref} className={cn("relative", className)}>
       <button
+        ref={btnRef}
         type="button"
-        onClick={() => !disabled && setOpen(!open)}
+        onClick={handleToggle}
         disabled={disabled}
         className={cn(
           "flex h-11 w-full items-center justify-between rounded-full border border-input bg-background px-4 py-2 text-base focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50 md:text-sm",
@@ -92,55 +133,63 @@ export const SelectDropdown = ({
         </svg>
       </button>
 
-      {open && (
-        <div className="absolute z-50 mt-1 w-full rounded-xl border border-input bg-background shadow-lg">
-          {searchable && (
-            <div className="p-2 pb-0">
-              <div className="relative">
-                <SearchNormal className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-placeholder pointer-events-none" variant="Bold" />
-                <input
-                  ref={inputRef}
-                  type="text"
-                  value={filter}
-                  onChange={(e) => setFilter(e.target.value)}
-                  placeholder="Search..."
-                  className="w-full h-9 rounded-full border border-input bg-background pl-9 pr-4 text-sm placeholder:text-placeholder focus-visible:outline-none"
-                />
+      {open &&
+        menuRect &&
+        createPortal(
+          <div
+            ref={menuRef}
+            style={{ top: menuRect.top, left: menuRect.left, width: menuRect.width }}
+            className="fixed z-[100] mt-1 rounded-xl border border-input bg-background shadow-lg"
+          >
+            {searchable && (
+              <div className="p-2 pb-0">
+                <div className="relative">
+                  <SearchNormal
+                    className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-placeholder pointer-events-none"
+                    variant="Bold"
+                  />
+                  <input
+                    ref={inputRef}
+                    type="text"
+                    value={filter}
+                    onChange={(e) => setFilter(e.target.value)}
+                    placeholder="Search..."
+                    className="w-full h-9 rounded-full border border-input bg-background pl-9 pr-4 text-sm placeholder:text-placeholder focus-visible:outline-none"
+                  />
+                </div>
               </div>
-            </div>
-          )}
-          <div className="max-h-60 overflow-y-auto">
-            {filteredOptions.length === 0 ? (
-              <p className="p-3 text-sm text-placeholder">No options available</p>
-            ) : (
-              filteredOptions.map((option) => (
-                <button
-                  key={option.value}
-                  type="button"
-                  onClick={() => handleSelect(option.value)}
-                  className={cn(
-                    "flex w-full items-center gap-2 px-4 py-2.5 text-sm text-left transition-colors hover:bg-accent",
-                    option.value === value && "font-medium",
-                  )}
-                >
-                  <span className="w-4 shrink-0">
-                    {option.value === value && (
-                      <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                      </svg>
-                    )}
-                  </span>
-                  {option.label}
-                </button>
-              ))
             )}
-          </div>
-        </div>
-      )}
+            <div className="max-h-60 overflow-y-auto">
+              {filteredOptions.length === 0 ? (
+                <p className="p-3 text-sm text-placeholder">No options available</p>
+              ) : (
+                filteredOptions.map((option) => (
+                  <button
+                    key={option.value}
+                    type="button"
+                    onClick={() => handleSelect(option.value)}
+                    className={cn(
+                      "flex w-full items-center gap-2 px-4 py-2.5 text-sm text-left transition-colors hover:bg-accent",
+                      option.value === value && "font-medium",
+                    )}
+                  >
+                    <span className="w-4 shrink-0">
+                      {option.value === value && (
+                        <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                        </svg>
+                      )}
+                    </span>
+                    {option.label}
+                  </button>
+                ))
+              )}
+            </div>
+          </div>,
+          document.body,
+        )}
 
-      {hasError && (
-        <p className="text-xs text-red-500 mt-2">{hasError.message}</p>
-      )}
+      {hasError && <p className="text-xs text-red-500 mt-2">{hasError.message}</p>}
     </div>
   );
 };
