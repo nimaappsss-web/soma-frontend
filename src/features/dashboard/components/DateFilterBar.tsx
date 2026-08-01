@@ -3,15 +3,8 @@ import { Teacher, Briefcase, VolumeHigh, Book } from "iconsax-react";
 import { DateRangeInput } from "./DateRangeInput";
 import { TermDropdown } from "./TermDropdown";
 import { QuickAddButton } from "../../../components/others/QuickAddButton";
-
-const termOptions = [
-  { value: "2025/2026-1", label: "2025/2026 session - 1st term" },
-  { value: "2025/2026-2", label: "2025/2026 session - 2nd term" },
-  { value: "2025/2026-3", label: "2025/2026 session - 3rd term" },
-  { value: "2024/2025-1", label: "2024/2025 session - 1st term" },
-  { value: "2024/2025-2", label: "2024/2025 session - 2nd term" },
-  { value: "2024/2025-3", label: "2024/2025 session - 3rd term" },
-];
+import { useActiveTerm } from "../../calendar/api";
+import { termLabel } from "../../calendar/utils/term";
 
 const quickAddItems = [
   { label: "Student", icon: <Teacher variant="Bold" size={16} />, href: "/admin/students", bgColor: "bg-blue-100", iconColor: "#2563EB" },
@@ -21,9 +14,15 @@ const quickAddItems = [
 ];
 
 export const DateFilterBar = () => {
+  const { terms, activeTerm } = useActiveTerm();
   const [from, setFrom] = useState("");
   const [to, setTo] = useState("");
-  const [term, setTerm] = useState("2025/2026-1");
+  const [term, setTerm] = useState<string>(activeTerm?.id ?? "");
+
+  const termOptions = terms.map((t) => ({
+    value: t.id,
+    label: termLabel(t.term).label,
+  }));
 
   return (
     <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 mt-6">

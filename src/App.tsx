@@ -43,6 +43,8 @@ import { AnnouncementsManagement } from "./features/announcements/components/Ann
 import { MomentsManagement } from "./features/moments/components/MomentsManagement";
 import { TimetableManagement } from "./features/timetable/components/TimetableManagement";
 import { AttendanceOverview } from "./features/attendance/components/AttendanceOverview";
+import { AttendanceClasses } from "./features/attendance/components/AttendanceClasses";
+import { AttendanceAbsentees } from "./features/attendance/components/AttendanceAbsentees";
 import { ExaminationsManagement } from "./features/examinations/components/ExaminationsManagement";
 import { CalendarLayout, CalendarEvents, CalendarHolidays, CalendarTerms } from "./features/calendar/components/CalendarManagement";
 import { ReportsManagement } from "./features/reports/components/ReportsManagement";
@@ -106,6 +108,8 @@ function App() {
           <Route path="moments" element={<MomentsManagement />} />
           <Route path="timetable" element={<TimetableManagement />} />
           <Route path="attendance" element={<AttendanceOverview />} />
+          <Route path="attendance/classes" element={<AttendanceClasses />} />
+          <Route path="attendance/absentees" element={<AttendanceAbsentees />} />
           <Route path="examinations" element={<ExaminationsManagement />} />
           <Route path="calendar" element={<CalendarLayout />}>
             <Route index element={<Navigate to="events" replace />} />

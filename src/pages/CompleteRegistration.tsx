@@ -8,6 +8,7 @@ import { useCompleteRegistration } from "../features/auth/api";
 import { useSubjects, useClasses } from "../features/principal/api";
 import { completeRegistrationSchema, type CompleteRegistrationFormData } from "../features/auth/utils/validationSchema";
 import { MultiSelect, type SelectOption } from "../components/ui/multi-select";
+import { SelectDropdown } from "../components/ui/select-dropdown";
 import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
 import { Label } from "../components/ui/label";
@@ -129,18 +130,12 @@ export const CompleteRegistration = () => {
                   <div className="flex items-start justify-between gap-2">
                     <div className="flex-1 space-y-2">
                       <Label className="text-xs text-muted-foreground">Subject</Label>
-                      <select
+                      <SelectDropdown
+                        placeholder="Select subject"
+                        options={subjectOptions}
                         value={a.subjectId}
-                        onChange={(e) => handleSubjectChange(i, e.target.value)}
-                        className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm"
-                      >
-                        <option value="">Select subject</option>
-                        {subjectOptions.map((opt) => (
-                          <option key={opt.value} value={opt.value}>
-                            {opt.label}
-                          </option>
-                        ))}
-                      </select>
+                        onChange={(val) => handleSubjectChange(i, val)}
+                      />
 
                       <Label className="text-xs text-muted-foreground">Classes</Label>
                       <MultiSelect
@@ -167,19 +162,12 @@ export const CompleteRegistration = () => {
 
             <div className="space-y-2">
               <Label htmlFor="formClass">Class Teacher (optional)</Label>
-              <select
-                id="formClass"
+              <SelectDropdown
+                placeholder="Not a class teacher"
+                options={classOptions}
                 value={formClassId}
-                onChange={(e) => setFormClassId(e.target.value)}
-                className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm"
-              >
-                <option value="">Not a class teacher</option>
-                {classOptions.map((opt) => (
-                  <option key={opt.value} value={opt.value}>
-                    {opt.label}
-                  </option>
-                ))}
-              </select>
+                onChange={setFormClassId}
+              />
             </div>
 
             <Button type="submit" disabled={mutation.isPending} className="w-full">

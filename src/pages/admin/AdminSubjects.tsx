@@ -4,6 +4,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 
 import { Avatar } from "../../components/ui/Avatar";
+import { Input } from "../../components/ui/input";
 import { useAuth } from "../../contexts/AuthContext";
 import { useSubjects, useCreateSubject, useDeleteSubject } from "../../features/principal/api";
 import { createSubjectSchema, type CreateSubjectFormData } from "../../features/principal/utils/validationSchema";
@@ -61,19 +62,17 @@ export const AdminSubjects = () => {
         {showForm && (
           <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-100 mb-6 flex gap-3 items-start">
             <div className="flex-1">
-              <input
+              <Input
                 {...register("name")}
                 placeholder="Subject name"
-                className="w-full h-10 rounded-md border border-gray-200 px-3 text-sm"
                 autoFocus
               />
               {errors.name && <p className="text-xs text-destructive mt-1">{errors.name.message}</p>}
             </div>
             <div className="w-40">
-              <input
+              <Input
                 {...register("code")}
                 placeholder="Code (optional)"
-                className="w-full h-10 rounded-md border border-gray-200 px-3 text-sm"
               />
             </div>
             <button onClick={handleSubmit(onAdd)} disabled={createMutation.isPending} className="px-4 py-2 bg-green-600 text-white rounded-lg text-sm font-medium disabled:opacity-50 shrink-0 h-10">

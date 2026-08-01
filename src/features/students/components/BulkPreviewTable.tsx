@@ -2,6 +2,7 @@ import { useState, useMemo, memo } from "react";
 
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { SelectDropdown } from "@/components/ui/select-dropdown";
 import { isValidRow, type BulkStudentRow } from "../utils/bulkParse";
 
 interface BulkPreviewTableProps {
@@ -214,29 +215,25 @@ const BulkPreviewRow = memo(({
         />
       </td>
       <td className="py-1.5 px-3">
-        <select
+        <SelectDropdown
+          placeholder="Select class *"
+          options={classes.map((c) => ({ value: c.id, label: c.name }))}
           value={row.classId ?? ""}
-          onChange={(e) => update("classId", e.target.value)}
-          className={`h-8 w-full rounded-md border px-2 text-sm bg-background ${
-            !row.classId ? "border-red-400" : "border-input"
-          }`}
-        >
-          <option value="">Select class *</option>
-          {classes.map((c) => (
-            <option key={c.id} value={c.id}>{c.name}</option>
-          ))}
-        </select>
+          onChange={(v) => update("classId", v)}
+          buttonClassName={`h-8 rounded-md px-2 text-sm ${!row.classId ? "border-red-400" : ""}`}
+        />
       </td>
       <td className="py-1.5 px-3">
-        <select
+        <SelectDropdown
+          placeholder="—"
+          options={[
+            { value: "M", label: "M" },
+            { value: "F", label: "F" },
+          ]}
           value={row.gender ?? ""}
-          onChange={(e) => update("gender", e.target.value)}
-          className="h-8 w-full rounded-md border border-input bg-background px-2 text-sm"
-        >
-          <option value="">—</option>
-          <option value="M">M</option>
-          <option value="F">F</option>
-        </select>
+          onChange={(v) => update("gender", v)}
+          buttonClassName="h-8 rounded-md px-2 text-sm"
+        />
       </td>
       <td className="py-1.5 px-3">
         <Input

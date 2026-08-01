@@ -4,6 +4,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 
 import { Avatar } from "../../components/ui/Avatar";
+import { Input } from "../../components/ui/input";
 import { useAuth } from "../../contexts/AuthContext";
 import {
   useClasses,
@@ -86,10 +87,9 @@ export const AdminClasses = () => {
         {showForm && (
           <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-100 mb-6 flex gap-3 items-start">
             <div className="flex-1">
-              <input
+              <Input
                 {...register("name")}
                 placeholder="Name (e.g. JSS 1A)"
-                className="w-full h-10 rounded-md border border-gray-200 px-3 text-sm"
                 autoFocus
               />
               {errors.name && (
@@ -99,10 +99,9 @@ export const AdminClasses = () => {
               )}
             </div>
             <div className="w-40">
-              <input
+              <Input
                 {...register("level")}
                 placeholder="Level (e.g. JSS 1)"
-                className="w-full h-10 rounded-md border border-gray-200 px-3 text-sm"
               />
               {errors.level && (
                 <p className="text-xs text-destructive mt-1">

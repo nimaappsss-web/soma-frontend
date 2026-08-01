@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from "react";
-import { useForm, useWatch, type Control } from "react-hook-form";
+import { useForm, useWatch, Controller, type Control } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import toast from "react-hot-toast";
@@ -15,11 +15,13 @@ import { addToQueue } from "../sync/syncQueue";
 import { transformError } from "../utils/transformError";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../components/ui/card";
 import { Input } from "../components/ui/input";
+import { SelectDropdown } from "../components/ui/select-dropdown";
 import { Label } from "../components/ui/label";
 import { Button } from "../components/ui/button";
 import { Avatar } from "../components/ui/Avatar";
 import { cn } from "../lib/utils";
 import { TagInput } from "../components/ui/tag-input";
+import { MultiSelect } from "../components/ui/multi-select";
 
 const NIGERIAN_STATES = ["Lagos", "Abuja", "Rivers", "Kano", "Oyo", "Kaduna"];
 
@@ -163,7 +165,7 @@ const AccountSection = () => {
               <Button type="button" onClick={() => fileInputRef.current?.click()} variant="outline" size="sm">
                 {pendingImage || user?.image ? "Change" : "Upload"}
               </Button>
-              <input ref={fileInputRef} type="file" accept="image/*" onChange={(e) => {
+              <Input ref={fileInputRef} type="file" accept="image/*" onChange={(e) => {
                 const file = e.target.files?.[0];
                 if (file) setPendingImage(file);
               }} className="hidden" />
@@ -246,13 +248,17 @@ const SchoolSection = () => {
 
   const { data: school, isLoading } = useSchoolInfo();
   const [arms, setArms] = useState<string[]>([]);
+  const savedArms = useRef<string[]>([]);
 
   useEffect(() => {
-    if (school) setArms(school.arms ?? []);
+    if (school) {
+      setArms(school.arms ?? []);
+      savedArms.current = school.arms ?? [];
+    }
   }, [school?.id]);
 
-  const isArmsDirty = arms.length !== (school?.arms?.length ?? 0) ||
-    arms.some((a, i) => a !== (school?.arms ?? [])[i]);
+  const isArmsDirty = arms.length !== savedArms.current.length ||
+    arms.some((a, i) => a !== savedArms.current[i]);
 
   const {
     register,
@@ -293,15 +299,23 @@ const SchoolSection = () => {
   const { data: preview } = useGenerateAdmission(true);
 
   const onSave = (data: SchoolUpdateFormData) => {
-    updateSchool.mutate({
-      name: data.name,
-      admissionPattern: data.admissionPattern || undefined,
-      state: data.state,
-      lga: data.lga,
-      schoolType: data.schoolType,
-      address: data.address || undefined,
-      arms: arms.length ? arms : undefined,
-    });
+    updateSchool.mutate(
+      {
+        name: data.name,
+        admissionPattern: data.admissionPattern || undefined,
+        state: data.state,
+        lga: data.lga,
+        schoolType: data.schoolType,
+        address: data.address || undefined,
+        arms: arms.length ? arms : undefined,
+      },
+      {
+        onSuccess: () => {
+          savedArms.current = arms;
+          reset(data);
+        },
+      },
+    );
   };
 
   return (
@@ -334,10 +348,18 @@ const SchoolSection = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="state">State</Label>
-                <select id="state" className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm" {...register("state")}>
-                  <option value="">Select state</option>
-                  {NIGERIAN_STATES.map((s) => <option key={s} value={s}>{s}</option>)}
-                </select>
+                <Controller
+                  control={control}
+                  name="state"
+                  render={({ field }) => (
+                    <SelectDropdown
+                      placeholder="Select state"
+                      options={NIGERIAN_STATES.map((s) => ({ value: s, label: s }))}
+                      value={field.value ?? ""}
+                      onChange={field.onChange}
+                    />
+                  )}
+                />
                 {errors.state && <p className="text-sm text-destructive">{errors.state.message}</p>}
               </div>
               <div className="space-y-2">
@@ -347,7 +369,7 @@ const SchoolSection = () => {
               </div>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <SchoolTypeCheckboxes control={control} setValue={setValue} />
+              <SchoolTypeSelect control={control} setValue={setValue} />
               <div className="space-y-2">
                 <Label>Arms</Label>
                 <TagInput
@@ -372,14 +394,14 @@ const SchoolSection = () => {
   );
 };
 
-const SCHOOL_TYPE_OPTIONS = [
+const SCHOOL_TYPE_OPTIONS: Array<{ value: string; label: string }> = [
   { value: "creche", label: "Creche" },
   { value: "kg", label: "Kindergarten" },
   { value: "primary", label: "Primary" },
   { value: "secondary", label: "Secondary" },
-] as const;
+];
 
-const SchoolTypeCheckboxes = ({
+const SchoolTypeSelect = ({
   control,
   setValue,
 }: {
@@ -388,29 +410,17 @@ const SchoolTypeCheckboxes = ({
 }) => {
   const selected = useWatch({ control, name: "schoolType" }) ?? [];
 
-  const toggle = (value: string) => {
-    const next = selected.includes(value as "secondary" | "creche" | "kg" | "primary")
-      ? selected.filter((v) => v !== value)
-      : [...selected, value as "secondary" | "creche" | "kg" | "primary"];
-    setValue("schoolType", next as ("secondary" | "creche" | "kg" | "primary")[], { shouldDirty: true });
-  };
-
   return (
     <div className="space-y-2">
       <Label>School Type</Label>
-      <div className="flex flex-wrap gap-4">
-        {SCHOOL_TYPE_OPTIONS.map((opt) => (
-          <label key={opt.value} className="flex items-center gap-2 text-sm cursor-pointer">
-            <input
-              type="checkbox"
-              checked={selected.includes(opt.value)}
-              onChange={() => toggle(opt.value)}
-              className="accent-black size-4"
-            />
-            {opt.label}
-          </label>
-        ))}
-      </div>
+      <MultiSelect
+        options={SCHOOL_TYPE_OPTIONS}
+        selected={selected}
+        onChange={(values) =>
+          setValue("schoolType", values as ("secondary" | "creche" | "kg" | "primary")[], { shouldDirty: true })
+        }
+        placeholder="Select school type"
+      />
     </div>
   );
 };

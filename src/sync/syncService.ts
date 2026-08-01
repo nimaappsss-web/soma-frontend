@@ -1,7 +1,7 @@
 import { fetchData } from "../utils/fetchData";
 import { db } from "../db/db";
 import type { User } from "../features/auth/types";
-import type { ClassCache, SubjectCache, TeacherCache, SchoolSettingsCache } from "../db/db";
+import type { AcademicTermCache, ClassCache, SubjectCache, TeacherCache, SchoolSettingsCache } from "../db/db";
 
 export interface SyncProgress {
   current: number;
@@ -108,12 +108,38 @@ const teacherAssignmentsTask: SyncTask = {
   },
 };
 
+const academicTermsTask: SyncTask = {
+  name: "academicTerms",
+  run: async (user) => {
+    const res = await fetchData<{ terms: AcademicTermCache[] }>("/academic-terms", "GET");
+    const serverTerms: AcademicTermCache[] = res.terms ?? [];
+
+    const pendingForTerm = new Set(
+      (await db.syncQueue
+        .where({ table: "academicTerms", status: "pending" })
+        .toArray())
+        .map((q) => q.recordId),
+    );
+    const local = await db.academicTerms.where("userId").equals(user.id).toArray();
+    const localPending = local.filter((l) => pendingForTerm.has(l.id));
+
+    await db.academicTerms.where("userId").equals(user.id).delete();
+    if (serverTerms.length || localPending.length) {
+      await db.academicTerms.bulkAdd([
+        ...serverTerms.map((t) => ({ ...t, userId: user.id })),
+        ...localPending,
+      ]);
+    }
+  },
+};
+
 const principalTasks: SyncTask[] = [
   classesTask,
   subjectsTask,
   teachersTask,
   parentsTask,
   schoolSettingsTask,
+  academicTermsTask,
 ];
 
 const teacherTasks: SyncTask[] = [
@@ -121,6 +147,7 @@ const teacherTasks: SyncTask[] = [
   teacherAssignmentsTask,
   classesTask,
   subjectsTask,
+  academicTermsTask,
 ];
 
 const parentTasks: SyncTask[] = [

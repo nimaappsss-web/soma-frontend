@@ -1,11 +1,14 @@
 import { useState, useRef, useEffect } from "react";
 import { Link, useParams, Navigate } from "react-router";
 import toast from "react-hot-toast";
-import { useForm } from "react-hook-form";
+import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 
 import { Avatar } from "../components/ui/Avatar";
+import { Input } from "../components/ui/input";
+import { SelectDropdown } from "../components/ui/select-dropdown";
+import { Textarea } from "../components/ui/textarea";
 import { useAuth } from "../contexts/AuthContext";
 import { useMe, useChangePassword } from "../features/auth/api";
 import { SchoolSettingsContent } from "../features/settings";
@@ -227,7 +230,7 @@ export const Settings = () => {
                           Remove
                         </button>
                       )}
-                      <input
+                      <Input
                         ref={fileInputRef}
                         type="file"
                         accept="image/*"
@@ -245,10 +248,9 @@ export const Settings = () => {
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div>
                         <label className="block text-xs text-gray-500 mb-1">Full Name</label>
-                        <input
+                        <Input
                           type="text"
                           {...accountForm.register("name")}
-                          className="w-full h-10 rounded-md border border-gray-200 px-3 text-sm"
                         />
                         {accountForm.formState.errors.name && (
                           <p className="text-xs text-red-500 mt-1">{accountForm.formState.errors.name.message}</p>
@@ -256,46 +258,50 @@ export const Settings = () => {
                       </div>
                       <div>
                         <label className="block text-xs text-gray-500 mb-1">Email</label>
-                        <input
+                        <Input
                           type="email"
                           value={user?.email ?? ""}
                           disabled
-                          className="w-full h-10 rounded-md border border-gray-200 px-3 text-sm bg-gray-50 text-gray-400"
+                          className="bg-gray-50 text-gray-400"
                         />
                       </div>
                       <div>
                         <label className="block text-xs text-gray-500 mb-1">Phone</label>
-                        <input
+                        <Input
                           type="tel"
                           {...accountForm.register("phone")}
-                          className="w-full h-10 rounded-md border border-gray-200 px-3 text-sm"
                         />
                       </div>
                       <div>
                         <label className="block text-xs text-gray-500 mb-1">Gender</label>
-                        <select
-                          {...accountForm.register("gender")}
-                          className="w-full h-10 rounded-md border border-gray-200 px-3 text-sm"
-                        >
-                          <option value="">Select</option>
-                          <option value="M">Male</option>
-                          <option value="F">Female</option>
-                        </select>
+                        <Controller
+                          control={accountForm.control}
+                          name="gender"
+                          render={({ field }) => (
+                            <SelectDropdown
+                              options={[
+                                { value: "", label: "Select" },
+                                { value: "M", label: "Male" },
+                                { value: "F", label: "Female" },
+                              ]}
+                              value={field.value ?? ""}
+                              onChange={field.onChange}
+                            />
+                          )}
+                        />
                       </div>
                       <div>
                         <label className="block text-xs text-gray-500 mb-1">Date of Birth</label>
-                        <input
+                        <Input
                           type="date"
                           {...accountForm.register("dateOfBirth")}
-                          className="w-full h-10 rounded-md border border-gray-200 px-3 text-sm"
                         />
                       </div>
                       <div className="md:col-span-2">
                         <label className="block text-xs text-gray-500 mb-1">Address</label>
-                        <textarea
+                        <Textarea
                           {...accountForm.register("address")}
                           rows={2}
-                          className="w-full rounded-md border border-gray-200 px-3 py-2 text-sm resize-none"
                         />
                       </div>
                     </div>
@@ -315,10 +321,9 @@ export const Settings = () => {
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div>
                         <label className="block text-xs text-gray-500 mb-1">Current Password</label>
-                        <input
+                        <Input
                           type="password"
                           {...passwordForm.register("currentPassword")}
-                          className="w-full h-10 rounded-md border border-gray-200 px-3 text-sm"
                         />
                         {passwordForm.formState.errors.currentPassword && (
                           <p className="text-xs text-red-500 mt-1">{passwordForm.formState.errors.currentPassword.message}</p>
@@ -326,10 +331,9 @@ export const Settings = () => {
                       </div>
                       <div>
                         <label className="block text-xs text-gray-500 mb-1">New Password</label>
-                        <input
+                        <Input
                           type="password"
                           {...passwordForm.register("newPassword")}
-                          className="w-full h-10 rounded-md border border-gray-200 px-3 text-sm"
                         />
                         {passwordForm.formState.errors.newPassword && (
                           <p className="text-xs text-red-500 mt-1">{passwordForm.formState.errors.newPassword.message}</p>
@@ -337,10 +341,9 @@ export const Settings = () => {
                       </div>
                       <div>
                         <label className="block text-xs text-gray-500 mb-1">Confirm New Password</label>
-                        <input
+                        <Input
                           type="password"
                           {...passwordForm.register("confirmPassword")}
-                          className="w-full h-10 rounded-md border border-gray-200 px-3 text-sm"
                         />
                         {passwordForm.formState.errors.confirmPassword && (
                           <p className="text-xs text-red-500 mt-1">{passwordForm.formState.errors.confirmPassword.message}</p>

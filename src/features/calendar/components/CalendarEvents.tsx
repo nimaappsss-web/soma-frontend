@@ -3,9 +3,11 @@ import { useState } from "react";
 import { Input } from "../../../components/ui/input";
 import { Button } from "../../../components/ui/button";
 import { SelectDropdown } from "../../../components/ui/select-dropdown";
-import { useCalendarEvents, useCreateCalendarEvent, useDeleteCalendarEvent, useAcademicTerms, useHolidays } from "../api";
+import { Textarea } from "../../../components/ui/textarea";
+import { useCalendarEvents, useCreateCalendarEvent, useDeleteCalendarEvent, useAcademicTerms } from "../api";
 import { CalendarGrid } from "./CalendarGrid";
 import { DayDetail } from "./DayDetail";
+import { localDateKey } from "@/utils/date";
 import type { CreateCalendarEventPayload, EventType, EventAudience } from "../types";
 
 const EVENT_TYPES: { value: string; label: string }[] = [
@@ -29,9 +31,6 @@ const termLabel = (term: string) => {
   return map[term] ?? term;
 };
 
-const localDateKey = (d: Date) =>
-  `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
-
 export const CalendarEvents = () => {
   const today = new Date();
   const fullYearFrom = `${today.getFullYear()}-01-01`;
@@ -46,7 +45,6 @@ export const CalendarEvents = () => {
   const selectedTerm = selectedTermId === "all" ? null : terms.find((t) => t.id === selectedTermId) ?? null;
 
   const { data: eventsData, isLoading: eventsLoading } = useCalendarEvents({ from: fullYearFrom, to: fullYearTo });
-  const { data: holidaysData } = useHolidays({ from: fullYearFrom, to: fullYearTo });
 
   const createMutation = useCreateCalendarEvent();
   const deleteMutation = useDeleteCalendarEvent();
@@ -62,12 +60,15 @@ export const CalendarEvents = () => {
   });
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
 
-  const events = eventsData?.events ?? [];
-  const holidays = holidaysData?.holidays ?? [];
+  const allEvents = eventsData?.events ?? [];
+  const events = allEvents.filter((e) => e.type !== "HOLIDAY");
+  const holidays = allEvents
+    .filter((e) => e.type === "HOLIDAY")
+    .map((e) => ({ id: e.id, date: e.date.slice(0, 10), reason: e.title, createdBy: "" }));
 
   const termOptions = terms.map((t) => ({
     value: t.id,
-    label: `${termLabel(t.term)} Term — ${t.session}`,
+    label: `${termLabel(t.term)} Term`,
   }));
 
   const filterOptions = [{ value: "all", label: "All Terms" }, ...termOptions];
@@ -165,12 +166,11 @@ export const CalendarEvents = () => {
               className="flex-1"
             />
           </div>
-          <textarea
+          <Textarea
             value={form.description ?? ""}
             onChange={(e) => setForm({ ...form, description: e.target.value })}
             placeholder="Description (optional)"
             rows={2}
-            className="w-full rounded-full border border-input bg-background px-4 py-2 text-sm placeholder:text-placeholder resize-none"
           />
           <Button onClick={handleCreate} disabled={createMutation.isPending} className="w-full">
             {createMutation.isPending ? "Adding..." : "Add Event"}

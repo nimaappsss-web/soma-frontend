@@ -5,6 +5,9 @@ import { useQuery } from "@tanstack/react-query";
 
 import { useAuth } from "../../contexts/AuthContext";
 import { Avatar } from "../../components/ui/Avatar";
+import { Input } from "../../components/ui/input";
+import { SelectDropdown } from "../../components/ui/select-dropdown";
+import { Textarea } from "../../components/ui/textarea";
 import { fetchData } from "../../utils/fetchData";
 import { uploadFile } from "../../utils/upload";
 import { addToQueue } from "../../sync/syncQueue";
@@ -140,7 +143,7 @@ export const AdminProfile = () => {
                     Remove
                   </button>
                 )}
-                <input ref={fileInputRef} type="file" accept="image/*" onChange={handleImageSelect} className="hidden" />
+                <Input ref={fileInputRef} type="file" accept="image/*" onChange={handleImageSelect} className="hidden" />
                 <p className="text-xs text-gray-400 mt-2">JPG, PNG or GIF. 5MB max.</p>
               </div>
             </div>
@@ -151,59 +154,55 @@ export const AdminProfile = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <label className="block text-xs text-gray-500 mb-1">Full Name</label>
-                <input
+                <Input
                   type="text"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
-                  className="w-full h-10 rounded-md border border-gray-200 px-3 text-sm"
                 />
               </div>
               <div>
                 <label className="block text-xs text-gray-500 mb-1">Email</label>
-                <input
+                <Input
                   type="email"
                   value={user?.email ?? ""}
                   disabled
-                  className="w-full h-10 rounded-md border border-gray-200 px-3 text-sm bg-gray-50 text-gray-400"
+                  className="bg-gray-50 text-gray-400"
                 />
               </div>
               <div>
                 <label className="block text-xs text-gray-500 mb-1">Phone</label>
-                <input
+                <Input
                   type="tel"
                   value={phone}
                   onChange={(e) => setPhone(e.target.value)}
-                  className="w-full h-10 rounded-md border border-gray-200 px-3 text-sm"
                 />
               </div>
               <div>
                 <label className="block text-xs text-gray-500 mb-1">Gender</label>
-                <select
+                <SelectDropdown
+                  options={[
+                    { value: "", label: "Select" },
+                    { value: "M", label: "Male" },
+                    { value: "F", label: "Female" },
+                  ]}
                   value={gender}
-                  onChange={(e) => setGender(e.target.value as "M" | "F" | "")}
-                  className="w-full h-10 rounded-md border border-gray-200 px-3 text-sm"
-                >
-                  <option value="">Select</option>
-                  <option value="M">Male</option>
-                  <option value="F">Female</option>
-                </select>
+                  onChange={(v) => setGender(v as "M" | "F" | "")}
+                />
               </div>
               <div>
                 <label className="block text-xs text-gray-500 mb-1">Date of Birth</label>
-                <input
+                <Input
                   type="date"
                   value={dateOfBirth}
                   onChange={(e) => setDateOfBirth(e.target.value)}
-                  className="w-full h-10 rounded-md border border-gray-200 px-3 text-sm"
                 />
               </div>
               <div className="md:col-span-2">
                 <label className="block text-xs text-gray-500 mb-1">Address</label>
-                <textarea
+                <Textarea
                   value={address}
                   onChange={(e) => setAddress(e.target.value)}
                   rows={2}
-                  className="w-full rounded-md border border-gray-200 px-3 py-2 text-sm resize-none"
                 />
               </div>
             </div>

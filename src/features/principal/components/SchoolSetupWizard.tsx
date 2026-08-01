@@ -6,16 +6,25 @@ import { z } from "zod";
 import { Input } from "../../../components/ui/input";
 import { Button } from "../../../components/ui/button";
 import { TagInput } from "../../../components/ui/tag-input";
+import { MultiSelect } from "../../../components/ui/multi-select";
 import { ErrorMessage } from "../../../components/others/ErrorMessage";
 import { useRegisterSchool } from "../../auth/api";
 import { useAuth } from "../../../contexts/AuthContext";
 import { transformError } from "../../../utils/transformError";
+
+const SCHOOL_TYPE_OPTIONS: Array<{ value: string; label: string }> = [
+  { value: "creche", label: "Creche" },
+  { value: "kg", label: "Kindergarten" },
+  { value: "primary", label: "Primary" },
+  { value: "secondary", label: "Secondary" },
+];
 
 const schoolSchema = z.object({
   schoolName: z.string().min(2, "School name is required"),
   state: z.string().min(2, "State is required"),
   lga: z.string().min(2, "LGA is required"),
   address: z.string().optional(),
+  schoolType: z.array(z.enum(["creche", "kg", "primary", "secondary"])).min(1, "Select at least one school type"),
 });
 
 type SchoolFormData = z.infer<typeof schoolSchema>;
@@ -28,10 +37,15 @@ export const SchoolSetupWizard = () => {
   const {
     register,
     handleSubmit,
+    setValue,
+    watch,
     formState: { errors },
   } = useForm<SchoolFormData>({
     resolver: zodResolver(schoolSchema),
+    defaultValues: { schoolName: "", state: "", lga: "", address: "", schoolType: [] },
   });
+
+  const schoolType = watch("schoolType");
 
   const onSubmit = (data: SchoolFormData) => {
     registerSchool.mutate(
@@ -39,7 +53,7 @@ export const SchoolSetupWizard = () => {
         schoolName: data.schoolName,
         state: data.state,
         lga: data.lga,
-        schoolType: [],
+        schoolType: data.schoolType,
         address: data.address || undefined,
         arms: arms.length ? arms : undefined,
       },
@@ -94,6 +108,17 @@ export const SchoolSetupWizard = () => {
               placeholder="Address (optional)"
               registration={register("address")}
               hasError={errors.address}
+            />
+          </div>
+          <div>
+            <MultiSelect
+              options={SCHOOL_TYPE_OPTIONS}
+              selected={schoolType}
+              onChange={(values) =>
+                setValue("schoolType", values as ("secondary" | "creche" | "kg" | "primary")[], { shouldValidate: true })
+              }
+              placeholder="Select school type"
+              hasError={errors.schoolType as unknown as import("react-hook-form").FieldError}
             />
           </div>
           <div>

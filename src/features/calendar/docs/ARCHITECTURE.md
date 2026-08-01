@@ -8,7 +8,7 @@ The calendar feature lives at `src/features/calendar/` and provides three subtab
 |-------|-----------|---------|
 | `/admin/calendar/events` | `CalendarEvents` | Monthly grid view with events + holidays, day detail panel |
 | `/admin/calendar/holidays` | `CalendarHolidays` | List-based holiday CRUD (backup management view) |
-| `/admin/calendar/terms` | `CalendarTerms` | Term definition CRUD (first/second/third, dates, set active) |
+| `/admin/calendar/terms` | `CalendarTerms` | Term definition CRUD (first/second/third, dates); active term is auto-detected |
 
 ## Directory Structure
 
@@ -25,9 +25,9 @@ src/features/calendar/
     useCreateHoliday.ts            — mutation: create holiday + offline queue
     useDeleteHoliday.ts            — mutation: delete holiday + offline queue
     useAcademicTerms.ts            — query: all academic terms
+    useActiveTerm.ts               — query: resolves the current term (isCurrent → date fallback)
     useCreateAcademicTerm.ts       — mutation: create term + offline queue
     useUpdateAcademicTerm.ts       — mutation: update term + offline queue
-    useSetCurrentTerm.ts           — mutation: set active term + offline queue
     useDeleteAcademicTerm.ts       — mutation: delete term + offline queue
   components/
     CalendarEvents.tsx             — grid view page (events tab)
@@ -40,6 +40,7 @@ src/features/calendar/
     index.ts                      — all TS interfaces
   utils/
     query-keys.ts                 — React Query key factories
+    term.ts                       — term label/number + date-range active-term helpers
     validationSchema.ts           — Zod schemas
   docs/
     ARCHITECTURE.md               — this file
@@ -85,10 +86,18 @@ Component mounts
 ### Term Filter Logic
 
 1. On mount, `useAcademicTerms()` fetches all terms
-2. Default filter: the term where `isCurrent === true`, or `"All Terms"` if none active
+2. Default filter: the active term from `useActiveTerm()` — `isCurrent === true`, falling back to the term whose date range contains today
 3. Selecting a term from the dropdown computes `from = term.startDate` and `to = term.endDate`
 4. The calendar grid shows events/holidays for the full year, but **dims** dates outside the selected term's range
 5. Month navigation is independent — user can browse any month regardless of selected term
+
+### Active Term Resolution (`useActiveTerm`)
+
+The current term is resolved automatically and never written by the client:
+
+1. Prefer the term with `isCurrent === true` (backend-maintained via `GET /academic-terms`)
+2. Fall back to the term where `startDate <= today <= endDate` (timezone-safe local date compare)
+3. Exposed to all features via `useActiveTerm()`, backed by the offline-first Dexie `academicTerms` cache
 
 ## Event / Holiday Type Colors (CalendarGrid)
 

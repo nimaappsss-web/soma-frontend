@@ -4,7 +4,8 @@ import { useLiveQuery } from "dexie-react-hooks";
 import { useQuery } from "@tanstack/react-query";
 
 import { useAuth } from "../../contexts/AuthContext";
-import { useTeacherProfile } from "../../features/teacher/api";
+import { useTeacherProfile, useAttendanceAvailability } from "../../features/teacher/api";
+import { useCalendarEvents } from "../../features/calendar/api";
 import { useStudents } from "../../features/students/api";
 import { AttendanceListView } from "../../features/teacher/components/AttendanceListView";
 import { AttendanceHistoryView } from "../../features/teacher/components/AttendanceHistoryView";
@@ -12,6 +13,7 @@ import { StudentSwipeCard } from "../../components/ui/StudentSwipeCard";
 import { addToQueue } from "../../sync/syncQueue";
 import { db } from "../../db/db";
 import { fetchData } from "../../utils/fetchData";
+import { localDateKey } from "../../utils/date";
 import { Button } from "../../components/ui/button";
 import type { AttendanceStatus, AttendanceRecord as ApiAttendanceRecord } from "../../features/teacher/types";
 import type { AttendanceQueryResponse } from "../../features/teacher/types";
@@ -26,7 +28,7 @@ export const TeacherAttendance = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const tabParam = searchParams.get("tab");
   const tab: Tab = tabParam === "history" ? "history" : "mark";
-  const today = new Date().toISOString().split("T")[0];
+  const today = localDateKey();
   const [view, setView] = useState<ViewMode>("list");
 
   const handleTabChange = (newTab: Tab) => {
@@ -45,6 +47,14 @@ export const TeacherAttendance = () => {
   const initialized = useRef(false);
 
   const { data: students, isLoading: studentsLoading } = useStudents(formClassId ?? "", "ACTIVE");
+
+  const availability = useAttendanceAvailability(today);
+  const { data: todayEventsData } = useCalendarEvents({ from: today, to: today });
+  const todayEvents = (todayEventsData?.events ?? []).filter((e) => e.type !== "HOLIDAY");
+
+  const blockedReason = availability.reason?.message;
+  const gatingBlocked = availability.status === "blocked";
+  const gatingLoading = availability.status === "loading";
 
   const cachedAttendance = useLiveQuery(
     () => {
@@ -95,6 +105,7 @@ export const TeacherAttendance = () => {
   });
 
   const hasSavedData = cachedAttendance !== undefined && cachedAttendance.length > 0;
+  const isMarked = userMarked || hasSavedData;
 
   if (!initialized.current && hasSavedData && !userMarked) {
     initialized.current = true;
@@ -125,14 +136,14 @@ export const TeacherAttendance = () => {
   };
 
   const handleSave = async () => {
-    if (!formClassId || Object.keys(attendance).length === 0) return;
+    if (!formClassId || gatingBlocked || gatingLoading || Object.keys(attendance).length === 0) return;
     const records = Object.entries(attendance).map(([studentId, status]) => ({
       studentId, status,
     }));
 
     const queueId = `attendance_${formClassId}_${today}`;
     await addToQueue({
-      userId: formClassId,
+      userId: user!.id,
       table: "attendance",
       recordId: queueId,
       endpoint: "/attendance/bulk",
@@ -171,7 +182,7 @@ export const TeacherAttendance = () => {
   };
 
   const handleClearAll = async () => {
-    if (!formClassId) return;
+    if (!formClassId || gatingBlocked || gatingLoading) return;
 
     await db.attendance
       .where("[userId+date+className]").equals([user!.id, today, formClass ?? ""])
@@ -183,7 +194,7 @@ export const TeacherAttendance = () => {
       .delete();
 
     await addToQueue({
-      userId: formClassId,
+      userId: user!.id,
       table: "attendance",
       recordId: `attendance_clear_${formClassId}_${today}`,
       endpoint: "/attendance/bulk",
@@ -232,7 +243,7 @@ export const TeacherAttendance = () => {
             Attendance — {formClass}
           </h1>
           <p className="text-xs text-gray-400 mt-0.5">
-            {tab === "history" ? "View history" : userMarked && !modifyMode ? "Marked for today" : `${markedCount} / ${totalStudents} marked`}
+            {tab === "history" ? "View history" : isMarked && !modifyMode ? "Marked for today" : `${markedCount} / ${totalStudents} marked`}
           </p>
         </div>
         <div className="flex items-center gap-3">
@@ -263,38 +274,66 @@ export const TeacherAttendance = () => {
         ) : (
           <p className="text-sm text-gray-400 text-center py-8">No class assigned.</p>
         )
-      ) : userMarked && !modifyMode ? (
-        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-8 max-w-sm mx-auto text-center">
-          <div className="text-4xl mb-4">✅</div>
-          <h3 className="text-lg font-semibold text-gray-800 mb-2">Attendance Marked</h3>
-          <p className="text-sm text-gray-400 mb-2">
-            {markedCount} students marked for today
+      ) : gatingLoading ? (
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-10 max-w-md mx-auto text-center">
+          <div className="text-3xl mb-3">🗓️</div>
+          <h3 className="text-base font-semibold text-gray-800 mb-1">Checking today</h3>
+          <p className="text-xs text-gray-400">Confirming whether today is a school day…</p>
+        </div>
+      ) : gatingBlocked ? (
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-10 max-w-md mx-auto text-center">
+          <div className="text-3xl mb-3">📅</div>
+          <h3 className="text-base font-semibold text-gray-800 mb-1">Attendance not available today</h3>
+          <p className="text-sm text-gray-500 mb-4">
+            {blockedReason ?? "This is not a school day."}
           </p>
-          <p className="text-xs text-gray-400 mb-6">
-            Tap Modify to change individual records
+          {todayEvents.length > 0 && (
+            <div className="rounded-lg border border-blue-100 bg-blue-50/40 p-3 text-left mb-2">
+              <p className="text-[11px] font-semibold text-blue-600 uppercase tracking-wider mb-1">Also scheduled</p>
+              {todayEvents.map((e) => (
+                <p key={e.id} className="text-xs text-gray-600">{e.title}</p>
+              ))}
+            </div>
+          )}
+          <p className="text-[11px] text-gray-400">
+            Attendance can only be marked on school days.
           </p>
-          <div className="space-y-2">
-            <Button onClick={handleModify} variant="outline" className="w-full">
-              Modify
-            </Button>
-            {clearConfirm ? (
-              <div className="flex gap-2">
-                <Button onClick={handleClearAll} variant="destructive" className="flex-1">
-                  Yes, clear all
-                </Button>
-                <Button onClick={() => setClearConfirm(false)} variant="ghost" className="flex-1">
-                  Cancel
-                </Button>
-              </div>
-            ) : (
-              <button
-                onClick={() => setClearConfirm(true)}
-                className="w-full text-xs text-red-400 hover:text-red-600 py-2 transition-colors"
-              >
-                Clear all attendance for today
-              </button>
-            )}
+        </div>
+      ) : isMarked && !modifyMode ? (
+        <div>
+          <div className="flex items-center justify-between mb-4">
+            <p className="text-sm text-green-600 font-medium">
+              {markedCount} students marked for today
+            </p>
+            <div className="flex items-center gap-2">
+              <Button onClick={handleModify} variant="outline" size="sm">
+                Modify
+              </Button>
+              {clearConfirm ? (
+                <div className="flex gap-2">
+                  <Button onClick={handleClearAll} variant="destructive" size="sm" className="flex-1">
+                    Yes, clear all
+                  </Button>
+                  <Button onClick={() => setClearConfirm(false)} variant="ghost" size="sm" className="flex-1">
+                    Cancel
+                  </Button>
+                </div>
+              ) : (
+                <button
+                  onClick={() => setClearConfirm(true)}
+                  className="text-xs text-red-400 hover:text-red-600 py-2 transition-colors"
+                >
+                  Clear all attendance for today
+                </button>
+              )}
+            </div>
           </div>
+          <AttendanceListView
+            students={sortedStudents}
+            attendance={attendance}
+            onMark={handleMark}
+            readOnly
+          />
         </div>
       ) : studentsLoading ? (
         <div className="flex items-center justify-center h-64">
@@ -312,6 +351,16 @@ export const TeacherAttendance = () => {
         </div>
       ) : (
         <>
+          {todayEvents.length > 0 && (
+            <div className="rounded-lg border border-blue-100 bg-blue-50/40 px-4 py-2.5 mb-4">
+              <p className="text-[11px] font-semibold text-blue-600 uppercase tracking-wider mb-0.5">
+                Event today
+              </p>
+              {todayEvents.map((e) => (
+                <p key={e.id} className="text-xs text-gray-700">{e.title}</p>
+              ))}
+            </div>
+          )}
           {view === "list" && (
             <div className="flex justify-end mb-4">
               <Button
@@ -332,14 +381,16 @@ export const TeacherAttendance = () => {
             >
               List View
             </button>
-            <button
-              onClick={() => setView("card")}
-              className={`px-3 py-1.5 rounded-md text-xs font-medium transition-colors ${
-                view === "card" ? "bg-blue-600 text-white" : "bg-gray-100 text-gray-500 hover:text-gray-700"
-              }`}
-            >
-              Card View
-            </button>
+            {!isMarked && (
+              <button
+                onClick={() => setView("card")}
+                className={`px-3 py-1.5 rounded-md text-xs font-medium transition-colors ${
+                  view === "card" ? "bg-blue-600 text-white" : "bg-gray-100 text-gray-500 hover:text-gray-700"
+                }`}
+              >
+                Card View
+              </button>
+            )}
           </div>
 
           {view === "card" ? (

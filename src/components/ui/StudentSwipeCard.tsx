@@ -237,11 +237,11 @@ export const StudentSwipeCard = ({
   }
 
   return (
-    <div className="relative w-full h-[520px] flex items-center justify-center">
+    <div className="relative w-full h-[560px] flex items-center justify-center select-none">
       <div className="relative w-[340px] h-[460px]">
         {nextNextStudent && (
           <div
-            className="absolute inset-0 rounded-2xl overflow-hidden bg-gradient-to-br from-gray-200 to-gray-300"
+            className="absolute inset-0 rounded-tl-2xl rounded-tr-[48px] rounded-br-2xl rounded-bl-[48px] overflow-hidden select-none bg-gradient-to-br from-gray-200 to-gray-300"
             style={{
               transform: "translateY(16px) scale(0.94)",
               zIndex: 8,
@@ -252,7 +252,7 @@ export const StudentSwipeCard = ({
 
         {nextStudent && (
           <div
-            className="absolute inset-0 rounded-2xl shadow-xl overflow-hidden"
+            className="absolute inset-0 rounded-tl-2xl rounded-tr-[48px] rounded-br-2xl rounded-bl-[48px] shadow-xl overflow-hidden select-none"
             style={{ transform: "translateY(4px) scale(0.98)", zIndex: 9, opacity: 0.7 }}
           >
             <StudentCard student={nextStudent} />
@@ -261,7 +261,7 @@ export const StudentSwipeCard = ({
 
         <div
           {...handlers}
-          className="absolute inset-0 cursor-grab active:cursor-grabbing rounded-2xl shadow-2xl overflow-hidden"
+          className="absolute inset-0 cursor-grab active:cursor-grabbing rounded-tl-2xl rounded-tr-[48px] rounded-br-2xl rounded-bl-[48px] shadow-2xl overflow-hidden"
           style={{
             transform: `translateX(${finalTranslateX}px) translateY(${finalTranslateY}px) rotate(${finalRotation}deg)`,
             opacity: finalOpacity,
@@ -317,29 +317,29 @@ export const StudentSwipeCard = ({
           <StudentCard student={currentStudent!} />
         </div>
 
-        <div className="absolute -bottom-10 left-0 right-0 flex items-center justify-center gap-2">
-          <div className="flex gap-1.5">
-            {Array.from({ length: Math.min(students.length, 20) }).map((_, i) => (
+        <div className="absolute bottom-16 left-0 right-0 flex flex-col items-center gap-2 px-4">
+          <div className="flex w-[340px] items-center gap-1.5">
+            {students.map((s, i) => (
               <div
-                key={i}
-                className={`w-1.5 h-1.5 rounded-full transition-all duration-300 ${
+                key={s.id}
+                className={`h-1.5 flex-1 rounded-full transition-all duration-300 ${
                   i < index
                     ? history[i]?.status === "present"
                       ? "bg-green-400"
                       : "bg-red-400"
                     : i === index
-                      ? "bg-blue-500 scale-125"
-                      : "bg-gray-300"
+                      ? "bg-blue-500 scale-y-150"
+                      : "bg-gray-200"
                 }`}
               />
             ))}
           </div>
-          <span className="text-xs text-gray-400 ml-2">
+          <span className="text-xs text-gray-400 tabular-nums">
             {index + 1} / {students.length}
           </span>
         </div>
 
-        <div className="absolute -top-8 left-0 right-0 flex justify-center gap-8 text-xs text-gray-400">
+        <div className="absolute -top-8 left-0 right-0 flex justify-center gap-8 text-xs text-gray-400 pointer-events-none">
           <span className="flex items-center gap-1">
             <svg className="w-3.5 h-3.5 text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
@@ -358,7 +358,7 @@ export const StudentSwipeCard = ({
       {showUndo && history.length > 0 && (
         <button
           onClick={handleUndo}
-          className="absolute bottom-2 left-1/2 -translate-x-1/2 px-5 py-2.5 bg-white border border-gray-200 rounded-full shadow-lg text-sm text-gray-600 hover:text-gray-800 hover:border-gray-300 hover:shadow-xl transition-all animate-in fade-in slide-in-from-bottom-2"
+          className="absolute bottom-1 left-1/2 -translate-x-1/2 px-5 py-2.5 bg-white border border-gray-200 rounded-full shadow-lg text-sm text-gray-600 hover:text-gray-800 hover:border-gray-300 hover:shadow-xl transition-all animate-in fade-in slide-in-from-bottom-2"
         >
           ↩ Undo {history[history.length - 1]?.status ?? ""}
         </button>

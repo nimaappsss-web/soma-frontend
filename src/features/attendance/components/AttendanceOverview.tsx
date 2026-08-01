@@ -1,16 +1,58 @@
-import { ClipboardTick } from "iconsax-react";
+import { useState } from "react";
+import { cn } from "@/lib/utils";
+import { localDateKey } from "../../../utils/date";
+import { AttendanceTodayView } from "./AttendanceTodayView";
+import { AttendanceCalendarView } from "./AttendanceCalendarView";
+
+type Tab = "today" | "calendar";
+
+const now = new Date();
+const today = localDateKey(now);
 
 export const AttendanceOverview = () => {
-  return (
-    <div className="p-6 max-w-4xl">
-      <h1 className="text-2xl font-semibold text-gray-900">Attendance</h1>
-      <p className="text-sm text-gray-400 mt-1">View attendance records across all classes</p>
+  const [tab, setTab] = useState<Tab>("today");
+  const [date, setDate] = useState<string>(today);
+  const [month, setMonth] = useState<number>(now.getMonth() + 1);
+  const [year, setYear] = useState<number>(now.getFullYear());
 
-      <div className="bg-white rounded-xl border border-gray-100 p-6 mt-6 text-center">
-        <ClipboardTick size={32} className="mx-auto text-gray-200 mb-3" variant="Bold" />
-        <p className="text-sm text-gray-400">Attendance overview coming soon</p>
-        <p className="text-xs text-gray-300 mt-1">View daily attendance summaries, class-wise reports, and student attendance history</p>
+  const handleMonthChange = (m: number, y: number) => {
+    setMonth(m);
+    setYear(y);
+  };
+
+  const tabs: Array<{ key: Tab; label: string }> = [
+    { key: "today", label: "Today" },
+    { key: "calendar", label: "Calendar" },
+  ];
+
+  return (
+    <div className="p-4 md:p-6 w-full">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+        <div>
+          <h1 className="text-xl md:text-2xl font-bold text-gray900">Attendance</h1>
+          <p className="text-xs md:text-sm text-gray500 mt-1">Whole-school attendance across all classes</p>
+        </div>
+        <div className="flex items-center gap-1 bg-gray50 rounded-full p-1 self-stretch sm:self-start">
+          {tabs.map((t) => (
+            <button
+              key={t.key}
+              onClick={() => setTab(t.key)}
+              className={cn(
+                "flex-1 sm:flex-none px-4 py-2.5 sm:py-1.5 text-sm font-medium rounded-full transition-colors active:scale-95",
+                tab === t.key ? "bg-white text-gray900 shadow-sm" : "text-gray500 hover:text-gray700",
+              )}
+            >
+              {t.label}
+            </button>
+          ))}
+        </div>
       </div>
+
+      {tab === "today" ? (
+        <AttendanceTodayView date={date} onDateChange={setDate} />
+      ) : (
+        <AttendanceCalendarView month={month} year={year} onMonthChange={handleMonthChange} />
+      )}
     </div>
   );
 };

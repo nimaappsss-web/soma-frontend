@@ -17,6 +17,7 @@ export const Avatar = ({ name, imageUrl, size = 40, className = "" }: AvatarProp
       <img
         src={imageUrl}
         alt={name}
+        draggable={false}
         className={`rounded-full object-cover ${className}`}
         style={{ width: size, height: size, minWidth: size, minHeight: size }}
       />
@@ -31,6 +32,7 @@ export const Avatar = ({ name, imageUrl, size = 40, className = "" }: AvatarProp
       <img
         src={`${DICEBEAR_BASE}?seed=${seed}`}
         alt={name}
+        draggable={false}
         className="w-full h-full"
         style={{ objectFit: "cover" }}
       />

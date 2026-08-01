@@ -1,4 +1,4 @@
-import { TickCircle, ArrowRight } from "iconsax-react";
+import { ArrowRight, TickCircle } from "iconsax-react";
 
 interface SetupCardProps {
   title: string;
@@ -27,7 +27,7 @@ export const SetupCard = ({ title, subtitle, icon, bgColor, iconColor, completed
         <p className="text-xs text-gray500 mt-0.5">{subtitle}</p>
       </div>
       {completed ? (
-        <TickCircle variant="Bold" size={18} className="text-springgreen600 shrink-0" />
+        <TickCircle variant="Bold" size={24} color="#0D0D0D" className="shrink-0" />
       ) : (
         <ArrowRight variant="Bold" size={16} className="text-gray300 shrink-0" />
       )}

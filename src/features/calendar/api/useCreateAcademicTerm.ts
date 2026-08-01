@@ -21,7 +21,6 @@ export const useCreateAcademicTerm = () => {
             id,
             userId: user!.id,
             term: payload.term,
-            session: payload.session,
             startDate: payload.startDate,
             endDate: payload.endDate,
             isCurrent: false,

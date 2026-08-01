@@ -15,6 +15,7 @@ interface SelectDropdownProps {
   placeholder?: string;
   hasError?: FieldError;
   className?: string;
+  buttonClassName?: string;
   disabled?: boolean;
   searchable?: boolean;
 }
@@ -26,6 +27,7 @@ export const SelectDropdown = ({
   placeholder = "Select...",
   hasError,
   className,
+  buttonClassName,
   disabled,
   searchable,
 }: SelectDropdownProps) => {
@@ -76,6 +78,7 @@ export const SelectDropdown = ({
           "flex h-11 w-full items-center justify-between rounded-full border border-input bg-background px-4 py-2 text-base focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50 md:text-sm",
           !value && "text-placeholder",
           hasError && "border-red-500",
+          buttonClassName,
         )}
       >
         <span className="truncate">{selectedLabel || placeholder}</span>

@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Input } from "../../../components/ui/input";
 
 export const ArrayInput = ({
   value,
@@ -42,7 +43,7 @@ export const ArrayInput = ({
         ))}
       </div>
       <div className="flex gap-2">
-        <input
+        <Input
           type="text"
           value={input}
           onChange={(e) => setInput(e.target.value)}
@@ -54,7 +55,7 @@ export const ArrayInput = ({
           }}
           disabled={disabled}
           placeholder="Add item..."
-          className="flex-1 h-10 rounded-md border border-gray-200 px-3 text-sm disabled:bg-gray-50"
+          className="flex-1 disabled:bg-gray-50"
         />
         <button
           type="button"

@@ -4,6 +4,9 @@ import toast from "react-hot-toast";
 import { useAuth } from "../../contexts/AuthContext";
 import { useTeacherDetail } from "../../features/teacher/api";
 import { Avatar } from "../../components/ui/Avatar";
+import { Input } from "../../components/ui/input";
+import { SelectDropdown } from "../../components/ui/select-dropdown";
+import { Textarea } from "../../components/ui/textarea";
 import { db } from "../../db/db";
 import { addToQueue } from "../../sync/syncQueue";
 import { uploadFile } from "../../utils/upload";
@@ -130,7 +133,7 @@ export const TeacherSettings = () => {
                   Remove
                 </button>
               )}
-              <input
+              <Input
                 ref={fileInputRef}
                 type="file"
                 accept="image/*"
@@ -145,61 +148,57 @@ export const TeacherSettings = () => {
         <section className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
           <h3 className="font-semibold text-gray-800 mb-4">Personal Information</h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label className="block text-xs text-gray-500 mb-1">Full Name</label>
-              <input
-                type="text"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                className="w-full h-10 rounded-md border border-gray-200 px-3 text-sm"
-              />
-            </div>
-            <div>
-              <label className="block text-xs text-gray-500 mb-1">Email</label>
-              <input
-                type="email"
-                value={teacher?.email ?? ""}
-                disabled
-                className="w-full h-10 rounded-md border border-gray-200 px-3 text-sm bg-gray-50 text-gray-400"
-              />
-            </div>
-            <div>
-              <label className="block text-xs text-gray-500 mb-1">Phone</label>
-              <input
-                type="tel"
-                value={phone}
-                onChange={(e) => setPhone(e.target.value)}
-                className="w-full h-10 rounded-md border border-gray-200 px-3 text-sm"
-              />
-            </div>
-            <div>
-              <label className="block text-xs text-gray-500 mb-1">Gender</label>
-              <select
-                value={gender}
-                onChange={(e) => setGender(e.target.value as "M" | "F" | "")}
-                className="w-full h-10 rounded-md border border-gray-200 px-3 text-sm"
-              >
-                <option value="">Select</option>
-                <option value="M">Male</option>
-                <option value="F">Female</option>
-              </select>
-            </div>
-            <div>
-              <label className="block text-xs text-gray-500 mb-1">Date of Birth</label>
-              <input
-                type="date"
-                value={dateOfBirth}
-                onChange={(e) => setDateOfBirth(e.target.value)}
-                className="w-full h-10 rounded-md border border-gray-200 px-3 text-sm"
-              />
-            </div>
+              <div>
+                <label className="block text-xs text-gray-500 mb-1">Full Name</label>
+                <Input
+                  type="text"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                />
+              </div>
+              <div>
+                <label className="block text-xs text-gray-500 mb-1">Email</label>
+                <Input
+                  type="email"
+                  value={teacher?.email ?? ""}
+                  disabled
+                  className="bg-gray-50 text-gray-400"
+                />
+              </div>
+              <div>
+                <label className="block text-xs text-gray-500 mb-1">Phone</label>
+                <Input
+                  type="tel"
+                  value={phone}
+                  onChange={(e) => setPhone(e.target.value)}
+                />
+              </div>
+              <div>
+                <label className="block text-xs text-gray-500 mb-1">Gender</label>
+                <SelectDropdown
+                  options={[
+                    { value: "", label: "Select" },
+                    { value: "M", label: "Male" },
+                    { value: "F", label: "Female" },
+                  ]}
+                  value={gender}
+                  onChange={(v) => setGender(v as "M" | "F" | "")}
+                />
+              </div>
+              <div>
+                <label className="block text-xs text-gray-500 mb-1">Date of Birth</label>
+                <Input
+                  type="date"
+                  value={dateOfBirth}
+                  onChange={(e) => setDateOfBirth(e.target.value)}
+                />
+              </div>
             <div className="md:col-span-2">
               <label className="block text-xs text-gray-500 mb-1">Address</label>
-              <textarea
+              <Textarea
                 value={address}
                 onChange={(e) => setAddress(e.target.value)}
                 rows={2}
-                className="w-full rounded-md border border-gray-200 px-3 py-2 text-sm resize-none"
               />
             </div>
           </div>
@@ -210,20 +209,20 @@ export const TeacherSettings = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <label className="block text-xs text-gray-500 mb-1">Role</label>
-              <input
+              <Input
                 type="text"
                 value={teacher?.role ?? ""}
                 disabled
-                className="w-full h-10 rounded-md border border-gray-200 px-3 text-sm bg-gray-50 text-gray-400 capitalize"
+                className="bg-gray-50 text-gray-400 capitalize"
               />
             </div>
             <div>
               <label className="block text-xs text-gray-500 mb-1">Form Class</label>
-              <input
+              <Input
                 type="text"
                 value={formClassName}
                 disabled
-                className="w-full h-10 rounded-md border border-gray-200 px-3 text-sm bg-gray-50 text-gray-400"
+                className="bg-gray-50 text-gray-400"
               />
             </div>
           </div>

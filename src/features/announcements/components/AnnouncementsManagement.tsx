@@ -4,6 +4,7 @@ import { Speaker } from "iconsax-react";
 import { Input } from "../../../components/ui/input";
 import { Button } from "../../../components/ui/button";
 import { SelectDropdown } from "../../../components/ui/select-dropdown";
+import { Textarea } from "../../../components/ui/textarea";
 import { useAnnouncements, useCreateAnnouncement, useDeleteAnnouncement } from "../api";
 import type { CreateAnnouncementPayload, AnnouncementAudience, AnnouncementPriority } from "../types";
 
@@ -57,12 +58,11 @@ export const AnnouncementsManagement = () => {
             onChange={(e) => setForm({ ...form, title: e.target.value })}
             placeholder="e.g. End of Term Exams Schedule"
           />
-          <textarea
+          <Textarea
             value={form.message}
             onChange={(e) => setForm({ ...form, message: e.target.value })}
             placeholder="Write your announcement..."
             rows={4}
-            className="w-full rounded-full border border-input bg-background px-4 py-2 text-sm placeholder:text-placeholder resize-none"
           />
           <div className="grid grid-cols-2 gap-4">
             <SelectDropdown

@@ -1,5 +1,6 @@
 import { useMemo } from "react";
 import { cn } from "@/lib/utils";
+import { localDateKey } from "@/utils/date";
 import type { CalendarEvent, Holiday } from "../types";
 
 const TYPE_COLORS: Record<string, string> = {
@@ -35,9 +36,6 @@ interface CalendarGridProps {
   onDateSelect: (date: Date) => void;
   onMonthChange: (date: Date) => void;
 }
-
-const localDateKey = (date: Date) =>
-  `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
 
 const buildDays = (
   year: number,

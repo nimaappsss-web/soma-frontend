@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from "react";
-import { ArrowLeft, ArrowRight } from "iconsax-react";
+import { ArrowLeft2, ArrowRight2 } from "iconsax-react";
 import { cn } from "@/lib/utils";
 
 interface CalendarProps {
@@ -24,6 +24,11 @@ export const Calendar = ({ value, onChange, onClose }: CalendarProps) => {
   const [viewDate] = useState(selected || today);
   const [viewMonth, setViewMonth] = useState(viewDate.getMonth());
   const [viewYear, setViewYear] = useState(viewDate.getFullYear());
+  const [viewMode, setViewMode] = useState<"month" | "year">("month");
+  const [yearPageStart, setYearPageStart] = useState(() => {
+    const y = viewDate.getFullYear();
+    return Math.floor(y / 12) * 12;
+  });
 
   const ref = useRef<HTMLDivElement>(null);
 
@@ -79,51 +84,107 @@ export const Calendar = ({ value, onChange, onClose }: CalendarProps) => {
     today.getMonth() === viewMonth &&
     today.getFullYear() === viewYear;
 
+  const prevYearPage = () => setYearPageStart((p) => p - 12);
+  const nextYearPage = () => setYearPageStart((p) => p + 12);
+
+  const selectYear = (year: number) => {
+    setViewYear(year);
+    setViewMode("month");
+  };
+
+  const yearCells = Array.from({ length: 12 }, (_, i) => yearPageStart + i);
+
   return (
     <div ref={ref} className="bg-white rounded-2xl border border-gray200 shadow-lg p-4 w-[280px]">
       <div className="flex items-center justify-between mb-4">
-        <button type="button" onClick={prevMonth} className="p-1 hover:bg-gray50 rounded-lg transition-colors">
-          <ArrowLeft variant="Bold" size={16} className="text-gray500" />
-        </button>
-        <span className="text-sm font-medium text-gray900">
-          {MONTHS[viewMonth]} {viewYear}
-        </span>
-        <button type="button" onClick={nextMonth} className="p-1 hover:bg-gray50 rounded-lg transition-colors">
-          <ArrowRight variant="Bold" size={16} className="text-gray500" />
-        </button>
-      </div>
-
-      <div className="grid grid-cols-7 gap-1 mb-2">
-        {DAYS.map((day) => (
-          <div key={day} className="text-center text-xs text-gray400 font-medium py-1">
-            {day}
-          </div>
-        ))}
-      </div>
-
-      <div className="grid grid-cols-7 gap-1">
-        {Array.from({ length: firstDay }).map((_, i) => (
-          <div key={`empty-${i}`} />
-        ))}
-        {Array.from({ length: daysInMonth }).map((_, i) => {
-          const day = i + 1;
-          return (
+        {viewMode === "month" ? (
+          <>
+            <button type="button" onClick={prevMonth} className="p-1 hover:bg-gray50 rounded-lg transition-colors">
+              <ArrowLeft2 variant="Linear" size={16} color="#6B7280" />
+            </button>
             <button
-              key={day}
               type="button"
-              onClick={() => selectDate(day)}
+              onClick={() => setViewMode("year")}
+              className="text-sm font-medium text-gray900 hover:bg-gray50 px-2 py-0.5 rounded-lg transition-colors"
+            >
+              {MONTHS[viewMonth]} {viewYear}
+            </button>
+            <button type="button" onClick={nextMonth} className="p-1 hover:bg-gray50 rounded-lg transition-colors">
+              <ArrowRight2 variant="Linear" size={16} color="#6B7280" />
+            </button>
+          </>
+        ) : (
+          <>
+            <button type="button" onClick={prevYearPage} className="p-1 hover:bg-gray50 rounded-lg transition-colors">
+              <ArrowLeft2 variant="Linear" size={16} color="#6B7280" />
+            </button>
+            <button
+              type="button"
+              onClick={() => setViewMode("month")}
+              className="text-sm font-medium text-gray900 hover:bg-gray50 px-2 py-0.5 rounded-lg transition-colors"
+            >
+              {yearPageStart}–{yearPageStart + 11}
+            </button>
+            <button type="button" onClick={nextYearPage} className="p-1 hover:bg-gray50 rounded-lg transition-colors">
+              <ArrowRight2 variant="Linear" size={16} color="#6B7280" />
+            </button>
+          </>
+        )}
+      </div>
+
+      {viewMode === "year" ? (
+        <div className="grid grid-cols-3 gap-1">
+          {yearCells.map((year) => (
+            <button
+              key={year}
+              type="button"
+              onClick={() => selectYear(year)}
               className={cn(
-                "h-8 w-8 rounded-full text-sm flex items-center justify-center transition-colors",
-                isSelected(day) && "bg-gray900 text-white font-medium",
-                !isSelected(day) && isToday(day) && "bg-gray100 text-gray900 font-medium",
-                !isSelected(day) && !isToday(day) && "text-gray700 hover:bg-gray50",
+                "h-9 rounded-lg text-sm flex items-center justify-center transition-colors",
+                year === viewYear && "bg-gray900 text-white font-medium",
+                year !== viewYear && year === today.getFullYear() && "bg-gray100 text-gray900 font-medium",
+                year !== viewYear && year !== today.getFullYear() && "text-gray700 hover:bg-gray50",
               )}
             >
-              {day}
+              {year}
             </button>
-          );
-        })}
-      </div>
+          ))}
+        </div>
+      ) : (
+        <>
+          <div className="grid grid-cols-7 gap-1 mb-2">
+            {DAYS.map((day) => (
+              <div key={day} className="text-center text-xs text-gray400 font-medium py-1">
+                {day}
+              </div>
+            ))}
+          </div>
+
+          <div className="grid grid-cols-7 gap-1">
+            {Array.from({ length: firstDay }).map((_, i) => (
+              <div key={`empty-${i}`} />
+            ))}
+            {Array.from({ length: daysInMonth }).map((_, i) => {
+              const day = i + 1;
+              return (
+                <button
+                  key={day}
+                  type="button"
+                  onClick={() => selectDate(day)}
+                  className={cn(
+                    "h-8 w-8 rounded-full text-sm flex items-center justify-center transition-colors",
+                    isSelected(day) && "bg-gray900 text-white font-medium",
+                    !isSelected(day) && isToday(day) && "bg-gray100 text-gray900 font-medium",
+                    !isSelected(day) && !isToday(day) && "text-gray700 hover:bg-gray50",
+                  )}
+                >
+                  {day}
+                </button>
+              );
+            })}
+          </div>
+        </>
+      )}
     </div>
   );
 };

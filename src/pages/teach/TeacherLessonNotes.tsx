@@ -11,6 +11,11 @@ import {
   useCurriculumTopics,
   useGenerateLessonNote,
 } from "../../features/lesson-notes/api";
+import { useActiveTerm } from "../../features/calendar/api";
+import { termNumber } from "../../features/calendar/utils/term";
+import { Input } from "../../components/ui/input";
+import { Textarea } from "../../components/ui/textarea";
+import { SelectDropdown } from "../../components/ui/select-dropdown";
 import type { LessonNote, GenerateResponse } from "../../features/lesson-notes/types";
 
 const genId = () => crypto.randomUUID();
@@ -43,12 +48,13 @@ export const TeacherLessonNotes = () => {
   const { user } = useAuth();
   const { formClass } = useTeacherProfile();
   const notes = useLessonNotes(user?.id ?? "");
+  const { activeTerm } = useActiveTerm();
 
   const [editingId, setEditingId] = useState<string | null>(null);
   const [className, setClassName] = useState(formClass ?? "");
   const [subjectName, setSubjectName] = useState("");
   const [week, setWeek] = useState(0);
-  const [term, setTerm] = useState(1);
+  const [term, setTerm] = useState(() => (activeTerm ? termNumber(activeTerm.term) : 1));
   const [content, setContent] = useState<GenerateResponse>(emptyContent());
   const [saving, setSaving] = useState(false);
 
@@ -73,7 +79,7 @@ export const TeacherLessonNotes = () => {
     setClassName(formClass ?? "");
     setSubjectName("");
     setWeek(0);
-    setTerm(1);
+    setTerm(activeTerm ? termNumber(activeTerm.term) : 1);
     setContent(emptyContent());
   };
 
@@ -184,11 +190,10 @@ export const TeacherLessonNotes = () => {
           <label className="block text-xs font-medium text-gray-500 mb-1 uppercase tracking-wide">
             {field.label} <span className="text-gray-400 font-normal normal-case">(one per line)</span>
           </label>
-          <textarea
+          <Textarea
             value={text}
             onChange={(e) => updateList(field.key as "behaviouralObjectives" | "instructionalMaterials", e.target.value)}
             rows={3}
-            className="w-full rounded-md border border-gray-200 px-3 py-2 text-sm resize-y"
           />
         </div>
       );
@@ -210,15 +215,15 @@ export const TeacherLessonNotes = () => {
               <div className="grid grid-cols-3 gap-2">
                 <div>
                   <label className="block text-xs text-gray-400 mb-0.5">Time</label>
-                  <input value={s.time} onChange={(e) => updateStep(i, "time", e.target.value)} className="w-full h-8 rounded border border-gray-200 px-2 text-xs" />
+                  <Input value={s.time} onChange={(e) => updateStep(i, "time", e.target.value)} className="h-8 rounded border border-gray-200 px-2 text-xs" />
                 </div>
                 <div>
                   <label className="block text-xs text-gray-400 mb-0.5">Teacher Activity</label>
-                  <textarea value={s.teacherActivity} onChange={(e) => updateStep(i, "teacherActivity", e.target.value)} rows={2} className="w-full rounded border border-gray-200 px-2 py-1 text-xs resize-y" />
+                  <Textarea value={s.teacherActivity} onChange={(e) => updateStep(i, "teacherActivity", e.target.value)} rows={2} autoGrow={false} className="min-h-8 rounded border border-gray-200 px-2 py-1 text-xs" />
                 </div>
                 <div>
                   <label className="block text-xs text-gray-400 mb-0.5">Student Activity</label>
-                  <textarea value={s.studentActivity} onChange={(e) => updateStep(i, "studentActivity", e.target.value)} rows={2} className="w-full rounded border border-gray-200 px-2 py-1 text-xs resize-y" />
+                  <Textarea value={s.studentActivity} onChange={(e) => updateStep(i, "studentActivity", e.target.value)} rows={2} autoGrow={false} className="min-h-8 rounded border border-gray-200 px-2 py-1 text-xs" />
                 </div>
               </div>
             </div>
@@ -233,11 +238,10 @@ export const TeacherLessonNotes = () => {
         <label className="block text-xs font-medium text-gray-500 mb-1 uppercase tracking-wide">
           {field.label}
         </label>
-        <textarea
+        <Textarea
           value={String((val as string) ?? "")}
           onChange={(e) => updateField(field.key, e.target.value)}
           rows={field.key === "topicSummary" || field.key === "backgroundInfo" || field.key === "previousKnowledge" || field.key === "introduction" ? 3 : 2}
-          className="w-full rounded-md border border-gray-200 px-3 py-2 text-sm resize-y"
         />
       </div>
     );
@@ -281,42 +285,32 @@ export const TeacherLessonNotes = () => {
             <div className="grid grid-cols-1 md:grid-cols-4 gap-3 mb-6">
               <div>
                 <label className="block text-xs text-gray-500 mb-1">Class</label>
-                <select
+                <SelectDropdown
+                  placeholder="Select class"
+                  options={formClass ? [{ value: formClass, label: formClass }] : []}
                   value={className}
-                  onChange={(e) => { setClassName(e.target.value); setSubjectName(""); setWeek(0); }}
-                  className="w-full h-10 rounded-md border border-gray-200 px-3 text-sm"
-                >
-                  <option value="">Select class</option>
-                  {formClass && <option value={formClass}>{formClass}</option>}
-                </select>
+                  onChange={(v) => { setClassName(v); setSubjectName(""); setWeek(0); }}
+                />
               </div>
               <div>
                 <label className="block text-xs text-gray-500 mb-1">Subject</label>
-                <select
+                <SelectDropdown
+                  placeholder="Select subject"
+                  options={subjects.map((s) => ({ value: s, label: s }))}
                   value={subjectName}
-                  onChange={(e) => { setSubjectName(e.target.value); setWeek(0); }}
+                  onChange={(v) => { setSubjectName(v); setWeek(0); }}
                   disabled={!className}
-                  className="w-full h-10 rounded-md border border-gray-200 px-3 text-sm disabled:opacity-50"
-                >
-                  <option value="">Select subject</option>
-                  {subjects.map((s) => (
-                    <option key={s} value={s}>{s}</option>
-                  ))}
-                </select>
+                />
               </div>
               <div>
                 <label className="block text-xs text-gray-500 mb-1">Week</label>
-                <select
-                  value={week}
-                  onChange={(e) => setWeek(Number(e.target.value))}
+                <SelectDropdown
+                  placeholder="Select week"
+                  options={weekOptions.map((t: { week: number; topic: string }) => ({ value: String(t.week), label: `Week ${t.week} — ${t.topic}` }))}
+                  value={week === 0 ? "" : String(week)}
+                  onChange={(v) => setWeek(Number(v))}
                   disabled={!subjectName}
-                  className="w-full h-10 rounded-md border border-gray-200 px-3 text-sm disabled:opacity-50"
-                >
-                  <option value={0}>Select week</option>
-                  {weekOptions.map((t: { week: number; topic: string }) => (
-                    <option key={t.week} value={t.week}>Week {t.week} — {t.topic}</option>
-                  ))}
-                </select>
+                />
               </div>
               <div className="flex items-end">
                 <button

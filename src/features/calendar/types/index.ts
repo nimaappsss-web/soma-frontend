@@ -17,6 +17,7 @@ export interface CalendarEvent {
   type: EventType;
   audience: EventAudience;
   createdBy: { id: string; name: string };
+  source?: "event" | "holiday";
 }
 
 export interface CalendarEventListResponse {
@@ -63,7 +64,6 @@ export interface UpdateHolidayPayload {
 export interface AcademicTerm {
   id: string;
   term: string;
-  session: string;
   startDate: string;
   endDate: string;
   isCurrent: boolean;
@@ -75,14 +75,12 @@ export interface AcademicTermListResponse {
 
 export interface CreateAcademicTermPayload {
   term: string;
-  session: string;
   startDate: string;
   endDate: string;
 }
 
 export interface UpdateAcademicTermPayload {
   term?: string;
-  session?: string;
   startDate?: string;
   endDate?: string;
   isCurrent?: boolean;

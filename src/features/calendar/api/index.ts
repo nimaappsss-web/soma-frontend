@@ -8,7 +8,7 @@ export { useCreateHoliday } from "./useCreateHoliday";
 export { useDeleteHoliday } from "./useDeleteHoliday";
 export { useUpdateHoliday } from "./useUpdateHoliday";
 export { useAcademicTerms } from "./useAcademicTerms";
+export { useActiveTerm } from "./useActiveTerm";
 export { useCreateAcademicTerm } from "./useCreateAcademicTerm";
 export { useUpdateAcademicTerm } from "./useUpdateAcademicTerm";
-export { useSetCurrentTerm } from "./useSetCurrentTerm";
 export { useDeleteAcademicTerm } from "./useDeleteAcademicTerm";

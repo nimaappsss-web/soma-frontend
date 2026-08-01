@@ -1,9 +1,11 @@
 import { useState } from "react";
-import { useForm } from "react-hook-form";
+import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 
 import { Avatar } from "../../components/ui/Avatar";
 import { Button } from "../../components/ui/button";
+import { Input } from "../../components/ui/input";
+import { SelectDropdown } from "../../components/ui/select-dropdown";
 import { useTeachers, useResendInvite, useUpdateTeacher } from "../../features/teacher/api";
 import { useClasses } from "../../features/principal/api";
 import { InviteTeacherModal } from "../../features/principal/components/InviteTeacherModal";
@@ -25,6 +27,7 @@ export const AdminTeachers = () => {
     register: editRegister,
     handleSubmit: handleEditSubmit,
     reset: resetEdit,
+    control: editControl,
     formState: { errors: editErrors },
   } = useForm<EditTeacherFormData>({
     resolver: zodResolver(editTeacherSchema),
@@ -87,24 +90,26 @@ export const AdminTeachers = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <label className="block text-xs text-gray-500 mb-1">Full Name *</label>
-              <input
+              <Input
                 type="text"
                 {...editRegister("name")}
-                className="w-full h-10 rounded-md border border-gray-200 px-3 text-sm"
               />
               {editErrors.name && <p className="text-xs text-destructive mt-1">{editErrors.name.message}</p>}
             </div>
             <div>
               <label className="block text-xs text-gray-500 mb-1">Form Class</label>
-              <select
-                {...editRegister("formClassId")}
-                className="w-full h-10 rounded-md border border-gray-200 px-3 text-sm"
-              >
-                <option value="">None</option>
-                {classesData?.classes.map((c) => (
-                  <option key={c.id} value={c.id}>{c.name}</option>
-                ))}
-              </select>
+              <Controller
+                control={editControl}
+                name="formClassId"
+                render={({ field }) => (
+                  <SelectDropdown
+                    placeholder="None"
+                    options={(classesData?.classes ?? []).map((c) => ({ value: c.id, label: c.name }))}
+                    value={field.value ?? ""}
+                    onChange={field.onChange}
+                  />
+                )}
+              />
             </div>
           </div>
           <div className="flex gap-3 mt-6">

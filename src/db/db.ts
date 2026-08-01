@@ -191,10 +191,15 @@ export interface AcademicTermCache {
   id: string;
   userId: string;
   term: string;
-  session: string;
   startDate: string;
   endDate: string;
   isCurrent: boolean;
+}
+
+export interface AttendanceSnapshot {
+  key: string;
+  data: unknown;
+  savedAt: number;
 }
 
 export const db = new Dexie("somaDB") as Dexie & {
@@ -216,6 +221,7 @@ export const db = new Dexie("somaDB") as Dexie & {
   holidays: EntityTable<HolidayCache, "id">;
   academicTerms: EntityTable<AcademicTermCache, "id">;
   announcements: EntityTable<AnnouncementCache, "id">;
+  attendanceSnapshots: EntityTable<AttendanceSnapshot, "key">;
 };
 
 db.version(11).stores({
@@ -398,6 +404,28 @@ db.version(20).stores({
   holidays: "id, userId",
   academicTerms: "id, userId",
   announcements: "id, userId",
+});
+
+db.version(21).stores({
+  students: "id, name, classId, status, schoolId, userId, [userId+classId]",
+  attendance: "id, studentId, className, schoolId, date, syncStatus, userId, [date+className], [userId+date+className]",
+  caScores: "id, studentId, className, schoolId, term, session, syncStatus, userId",
+  subjects: "id, schoolId, userId",
+  classes: "id, level, schoolId, userId, [userId+level]",
+  teacherFormClass: "id",
+  teacherAssignments: "id, userId",
+  teachers: "id, userId",
+  pendingInvites: "id, userId",
+  teacherDetails: "id, userId",
+  parents: "id, status, schoolId, userId",
+  syncQueue: "++id, status, createdAt, table, userId",
+  lessonNotes: "id, userId",
+  schoolSettings: "id, userId",
+  calendarEvents: "id, userId",
+  holidays: "id, userId",
+  academicTerms: "id, userId",
+  announcements: "id, userId",
+  attendanceSnapshots: "key",
 });
 
 

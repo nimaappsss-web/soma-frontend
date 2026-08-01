@@ -1,14 +1,19 @@
 import { useState } from "react";
 import { useLiveQuery } from "dexie-react-hooks";
+import toast from "react-hot-toast";
 
 import { useAuth } from "../contexts/AuthContext";
 import { db } from "../db/db";
 import { StudentCACard } from "../components/ui/StudentCACard";
+import { Input } from "../components/ui/input";
+import { SelectDropdown } from "../components/ui/select-dropdown";
+import { useActiveTerm } from "../features/calendar/api";
 
 const ASSESSMENT_TYPES = ["Quiz", "Test", "Assignment", "Project", "Exam"];
 
 export const ContinuousAssessment = () => {
   const { user } = useAuth();
+  const { activeTerm } = useActiveTerm();
   const userId = user?.id ?? "";
   const students = useLiveQuery(
     () => {
@@ -49,8 +54,12 @@ export const ContinuousAssessment = () => {
   };
 
   const handleSave = async () => {
-    const term = "Term 1";
-    const session = "2025/2026";
+    if (!activeTerm) {
+      toast.error("No active term — set up terms first");
+      return;
+    }
+    const term = activeTerm.term;
+    const session = `${new Date(activeTerm.startDate).getFullYear()}/${new Date(activeTerm.startDate).getFullYear() + 1}`;
     const entries = Object.entries(scores).map(([studentId, score]) => ({
       id: `${studentId}_${session}_${term}_${assessmentType}_${Date.now()}`,
       userId,
@@ -84,41 +93,33 @@ export const ContinuousAssessment = () => {
       <div className="flex flex-wrap gap-3 px-6 py-4 items-end border-b border-gray-100 bg-white">
         <div className="flex flex-col gap-1">
           <label className="text-xs text-gray-500 font-medium">Class</label>
-          <select
+          <SelectDropdown
+            placeholder="All classes"
+            options={classes.map((c) => ({ value: c, label: c }))}
             value={selectedClass}
-            onChange={(e) => {
-              setSelectedClass(e.target.value);
+            onChange={(v) => {
+              setSelectedClass(v);
               setIndex(0);
             }}
-            className="h-9 rounded-md border border-input bg-white px-3 text-sm"
-          >
-            <option value="">All classes</option>
-            {classes.map((c) => (
-              <option key={c} value={c}>{c}</option>
-            ))}
-          </select>
+          />
         </div>
 
         <div className="flex flex-col gap-1">
           <label className="text-xs text-gray-500 font-medium">Type</label>
-          <select
+          <SelectDropdown
+            options={ASSESSMENT_TYPES.map((t) => ({ value: t, label: t }))}
             value={assessmentType}
-            onChange={(e) => setAssessmentType(e.target.value)}
-            className="h-9 rounded-md border border-input bg-white px-3 text-sm"
-          >
-            {ASSESSMENT_TYPES.map((t) => (
-              <option key={t} value={t}>{t}</option>
-            ))}
-          </select>
+            onChange={setAssessmentType}
+          />
         </div>
 
         <div className="flex flex-col gap-1">
           <label className="text-xs text-gray-500 font-medium">Max Score</label>
-          <input
+          <Input
             type="number"
             value={maxScore}
             onChange={(e) => setMaxScore(Number(e.target.value))}
-            className="h-9 w-20 rounded-md border border-input bg-white px-3 text-sm"
+            className="h-9 w-20 px-3"
             min={1}
           />
         </div>

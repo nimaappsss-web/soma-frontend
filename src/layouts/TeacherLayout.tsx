@@ -60,11 +60,11 @@ export const TeacherLayout = () => {
             className={({ isActive }) =>
               cn(
                 "flex items-center h-[45px] text-sm transition-colors",
-                collapsed ? "justify-start w-[48px] px-0" : "gap-3 px-4 rounded-full",
+                collapsed ? "justify-start w-[48px] px-0" : "gap-3 px-4 rounded-[20px]",
                 collapsed && isActive && "bg-gray900 text-white font-medium rounded-xl",
-                collapsed && !isActive && "text-gray700 hover:bg-gray50 hover:text-gray900 rounded-full",
-                !collapsed && isActive && "bg-gray900 text-white font-medium rounded-full",
-                !collapsed && !isActive && "text-gray700 hover:bg-gray50 hover:text-gray900 rounded-full",
+                collapsed && !isActive && "text-gray700 hover:bg-gray50 hover:text-gray900 rounded-[20px]",
+                !collapsed && isActive && "bg-gray900 text-white font-medium rounded-[20px]",
+                !collapsed && !isActive && "text-gray700 hover:bg-gray50 hover:text-gray900 rounded-[20px]",
               )
             }
           >
@@ -82,11 +82,11 @@ export const TeacherLayout = () => {
           className={({ isActive }) =>
             cn(
               "flex items-center h-[45px] text-sm transition-colors",
-              collapsed ? "justify-start w-[48px] px-0" : "gap-3 px-4 rounded-full",
+              collapsed ? "justify-start w-[48px] px-0" : "gap-3 px-4 rounded-[20px]",
               collapsed && isActive && "bg-gray900 text-white font-medium rounded-xl",
-              collapsed && !isActive && "text-gray700 hover:bg-gray50 hover:text-gray900 rounded-full",
-              !collapsed && isActive && "bg-gray900 text-white font-medium rounded-full",
-              !collapsed && !isActive && "text-gray700 hover:bg-gray50 hover:text-gray900 rounded-full",
+              collapsed && !isActive && "text-gray700 hover:bg-gray50 hover:text-gray900 rounded-[20px]",
+              !collapsed && isActive && "bg-gray900 text-white font-medium rounded-[20px]",
+              !collapsed && !isActive && "text-gray700 hover:bg-gray50 hover:text-gray900 rounded-[20px]",
             )
           }
         >

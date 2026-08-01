@@ -3,9 +3,11 @@ import { useLiveQuery } from "dexie-react-hooks";
 import { useQuery } from "@tanstack/react-query";
 
 import { Avatar } from "../../../components/ui/Avatar";
+import { Input } from "../../../components/ui/input";
 import { useAuth } from "../../../contexts/AuthContext";
 import { db } from "../../../db/db";
 import { fetchData } from "../../../utils/fetchData";
+import { localDateKey } from "../../../utils/date";
 import type { AttendanceQueryResponse, AttendanceRecord as ApiAttendanceRecord } from "../types";
 import type { Student as ApiStudent } from "../../students/types";
 
@@ -22,8 +24,9 @@ const statusColors: Record<string, string> = {
 
 export const AttendanceHistoryView = ({ classId, formClass }: AttendanceHistoryViewProps) => {
   const { user } = useAuth();
-  const today = new Date().toISOString().split("T")[0];
+  const today = localDateKey();
   const [date, setDate] = useState(today);
+  const [blockedReason, setBlockedReason] = useState<string | null>(null);
 
   useQuery({
     queryKey: ["attendance", "history", classId, date],
@@ -32,6 +35,7 @@ export const AttendanceHistoryView = ({ classId, formClass }: AttendanceHistoryV
         `/attendance?classId=${classId}&date=${date}`,
         "GET",
       );
+      setBlockedReason(res.reason && res.reason.available === false ? (res.reason.message ?? null) : null);
       if (res.records?.length) {
         const hasPending = await db.attendance
           .where("[userId+date+className]").equals([user!.id, date, formClass ?? ""])
@@ -138,11 +142,11 @@ export const AttendanceHistoryView = ({ classId, formClass }: AttendanceHistoryV
   return (
     <div>
       <div className="flex items-center gap-3 mb-4">
-        <input
+        <Input
           type="date"
           value={date}
           onChange={(e) => setDate(e.target.value)}
-          className="h-10 rounded-md border border-gray-200 px-3 text-sm"
+          className="h-10"
         />
         <span className="text-xs text-gray-400">
           {records.length} record(s)
@@ -150,9 +154,16 @@ export const AttendanceHistoryView = ({ classId, formClass }: AttendanceHistoryV
       </div>
 
       {!records.length ? (
-        <p className="text-sm text-gray-400 text-center py-8">
-          No attendance records for {date}.
-        </p>
+        blockedReason ? (
+          <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-8 text-center">
+            <p className="text-sm text-gray-500 mb-1">Not a school day</p>
+            <p className="text-xs text-gray-400">{blockedReason}</p>
+          </div>
+        ) : (
+          <p className="text-sm text-gray-400 text-center py-8">
+            No attendance records for {date}.
+          </p>
+        )
       ) : (
         <div className="bg-white rounded-xl shadow-sm border border-gray-100 divide-y divide-gray-100">
           {sortedRecords.map((r) => {

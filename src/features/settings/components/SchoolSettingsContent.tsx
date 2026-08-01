@@ -6,6 +6,8 @@ import { useUpdateSchool } from "../../../features/principal/api";
 import { uploadFile } from "../../../utils/upload";
 import { transformError } from "../../../utils/transformError";
 import { ArrayInput } from "./ArrayInput";
+import { Input } from "../../../components/ui/input";
+import { Textarea } from "../../../components/ui/textarea";
 import type { SchoolSetting } from "../types";
 
 export const SchoolSettingsContent = () => {
@@ -140,22 +142,22 @@ const SettingField = ({
       <label className="block text-xs text-gray-500 mb-1">{setting.label}</label>
 
       {setting.type === "text" && (
-        <input
+        <Input
           type="text"
           value={(value as string) ?? ""}
           onChange={(e) => onChange(e.target.value)}
           disabled={disabled}
-          className="w-full h-10 rounded-md border border-gray-200 px-3 text-sm disabled:bg-gray-50 disabled:text-gray-400"
+          className="disabled:bg-gray-50 disabled:text-gray-400"
         />
       )}
 
       {setting.type === "textarea" && (
-        <textarea
+        <Textarea
           value={(value as string) ?? ""}
           onChange={(e) => onChange(e.target.value)}
           disabled={disabled}
           rows={3}
-          className="w-full rounded-md border border-gray-200 px-3 py-2 text-sm resize-none disabled:bg-gray-50 disabled:text-gray-400"
+          className="disabled:bg-gray-50 disabled:text-gray-400"
         />
       )}
 
@@ -179,7 +181,7 @@ const SettingField = ({
           >
             {value || logoFile ? "Change" : "Upload"}
           </button>
-          <input
+          <Input
             ref={fileInputRef}
             type="file"
             accept="image/*"
@@ -194,12 +196,12 @@ const SettingField = ({
 
       {setting.type === "pattern" && (
         <div>
-          <input
+          <Input
             type="text"
             value={(value as string) ?? ""}
             onChange={(e) => onChange(e.target.value)}
             disabled={disabled}
-            className="w-full h-10 rounded-md border border-gray-200 px-3 text-sm disabled:bg-gray-50 disabled:text-gray-400"
+            className="disabled:bg-gray-50 disabled:text-gray-400"
           />
           <p className="text-xs text-gray-400 mt-1">
             Use {"{level}"} {"{section}"} and {"{number}"} as placeholders

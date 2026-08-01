@@ -1,16 +1,26 @@
 import { CalendarTick, Book, RulerPen, Briefcase, Teacher } from "iconsax-react";
 import { SetupCard } from "./SetupCard";
 
+export interface SetupCompleted {
+  terms: boolean;
+  subjects: boolean;
+  classes: boolean;
+  teachers: boolean;
+  studentsParents: boolean;
+}
+
 const setupItems = [
   {
+    key: "terms" as const,
     title: "School Terms & Ranking",
     subtitle: "Term structure, and ranking rules",
     icon: CalendarTick,
     bgColor: "bg-springgreen600/10",
     iconColor: "text-springgreen600",
-    completed: true,
+    to: "/admin/calendar/terms",
   },
   {
+    key: "subjects" as const,
     title: "Configure Subject Directory",
     subtitle: "Setup core subjects",
     icon: Book,
@@ -19,6 +29,7 @@ const setupItems = [
     to: "/admin/subjects",
   },
   {
+    key: "classes" as const,
     title: "Create Classes",
     subtitle: "Define class levels and specific arms",
     icon: RulerPen,
@@ -27,6 +38,7 @@ const setupItems = [
     to: "/admin/classes",
   },
   {
+    key: "teachers" as const,
     title: "Invite Teachers",
     subtitle: "Onboard teachers and staff",
     icon: Briefcase,
@@ -35,6 +47,7 @@ const setupItems = [
     to: "/admin/teachers",
   },
   {
+    key: "studentsParents" as const,
     title: "Add Students & Parents",
     subtitle: "Upload student records and link primary guardian contacts.",
     icon: Teacher,
@@ -44,17 +57,17 @@ const setupItems = [
   },
 ];
 
-export const SetupChecklist = () => (
+export const SetupChecklist = ({ completed }: { completed: SetupCompleted }) => (
   <div className="grid grid-cols-1 md:grid-cols-2 gap-3.75 mt-5">
     {setupItems.map((item) => (
       <SetupCard
-        key={item.title}
+        key={item.key}
         title={item.title}
         subtitle={item.subtitle}
         icon={<item.icon variant="Bold" size={24} color="currentColor" />}
         bgColor={item.bgColor}
         iconColor={item.iconColor}
-        completed={item.completed}
+        completed={completed[item.key]}
         to={item.to}
       />
     ))}

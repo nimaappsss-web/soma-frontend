@@ -13,7 +13,7 @@ import {
   Setting2,
   MagicStar,
   ClipboardTick,
-  ArrowRight,
+  ArrowRight2,
   Chart,
   StatusUp,
   NotificationBing,
@@ -123,7 +123,7 @@ const SidebarNav = ({
                   "flex items-center justify-start h-[45px] w-[48px] transition-colors",
                   isActive || active
                     ? "bg-gray900 text-white font-medium rounded-xl"
-                    : "text-gray700 hover:bg-gray50 hover:text-gray900 rounded-full",
+                    : "text-gray700 hover:bg-gray50 hover:text-gray900 rounded-[20px]",
                 )
               }
             >
@@ -137,7 +137,7 @@ const SidebarNav = ({
             <button
               onClick={() => toggleExpanded(item.label)}
               className={cn(
-                "flex items-center gap-3 px-4 h-[45px] rounded-full text-sm transition-colors w-full",
+                "flex items-center gap-3 px-4 h-[45px] rounded-[20px] text-sm transition-colors w-full",
                 active
                   ? "bg-gray900 text-white font-medium"
                   : "text-gray700 hover:bg-gray50 hover:text-gray900",
@@ -145,8 +145,8 @@ const SidebarNav = ({
             >
               <span className="shrink-0"><item.Icon variant="Bold" size={24} color="currentColor" /></span>
               <span className="flex-1 text-left">{item.label}</span>
-              <ArrowRight
-                variant="Bold"
+              <ArrowRight2
+                variant="Linear"
                 size={14}
                 color="currentColor"
                 className={cn(
@@ -170,7 +170,7 @@ const SidebarNav = ({
                       onClick={onNavigate}
                       className={({ isActive }) =>
                         cn(
-                          "flex items-center gap-3 pl-10 pr-4 h-[40px] rounded-full text-sm transition-colors",
+                          "flex items-center gap-3 pl-10 pr-4 h-[40px] rounded-[20px] text-sm transition-colors",
                           isActive
                             ? "bg-gray900 text-white font-medium"
                             : "text-gray700 hover:bg-gray50 hover:text-gray900",
@@ -196,11 +196,11 @@ const SidebarNav = ({
           className={({ isActive }) =>
             cn(
               "flex items-center h-[45px] text-sm transition-colors",
-              collapsed ? "justify-start w-[48px] px-0" : "gap-3 px-4 rounded-full",
+              collapsed ? "justify-start w-[48px] px-0" : "gap-3 px-4 rounded-[20px]",
               collapsed && isActive && "bg-gray900 text-white font-medium rounded-xl",
-              collapsed && !isActive && "text-gray700 hover:bg-gray50 hover:text-gray900 rounded-full",
-              !collapsed && isActive && "bg-gray900 text-white font-medium rounded-full",
-              !collapsed && !isActive && "text-gray700 hover:bg-gray50 hover:text-gray900 rounded-full",
+              collapsed && !isActive && "text-gray700 hover:bg-gray50 hover:text-gray900 rounded-[20px]",
+              !collapsed && isActive && "bg-gray900 text-white font-medium rounded-[20px]",
+              !collapsed && !isActive && "text-gray700 hover:bg-gray50 hover:text-gray900 rounded-[20px]",
             )
           }
         >

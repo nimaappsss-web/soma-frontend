@@ -43,7 +43,7 @@ export const useMyFormClass = (userId: string) => {
     result = { formClassId: null, formClass: null };
   }
 
-  const isLoading = !apiHasData && (liveData === undefined || query.isLoading) && !query.isError;
+  const isLoading = liveData === undefined && !apiHasData && query.isLoading && !query.isError;
 
   return {
     data: result,

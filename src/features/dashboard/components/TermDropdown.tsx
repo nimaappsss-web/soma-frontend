@@ -41,7 +41,7 @@ export const TermDropdown = ({
       <button
         type="button"
         onClick={() => setOpen(!open)}
-        className="flex items-center h-11 rounded-full border border-gray200 bg-white px-4 text-sm gap-2 min-w-[220px]"
+        className="flex items-center h-[45px] rounded-[20px] border border-gray200 bg-white px-4 text-sm gap-2 min-w-[220px]"
       >
         <span className={cn("flex-1 text-left truncate", !selected && "text-placeholder")}>
           {selected?.label || placeholder}

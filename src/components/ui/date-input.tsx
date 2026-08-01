@@ -14,6 +14,7 @@ interface DateInputProps {
   hasError?: FieldError;
   className?: string;
   disabled?: boolean;
+  dropdownAlign?: "left" | "right";
 }
 
 const formatDate = (date: string) => {
@@ -30,6 +31,7 @@ const DateInput = ({
   hasError,
   className,
   disabled,
+  dropdownAlign = "left",
 }: DateInputProps) => {
   const [open, setOpen] = useState(false);
 
@@ -40,7 +42,7 @@ const DateInput = ({
         onClick={() => !disabled && setOpen(!open)}
         disabled={disabled}
         className={cn(
-          "flex h-11 items-center rounded-full border border-input bg-background px-4 text-sm cursor-pointer",
+          "flex h-[45px] items-center rounded-[20px] border border-input bg-background px-4 text-sm cursor-pointer",
           disabled && "cursor-not-allowed opacity-50",
           hasError && "border-red-500",
           className,
@@ -57,7 +59,8 @@ const DateInput = ({
 
       <div
         className={cn(
-          "absolute z-50 top-full mt-2 left-0 transition-all duration-200 origin-top-left",
+          "absolute z-50 top-full mt-2 transition-all duration-200",
+          dropdownAlign === "right" ? "right-0 origin-top-right" : "left-0 origin-top-left",
           open ? "opacity-100 scale-100" : "opacity-0 scale-95 pointer-events-none",
         )}
       >

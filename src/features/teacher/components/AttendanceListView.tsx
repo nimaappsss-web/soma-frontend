@@ -6,6 +6,7 @@ interface AttendanceListViewProps {
   students: Student[];
   attendance: Record<string, AttendanceStatus>;
   onMark: (studentId: string, status: AttendanceStatus) => void;
+  readOnly?: boolean;
 }
 
 const statusIcons: Record<AttendanceStatus, { icon: string; active: string; inactive: string }> = {
@@ -26,7 +27,7 @@ const statusIcons: Record<AttendanceStatus, { icon: string; active: string; inac
   },
 };
 
-export const AttendanceListView = ({ students, attendance, onMark }: AttendanceListViewProps) => {
+export const AttendanceListView = ({ students, attendance, onMark, readOnly }: AttendanceListViewProps) => {
   if (students.length === 0) return null;
 
   return (
@@ -51,6 +52,7 @@ export const AttendanceListView = ({ students, attendance, onMark }: AttendanceL
               {(Object.keys(statusIcons) as AttendanceStatus[]).map((status) => (
                 <button
                   key={status}
+                  disabled={readOnly}
                   onClick={() => onMark(s.id, status)}
                   className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold transition-all ${
                     currentStatus === status

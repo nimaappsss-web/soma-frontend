@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { useParams, useSearchParams, useNavigate, Link } from "react-router";
 import { useForm } from "react-hook-form";
 import { useQuery } from "@tanstack/react-query";
@@ -9,7 +9,7 @@ import { useInviteInfo, useSendOTPByEmail, useVerifyOTP } from "../features/auth
 import { useAuth } from "../contexts/AuthContext";
 import { getPostAuthPath } from "../features/auth/utils/routing";
 import { completeRegistrationSchema, type CompleteRegistrationFormData } from "../features/auth/utils/validationSchema";
-import { Trash } from "iconsax-react";
+import { Trash, ArrowLeft2 } from "iconsax-react";
 import { MultiSelect, type SelectOption } from "../components/ui/multi-select";
 import { SelectDropdown } from "../components/ui/select-dropdown";
 import { Button } from "../components/ui/button";
@@ -41,7 +41,7 @@ type Step = "email" | "otp" | "register";
 
 export const VerifyTeacher = () => {
   const { token: pathToken } = useParams<{ token: string }>();
-  const [searchParams] = useSearchParams();
+  const [searchParams, setSearchParams] = useSearchParams();
   const token = pathToken || searchParams.get("token") || "";
   const navigate = useNavigate();
   const { setTokens } = useAuth();
@@ -49,15 +49,35 @@ export const VerifyTeacher = () => {
   const sendOTPMutation = useSendOTPByEmail();
   const verifyOTPMutation = useVerifyOTP();
 
-  const [step, setStep] = useState<Step>("email");
+  const urlStep = searchParams.get("step");
+  const initialStep: Step =
+    urlStep === "otp" || urlStep === "register" || urlStep === "email" ? urlStep : "email";
+  const [step, setStep] = useState<Step>(initialStep);
   const [assignments, setAssignments] = useState<AssignmentRow[]>([
     { subjectId: "", classIds: [] },
   ]);
   const [formClassId, setFormClassId] = useState("");
-  const [email, setEmail] = useState("");
+  const [email, setEmail] = useState(searchParams.get("email") ?? "");
   const [emailError, setEmailError] = useState("");
   const [otp, setOtp] = useState("");
   const lastSubmittedOtpRef = useRef("");
+
+  const goToStep = useCallback(
+    (next: Step, nextEmail?: string) => {
+      setStep(next);
+      if (nextEmail !== undefined) setEmail(nextEmail);
+      setSearchParams((prev) => {
+        const params = new URLSearchParams(prev);
+        params.set("step", next);
+        if (nextEmail !== undefined) {
+          if (nextEmail) params.set("email", nextEmail);
+          else params.delete("email");
+        }
+        return params;
+      });
+    },
+    [setSearchParams],
+  );
 
   const {
     register,
@@ -100,20 +120,19 @@ export const VerifyTeacher = () => {
 
   useEffect(() => {
     if (inviteInfo && !isOpenInvite) {
-      setStep("register");
-      setEmail(inviteInfo.email ?? "");
+      goToStep("register", inviteInfo.email ?? "");
     }
-  }, [inviteInfo, isOpenInvite]);
+  }, [inviteInfo, isOpenInvite, goToStep]);
 
   useEffect(() => {
     if (otp.length === 6 && otp !== lastSubmittedOtpRef.current) {
       lastSubmittedOtpRef.current = otp;
       verifyOTPMutation.mutate(
         { email: email.trim(), code: otp },
-        { onSuccess: () => setStep("register") },
+        { onSuccess: () => goToStep("register") },
       );
     }
-  }, [otp, email, verifyOTPMutation]);
+  }, [otp, email, verifyOTPMutation, goToStep]);
 
   const handleSendOTP = () => {
     const trimmed = email.trim();
@@ -127,7 +146,7 @@ export const VerifyTeacher = () => {
     }
     setEmailError("");
     sendOTPMutation.mutate(trimmed, {
-      onSuccess: () => setStep("otp"),
+      onSuccess: () => goToStep("otp", trimmed),
     });
   };
 
@@ -251,6 +270,14 @@ export const VerifyTeacher = () => {
     return (
       <AuthLayout>
         <div className="lg:max-w-85.5">
+          <button
+            type="button"
+            onClick={() => goToStep("email", "")}
+            aria-label="Go back"
+            className="flex items-center justify-center w-8 h-8 rounded-full border border-black bg-transparent text-black transition-colors hover:bg-gray50 mb-5"
+          >
+            <ArrowLeft2 variant="Linear" size={16} color="#0D0D0D" />
+          </button>
           <div>
             <h1 className="text-2xl font-medium text-gray-900">
               Join {inviteInfo?.schoolName ?? "Your School"}
@@ -381,7 +408,7 @@ export const VerifyTeacher = () => {
                   onClick={() => handleRemoveSubject(i)}
                   aria-label="Remove subject"
                 >
-                  <Trash size={16} variant="Bold" />
+                  <Trash size={16} variant="Linear" color="#FFFFFF" />
                 </Button>
               </div>
             ))}

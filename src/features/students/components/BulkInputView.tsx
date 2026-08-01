@@ -2,6 +2,9 @@ import { useState, useRef, useCallback } from "react";
 
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { SelectDropdown } from "@/components/ui/select-dropdown";
 import type { BulkStudentRow } from "../utils/bulkParse";
 import { parseCSV, parseExcel, parseTextarea } from "../utils/bulkParse";
 
@@ -80,17 +83,12 @@ export const BulkInputView = ({ classes, onParsed }: BulkInputViewProps) => {
         <Label htmlFor="default-class" className="text-xs text-gray-500 mb-1 block">
           Default Class <span className="text-gray-400 font-normal">(can override per row in preview)</span>
         </Label>
-        <select
-          id="default-class"
+        <SelectDropdown
+          placeholder="Select class"
+          options={classes.map((c) => ({ value: c.id, label: c.name }))}
           value={defaultClassId}
-          onChange={(e) => setDefaultClassId(e.target.value)}
-          className="w-full h-10 rounded-md border border-gray-200 px-3 text-sm"
-        >
-          <option value="">Select class</option>
-          {classes.map((c) => (
-            <option key={c.id} value={c.id}>{c.name}</option>
-          ))}
-        </select>
+          onChange={setDefaultClassId}
+        />
       </div>
 
       <div className="flex gap-2 border-b border-gray-200 pb-3">
@@ -126,7 +124,7 @@ export const BulkInputView = ({ classes, onParsed }: BulkInputViewProps) => {
             onClick={() => fileRef.current?.click()}
             className="border-2 border-dashed border-gray-200 rounded-lg p-8 text-center cursor-pointer hover:border-blue-400 hover:bg-blue-50/30 transition-colors"
           >
-            <input
+            <Input
               ref={fileRef}
               type="file"
               accept=".csv,.xlsx,.xls"
@@ -154,13 +152,13 @@ export const BulkInputView = ({ classes, onParsed }: BulkInputViewProps) => {
           <p className="text-xs text-gray-400 mb-2">
             Simple: one name per line. Or CSV: <code className="bg-gray-100 px-1 rounded">name, classId, gender, dateOfBirth, parentName, parentPhone, parentEmail</code>
           </p>
-          <textarea
+          <Textarea
             id="bulk-input"
             value={rawInput}
             onChange={(e) => setRawInput(e.target.value)}
             placeholder={`Chidi Okonkwo\nAmina Bello, F\nEmeka Okafor, M, Mr. Okafor, 08012345678`}
             rows={8}
-            className="w-full rounded-md border border-gray-200 px-3 py-2 text-sm resize-y font-mono focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="font-mono"
           />
           <div className="mt-3">
             <Button onClick={handlePasteParse} disabled={!rawInput.trim()}>

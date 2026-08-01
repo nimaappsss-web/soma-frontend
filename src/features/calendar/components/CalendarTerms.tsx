@@ -4,18 +4,10 @@ import { motion, AnimatePresence } from "motion/react";
 import toast from "react-hot-toast";
 import { Input } from "../../../components/ui/input";
 import { Button } from "../../../components/ui/button";
-import { SelectDropdown } from "../../../components/ui/select-dropdown";
-import { useAcademicTerms, useCreateAcademicTerm, useUpdateAcademicTerm, useSetCurrentTerm, useDeleteAcademicTerm } from "../api";
+import { useAcademicTerms, useCreateAcademicTerm, useUpdateAcademicTerm, useDeleteAcademicTerm } from "../api";
 import type { CreateAcademicTermPayload, UpdateAcademicTermPayload, AcademicTerm } from "../types";
 
 const TERM_ORDER = ["first", "second", "third"] as const;
-
-const sessionOptions = [
-  { value: "2024/2025", label: "2024/2025" },
-  { value: "2025/2026", label: "2025/2026" },
-  { value: "2026/2027", label: "2026/2027" },
-  { value: "2027/2028", label: "2027/2028" },
-];
 
 const formatRange = (start: string, end: string) => {
   const s = new Date(start);
@@ -51,8 +43,6 @@ const TermRow = ({
   term,
   index,
   total,
-  onSetCurrent,
-  onSetInactive,
   onEdit,
   onDelete,
   isPending,
@@ -65,8 +55,6 @@ const TermRow = ({
   term: AcademicTerm;
   index: number;
   total: number;
-  onSetCurrent: () => void;
-  onSetInactive: () => void;
   onEdit: () => void;
   onDelete: () => void;
   isPending: boolean;
@@ -109,12 +97,6 @@ const TermRow = ({
                 <span className="text-xs font-medium text-gray-400 uppercase tracking-wider">Term</span>
                 <span className="text-sm font-semibold text-gray-900">{info.label}</span>
               </div>
-              <SelectDropdown
-                options={sessionOptions}
-                value={editForm.session ?? ""}
-                onChange={(v) => onEditFormChange("session", v)}
-                placeholder="Session"
-              />
               <div className="flex gap-3">
                 <div className="flex-1">
                   <label className="block text-xs text-gray-500 mb-1">Start Date</label>
@@ -146,22 +128,13 @@ const TermRow = ({
                     </span>
                   )}
                 </div>
-                <p className="text-sm text-gray-500">{term.session}</p>
+                <p className="text-sm text-gray-500">{termLabel(term.term).label}</p>
                 <p className="mt-2 text-xs text-gray-400">{formatRange(term.startDate, term.endDate)}</p>
               </div>
               <div className="flex shrink-0 gap-1.5">
                 <Button onClick={onEdit} variant="outline" size="sm">
                   Edit
                 </Button>
-                {term.isCurrent ? (
-                  <Button onClick={onSetInactive} disabled={isPending} variant="outline" size="sm">
-                    Set Inactive
-                  </Button>
-                ) : (
-                  <Button onClick={onSetCurrent} disabled={isPending} variant="outline" size="sm">
-                    Set Active
-                  </Button>
-                )}
                 <Button onClick={onDelete} disabled={isPending} variant="ghost" size="sm">
                   Remove
                 </Button>
@@ -178,11 +151,10 @@ export const CalendarTerms = () => {
   const { data, isLoading } = useAcademicTerms();
   const createMutation = useCreateAcademicTerm();
   const updateMutation = useUpdateAcademicTerm();
-  const setCurrentMutation = useSetCurrentTerm();
   const deleteMutation = useDeleteAcademicTerm();
 
   const [showForm, setShowForm] = useState(false);
-  const [form, setForm] = useState<CreateAcademicTermPayload>({ term: "", session: "", startDate: "", endDate: "" });
+  const [form, setForm] = useState<CreateAcademicTermPayload>({ term: "", startDate: "", endDate: "" });
 
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editForm, setEditForm] = useState<UpdateAcademicTermPayload>({});
@@ -190,14 +162,12 @@ export const CalendarTerms = () => {
   const terms = data?.terms ?? [];
   const hasCurrent = terms.some((t) => t.isCurrent);
 
-  const { nextTerm, prevTerm, defaultSession } = useMemo(() => {
+  const { nextTerm, prevTerm } = useMemo(() => {
     const existing = new Set(terms.map((t) => t.term));
     const idx = TERM_ORDER.findIndex((t) => !existing.has(t));
-    const sessions = [...new Set(terms.map((t) => t.session))].sort();
     return {
       nextTerm: idx >= 0 ? TERM_ORDER[idx] : null,
       prevTerm: idx > 0 ? terms.find((t) => t.term === TERM_ORDER[idx - 1]) : null,
-      defaultSession: sessions[sessions.length - 1] ?? "",
     };
   }, [terms]);
 
@@ -205,21 +175,21 @@ export const CalendarTerms = () => {
 
   const openForm = () => {
     if (!nextTerm) return;
-    setForm({ term: nextTerm, session: defaultSession, startDate: "", endDate: "" });
+    setForm({ term: nextTerm, startDate: "", endDate: "" });
     setShowForm(true);
   };
 
   const handleCreate = () => {
-    if (!form.term || !form.session || !form.startDate || !form.endDate) return;
+    if (!form.term || !form.startDate || !form.endDate) return;
     if (form.endDate <= form.startDate) { toast.error("End date must be after start date"); return; }
     createMutation.mutate(form, {
-      onSuccess: () => { setShowForm(false); setForm({ term: "", session: "", startDate: "", endDate: "" }); },
+      onSuccess: () => { setShowForm(false); setForm({ term: "", startDate: "", endDate: "" }); },
     });
   };
 
   const startEditing = (t: AcademicTerm) => {
     setEditingId(t.id);
-    setEditForm({ term: t.term, session: t.session, startDate: toDateInputValue(t.startDate), endDate: toDateInputValue(t.endDate) });
+    setEditForm({ term: t.term, startDate: toDateInputValue(t.startDate), endDate: toDateInputValue(t.endDate) });
   };
 
   const handleEditChange = (field: keyof UpdateAcademicTermPayload, value: string) => {
@@ -246,7 +216,7 @@ export const CalendarTerms = () => {
     setEditForm({});
   };
 
-  const isPending = createMutation.isPending || updateMutation.isPending || setCurrentMutation.isPending || deleteMutation.isPending;
+  const isPending = createMutation.isPending || updateMutation.isPending || deleteMutation.isPending;
 
   return (
     <div className="max-w-2xl">
@@ -254,7 +224,7 @@ export const CalendarTerms = () => {
         <p className="text-[11px] font-mono uppercase tracking-[0.18em] text-gray-400 mb-1">Academic Calendar</p>
         <h1 className="text-2xl font-semibold text-gray-900">Terms</h1>
         <p className="text-sm text-gray-500 mt-1 max-w-md">
-          Define the terms that make up your school year and choose which one is currently active.
+          Define the terms that make up your school year. The active term is detected automatically from your school calendar.
         </p>
       </div>
 
@@ -281,12 +251,6 @@ export const CalendarTerms = () => {
                   <span className="text-xs font-medium text-gray-400 uppercase tracking-wider">Term</span>
                   <span className="text-sm font-semibold text-gray-900">{termLabel(nextTerm).label}</span>
                 </div>
-                <SelectDropdown
-                  options={sessionOptions}
-                  value={form.session}
-                  onChange={(v) => setForm({ ...form, session: v })}
-                  placeholder="Session"
-                />
                 <div className="flex gap-3">
                   <div className="flex-1">
                     <label className="block text-xs text-gray-500 mb-1">Start Date</label>
@@ -342,8 +306,6 @@ export const CalendarTerms = () => {
               term={t}
               index={i}
               total={terms.length}
-              onSetCurrent={() => setCurrentMutation.mutate(t.id)}
-              onSetInactive={() => updateMutation.mutate({ id: t.id, data: { isCurrent: false } })}
               onEdit={() => startEditing(t)}
               onDelete={() => deleteMutation.mutate(t.id)}
               isPending={isPending}
@@ -366,7 +328,7 @@ export const CalendarTerms = () => {
 
       {terms.length > 0 && !hasCurrent && (
         <p className="mt-6 text-xs text-gray-400 text-center">
-          No term is currently active — set one using the button above.
+          No term is flagged active on the server — the current term is detected automatically from the dates above.
         </p>
       )}
 

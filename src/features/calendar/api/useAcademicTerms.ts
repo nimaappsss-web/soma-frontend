@@ -10,7 +10,6 @@ import type { AcademicTermListResponse, AcademicTerm, AxiosErrorResponse } from 
 const fromCache = (c: AcademicTermCache): AcademicTerm => ({
   id: c.id,
   term: c.term,
-  session: c.session,
   startDate: c.startDate,
   endDate: c.endDate,
   isCurrent: c.isCurrent,

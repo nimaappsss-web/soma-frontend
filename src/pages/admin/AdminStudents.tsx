@@ -1,9 +1,11 @@
 import { useState, useMemo, useEffect, useCallback } from "react";
-import { useForm } from "react-hook-form";
+import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Trash } from "iconsax-react";
 
 import { Avatar } from "../../components/ui/Avatar";
+import { Input } from "../../components/ui/input";
+import { SelectDropdown } from "../../components/ui/select-dropdown";
 import { useAuth } from "../../contexts/AuthContext";
 import { useAllStudents, useCreateStudent, useStudentDetail, useDeleteStudent, useBulkDeleteStudents } from "../../features/students/api";
 import { BulkAddStudents } from "../../features/students/components/BulkAddStudents";
@@ -74,6 +76,7 @@ export const AdminStudents = () => {
     register,
     handleSubmit,
     reset,
+    control,
     formState: { errors },
   } = useForm<CreateStudentFormData>({
     resolver: zodResolver(createStudentSchema),
@@ -114,6 +117,7 @@ export const AdminStudents = () => {
     register: editRegister,
     handleSubmit: handleEditSubmit,
     reset: resetEdit,
+    control: editControl,
     formState: { errors: editErrors, isDirty: editDirty },
   } = useForm<EditStudentFormData>({
     resolver: zodResolver(editStudentSchema),
@@ -195,20 +199,26 @@ export const AdminStudents = () => {
     <div>
       <label className="block text-xs text-gray-500 mb-1">{label}</label>
       {key === "gender" ? (
-        <select
-          {...register("gender")}
-          className="w-full h-10 rounded-md border border-gray-200 px-3 text-sm"
-        >
-          <option value="">Select</option>
-          <option value="M">Male</option>
-          <option value="F">Female</option>
-        </select>
+        <Controller
+          control={control}
+          name="gender"
+          render={({ field: genderField }) => (
+            <SelectDropdown
+              options={[
+                { value: "", label: "Select" },
+                { value: "M", label: "Male" },
+                { value: "F", label: "Female" },
+              ]}
+              value={genderField.value ?? ""}
+              onChange={genderField.onChange}
+            />
+          )}
+        />
       ) : (
-        <input
+        <Input
           type={type}
           {...register(key)}
           placeholder={placeholder}
-          className="w-full h-10 rounded-md border border-gray-200 px-3 text-sm"
         />
       )}
       {errors[key] && (
@@ -218,20 +228,17 @@ export const AdminStudents = () => {
   );
 
   return (
-    <div className="p-6 max-w-4xl">
+    <div className="p-6 w-full">
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-2xl font-semibold text-gray-900">Students</h1>
         <div className="flex gap-3">
-          <select
+          <SelectDropdown
             value={classFilter}
-            onChange={(e) => setClassFilter(e.target.value)}
-            className="h-10 rounded-md border border-gray-200 px-3 text-sm w-56"
-          >
-            <option value="">All classes</option>
-            {classesData?.classes.map((c) => (
-              <option key={c.id} value={c.id}>{c.name}</option>
-            ))}
-          </select>
+            onChange={setClassFilter}
+            placeholder="All classes"
+            className="w-56"
+            options={(classesData?.classes ?? []).map((c) => ({ value: c.id, label: c.name }))}
+          />
           <button
             onClick={() => { setShowBulk(true); setShowForm(false); }}
             className="px-4 py-2 border border-blue-600 text-blue-600 rounded-lg text-sm font-medium hover:bg-blue-50"
@@ -291,58 +298,84 @@ export const AdminStudents = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <label className="block text-xs text-gray-500 mb-1">Full Name *</label>
-              <input type="text" {...editRegister("name")} className="w-full h-10 rounded-md border border-gray-200 px-3 text-sm" />
+              <Input type="text" {...editRegister("name")} />
               {editErrors.name && <p className="text-xs text-destructive mt-1">{editErrors.name.message}</p>}
             </div>
             <div>
               <label className="block text-xs text-gray-500 mb-1">Class *</label>
-              <select {...editRegister("classId")} className="w-full h-10 rounded-md border border-gray-200 px-3 text-sm">
-                <option value="">Select class</option>
-                {classesData?.classes.map((c) => (
-                  <option key={c.id} value={c.id}>{c.name}</option>
-                ))}
-              </select>
+              <Controller
+                control={editControl}
+                name="classId"
+                render={({ field }) => (
+                  <SelectDropdown
+                    placeholder="Select class"
+                    options={(classesData?.classes ?? []).map((c) => ({ value: c.id, label: c.name }))}
+                    value={field.value ?? ""}
+                    onChange={field.onChange}
+                  />
+                )}
+              />
               {editErrors.classId && <p className="text-xs text-destructive mt-1">{editErrors.classId.message}</p>}
             </div>
             <div>
               <label className="block text-xs text-gray-500 mb-1">Gender</label>
-              <select {...editRegister("gender")} className="w-full h-10 rounded-md border border-gray-200 px-3 text-sm">
-                <option value="">Select</option>
-                <option value="M">Male</option>
-                <option value="F">Female</option>
-              </select>
+              <Controller
+                control={editControl}
+                name="gender"
+                render={({ field }) => (
+                  <SelectDropdown
+                    placeholder="Select"
+                    options={[
+                      { value: "M", label: "Male" },
+                      { value: "F", label: "Female" },
+                    ]}
+                    value={field.value ?? ""}
+                    onChange={field.onChange}
+                  />
+                )}
+              />
             </div>
             <div>
               <label className="block text-xs text-gray-500 mb-1">Date of Birth</label>
-              <input type="date" {...editRegister("dateOfBirth")} className="w-full h-10 rounded-md border border-gray-200 px-3 text-sm" />
+              <Input type="date" {...editRegister("dateOfBirth")} />
             </div>
             <div>
               <label className="block text-xs text-gray-500 mb-1">Status</label>
-              <select {...editRegister("status")} className="w-full h-10 rounded-md border border-gray-200 px-3 text-sm">
-                <option value="ACTIVE">Active</option>
-                <option value="TRANSFERRED">Transferred</option>
-                <option value="WITHDRAWN">Withdrawn</option>
-                <option value="GRADUATED">Graduated</option>
-              </select>
+              <Controller
+                control={editControl}
+                name="status"
+                render={({ field }) => (
+                  <SelectDropdown
+                    options={[
+                      { value: "ACTIVE", label: "Active" },
+                      { value: "TRANSFERRED", label: "Transferred" },
+                      { value: "WITHDRAWN", label: "Withdrawn" },
+                      { value: "GRADUATED", label: "Graduated" },
+                    ]}
+                    value={field.value ?? "ACTIVE"}
+                    onChange={field.onChange}
+                  />
+                )}
+              />
             </div>
             <div>
               <label className="block text-xs text-gray-500 mb-1">Address</label>
-              <input type="text" {...editRegister("address")} placeholder="15 Awolowo Road, Ikoyi" className="w-full h-10 rounded-md border border-gray-200 px-3 text-sm" />
+              <Input type="text" {...editRegister("address")} placeholder="15 Awolowo Road, Ikoyi" />
             </div>
             <div className="md:col-span-2 border-t border-gray-100 pt-4">
               <p className="text-xs font-medium text-gray-500 mb-3 uppercase tracking-wide">Parent/Guardian</p>
             </div>
             <div>
               <label className="block text-xs text-gray-500 mb-1">Parent Name</label>
-              <input type="text" {...editRegister("parentName")} className="w-full h-10 rounded-md border border-gray-200 px-3 text-sm" />
+              <Input type="text" {...editRegister("parentName")} />
             </div>
             <div>
               <label className="block text-xs text-gray-500 mb-1">Parent Phone</label>
-              <input type="tel" {...editRegister("parentPhone")} className="w-full h-10 rounded-md border border-gray-200 px-3 text-sm" />
+              <Input type="tel" {...editRegister("parentPhone")} />
             </div>
             <div>
               <label className="block text-xs text-gray-500 mb-1">Parent Email</label>
-              <input type="email" {...editRegister("parentEmail")} className="w-full h-10 rounded-md border border-gray-200 px-3 text-sm" />
+              <Input type="email" {...editRegister("parentEmail")} />
               {editErrors.parentEmail && <p className="text-xs text-destructive mt-1">{editErrors.parentEmail.message}</p>}
             </div>
           </div>

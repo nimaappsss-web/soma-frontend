@@ -117,11 +117,29 @@ export interface MarkAttendanceResponse {
   records: AttendanceRecord[];
 }
 
+export type AttendanceBlockedType = "HOLIDAY" | "WEEKEND" | "OUT_OF_TERM" | "FUTURE";
+
+export interface AttendanceReason {
+  available: boolean;
+  type?: AttendanceBlockedType;
+  message?: string;
+}
+
 export interface AttendanceQueryResponse {
   records: AttendanceRecord[];
   total: number;
   page: number;
   totalPages: number;
+  reason?: AttendanceReason;
+}
+
+export interface AttendanceAvailability {
+  date: string;
+  available: boolean;
+  reason?: {
+    type: AttendanceBlockedType;
+    message: string;
+  };
 }
 
 export interface TeacherStats {
@@ -184,6 +202,10 @@ export interface AttendanceCalendarDay {
   dayOfWeek: string;
   isSchoolDay: boolean;
   isHoliday: boolean;
+  isWeekend?: boolean;
+  isOutOfTerm?: boolean;
+  blockedType?: AttendanceBlockedType;
+  blockedReason?: string;
   present: number;
   absent: number;
   percentage: number;
@@ -193,7 +215,6 @@ export interface AttendanceCalendar {
   month: number;
   year: number;
   schoolDays: number;
-  holidayDates: string[];
   days: AttendanceCalendarDay[];
 }
 
