@@ -5,37 +5,41 @@ import { db } from "../../../db/db";
 import { fetchData } from "../../../utils/fetchData";
 import { useAuth } from "../../../contexts/AuthContext";
 import { examKeys } from "../utils/query-keys";
-import type { ExamScheme, AxiosErrorResponse } from "../types";
+import type { ExamSchemeInfo, AxiosErrorResponse } from "../types";
 
-export const useExamComponents = (term: string, session?: string, schoolType?: string) => {
+export interface ExamSchemesResponse {
+  term: string;
+  session: string;
+  schemes: ExamSchemeInfo[];
+}
+
+export const useExamSchemes = (term: string, session?: string) => {
   const { user } = useAuth();
   const userId = user?.id ?? "";
   const sessionKey = session ?? "";
-  const typeKey = schoolType ?? "";
 
   const params = new URLSearchParams();
   if (term) params.set("term", term);
   if (session) params.set("session", session);
-  if (typeKey) params.set("schoolType", typeKey);
 
-  const schemeId = `${userId}:${term}:${sessionKey}:${typeKey}`;
+  const cacheId = `${userId}:${term}:${sessionKey}:all`;
 
   const cached = useLiveQuery(
     () => {
-      if (!userId || !term) return Promise.resolve(undefined as ExamScheme | undefined);
+      if (!userId || !term) return Promise.resolve(undefined as ExamSchemesResponse | undefined);
       return db.examScheme
-        .get(schemeId)
-        .then((row) => (row ? (JSON.parse(row.schemeJson) as ExamScheme) : undefined));
+        .get(cacheId)
+        .then((row) => (row ? (JSON.parse(row.schemeJson) as ExamSchemesResponse) : undefined));
     },
-    [schemeId, userId, term],
+    [cacheId, userId, term],
   );
 
-  const query = useQuery<ExamScheme, AxiosErrorResponse>({
-    queryKey: examKeys.scheme({ term, session: sessionKey, schoolType: typeKey }),
+  const query = useQuery<ExamSchemesResponse, AxiosErrorResponse>({
+    queryKey: examKeys.scheme({ term, session: sessionKey, scope: "all" }),
     queryFn: async () => {
-      const res = await fetchData<ExamScheme>(`/exams/components?${params.toString()}`, "GET");
+      const res = await fetchData<ExamSchemesResponse>(`/exams/components?${params.toString()}`, "GET");
       await db.examScheme.put({
-        id: schemeId,
+        id: cacheId,
         userId,
         term,
         session: res.session || sessionKey,
@@ -44,7 +48,7 @@ export const useExamComponents = (term: string, session?: string, schoolType?: s
       });
       return res;
     },
-    enabled: !!term && !!userId && !!typeKey,
+    enabled: !!term && !!userId,
     staleTime: 5 * 60 * 1000,
   });
 

@@ -27,13 +27,31 @@ export interface ExamComponent {
   sortOrder: number;
 }
 
-export interface ExamScheme {
-  term: string;
-  session: string;
+export interface ExamSchemeInfo {
+  schemeId: string | null;
+  schoolTypes: string[];
   components: ExamComponent[];
   schemeTotal: number;
   complete: boolean;
   warning: string | null;
+}
+
+export interface ExamScheme {
+  term: string;
+  session: string;
+  schemeId?: string | null;
+  schoolTypes?: string[];
+  components?: ExamComponent[];
+  schemeTotal?: number;
+  complete?: boolean;
+  warning?: string | null;
+  schemes?: ExamSchemeInfo[];
+}
+
+export interface CreateScoreSchemePayload {
+  term: string;
+  session?: string;
+  schoolTypes: string[];
 }
 
 export interface CreateExamComponentPayload {
@@ -43,6 +61,8 @@ export interface CreateExamComponentPayload {
   maxScore: number;
   sortOrder: number;
   session?: string;
+  schemeId?: string;
+  schoolTypes?: string[];
 }
 
 export type UpdateExamComponentPayload = Partial<
@@ -260,5 +280,27 @@ export interface TermResultsResponse {  classId: string;
     position: number;
     classSize: number;
     attendancePercentage: number;
+  }>;
+}
+
+export interface StudentAcademicsResponse {
+  studentId: string;
+  term: string;
+  session: string;
+  average: number;
+  bestSubject: { name: string; score: number } | null;
+  worstSubject: { name: string; score: number } | null;
+  attendancePercentage: number;
+  position: number;
+  classSize: number;
+  subjects: Array<{
+    subjectId: string;
+    subjectName: string;
+    scores: Array<{ type: string; score: number; maxScore: number }>;
+    caTotal: number;
+    examScore: number;
+    total: number;
+    grade: string;
+    teacherName: string;
   }>;
 }

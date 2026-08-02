@@ -1,5 +1,5 @@
-import { TermResultsView } from "../../features/examinations/components/TermResultsView";
+import { MyClassStudents } from "../../features/examinations/components/MyClassStudents";
 
 export const TeacherResults = () => {
-  return <TermResultsView />;
+  return <MyClassStudents />;
 };

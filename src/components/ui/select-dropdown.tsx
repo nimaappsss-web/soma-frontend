@@ -1,7 +1,8 @@
-import { useState, useRef, useEffect, useMemo } from "react";
+import { useState, useRef, useEffect, useLayoutEffect, useMemo } from "react";
 import { createPortal } from "react-dom";
 import { cn } from "@/lib/utils";
 import { SearchNormal } from "iconsax-react";
+import type { CSSProperties } from "react";
 import type { FieldError } from "react-hook-form";
 
 export interface SelectOption {
@@ -21,10 +22,13 @@ interface SelectDropdownProps {
   searchable?: boolean;
 }
 
-interface MenuRect {
-  top: number;
+interface MenuPos {
+  btnTop: number;
+  btnBottom: number;
   left: number;
   width: number;
+  height: number;
+  flipped: boolean;
 }
 
 export const SelectDropdown = ({
@@ -40,11 +44,13 @@ export const SelectDropdown = ({
 }: SelectDropdownProps) => {
   const [open, setOpen] = useState(false);
   const [filter, setFilter] = useState("");
-  const [menuRect, setMenuRect] = useState<MenuRect | null>(null);
+  const [pos, setPos] = useState<MenuPos | null>(null);
   const ref = useRef<HTMLDivElement>(null);
   const btnRef = useRef<HTMLButtonElement>(null);
   const menuRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+
+  const inDialog = typeof document !== "undefined" && !!document.querySelector('[role="dialog"]');
 
   useEffect(() => {
     if (open && searchable) {
@@ -59,7 +65,14 @@ export const SelectDropdown = ({
       const el = btnRef.current;
       if (!el) return;
       const r = el.getBoundingClientRect();
-      setMenuRect({ top: r.bottom + 4, left: r.left, width: r.width });
+      setPos((p) => ({
+        btnTop: r.top,
+        btnBottom: r.bottom,
+        left: r.left,
+        width: r.width,
+        height: p?.height ?? 0,
+        flipped: p?.flipped ?? false,
+      }));
     };
     update();
     window.addEventListener("scroll", update, true);
@@ -69,6 +82,16 @@ export const SelectDropdown = ({
       window.removeEventListener("resize", update);
     };
   }, [open]);
+
+  useLayoutEffect(() => {
+    if (!open || !pos || pos.flipped) return;
+    const el = menuRef.current;
+    if (!el) return;
+    const h = el.offsetHeight;
+    if (pos.btnBottom + 4 + h > window.innerHeight - 8) {
+      setPos((p) => (p ? { ...p, height: h, flipped: true } : p));
+    }
+  }, [open, pos]);
 
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
@@ -97,7 +120,7 @@ export const SelectDropdown = ({
       const el = btnRef.current;
       if (el) {
         const r = el.getBoundingClientRect();
-        setMenuRect({ top: r.bottom + 4, left: r.left, width: r.width });
+        setPos({ btnTop: r.top, btnBottom: r.bottom, left: r.left, width: r.width, height: 0, flipped: false });
       }
     }
     setOpen(!open);
@@ -107,6 +130,63 @@ export const SelectDropdown = ({
     onChange(optionValue);
     setOpen(false);
   };
+
+  const menuStyle: CSSProperties | undefined = pos
+    ? {
+        top: pos.flipped ? Math.max(4, pos.btnTop - pos.height - 4) : pos.btnBottom + 4,
+        left: pos.left,
+        width: pos.width,
+      }
+    : undefined;
+
+  const menu = (
+    <>
+      {searchable && (
+        <div className="p-2 pb-0">
+          <div className="relative">
+            <SearchNormal
+              className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-placeholder pointer-events-none"
+              variant="Bold"
+            />
+            <input
+              ref={inputRef}
+              type="text"
+              value={filter}
+              onChange={(e) => setFilter(e.target.value)}
+              placeholder="Search..."
+              className="w-full h-9 rounded-full border border-input bg-background pl-9 pr-4 text-sm placeholder:text-placeholder focus-visible:outline-none"
+            />
+          </div>
+        </div>
+      )}
+      <div className="max-h-60 overflow-y-auto">
+        {filteredOptions.length === 0 ? (
+          <p className="p-3 text-sm text-placeholder">No options available</p>
+        ) : (
+          filteredOptions.map((option) => (
+            <button
+              key={option.value}
+              type="button"
+              onClick={() => handleSelect(option.value)}
+              className={cn(
+                "flex w-full items-center gap-2 px-4 py-2.5 text-sm text-left transition-colors hover:bg-accent",
+                option.value === value && "font-medium",
+              )}
+            >
+              <span className="w-4 shrink-0">
+                {option.value === value && (
+                  <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                  </svg>
+                )}
+              </span>
+              {option.label}
+            </button>
+          ))
+        )}
+      </div>
+    </>
+  );
 
   return (
     <div ref={ref} className={cn("relative", className)}>
@@ -134,57 +214,15 @@ export const SelectDropdown = ({
       </button>
 
       {open &&
-        menuRect &&
+        pos &&
         createPortal(
           <div
             ref={menuRef}
-            style={{ top: menuRect.top, left: menuRect.left, width: menuRect.width }}
-            className="fixed z-[100] mt-1 rounded-xl border border-input bg-background shadow-lg"
+            onPointerDownCapture={inDialog ? (e) => e.stopPropagation() : undefined}
+            style={inDialog ? { ...menuStyle, pointerEvents: "auto" } : menuStyle}
+            className="fixed z-[100] rounded-xl border border-input bg-background shadow-lg"
           >
-            {searchable && (
-              <div className="p-2 pb-0">
-                <div className="relative">
-                  <SearchNormal
-                    className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-placeholder pointer-events-none"
-                    variant="Bold"
-                  />
-                  <input
-                    ref={inputRef}
-                    type="text"
-                    value={filter}
-                    onChange={(e) => setFilter(e.target.value)}
-                    placeholder="Search..."
-                    className="w-full h-9 rounded-full border border-input bg-background pl-9 pr-4 text-sm placeholder:text-placeholder focus-visible:outline-none"
-                  />
-                </div>
-              </div>
-            )}
-            <div className="max-h-60 overflow-y-auto">
-              {filteredOptions.length === 0 ? (
-                <p className="p-3 text-sm text-placeholder">No options available</p>
-              ) : (
-                filteredOptions.map((option) => (
-                  <button
-                    key={option.value}
-                    type="button"
-                    onClick={() => handleSelect(option.value)}
-                    className={cn(
-                      "flex w-full items-center gap-2 px-4 py-2.5 text-sm text-left transition-colors hover:bg-accent",
-                      option.value === value && "font-medium",
-                    )}
-                  >
-                    <span className="w-4 shrink-0">
-                      {option.value === value && (
-                        <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                        </svg>
-                      )}
-                    </span>
-                    {option.label}
-                  </button>
-                ))
-              )}
-            </div>
+            {menu}
           </div>,
           document.body,
         )}

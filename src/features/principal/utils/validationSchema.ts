@@ -3,6 +3,7 @@ import { z } from "zod";
 export const createClassSchema = z.object({
   name: z.string().min(1, "Class name is required"),
   level: z.string().min(1, "Level is required"),
+  schoolType: z.string().optional(),
 });
 
 export const createSubjectSchema = z.object({

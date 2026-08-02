@@ -37,12 +37,9 @@ export const CreateAssessmentDialog = ({ open, onClose, defaultClassId }: Create
 
   const { data: classesData } = useClasses();
   const { data: subjectsData } = useSubjects();
-  const { data: schemeData } = useExamComponents(term);
   const { data: termsData } = useAcademicTerms();
   const { data: holidaysData } = useHolidays();
   const createMutation = useCreateExam();
-
-  const components = schemeData?.components ?? [];
 
   const [classId, setClassId] = useState(defaultClassId ?? "");
   const [subjectId, setSubjectId] = useState("");
@@ -52,6 +49,11 @@ export const CreateAssessmentDialog = ({ open, onClose, defaultClassId }: Create
   const [maxScore, setMaxScore] = useState("");
   const [date, setDate] = useState("");
   const [dateRejection, setDateRejection] = useState<ExamDateRejection | null>(null);
+
+  const selectedClass = (classesData?.classes ?? []).find((c) => c.id === classId);
+  const classSchoolType = selectedClass?.schoolType ?? "";
+  const { data: schemeData } = useExamComponents(term, undefined, classSchoolType);
+  const components = schemeData?.components ?? [];
 
   const holidayDates = useMemo(() => holidaysData?.holidays?.map((h) => h.date) ?? [], [holidaysData]);
   const terms = termsData?.terms ?? [];
@@ -172,6 +174,11 @@ export const CreateAssessmentDialog = ({ open, onClose, defaultClassId }: Create
             />
             {!componentId && (
               <p className="text-xs text-gray500">Pick a component to auto-fill name, type, and max score.</p>
+            )}
+            {classId && classSchoolType && components.length === 0 && (
+              <p className="text-xs text-amber500">
+                No mark types are configured for {classSchoolType} classes. You can still create a custom assessment.
+              </p>
             )}
           </div>
 

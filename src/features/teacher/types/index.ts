@@ -10,6 +10,7 @@ export interface SubjectAssignment {
     name: string;
     level: string;
     arm?: string;
+    schoolType?: string;
   }>;
 }
 
@@ -48,7 +49,7 @@ export interface TeacherDetail {
   assignments: Array<{
     id: string;
     subject: { id: string; name: string; code?: string };
-    classes: Array<{ id: string; name: string; level: string; arm?: string }>;
+    classes: Array<{ id: string; name: string; level: string; arm?: string; schoolType?: string }>;
   }>;
 }
 

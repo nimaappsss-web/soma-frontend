@@ -1,7 +1,21 @@
 import { fetchData } from "../utils/fetchData";
 import { db } from "../db/db";
 import type { User } from "../features/auth/types";
-import type { AcademicTermCache, ClassCache, SubjectCache, TeacherCache, SchoolSettingsCache } from "../db/db";
+import type {
+  AcademicTermCache,
+  ClassCache,
+  SubjectCache,
+  TeacherCache,
+  SchoolSettingsCache,
+} from "../db/db";
+import {
+  seedActiveExamSummaries,
+  type ActiveExamSummariesResponse,
+} from "../features/examinations/utils/activeSummaries";
+import { seedTermResults } from "../features/examinations/utils/termResultsCache";
+import type { TermResultsResponse } from "../features/examinations/types";
+import { seedReportSettings } from "../features/report-card/utils/reportCardCache";
+import type { ReportSettings } from "../features/report-card/types";
 
 export interface SyncProgress {
   current: number;
@@ -133,6 +147,51 @@ const academicTermsTask: SyncTask = {
   },
 };
 
+const examScoresPullTask: SyncTask = {
+  name: "examScores",
+  run: async (user) => {
+    let res: ActiveExamSummariesResponse | undefined;
+    try {
+      res = await fetchData<ActiveExamSummariesResponse>("/assessments/active-scores", "GET");
+    } catch {
+      return;
+    }
+    await seedActiveExamSummaries(user.id, res?.exams ?? []);
+  },
+};
+
+const termResultsPullTask: SyncTask = {
+  name: "termResults",
+  run: async (user) => {
+    const formClass = await db.teacherFormClass.get(user.id);
+    if (!formClass?.formClassId) return;
+    const terms = await db.academicTerms.where("userId").equals(user.id).toArray();
+    const active = terms.find((t) => t.isCurrent) ?? terms[0];
+    if (!active) return;
+    try {
+      const res = await fetchData<TermResultsResponse>(
+        `/results/term?classId=${formClass.formClassId}&term=${active.term}&session=`,
+        "GET",
+      );
+      await seedTermResults(user.id, formClass.formClassId, active.term, "", res);
+    } catch {
+      return;
+    }
+  },
+};
+
+const reportSettingsPullTask: SyncTask = {
+  name: "reportSettings",
+  run: async (user) => {
+    try {
+      const res = await fetchData<ReportSettings>("/report-settings", "GET");
+      await seedReportSettings(user.id, res);
+    } catch {
+      return;
+    }
+  },
+};
+
 const principalTasks: SyncTask[] = [
   classesTask,
   subjectsTask,
@@ -140,6 +199,7 @@ const principalTasks: SyncTask[] = [
   parentsTask,
   schoolSettingsTask,
   academicTermsTask,
+  reportSettingsPullTask,
 ];
 
 const teacherTasks: SyncTask[] = [
@@ -148,6 +208,9 @@ const teacherTasks: SyncTask[] = [
   classesTask,
   subjectsTask,
   academicTermsTask,
+  termResultsPullTask,
+  examScoresPullTask,
+  reportSettingsPullTask,
 ];
 
 const parentTasks: SyncTask[] = [

@@ -79,7 +79,7 @@ export const TagInput = ({
               disabled={disabled}
               className="hover:text-black/70"
             >
-              <CloseCircle size={14} variant="Bold" />
+              <CloseCircle size={14} variant="Bold" color="currentColor" />
             </button>
           </span>
         ))}

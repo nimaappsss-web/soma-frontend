@@ -5,7 +5,9 @@ import { zodResolver } from "@hookform/resolvers/zod";
 
 import { Avatar } from "../../components/ui/Avatar";
 import { Input } from "../../components/ui/input";
+import { SelectDropdown } from "../../components/ui/select-dropdown";
 import { useAuth } from "../../contexts/AuthContext";
+import { useSchoolSettings } from "../../features/settings/api/useSchoolSettings";
 import {
   useClasses,
   useCreateClass,
@@ -16,12 +18,34 @@ import {
   type CreateClassFormData,
 } from "../../features/principal/utils/validationSchema";
 
+const SCHOOL_TYPE_LABEL: Record<string, string> = {
+  creche: "Creche",
+  kg: "Kindergarten",
+  primary: "Primary",
+  secondary: "Secondary",
+};
+
+const schoolTypeLabel = (t: string) => SCHOOL_TYPE_LABEL[t] ?? t.charAt(0).toUpperCase() + t.slice(1);
+
 export const AdminClasses = () => {
   const { user, logout } = useAuth();
   const { data, isLoading } = useClasses();
+  const { data: settings } = useSchoolSettings();
   const createMutation = useCreateClass();
   const deleteMutation = useDeleteClass();
   const [showForm, setShowForm] = useState(false);
+  const [selectedSchoolType, setSelectedSchoolType] = useState("");
+
+  const schoolTypeOptions = (() => {
+    const declared = settings?.find((s) => s.key === "schoolType");
+    const declaredTypes: string[] = Array.isArray(declared?.value) ? (declared.value as string[]) : [];
+    const classTypes = (data?.classes ?? [])
+      .map((c) => c.schoolType)
+      .filter((t): t is string => !!t);
+    return [...new Set([...declaredTypes, ...classTypes])]
+      .sort()
+      .map((t) => ({ value: t, label: schoolTypeLabel(t) }));
+  })();
 
   const {
     register,
@@ -35,10 +59,11 @@ export const AdminClasses = () => {
 
   const onAdd = (data: CreateClassFormData) => {
     createMutation.mutate(
-      { name: data.name, level: data.level },
+      { name: data.name, level: data.level, schoolType: selectedSchoolType || undefined },
       {
         onSuccess: () => {
           reset();
+          setSelectedSchoolType("");
           setShowForm(false);
         },
       },
@@ -109,6 +134,19 @@ export const AdminClasses = () => {
                 </p>
               )}
             </div>
+            <div className="w-44">
+              <SelectDropdown
+                options={schoolTypeOptions}
+                value={selectedSchoolType}
+                onChange={setSelectedSchoolType}
+                placeholder="School type"
+              />
+              {schoolTypeOptions.length === 0 && (
+                <p className="text-xs text-destructive mt-1">
+                  Set school types in Settings first.
+                </p>
+              )}
+            </div>
             <button
               onClick={handleSubmit(onAdd)}
               disabled={createMutation.isPending}
@@ -141,6 +179,11 @@ export const AdminClasses = () => {
                 >
                   <span className="text-gray-800 font-medium">{c.name}</span>
                   <div className="flex items-center gap-3">
+                    {c.schoolType && (
+                      <span className="text-[10px] font-medium capitalize bg-gray-100 text-gray-600 px-2 py-0.5 rounded-full">
+                        {schoolTypeLabel(c.schoolType)}
+                      </span>
+                    )}
                     <span className="text-xs text-gray-400">{c.level}</span>
                     <button
                       onClick={() => deleteMutation.mutate(c.id)}

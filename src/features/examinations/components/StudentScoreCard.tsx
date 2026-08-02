@@ -11,6 +11,7 @@ interface StudentScoreCardProps {
   saved: boolean;
   onChange: (studentId: string, value: number) => void;
   onNext: () => void;
+  onPrev: () => void;
   onSkip: () => void;
 }
 
@@ -27,6 +28,7 @@ export const StudentScoreCard = ({
   saved,
   onChange,
   onNext,
+  onPrev,
   onSkip,
 }: StudentScoreCardProps) => {
   const [showKeypad, setShowKeypad] = useState(true);
@@ -54,7 +56,11 @@ export const StudentScoreCard = ({
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === "Enter") {
+    if (e.key === "ArrowLeft") {
+      onPrev();
+    } else if (e.key === "ArrowRight") {
+      onNext();
+    } else if (e.key === "Enter") {
       onNext();
     } else if (e.key === "Backspace") {
       padDelete();
@@ -90,7 +96,7 @@ export const StudentScoreCard = ({
         </div>
         <div className="flex items-center justify-between mt-1.5">
           <p className="text-xs text-gray500">out of {maxScore}</p>
-          <p className="text-xs text-gray500">Enter to go next</p>
+          <p className="text-xs text-gray500">← → navigate · Enter next</p>
         </div>
       </div>
 

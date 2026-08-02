@@ -1,11 +1,7 @@
 import { useState, useMemo } from "react";
-import { ArrowLeft2, Add, SearchNormal, DocumentText, Lock1 } from "iconsax-react";
+import { ArrowLeft2, ArrowRight2, Add, SearchNormal, DocumentText, Lock1, Book1 } from "iconsax-react";
 
-import { useAuth } from "../../../contexts/AuthContext";
-import { useClasses } from "../../principal/api/useClasses";
-import { useSubjects } from "../../principal/api/useSubjects";
-import { useMyAssignments } from "../../teacher/api/useMyAssignments";
-import { useMyFormClass } from "../../teacher/api/useMyFormClass";
+import { useActiveTerm } from "../../calendar/api/useActiveTerm";
 import { useExams } from "../api/useExams";
 import { useExamScores } from "../api/useExamScores";
 import { useSaveExamStudentScore } from "../api/useSaveExamStudentScore";
@@ -14,6 +10,7 @@ import { StudentScoreCard } from "./StudentScoreCard";
 import { SelectDropdown } from "../../../components/ui/select-dropdown";
 import { Button } from "../../../components/ui/button";
 import { cn } from "../../../lib/utils";
+import type { Exam } from "../types";
 
 const statusPill = (status: string) => {
   switch (status) {
@@ -29,49 +26,20 @@ const statusPill = (status: string) => {
 };
 
 export const Scoring = ({ teacherMode = false }: { teacherMode?: boolean }) => {
-  const { user } = useAuth();
-  const userId = user?.id ?? "";
+  const { activeTerm } = useActiveTerm();
+  const term = activeTerm?.term ?? "";
 
-  const { data: classesData } = useClasses();
-  const { data: subjectsData } = useSubjects();
-  const { data: myAssignments = [] } = useMyAssignments(userId);
-  const { data: myFormClass } = useMyFormClass(userId);
-
-  const allowedClassIds = useMemo(() => {
-    if (!teacherMode) return null;
-    const set = new Set<string>();
-    myAssignments.forEach((a) => a.classes.forEach((c) => set.add(c.id)));
-    if (myFormClass?.formClassId) set.add(myFormClass.formClassId);
-    return set;
-  }, [teacherMode, myAssignments, myFormClass]);
-
-  const allowedSubjectIds = useMemo(() => {
-    if (!teacherMode) return null;
-    return new Set(myAssignments.map((a) => a.subject.id));
-  }, [teacherMode, myAssignments]);
-
-  const classOptions = useMemo(
-    () =>
-      (classesData?.classes ?? [])
-        .filter((c) => !allowedClassIds || allowedClassIds.has(c.id))
-        .map((c) => ({ value: c.id, label: c.name })),
-    [classesData, allowedClassIds],
-  );
-
-  const subjectOptions = useMemo(
-    () =>
-      (subjectsData ?? [])
-        .filter((s) => !allowedSubjectIds || allowedSubjectIds.has(s.id))
-        .map((s) => ({ value: s.id, label: s.name })),
-    [subjectsData, allowedSubjectIds],
-  );
-
-  const [classId, setClassId] = useState("");
-  const [subjectId, setSubjectId] = useState("");
+  const [selectedClass, setSelectedClass] = useState<{ id: string; name: string } | null>(null);
+  const [classSubjectId, setClassSubjectId] = useState("");
   const [createOpen, setCreateOpen] = useState(false);
   const [selectedExamId, setSelectedExamId] = useState<string | null>(null);
 
-  const { data: examsData, isLoading: examsLoading } = useExams({ classId: classId || undefined, subjectId: subjectId || undefined });
+  const { data: examsData, isLoading: examsLoading } = useExams({
+    term,
+    classId: selectedClass?.id,
+    subjectId: classSubjectId || undefined,
+    limit: 500,
+  });
 
   const exams = examsData?.exams ?? [];
 
@@ -87,6 +55,39 @@ export const Scoring = ({ teacherMode = false }: { teacherMode?: boolean }) => {
 
   const roster = rosterData?.roster ?? [];
   const isLocked = rosterData ? rosterData.status !== "DRAFT" : false;
+
+  const classGroups = useMemo(() => {
+    const map = new Map<string, { id: string; name: string; assessments: number; subjects: Set<string>; scoreTotal: number }>();
+    exams.forEach((e) => {
+      const entry = map.get(e.classId) ?? {
+        id: e.classId,
+        name: e.className,
+        assessments: 0,
+        subjects: new Set<string>(),
+        scoreTotal: 0,
+      };
+      entry.assessments += 1;
+      entry.subjects.add(e.subjectId);
+      entry.scoreTotal += e.scoreCount ?? 0;
+      map.set(e.classId, entry);
+    });
+    return [...map.values()].sort((a, b) => a.name.localeCompare(b.name));
+  }, [exams]);
+
+  const subjectGroups = useMemo(() => {
+    const map = new Map<string, { id: string; name: string; exams: Exam[] }>();
+    exams.forEach((e) => {
+      const entry = map.get(e.subjectId) ?? { id: e.subjectId, name: e.subjectName, exams: [] };
+      entry.exams.push(e);
+      map.set(e.subjectId, entry);
+    });
+    return [...map.values()].map((g) => ({ ...g, exams: [...g.exams].sort((a, b) => a.name.localeCompare(b.name)) }));
+  }, [exams]);
+
+  const classSubjectOptions = useMemo(
+    () => subjectGroups.map((g) => ({ value: g.id, label: g.name })),
+    [subjectGroups],
+  );
 
   const pending = useMemo(() => {
     return roster.filter(
@@ -147,9 +148,19 @@ export const Scoring = ({ teacherMode = false }: { teacherMode?: boolean }) => {
     if (index < roster.length - 1) setIndex(index + 1);
   };
 
+  const handlePrev = () => {
+    if (current) commit(current.studentId);
+    setIndex((i) => Math.max(i - 1, 0));
+  };
+
   const backToExams = () => {
     setSelectedExamId(null);
     setSearch("");
+  };
+
+  const backToClasses = () => {
+    setSelectedClass(null);
+    setClassSubjectId("");
   };
 
   if (selectedExam) {
@@ -248,11 +259,114 @@ export const Scoring = ({ teacherMode = false }: { teacherMode?: boolean }) => {
                 saved={isCurrentSaved}
                 onChange={(studentId, value) => setScores((prev) => ({ ...prev, [studentId]: value }))}
                 onNext={handleNext}
+                onPrev={handlePrev}
                 onSkip={handleSkip}
               />
             </>
           )}
         </div>
+      </div>
+    );
+  }
+
+  if (selectedClass) {
+    return (
+      <div className="p-4 md:p-6 w-full">
+        <div className="flex items-center gap-3">
+          <Button
+            type="button"
+            variant="outline"
+            size="icon"
+            className="rounded-full shrink-0"
+            onClick={backToClasses}
+            aria-label="Back to classes"
+          >
+            <ArrowLeft2 variant="Linear" size={16} color="#0D0D0D" />
+          </Button>
+          <div className="min-w-0 flex-1">
+            <h1 className="text-lg md:text-xl font-bold text-gray900 truncate">{selectedClass.name}</h1>
+            <p className="text-xs md:text-sm text-gray500 mt-0.5 truncate">
+              Assessments for this class
+            </p>
+          </div>
+          {!teacherMode && (
+            <Button size="sm" onClick={() => setCreateOpen(true)}>
+              <Add size={14} variant="Linear" color="#FFFFFF" />
+              New assessment
+            </Button>
+          )}
+        </div>
+
+        <div className="mt-4">
+          <SelectDropdown
+            options={classSubjectOptions}
+            value={classSubjectId}
+            onChange={setClassSubjectId}
+            placeholder="All subjects"
+            buttonClassName="w-full sm:w-56"
+            searchable
+          />
+        </div>
+
+        <div className="mt-6 space-y-6">
+          {examsLoading ? (
+            <div className="bg-white rounded-xl border border-gray100 p-8 text-center">
+              <div className="h-8 w-8 animate-spin rounded-full border-2 border-gray100 border-t-gray900 mx-auto" />
+            </div>
+          ) : subjectGroups.length === 0 ? (
+            <div className="bg-white rounded-xl border border-gray100 p-8 text-center">
+              <DocumentText size={24} className="mx-auto text-gray300 mb-2" />
+              <p className="text-sm font-medium text-gray900">No assessments yet</p>
+              <p className="text-xs text-gray500 mt-1 max-w-xs mx-auto">
+                {teacherMode
+                  ? "No assessments assigned to you yet. Check back once your subject assessments are created."
+                  : "Create an assessment to start recording CA and exam scores."}
+              </p>
+            </div>
+          ) : (
+            subjectGroups.map((g) => (
+              <section key={g.id}>
+                <h2 className="mb-2 flex items-center gap-2 text-sm font-semibold text-gray900">
+                  <Book1 size={16} variant="Bold" color="#0D0D0D" />
+                  {g.name}
+                </h2>
+                <div className="space-y-2">
+                  {g.exams.map((e) => (
+                    <button
+                      key={e.id}
+                      onClick={() => handleSelectExam(e.id)}
+                      className="w-full bg-white rounded-xl border border-gray100 p-4 flex items-center gap-3 text-left hover:border-gray200 transition-colors"
+                    >
+                      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-gray100">
+                        <DocumentText size={18} variant="Bold" color="#0D0D0D" />
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <p className="text-sm font-semibold text-gray900 truncate">{e.name}</p>
+                        <p className="text-xs text-gray500 mt-0.5 truncate">
+                          {e.componentName ?? e.type} · {e.date}
+                        </p>
+                      </div>
+                      <div className="flex flex-col items-end gap-1 shrink-0">
+                        <span className={cn("rounded-full px-2.5 py-0.5 text-[10px] font-medium", statusPill(e.status))}>
+                          {e.status}
+                        </span>
+                        <span className="text-[11px] text-gray500">{e.scoreCount} scored</span>
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              </section>
+            ))
+          )}
+        </div>
+
+        {!teacherMode && (
+          <CreateAssessmentDialog
+            open={createOpen}
+            onClose={() => setCreateOpen(false)}
+            defaultClassId={selectedClass.id}
+          />
+        )}
       </div>
     );
   }
@@ -263,7 +377,7 @@ export const Scoring = ({ teacherMode = false }: { teacherMode?: boolean }) => {
         <div>
           <h1 className="text-xl md:text-2xl font-bold text-gray900">Scoring</h1>
           <p className="text-xs md:text-sm text-gray500 mt-0.5">
-            Pick an assessment to record scores per student.
+            Pick a class to record scores per student.
           </p>
         </div>
         {!teacherMode && (
@@ -274,32 +388,13 @@ export const Scoring = ({ teacherMode = false }: { teacherMode?: boolean }) => {
         )}
       </div>
 
-      <div className="mt-4 flex flex-col sm:flex-row sm:items-center gap-3">
-        <SelectDropdown
-          options={classOptions}
-          value={classId}
-          onChange={setClassId}
-          placeholder={teacherMode ? "My classes" : "All classes"}
-          buttonClassName="w-full sm:w-48"
-          searchable
-        />
-        <SelectDropdown
-          options={subjectOptions}
-          value={subjectId}
-          onChange={setSubjectId}
-          placeholder={teacherMode ? "My subjects" : "All subjects"}
-          buttonClassName="w-full sm:w-48"
-          searchable
-        />
-      </div>
-
-      <div className="mt-4 space-y-2">
+      <div className="mt-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
         {examsLoading ? (
-          <div className="bg-white rounded-xl border border-gray100 p-8 text-center">
+          <div className="bg-white rounded-xl border border-gray100 p-8 text-center sm:col-span-2 xl:col-span-3">
             <div className="h-8 w-8 animate-spin rounded-full border-2 border-gray100 border-t-gray900 mx-auto" />
           </div>
-        ) : exams.length === 0 ? (
-          <div className="bg-white rounded-xl border border-gray100 p-8 text-center">
+        ) : classGroups.length === 0 ? (
+          <div className="bg-white rounded-xl border border-gray100 p-8 text-center sm:col-span-2 xl:col-span-3">
             <DocumentText size={24} className="mx-auto text-gray300 mb-2" />
             <p className="text-sm font-medium text-gray900">No assessments yet</p>
             <p className="text-xs text-gray500 mt-1 max-w-xs mx-auto">
@@ -309,27 +404,25 @@ export const Scoring = ({ teacherMode = false }: { teacherMode?: boolean }) => {
             </p>
           </div>
         ) : (
-          exams.map((e) => (
+          classGroups.map((g) => (
             <button
-              key={e.id}
-              onClick={() => handleSelectExam(e.id)}
-              className="w-full bg-white rounded-xl border border-gray100 p-4 flex items-center gap-3 text-left hover:border-gray200 transition-colors"
+              key={g.id}
+              onClick={() => setSelectedClass({ id: g.id, name: g.name })}
+              className="group w-full bg-white rounded-xl border border-gray100 p-4 text-left hover:border-gray200 transition-colors active:scale-[0.99]"
             >
-              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-gray100">
-                <DocumentText size={18} variant="Bold" color="#0D0D0D" />
+              <div className="flex items-center justify-between gap-3">
+                <p className="text-sm font-semibold text-gray900 truncate">{g.name}</p>
+                <ArrowRight2
+                  size={16}
+                  variant="Bold"
+                  color="#B3B3B3"
+                  className="shrink-0 transition-transform group-hover:translate-x-0.5"
+                />
               </div>
-              <div className="min-w-0 flex-1">
-                <p className="text-sm font-semibold text-gray900 truncate">{e.name}</p>
-                <p className="text-xs text-gray500 mt-0.5 truncate">
-                  {e.subjectName} · {e.className} · {e.date}
-                </p>
-              </div>
-              <div className="flex flex-col items-end gap-1 shrink-0">
-                <span className={cn("rounded-full px-2.5 py-0.5 text-[10px] font-medium", statusPill(e.status))}>
-                  {e.status}
-                </span>
-                <span className="text-[11px] text-gray500">{e.scoreCount} scored</span>
-              </div>
+              <p className="mt-2 text-xs text-gray500">
+                {g.assessments} {g.assessments === 1 ? "assessment" : "assessments"} · {g.subjects.size}{" "}
+                {g.subjects.size === 1 ? "subject" : "subjects"} · {g.scoreTotal} scored
+              </p>
             </button>
           ))
         )}
@@ -339,7 +432,7 @@ export const Scoring = ({ teacherMode = false }: { teacherMode?: boolean }) => {
         <CreateAssessmentDialog
           open={createOpen}
           onClose={() => setCreateOpen(false)}
-          defaultClassId={classId}
+          defaultClassId={undefined}
         />
       )}
     </div>

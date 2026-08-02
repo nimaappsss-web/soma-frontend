@@ -42,12 +42,12 @@ const navItems: NavItem[] = [
   { label: "Students", to: "/teach/students", Icon: Profile2User },
   {
     label: "CA & Exams",
-    to: "/teach/exams/scoring",
+    to: "/teach/ca-and-exams/mark-scores",
     Icon: StatusUp,
     hasCaret: true,
     children: [
-      { label: "Mark Scores", to: "/teach/exams/scoring" },
-      { label: "My Class", to: "/teach/exams/results" },
+      { label: "Mark Scores", to: "/teach/ca-and-exams/mark-scores" },
+      { label: "My Class", to: "/teach/ca-and-exams/my-class" },
     ],
   },
   { label: "Lesson Notes", to: "/teach/lesson-notes", Icon: Book1 },
@@ -73,7 +73,7 @@ export const TeacherLayout = () => {
           ...item,
           children: isFormTeacher
             ? item.children
-            : item.children.filter((child) => child.to !== "/teach/exams/results"),
+            : item.children.filter((child) => child.to !== "/teach/ca-and-exams/my-class"),
         };
       }),
     [isFormTeacher],
@@ -86,8 +86,8 @@ export const TeacherLayout = () => {
   };
 
   const isChildActive = (children: { label: string; to: string }[]) => {
-    if (children.some((child) => child.to.startsWith("/teach/exams"))) {
-      return location.pathname.startsWith("/teach/exams");
+    if (children.some((child) => child.to.startsWith("/teach/ca-and-exams"))) {
+      return location.pathname.startsWith("/teach/ca-and-exams");
     }
     return children.some((child) => location.pathname.startsWith(child.to));
   };

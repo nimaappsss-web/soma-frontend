@@ -10,6 +10,7 @@ interface CreateClassPayload {
   name: string;
   level: string;
   arm?: string;
+  schoolType?: string;
 }
 
 export const useCreateClass = () => {

@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from "react";
-import { useSearchParams } from "react-router";
+import { useSearchParams, useNavigate } from "react-router";
 import { useLiveQuery } from "dexie-react-hooks";
 import {
   Book1,
@@ -10,21 +10,23 @@ import {
   TickCircle,
   SearchNormal,
   CloseCircle,
+  Warning2,
+  Trash,
 } from "iconsax-react";
 
 import { useAuth } from "../../../contexts/AuthContext";
 import { db } from "../../../db/db";
 import { useMyAssignments } from "../../teacher/api/useMyAssignments";
 import { useActiveTerm } from "../../calendar/api";
-import { useExamComponents } from "../api/useExamComponents";
+import { useExamComponents, useDeleteExamScores } from "../api";
 import { useStudents } from "../../students/api";
 import { useExamScoresLocal, useExamScoresBulk, useSaveExamScores, examScoreKey } from "../api";
 import { SelectDropdown } from "../../../components/ui/select-dropdown";
 import { Button } from "../../../components/ui/button";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "../../../components/ui/dialog";
 import { StudentScoreCard } from "./StudentScoreCard";
 import { ScoreListView } from "./ScoreListView";
 import { cn } from "../../../lib/utils";
-import type { ExamComponent } from "../types";
 import type { SubjectAssignment } from "../../teacher/types";
 
 const initials = (name: string) =>
@@ -38,7 +40,6 @@ const initials = (name: string) =>
 
 interface SubjectBlockProps {
   assignment: SubjectAssignment;
-  components: ExamComponent[];
   term: string;
   open: boolean;
   onToggle: () => void;
@@ -50,7 +51,6 @@ type ViewMode = "list" | "card";
 
 const SubjectBlock = ({
   assignment,
-  components,
   term,
   open,
   onToggle,
@@ -59,8 +59,13 @@ const SubjectBlock = ({
 }: SubjectBlockProps) => {
   const { user } = useAuth();
   const userId = user?.id ?? "";
+  const navigate = useNavigate();
   const subject = assignment.subject;
-  const classOptions = assignment.classes.map((c) => ({ value: c.id, label: c.name }));
+  const classOptions = assignment.classes.map((c) => ({
+    value: c.id,
+    label: c.name,
+    schoolType: c.schoolType ?? "",
+  }));
 
   const [classId, setClassId] = useState<string>(() => initialClassId || classOptions[0]?.value || "");
   const [componentId, setComponentId] = useState<string>(initialComponentId);
@@ -70,6 +75,12 @@ const SubjectBlock = ({
   );
   const [scores, setScores] = useState<Record<string, number>>({});
   const [search, setSearch] = useState("");
+  const [sessionDismissed, setSessionDismissed] = useState(false);
+  const [confirmDelete, setConfirmDelete] = useState(false);
+
+  const classSchoolType = classOptions.find((c) => c.value === classId)?.schoolType ?? "";
+  const { data: schemeData } = useExamComponents(term, undefined, classSchoolType);
+  const components = schemeData?.components ?? [];
 
   const examKey = classId && componentId ? examScoreKey({ subjectId: subject.id, classId, componentId, term }) : "";
 
@@ -77,6 +88,7 @@ const SubjectBlock = ({
   const { scores: savedScores, isLoading: savedLoading } = useExamScoresLocal(examKey);
   useExamScoresBulk({ subjectId: subject.id, classId, componentId, term });
   const saveMutation = useSaveExamScores();
+  const deleteScoresMutation = useDeleteExamScores();
 
   const savedScoreMap = new Map(savedScores.map((r) => [r.studentId, r]));
 
@@ -102,6 +114,8 @@ const SubjectBlock = ({
     setIndex(0);
     setScores({});
     setSearch("");
+    setSessionDismissed(false);
+    setConfirmDelete(false);
   }, [examKey]);
 
   useEffect(() => {
@@ -149,6 +163,39 @@ const SubjectBlock = ({
 
   const selectedComponent = components.find((c) => c.id === componentId) ?? null;
 
+  const activeCount = useLiveQuery(
+    async () => {
+      if (!userId || !examKey) return 0;
+      const rows = await db.examScores
+        .where("examKey")
+        .equals(examKey)
+        .filter((r) => r.userId === userId)
+        .toArray();
+      return rows.length;
+    },
+    [userId, examKey],
+  );
+
+  const componentCounts = useLiveQuery(
+    async () => {
+      if (!userId || !classId || !subject) return new Map<string, number>();
+      const prefix = `${subject.id}:${classId}:`;
+      const rows = await db.examScores
+        .where("examKey")
+        .startsWith(prefix)
+        .filter((r) => r.userId === userId && r.term === term)
+        .toArray();
+      const map = new Map<string, number>();
+      for (const r of rows) {
+        const parts = r.examKey.split(":");
+        const cid = parts[2];
+        if (cid) map.set(cid, (map.get(cid) ?? 0) + 1);
+      }
+      return map;
+    },
+    [userId, classId, subject, term],
+  );
+
   const handleChange = (studentId: string, value: number) => {
     setScores((prev) => ({ ...prev, [studentId]: value }));
   };
@@ -179,6 +226,10 @@ const SubjectBlock = ({
 
   const handleNext = () => {
     setIndex((i) => Math.min(i + 1, Math.max(rosterCards.length - 1, 0)));
+  };
+
+  const handlePrev = () => {
+    setIndex((i) => Math.max(i - 1, 0));
   };
 
   const handleSkip = () => {
@@ -216,8 +267,9 @@ const SubjectBlock = ({
             <div className="mt-4 flex items-start gap-3 rounded-xl border border-amber500/30 bg-amber500/5 px-4 py-3">
               <InfoCircle size={16} variant="Bold" color="#F59E0B" className="shrink-0 mt-0.5" />
               <p className="text-sm text-gray700">
-                No score scheme is configured for this term yet. Ask your principal to set up CA &amp; exams in
-                Examinations → Configure.
+                {classSchoolType
+                  ? `No configuration applies to ${classSchoolType} classes yet. Ask your principal to set up CA & exams for ${classSchoolType} in Examinations → Configure.`
+                  : "No score scheme is configured for this term yet. Ask your principal to set up CA & exams in Examinations → Configure."}
               </p>
             </div>
           ) : (
@@ -252,11 +304,58 @@ const SubjectBlock = ({
                       >
                         {c.name}
                         <span className={cn("text-xs", active ? "text-gray300" : "text-gray400")}>· {c.maxScore}</span>
+                        {(() => {
+                          const n = componentCounts?.get(c.id);
+                          return n ? (
+                            <span
+                              className={cn(
+                                "rounded-full px-1.5 py-0.5 text-[10px] leading-none font-semibold",
+                                active ? "bg-white/20 text-white" : "bg-gray100 text-gray600",
+                              )}
+                            >
+                              {n}
+                            </span>
+                          ) : null;
+                        })()}
                       </button>
                     );
                   })}
                 </div>
               </div>
+
+              {componentId && selectedComponent && (activeCount ?? 0) > 0 && !sessionDismissed && (
+                <div className="mt-5 flex flex-col sm:flex-row sm:items-center gap-3 rounded-xl border border-gray200 bg-offWhite px-4 py-3">
+                  <div className="flex items-start gap-2.5 min-w-0">
+                    <Warning2 size={17} variant="Bold" color="#0D0D0D" className="shrink-0 mt-0.5" />
+                    <div className="min-w-0">
+                      <p className="text-sm font-semibold text-gray900">
+                        Active {selectedComponent.name} session
+                      </p>
+                      <p className="text-xs text-gray500 mt-0.5">
+                        {activeCount ?? 0} of {roster.length} students scored ·{" "}
+                        {classOptions.find((c) => c.value === classId)?.label ?? "Class"}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2 sm:ml-auto shrink-0">
+                    <Button size="sm" variant="outline" onClick={() => setSessionDismissed(true)}>
+                      Continue
+                    </Button>
+                    <Button size="sm" variant="outline" onClick={() => navigate("/teach/ca-and-exams/active")}>
+                      View active
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => setConfirmDelete(true)}
+                      className="text-red500 border-red500/40 hover:bg-red500/5"
+                    >
+                      <Trash size={14} variant="Bold" />
+                      Start over
+                    </Button>
+                  </div>
+                </div>
+              )}
 
               {componentId && selectedComponent && (
                 <div className="mt-5">
@@ -436,6 +535,7 @@ const SubjectBlock = ({
                                   saved={isCurrentSaved}
                                   onChange={handleChange}
                                   onNext={handleNext}
+                                  onPrev={handlePrev}
                                   onSkip={handleSkip}
                                 />
                               ) : null}
@@ -453,6 +553,47 @@ const SubjectBlock = ({
           )}
         </div>
       )}
+
+      <Dialog open={confirmDelete} onOpenChange={setConfirmDelete}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Trash size={16} variant="Bold" className="text-red500" />
+              Delete & start over?
+            </DialogTitle>
+            <DialogDescription className="text-sm text-gray500">
+              This clears all {activeCount ?? 0} saved scores for {selectedComponent?.name ?? "this mark type"} in{" "}
+              {classOptions.find((c) => c.value === classId)?.label ?? "this class"}. They will be removed from your
+              active sessions — on this device and when you're back online.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex items-center justify-end gap-2 mt-2">
+            <Button variant="outline" size="sm" onClick={() => setConfirmDelete(false)} disabled={deleteScoresMutation.isPending}>
+              Cancel
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              className="text-red500 border-red500/40 hover:bg-red500/5"
+              disabled={deleteScoresMutation.isPending}
+              onClick={() =>
+                deleteScoresMutation.mutate(
+                  { subjectId: subject.id, classId, componentId, term },
+                  {
+                    onSuccess: () => {
+                      setScores({});
+                      setIndex(0);
+                      setConfirmDelete(false);
+                    },
+                  },
+                )
+              }
+            >
+              {deleteScoresMutation.isPending ? "Deleting…" : "Yes, start over"}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
@@ -469,8 +610,6 @@ export const TeacherScoring = () => {
   const term = activeTerm?.term ?? "";
 
   const { data: assignments = [], isLoading: assignmentsLoading } = useMyAssignments(userId);
-  const { data: schemeData, isLoading: schemeLoading } = useExamComponents(term);
-  const components = schemeData?.components ?? [];
 
   const [openSubject, setOpenSubject] = useState<string | null>(null);
   const [openedOnce, setOpenedOnce] = useState(false);
@@ -483,7 +622,7 @@ export const TeacherScoring = () => {
     }
   }, [assignments, openedOnce, focusSubjectId]);
 
-  if (assignmentsLoading || termLoading || schemeLoading) {
+  if (assignmentsLoading || termLoading) {
     return (
       <div className="p-4 md:p-6 w-full">
         <div className="bg-white rounded-xl border border-gray100 p-8 text-center">
@@ -522,7 +661,6 @@ export const TeacherScoring = () => {
           <SubjectBlock
             key={a.subject.id}
             assignment={a}
-            components={components}
             term={term}
             open={openSubject === a.subject.id}
             onToggle={() => setOpenSubject((prev) => (prev === a.subject.id ? null : a.subject.id))}

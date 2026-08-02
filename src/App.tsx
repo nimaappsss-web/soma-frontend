@@ -15,6 +15,7 @@ import { TeacherDashboard } from "./pages/teach/TeacherDashboard";
 import { TeacherExams } from "./pages/teach/TeacherExams";
 import { TeacherActiveAssessments } from "./pages/teach/TeacherActiveAssessments";
 import { TeacherResults } from "./pages/teach/TeacherResults";
+import { StudentReportView } from "./features/examinations/components/StudentReportView";
 import { TeacherExaminationsLayout, TeacherExaminationsIndex } from "./features/examinations/components/TeacherExaminationsLayout";
 import { useAnimatedFavicon } from "./hooks/useAnimatedFavicon";
 import { TeacherStudents } from "./pages/teach/TeacherStudents";
@@ -139,13 +140,14 @@ function App() {
           <Route index element={<TeacherDashboard />} />
           <Route path="students" element={<TeacherStudents />} />
           <Route path="attendance" element={<TeacherAttendance />} />
-          <Route path="exams" element={<TeacherExaminationsLayout />}>
+          <Route path="ca-and-exams" element={<TeacherExaminationsLayout />}>
             <Route index element={<TeacherExaminationsIndex />} />
-            <Route path="scoring" element={<TeacherExams />} />
+            <Route path="mark-scores" element={<TeacherExams />} />
             <Route path="active" element={<TeacherActiveAssessments />} />
-            <Route path="results" element={<TeacherResults />} />
           </Route>
-          <Route path="results" element={<Navigate to="/teach/exams/results" replace />} />
+          <Route path="ca-and-exams/my-class" element={<TeacherResults />} />
+          <Route path="ca-and-exams/reports/:studentId" element={<StudentReportView />} />
+          <Route path="results" element={<Navigate to="/teach/ca-and-exams/my-class" replace />} />
           <Route path="lesson-notes" element={<TeacherLessonNotes />} />
           <Route path="announcements" element={<TeacherAnnouncements />} />
           <Route path="settings" element={<TeacherSettings />} />

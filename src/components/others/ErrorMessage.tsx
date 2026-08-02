@@ -19,7 +19,7 @@ export const ErrorMessage = ({ children, onDismiss, className, action }: ErrorMe
       )}
     >
       <div className="flex items-start gap-2">
-        <InfoCircle className="mt-0.5 h-4 w-4 shrink-0" variant="Bold" />
+        <InfoCircle className="mt-0.5 h-4 w-4 shrink-0" variant="Bold" color="currentColor" />
         <span className="flex-1">{children}</span>
         {onDismiss && (
           <button
@@ -27,7 +27,7 @@ export const ErrorMessage = ({ children, onDismiss, className, action }: ErrorMe
             onClick={onDismiss}
             className="shrink-0 rounded-full p-0.5 hover:bg-red-500/20 transition-colors"
           >
-            <CloseCircle className="h-3.5 w-3.5" variant="Bold" />
+            <CloseCircle className="h-3.5 w-3.5" variant="Bold" color="currentColor" />
           </button>
         )}
       </div>

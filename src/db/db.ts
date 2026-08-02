@@ -61,6 +61,7 @@ export interface ClassCache {
   name: string;
   level: string;
   arm?: string;
+  schoolType?: string;
   schoolId?: string;
 }
 
@@ -237,6 +238,79 @@ export interface ExamSchemeCache {
   updatedAt: number;
 }
 
+export interface ExamCache {
+  id: string;
+  userId: string;
+  name: string;
+  type: string;
+  subjectId: string;
+  subjectName: string;
+  classId: string;
+  className: string;
+  componentId: string | null;
+  componentName: string | null;
+  term: string;
+  session: string;
+  maxScore: number;
+  date: string;
+  status: string;
+  scoreCount: number;
+}
+
+export interface ExamRosterCache {
+  id: string;
+  userId: string;
+  examId: string;
+  rosterJson: string;
+  updatedAt: number;
+}
+
+export interface ExamActiveSummaryCache {
+  id: string;
+  userId: string;
+  examKey: string;
+  subjectId: string;
+  subjectName: string;
+  classId: string;
+  className: string | null;
+  componentId: string;
+  componentName: string | null;
+  type: string;
+  maxScore: number;
+  term: string;
+  session: string;
+  scoreCount: number;
+  updatedAt: number;
+}
+
+export interface ExamTermResultsCache {
+  id: string;
+  userId: string;
+  classId: string;
+  term: string;
+  session: string;
+  resultsJson: string;
+  updatedAt: number;
+}
+
+export interface ExamStudentReportCache {
+  id: string;
+  userId: string;
+  studentId: string;
+  term: string;
+  session: string;
+  reportJson: string;
+  updatedAt: number;
+}
+
+export interface ReportSettingsCache {
+  id: string;
+  userId: string;
+  template: string;
+  theme: string;
+  updatedAt: number;
+}
+
 export const db = new Dexie("somaDB") as Dexie & {
   students: EntityTable<Student, "id">;
   attendance: EntityTable<AttendanceRecord, "id">;
@@ -260,6 +334,12 @@ export const db = new Dexie("somaDB") as Dexie & {
   attendanceNotes: EntityTable<AttendanceNote, "id">;
   examScores: EntityTable<ExamScoreCache, "id">;
   examScheme: EntityTable<ExamSchemeCache, "id">;
+  exams: EntityTable<ExamCache, "id">;
+  examRosters: EntityTable<ExamRosterCache, "id">;
+  examActiveSummaries: EntityTable<ExamActiveSummaryCache, "id">;
+  examTermResults: EntityTable<ExamTermResultsCache, "id">;
+  examStudentReports: EntityTable<ExamStudentReportCache, "id">;
+  reportSettings: EntityTable<ReportSettingsCache, "id">;
 };
 
 db.version(11).stores({
@@ -512,6 +592,121 @@ db.version(23).stores({
   attendanceNotes: "id, userId, [userId+date+className]",
   examScores: "id, userId, examKey, studentId, syncStatus",
   examScheme: "id, userId",
+});
+
+db.version(24).stores({
+  students: "id, name, classId, status, schoolId, userId, [userId+classId]",
+  attendance: "id, studentId, className, schoolId, date, syncStatus, userId, [date+className], [userId+date+className]",
+  caScores: "id, studentId, className, schoolId, term, session, syncStatus, userId",
+  subjects: "id, schoolId, userId",
+  classes: "id, level, schoolId, userId, [userId+level]",
+  teacherFormClass: "id",
+  teacherAssignments: "id, userId",
+  teachers: "id, userId",
+  pendingInvites: "id, userId",
+  teacherDetails: "id, userId",
+  parents: "id, status, schoolId, userId",
+  syncQueue: "++id, status, createdAt, table, userId",
+  lessonNotes: "id, userId",
+  schoolSettings: "id, userId",
+  calendarEvents: "id, userId",
+  holidays: "id, userId",
+  academicTerms: "id, userId",
+  announcements: "id, userId",
+  attendanceSnapshots: "key",
+  attendanceNotes: "id, userId, [userId+date+className]",
+  examScores: "id, userId, examKey, studentId, syncStatus",
+  examScheme: "id, userId",
+  exams: "id, userId, term, classId, subjectId",
+  examRosters: "id, userId, examId",
+});
+
+db.version(25).stores({
+  students: "id, name, classId, status, schoolId, userId, [userId+classId]",
+  attendance: "id, studentId, className, schoolId, date, syncStatus, userId, [date+className], [userId+date+className]",
+  caScores: "id, studentId, className, schoolId, term, session, syncStatus, userId",
+  subjects: "id, schoolId, userId",
+  classes: "id, level, schoolId, userId, [userId+level]",
+  teacherFormClass: "id",
+  teacherAssignments: "id, userId",
+  teachers: "id, userId",
+  pendingInvites: "id, userId",
+  teacherDetails: "id, userId",
+  parents: "id, status, schoolId, userId",
+  syncQueue: "++id, status, createdAt, table, userId",
+  lessonNotes: "id, userId",
+  schoolSettings: "id, userId",
+  calendarEvents: "id, userId",
+  holidays: "id, userId",
+  academicTerms: "id, userId",
+  announcements: "id, userId",
+  attendanceSnapshots: "key",
+  attendanceNotes: "id, userId, [userId+date+className]",
+  examScores: "id, userId, examKey, studentId, syncStatus",
+  examScheme: "id, userId",
+  exams: "id, userId, term, classId, subjectId",
+  examRosters: "id, userId, examId",
+  examActiveSummaries: "id, userId, classId, examKey",
+});
+
+db.version(26).stores({
+  students: "id, name, classId, status, schoolId, userId, [userId+classId]",
+  attendance: "id, studentId, className, schoolId, date, syncStatus, userId, [date+className], [userId+date+className]",
+  caScores: "id, studentId, className, schoolId, term, session, syncStatus, userId",
+  subjects: "id, schoolId, userId",
+  classes: "id, level, schoolId, userId, [userId+level]",
+  teacherFormClass: "id",
+  teacherAssignments: "id, userId",
+  teachers: "id, userId",
+  pendingInvites: "id, userId",
+  teacherDetails: "id, userId",
+  parents: "id, status, schoolId, userId",
+  syncQueue: "++id, status, createdAt, table, userId",
+  lessonNotes: "id, userId",
+  schoolSettings: "id, userId",
+  calendarEvents: "id, userId",
+  holidays: "id, userId",
+  academicTerms: "id, userId",
+  announcements: "id, userId",
+  attendanceSnapshots: "key",
+  attendanceNotes: "id, userId, [userId+date+className]",
+  examScores: "id, userId, examKey, studentId, syncStatus",
+  examScheme: "id, userId",
+  exams: "id, userId, term, classId, subjectId",
+  examRosters: "id, userId, examId",
+  examActiveSummaries: "id, userId, classId, examKey",
+  examTermResults: "id, userId, classId, term",
+});
+
+db.version(27).stores({
+  students: "id, name, classId, status, schoolId, userId, [userId+classId]",
+  attendance: "id, studentId, className, schoolId, date, syncStatus, userId, [date+className], [userId+date+className]",
+  caScores: "id, studentId, className, schoolId, term, session, syncStatus, userId",
+  subjects: "id, schoolId, userId",
+  classes: "id, level, schoolId, userId, [userId+level]",
+  teacherFormClass: "id",
+  teacherAssignments: "id, userId",
+  teachers: "id, userId",
+  pendingInvites: "id, userId",
+  teacherDetails: "id, userId",
+  parents: "id, status, schoolId, userId",
+  syncQueue: "++id, status, createdAt, table, userId",
+  lessonNotes: "id, userId",
+  schoolSettings: "id, userId",
+  calendarEvents: "id, userId",
+  holidays: "id, userId",
+  academicTerms: "id, userId",
+  announcements: "id, userId",
+  attendanceSnapshots: "key",
+  attendanceNotes: "id, userId, [userId+date+className]",
+  examScores: "id, userId, examKey, studentId, syncStatus",
+  examScheme: "id, userId",
+  exams: "id, userId, term, classId, subjectId",
+  examRosters: "id, userId, examId",
+  examActiveSummaries: "id, userId, classId, examKey",
+  examTermResults: "id, userId, classId, term",
+  examStudentReports: "id, userId, studentId, term",
+  reportSettings: "id, userId",
 });
 
 
