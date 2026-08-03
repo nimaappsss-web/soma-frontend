@@ -41,6 +41,11 @@ export const searchIndex: SearchItem[] = [
   { id: "page-announcements", label: "Announcements", description: "Create and manage announcements", path: "/admin/announcements", icon: "VolumeHigh", category: "page", roles: ["principal"], keywords: ["notice", "broadcast", "news"] },
   { id: "page-settings", label: "Settings", description: "Account and school settings", path: "/admin/settings", icon: "Setting2", category: "page", roles: ["principal"], keywords: ["config", "preference", "account"] },
   { id: "page-profile", label: "Profile", description: "Edit your profile information", path: "/admin/settings", icon: "User", category: "page", roles: ["principal"], keywords: ["avatar", "personal", "info"] },
+  { id: "page-admin-profile", label: "My Profile", description: "View and edit your principal profile", path: "/admin/profile", icon: "UserEdit", category: "page", roles: ["principal"], keywords: ["personal", "avatar", "name", "phone"] },
+  { id: "page-attendance-classes", label: "Attendance by Class", description: "View attendance grouped by class", path: "/admin/attendance/classes", icon: "ClipboardTick", category: "page", roles: ["principal"], keywords: ["class", "per class", "roll", "record"] },
+  { id: "page-attendance-absentees", label: "Absentees", description: "See students marked absent", path: "/admin/attendance/absentees", icon: "ClipboardTick", category: "page", roles: ["principal"], keywords: ["absent", "missing", "truant", "away"] },
+  { id: "page-exam-scoring", label: "Exam Scoring", description: "Record and review CA and exam scores", path: "/admin/examinations/scoring", icon: "StatusUp", category: "page", roles: ["principal"], keywords: ["score", "grade", "marks", "record"] },
+  { id: "page-exam-configure", label: "Exam Configuration", description: "Configure assessment schemes and scoring", path: "/admin/examinations/configure", icon: "Setting2", category: "page", roles: ["principal"], keywords: ["scheme", "setup", "config", "assessment"] },
 
   // Teacher
   { id: "page-teach-home", label: "Teacher Dashboard", description: "Your class overview and assignments", path: "/teach", icon: "Home2", category: "page", roles: ["teacher"], keywords: ["home", "overview"] },
@@ -49,6 +54,10 @@ export const searchIndex: SearchItem[] = [
   { id: "page-teach-lesson-notes", label: "Lesson Notes", description: "Create and manage lesson notes", path: "/teach/lesson-notes", icon: "Book1", category: "page", roles: ["teacher"], keywords: ["plan", "scheme", "ai"] },
   { id: "page-teach-announcements", label: "Announcements", description: "View school announcements", path: "/teach/announcements", icon: "VolumeHigh", category: "page", roles: ["teacher"], keywords: ["notice", "news"] },
   { id: "page-teach-settings", label: "Teacher Settings", description: "Update your profile and password", path: "/teach/settings", icon: "Setting", category: "page", roles: ["teacher"], keywords: ["account", "config"] },
+  { id: "page-teach-mark-scores", label: "Mark Scores", description: "Record CA and exam scores for your class", path: "/teach/ca-and-exams/mark-scores", icon: "StatusUp", category: "page", roles: ["teacher"], keywords: ["ca", "exam", "grade", "score"] },
+  { id: "page-teach-active", label: "Active Assessments", description: "View assessments currently in progress", path: "/teach/ca-and-exams/active", icon: "Clock", category: "page", roles: ["teacher"], keywords: ["active", "ongoing", "test", "live"] },
+  { id: "page-teach-my-class", label: "My Class Results", description: "View results for your form class", path: "/teach/ca-and-exams/my-class", icon: "Chart", category: "page", roles: ["teacher"], keywords: ["results", "report", "scores"] },
+  { id: "page-continuous-assessment", label: "Continuous Assessment", description: "Record student CA scores", path: "/continuous-assessment", icon: "StatusUp", category: "page", roles: ["teacher", "principal"], keywords: ["ca", "assessment", "score", "record"] },
 
   // Parent
   { id: "page-parent-home", label: "Parent Dashboard", description: "Your children's school overview", path: "/parent", icon: "Home2", category: "page", roles: ["parent"], keywords: ["home", "overview"] },
@@ -96,6 +105,8 @@ export const searchIndex: SearchItem[] = [
   { id: "action-new-lesson-note", label: "New Lesson Note", description: "Create a blank lesson note", path: "/teach/lesson-notes", icon: "Document", category: "action", roles: ["teacher"], keywords: ["create", "new", "plan"] },
   { id: "action-generate-lesson-note", label: "Generate Lesson Note with AI", description: "AI-generate a lesson plan from subject and week", path: "/teach/lesson-notes", icon: "MagicStar", category: "action", roles: ["teacher"], keywords: ["ai", "auto", "generate", "plan"] },
   { id: "action-view-form-class", label: "View My Form Class", description: "See students in your assigned form class", path: "/teach", icon: "ProfileTick", category: "action", roles: ["teacher"], keywords: ["class", "students", "assigned"] },
+  { id: "action-record-scores", label: "Record CA & Exam Scores", description: "Enter scores for your class assessments", path: "/teach/ca-and-exams/mark-scores", icon: "ClipboardTick", category: "action", roles: ["teacher"], keywords: ["score", "grade", "marks", "record"] },
+  { id: "action-view-class-results", label: "View My Class Results", description: "Open results for your form class", path: "/teach/ca-and-exams/my-class", icon: "Chart", category: "action", roles: ["teacher"], keywords: ["results", "report", "grade", "scores"] },
 
   // Sign out (all roles)
   { id: "action-sign-out", label: "Sign Out", description: "Log out of the application", path: "/login", icon: "Logout", category: "action", roles: ["principal", "teacher", "parent", "staff"], keywords: ["logout", "exit", "leave"] },

@@ -25,7 +25,12 @@ export const MomentsManagement = () => {
               <span className="text-xs text-gray-400 ml-1">({birthdays.length} upcoming)</span>
             </div>
             {birthdays.length === 0 ? (
-              <p className="text-sm text-gray-400">No upcoming birthdays</p>
+              <div className="flex flex-col items-center justify-center py-6 text-center">
+                <div className="w-12 h-12 rounded-full bg-pink-50 border border-pink-100 flex items-center justify-center mb-3">
+                  <Gift size={22} className="text-pink-300" />
+                </div>
+                <p className="text-sm text-gray-400">No upcoming birthdays</p>
+              </div>
             ) : (
               <div className="grid gap-3">
                 {birthdays.map((b) => (
@@ -51,7 +56,12 @@ export const MomentsManagement = () => {
               <span className="text-xs text-gray-400 ml-1">({anniversaries.length} upcoming)</span>
             </div>
             {anniversaries.length === 0 ? (
-              <p className="text-sm text-gray-400">No upcoming work anniversaries</p>
+              <div className="flex flex-col items-center justify-center py-6 text-center">
+                <div className="w-12 h-12 rounded-full bg-amber-50 border border-amber-100 flex items-center justify-center mb-3">
+                  <MagicStar size={22} className="text-amber-300" variant="Bold" />
+                </div>
+                <p className="text-sm text-gray-400">No upcoming work anniversaries</p>
+              </div>
             ) : (
               <div className="grid gap-3">
                 {anniversaries.map((a) => (
