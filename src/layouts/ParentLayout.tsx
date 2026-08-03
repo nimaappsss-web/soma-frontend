@@ -111,7 +111,7 @@ export const ParentLayout = () => {
   );
 
   return (
-    <div className="flex h-screen bg-offWhite overflow-hidden">
+    <div className="flex h-dvh bg-offWhite overflow-hidden">
       {/* Mobile sidebar overlay */}
       <div
         className={cn(

@@ -212,18 +212,18 @@ export const TeacherLessonNotes = () => {
                 <span className="text-xs font-medium text-gray-600">Step {s.step}</span>
                 <button onClick={() => removeStep(i)} className="text-xs text-red-500 hover:text-red-600">Remove</button>
               </div>
-              <div className="grid grid-cols-3 gap-2">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
                 <div>
                   <label className="block text-xs text-gray-400 mb-0.5">Time</label>
-                  <Input value={s.time} onChange={(e) => updateStep(i, "time", e.target.value)} className="h-8 rounded border border-gray-200 px-2 text-xs" />
+                  <Input value={s.time} onChange={(e) => updateStep(i, "time", e.target.value)} className="h-10 rounded border border-gray-200 px-2" />
                 </div>
                 <div>
                   <label className="block text-xs text-gray-400 mb-0.5">Teacher Activity</label>
-                  <Textarea value={s.teacherActivity} onChange={(e) => updateStep(i, "teacherActivity", e.target.value)} rows={2} autoGrow={false} className="min-h-8 rounded border border-gray-200 px-2 py-1 text-xs" />
+                  <Textarea value={s.teacherActivity} onChange={(e) => updateStep(i, "teacherActivity", e.target.value)} rows={2} autoGrow={false} className="min-h-10 rounded border border-gray-200 px-2 py-1.5" />
                 </div>
                 <div>
                   <label className="block text-xs text-gray-400 mb-0.5">Student Activity</label>
-                  <Textarea value={s.studentActivity} onChange={(e) => updateStep(i, "studentActivity", e.target.value)} rows={2} autoGrow={false} className="min-h-8 rounded border border-gray-200 px-2 py-1 text-xs" />
+                  <Textarea value={s.studentActivity} onChange={(e) => updateStep(i, "studentActivity", e.target.value)} rows={2} autoGrow={false} className="min-h-10 rounded border border-gray-200 px-2 py-1.5" />
                 </div>
               </div>
             </div>
@@ -248,23 +248,23 @@ export const TeacherLessonNotes = () => {
   };
 
   return (
-    <div className="p-8">
+    <div className="p-4 md:p-8">
       <h2 className="text-2xl font-bold text-gray-800 mb-6">Lesson Notes</h2>
 
-      <div className="flex gap-6">
-        <div className="w-56 shrink-0">
+      <div className="flex flex-col lg:flex-row gap-6">
+        <div className="w-full lg:w-56 shrink-0">
           <button
             onClick={newNote}
             className="w-full mb-4 px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700"
           >
             + New Note
           </button>
-          <div className="space-y-1">
+          <div className="flex lg:flex-col gap-2 overflow-x-auto pb-2 lg:pb-0 lg:space-y-1">
             {notes.map((note) => (
               <button
                 key={note.id}
                 onClick={() => openNote(note)}
-                className={`w-full text-left px-3 py-2 rounded-lg text-sm transition-colors ${
+                className={`min-w-[200px] lg:min-w-0 lg:w-full text-left px-3 py-2 rounded-lg text-sm transition-colors ${
                   editingId === note.id
                     ? "bg-blue-100 text-blue-700"
                     : "hover:bg-gray-100 text-gray-700"

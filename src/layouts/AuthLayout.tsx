@@ -21,9 +21,9 @@ export const AuthLayout = ({ children, reverse }: AuthLayoutProps) => {
         </span>
       </header>
 
-      <main className="px-5 pb-5 flex-1 flex flex-col bg-pureWhite">
+      <main className="px-3 sm:px-5 pb-5 flex-1 flex flex-col bg-pureWhite">
         <div className={cn("flex-1 flex bg-offWhite rounded-l-[20px]", reverse && "flex-row-reverse")}>
-          <div className="w-full lg:w-1/2 rounded-[20px] px-8 py-12 max-h-[calc(100vh-5rem)] overflow-y-auto flex flex-col">
+          <div className="w-full lg:w-1/2 rounded-[20px] px-3 sm:px-8 py-8 sm:py-12 max-h-[calc(100dvh-5rem)] overflow-y-auto flex flex-col">
             <div className="w-full max-w-sm space-y-6 my-auto mx-auto">{children}</div>
           </div>
           <div className="hidden lg:flex w-1/2 bg-black rounded-[20px] items-center justify-center p-8">

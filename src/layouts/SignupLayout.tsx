@@ -13,7 +13,7 @@ export const SignupLayout = ({ children }: SignupLayoutProps) => {
         </div>
       </div>
 
-      <div className="w-full lg:w-1/2 flex items-center justify-center px-8 py-12 bg-pureWhite rounded-l-[20px]">
+      <div className="w-full lg:w-1/2 flex items-center justify-center px-5 sm:px-8 py-12 bg-pureWhite rounded-l-[20px]">
         <div className="w-full max-w-[464px]">{children}</div>
       </div>
     </div>

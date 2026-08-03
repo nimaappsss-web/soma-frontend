@@ -36,7 +36,7 @@ export const Step1Email = ({ onSubmit, onGoogleClick, isPending, error }: Step1E
         </div>
 
         <div className="text-center">
-          <h1 className="text-[24px] mx-auto text-center font-light text-gray-900 leading-snug min-w-[464px]">
+          <h1 className="text-[22px] sm:text-[24px] mx-auto text-center font-light text-gray-900 leading-snug max-w-[464px]">
             Track academic progress, manage school data, and streamline administrative workflows.
           </h1>
         </div>
@@ -47,7 +47,7 @@ export const Step1Email = ({ onSubmit, onGoogleClick, isPending, error }: Step1E
           </div>
         )}
 
-        <form onSubmit={handleSubmit(onSubmit)} className="mt-8 space-y-5 w-[342px] mx-auto">
+        <form onSubmit={handleSubmit(onSubmit)} className="mt-8 space-y-5 w-full max-w-[342px] mx-auto">
           <Input
             type="email"
             placeholder="Enter your email"
@@ -60,7 +60,7 @@ export const Step1Email = ({ onSubmit, onGoogleClick, isPending, error }: Step1E
           </Button>
         </form>
 
-        <div className="relative mt-5 mb-5 w-[342px] mx-auto">
+        <div className="relative mt-5 mb-5 w-full max-w-[342px] mx-auto">
           <div className="absolute inset-0 flex items-center">
             <div className="w-full border-t border-gray-200" />
           </div>
@@ -69,7 +69,7 @@ export const Step1Email = ({ onSubmit, onGoogleClick, isPending, error }: Step1E
           </div>
         </div>
 
-        <div className="w-[342px] mx-auto mt-5 mb-5">
+        <div className="w-full max-w-[342px] mx-auto mt-5 mb-5">
           <Button
             type="button"
             variant="outline"

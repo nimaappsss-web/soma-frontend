@@ -41,7 +41,7 @@ export const Step2OTP = ({
         </div>
 
         <div className="text-center">
-          <h1 className="text-[24px] mx-auto text-center font-light text-gray-900 leading-snug min-w-[464px]">
+          <h1 className="text-[22px] sm:text-[24px] mx-auto text-center font-light text-gray-900 leading-snug">
             Activate your account
           </h1>
         </div>
@@ -54,7 +54,7 @@ export const Step2OTP = ({
           </div>
         )}
 
-        <div className="mt-2 w-[342px] mx-auto">
+        <div className="mt-2 w-full max-w-[342px] mx-auto">
           <p className="text-sm text-black/50 mt-2">
             We've sent an email to <span className="font-bold">{email}.</span>{" "}
             Check your inbox to activate your account and get started.

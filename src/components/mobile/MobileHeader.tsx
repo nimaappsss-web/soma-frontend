@@ -7,7 +7,7 @@ export const MobileHeader = ({ onMenuClick }: { onMenuClick: () => void }) => {
 
   return (
     <header
-      className="flex items-center h-[62px] shrink-0 bg-pureWhite border-b border-gray100 px-4 md:hidden"
+      className="flex items-center min-h-[62px] shrink-0 bg-pureWhite border-b border-gray100 px-4 md:hidden"
       style={{ paddingTop: "env(safe-area-inset-top)" }}
     >
       <button

@@ -15,12 +15,12 @@ export const SubjectAssignmentsCard = ({
           {assignments.map((a) => (
             <div
               key={a.id}
-              className="py-3 flex items-center justify-between"
+              className="py-3 flex items-center justify-between gap-3"
             >
-              <span className="text-gray-800 font-medium">
+              <span className="text-gray-800 font-medium min-w-0 truncate">
                 {a.subject.name}
               </span>
-              <span className="text-sm text-gray-500">
+              <span className="text-sm text-gray-500 text-right truncate">
                 {a.classes.map((c) => c.name).join(", ")}
               </span>
             </div>

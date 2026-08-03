@@ -64,7 +64,7 @@ export const AnnouncementsManagement = () => {
             placeholder="Write your announcement..."
             rows={4}
           />
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <SelectDropdown
               options={audienceOptions.map((o) => ({ value: o.value, label: o.label }))}
               value={form.audience}

@@ -21,7 +21,7 @@ export const TeacherStudents = () => {
   }
 
   return (
-    <div className="p-8 max-w-3xl">
+    <div className="p-4 md:p-8 max-w-3xl">
       <div className="mb-6">
         <h2 className="text-2xl font-bold text-gray-800">{formClass}</h2>
         <p className="text-sm text-gray-400 mt-1">
@@ -43,9 +43,9 @@ export const TeacherStudents = () => {
                 key={s.id}
                 className="px-6 py-3 flex items-center justify-between"
               >
-                <div className="flex items-center gap-3">
+                <div className="flex items-center gap-3 min-w-0 flex-1">
                   <Avatar name={s.name} size={32} />
-                  <div>
+                  <div className="min-w-0">
                     <span className="text-gray-800 font-medium">{s.name}</span>
                     {s.admissionNo && (
                       <span className="ml-2 text-xs text-gray-400">

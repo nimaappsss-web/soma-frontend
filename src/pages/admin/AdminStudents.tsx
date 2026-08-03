@@ -228,15 +228,15 @@ export const AdminStudents = () => {
   );
 
   return (
-    <div className="p-6 w-full">
-      <div className="flex items-center justify-between mb-6">
+    <div className="p-4 md:p-6 w-full">
+      <div className="flex flex-wrap items-center justify-between gap-3 mb-6">
         <h1 className="text-2xl font-semibold text-gray-900">Students</h1>
-        <div className="flex gap-3">
+        <div className="flex flex-wrap gap-3">
           <SelectDropdown
             value={classFilter}
             onChange={setClassFilter}
             placeholder="All classes"
-            className="w-56"
+            className="w-full sm:w-56"
             options={(classesData?.classes ?? []).map((c) => ({ value: c.id, label: c.name }))}
           />
           <button

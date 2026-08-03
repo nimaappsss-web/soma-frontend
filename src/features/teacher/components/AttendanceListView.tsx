@@ -39,9 +39,9 @@ export const AttendanceListView = ({ students, attendance, onMark, readOnly }: A
             key={s.id}
             className="px-5 py-3 flex items-center justify-between"
           >
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-3 min-w-0 flex-1">
               <Avatar name={s.name} size={28} />
-              <div>
+              <div className="min-w-0">
                 <span className="text-gray-800 font-medium text-sm">{s.name}</span>
                 {s.admissionNo && (
                   <span className="ml-2 text-xs text-gray-400">{s.admissionNo}</span>

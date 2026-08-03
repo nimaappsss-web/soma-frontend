@@ -157,9 +157,9 @@ export const Settings = () => {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <header className="bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between">
+      <header className="bg-white border-b border-gray-200 px-4 md:px-6 py-4 flex flex-wrap items-center justify-between gap-3">
         <h1 className="text-xl font-bold text-blue-700">Soma</h1>
-        <div className="flex items-center gap-4">
+        <div className="flex flex-wrap items-center gap-3">
           <span className="text-sm text-gray-500">{user?.schoolName}</span>
           <Avatar name={user?.name ?? ""} size={24} className="inline-block align-middle" />
           <span className="text-sm text-gray-700">{user?.name}</span>
@@ -172,7 +172,7 @@ export const Settings = () => {
         </div>
       </header>
 
-      <main className="max-w-5xl mx-auto px-6 py-8">
+      <main className="max-w-5xl mx-auto px-4 md:px-6 py-6 md:py-8">
         <div className="flex items-center justify-between mb-6">
           <div>
             <Link to="/" className="text-sm text-gray-400 hover:text-gray-600">
@@ -182,22 +182,24 @@ export const Settings = () => {
           </div>
         </div>
 
-        <div className="flex gap-8">
-          <nav className="w-56 shrink-0">
-            <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+        <div className="flex flex-col lg:flex-row gap-4 lg:gap-8">
+          <nav className="w-full lg:w-56 shrink-0">
+            <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-x-auto lg:overflow-visible">
+              <div className="flex lg:flex-col">
               {sidebarItems.map((item) => (
                 <Link
                   key={item.id}
                   to={`/settings/${item.id}`}
-                  className={`block w-full px-5 py-3 text-left text-sm font-medium transition-colors ${
+                  className={`block shrink-0 lg:shrink lg:w-full px-5 py-3 text-left text-sm font-medium whitespace-nowrap lg:whitespace-normal transition-colors ${
                     tab === item.id
-                      ? "bg-blue-50 text-blue-700 border-r-2 border-blue-600"
+                      ? "bg-blue-50 text-blue-700 border-b-2 lg:border-b-0 lg:border-r-2 border-blue-600"
                       : "text-gray-600 hover:bg-gray-50"
                   }`}
                 >
                   {item.label}
                 </Link>
               ))}
+              </div>
             </div>
           </nav>
 

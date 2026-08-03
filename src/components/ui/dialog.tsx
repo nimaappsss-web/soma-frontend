@@ -13,12 +13,12 @@ const contentStyles = cva(
     variants: {
       variant: {
         center:
-          "left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 rounded-2xl w-[calc(100%-60px)] max-w-lg max-h-[85vh] overflow-y-auto data-[state=open]:scale-100 data-[state=open]:opacity-100 data-[state=closed]:scale-95 data-[state=closed]:opacity-0",
+          "inset-x-0 bottom-0 w-full rounded-t-2xl max-h-[90dvh] overflow-y-auto data-[state=open]:translate-y-0 data-[state=open]:opacity-100 data-[state=closed]:translate-y-full data-[state=closed]:opacity-0 md:inset-x-auto md:bottom-auto md:left-1/2 md:top-1/2 md:-translate-x-1/2 md:max-w-lg md:w-[calc(100%-60px)] md:rounded-2xl md:data-[state=open]:-translate-y-1/2 md:data-[state=closed]:-translate-y-1/2 md:data-[state=closed]:scale-95 md:data-[state=open]:scale-100",
         left: "inset-y-0 left-0 h-full w-[min(280px,80vw)] rounded-r-2xl overflow-y-auto data-[state=open]:translate-x-0 data-[state=closed]:-translate-x-full",
         right:
           "inset-y-0 right-0 h-full w-[min(280px,80vw)] rounded-l-2xl overflow-y-auto data-[state=open]:translate-x-0 data-[state=closed]:translate-x-full",
         middle:
-          "left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 rounded-2xl w-[calc(100%-60px)] max-w-md max-h-[85vh] overflow-y-auto data-[state=open]:opacity-100 data-[state=closed]:opacity-0",
+          "inset-x-0 bottom-0 w-full rounded-t-3xl max-h-[90dvh] overflow-y-auto data-[state=open]:translate-y-0 data-[state=open]:opacity-100 data-[state=closed]:translate-y-full data-[state=closed]:opacity-0 md:inset-x-auto md:bottom-auto md:left-1/2 md:top-1/2 md:-translate-x-1/2 md:max-w-md md:w-[calc(100%-60px)] md:rounded-2xl md:data-[state=open]:-translate-y-1/2 md:data-[state=closed]:-translate-y-1/2",
       },
     },
     defaultVariants: { variant: "center" },
@@ -88,6 +88,9 @@ const DialogContent = forwardRef<
       className={cn(contentStyles({ variant }), className)}
       {...props}
     >
+      {(variant === "center" || variant === "middle") && (
+        <div className="md:hidden mx-auto mt-2 h-1.5 w-10 shrink-0 rounded-full bg-gray200" />
+      )}
       {children}
       {showClose && (
         <DialogPrimitive.Close className="absolute right-4 top-4 rounded-lg p-1 text-gray400 hover:text-gray900 transition-colors focus:outline-none">

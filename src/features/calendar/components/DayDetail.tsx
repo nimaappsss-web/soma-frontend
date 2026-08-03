@@ -35,12 +35,13 @@ interface DayDetailProps {
   onCreateEvent: (title: string, type: EventType) => void;
   onDeleteEvent: (id: string) => void;
   isPending: boolean;
+  variant?: "side" | "sheet";
 }
 
 const formatDate = (d: Date) =>
   d.toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric", year: "numeric" });
 
-export const DayDetail = ({ date, events, holidays, onClose, onCreateEvent, onDeleteEvent, isPending }: DayDetailProps) => {
+export const DayDetail = ({ date, events, holidays, onClose, onCreateEvent, onDeleteEvent, isPending, variant = "side" }: DayDetailProps) => {
   const [title, setTitle] = useState("");
   const [type, setType] = useState<EventType>("EVENT");
 
@@ -62,7 +63,7 @@ export const DayDetail = ({ date, events, holidays, onClose, onCreateEvent, onDe
         animate={{ opacity: 1, x: 0 }}
         exit={{ opacity: 0, x: 40 }}
         transition={{ duration: 0.2 }}
-        className="w-80 shrink-0 border-l border-gray-100 bg-white"
+        className={variant === "sheet" ? "w-full" : "w-80 shrink-0 border-l border-gray-100 bg-white"}
       >
         <div className="flex items-center justify-between px-5 pt-5 pb-3">
           <span className="text-sm font-semibold text-gray-900">{formatDate(date)}</span>
@@ -71,7 +72,7 @@ export const DayDetail = ({ date, events, holidays, onClose, onCreateEvent, onDe
           </button>
         </div>
 
-        <div className="px-5 space-y-2 min-h-[120px] overflow-y-auto max-h-[calc(100vh-280px)]">
+        <div className="px-5 space-y-2 min-h-[120px] overflow-y-auto max-h-[calc(100dvh-280px)]">
           {hasHolidays && (
             <div>
               <p className="text-[11px] font-semibold text-orange-600 uppercase tracking-wider mb-2">Holidays</p>
@@ -117,7 +118,7 @@ export const DayDetail = ({ date, events, holidays, onClose, onCreateEvent, onDe
           )}
         </div>
 
-        <div className="border-t border-gray-100 mt-4 px-5 py-4 space-y-3">
+        <div className="border-t border-gray-100 mt-4 px-5 py-4 space-y-3 pb-6">
           <p className="text-xs font-medium text-gray-500">Add Event</p>
           <Input
             value={title}

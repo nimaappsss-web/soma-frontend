@@ -277,7 +277,7 @@ export const AdminLayout = () => {
   );
 
   return (
-    <div className="flex h-screen bg-offWhite overflow-hidden">
+    <div className="flex h-dvh bg-offWhite overflow-hidden">
       {user?.needsPhoneSetup && <PhoneSetupDialog />}
 
       {/* Mobile sidebar overlay */}

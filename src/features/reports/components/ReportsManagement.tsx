@@ -71,7 +71,7 @@ export const ReportsManagement = () => {
           <div className="bg-white rounded-xl border border-gray-100 p-5">
             <p className="text-sm font-semibold text-gray-900">Template</p>
             <p className="text-xs text-gray-400 mt-0.5">How the report card is laid out</p>
-            <div className="mt-3 grid grid-cols-3 gap-2">
+            <div className="mt-3 grid grid-cols-1 sm:grid-cols-3 gap-2">
               {TEMPLATES.map((t) => (
                 <button
                   key={t.id}

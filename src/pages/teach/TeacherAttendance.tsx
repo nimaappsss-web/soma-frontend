@@ -416,7 +416,7 @@ export const TeacherAttendance = () => {
                   onChange={(e) => setDayNote(e.target.value)}
                   placeholder="Optional note for today (e.g. exam day, low turnout…)"
                   rows={2}
-                  className="rounded-xl bg-gray-50 border-gray-100 text-sm"
+                  className="rounded-xl bg-gray-50 border-gray-100"
                 />
                 <div className="flex items-center justify-end mt-2 gap-3">
                   {dayNote && (

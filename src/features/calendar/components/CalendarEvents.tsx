@@ -7,6 +7,7 @@ import { Textarea } from "../../../components/ui/textarea";
 import { useCalendarEvents, useCreateCalendarEvent, useDeleteCalendarEvent, useAcademicTerms } from "../api";
 import { CalendarGrid } from "./CalendarGrid";
 import { DayDetail } from "./DayDetail";
+import { BottomSheet } from "../../../components/mobile/BottomSheet";
 import { localDateKey } from "@/utils/date";
 import type { CreateCalendarEventPayload, EventType, EventAudience } from "../types";
 
@@ -201,15 +202,34 @@ export const CalendarEvents = () => {
             )}
           </div>
           {selectedDate && (
-            <DayDetail
-              date={selectedDate}
-              events={todayEvents}
-              holidays={todayHolidays}
-              onClose={() => setSelectedDate(null)}
-              onCreateEvent={handleDayCreate}
-              onDeleteEvent={(id) => deleteMutation.mutate(id)}
-              isPending={createMutation.isPending || deleteMutation.isPending}
-            />
+            <div className="hidden lg:block">
+              <DayDetail
+                date={selectedDate}
+                events={todayEvents}
+                holidays={todayHolidays}
+                onClose={() => setSelectedDate(null)}
+                onCreateEvent={handleDayCreate}
+                onDeleteEvent={(id) => deleteMutation.mutate(id)}
+                isPending={createMutation.isPending || deleteMutation.isPending}
+                variant="side"
+              />
+            </div>
+          )}
+          {selectedDate && (
+            <div className="lg:hidden">
+              <BottomSheet open onClose={() => setSelectedDate(null)}>
+                <DayDetail
+                  date={selectedDate}
+                  events={todayEvents}
+                  holidays={todayHolidays}
+                  onClose={() => setSelectedDate(null)}
+                  onCreateEvent={handleDayCreate}
+                  onDeleteEvent={(id) => deleteMutation.mutate(id)}
+                  isPending={createMutation.isPending || deleteMutation.isPending}
+                  variant="sheet"
+                />
+              </BottomSheet>
+            </div>
           )}
         </div>
       )}

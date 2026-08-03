@@ -35,9 +35,9 @@ export const AdminSubjects = () => {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <header className="bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between">
+      <header className="bg-white border-b border-gray-200 px-4 md:px-6 py-4 flex flex-wrap items-center justify-between gap-3">
         <h1 className="text-xl font-bold text-blue-700">Soma</h1>
-        <div className="flex items-center gap-4">
+        <div className="flex flex-wrap items-center gap-3">
           <span className="text-sm text-gray-500">{user?.schoolName}</span>
           <Avatar name={user?.name ?? ""} size={24} className="inline-block align-middle" />
           <span className="text-sm text-gray-700">{user?.name}</span>
@@ -48,8 +48,8 @@ export const AdminSubjects = () => {
         </div>
       </header>
 
-      <main className="max-w-4xl mx-auto px-6 py-8">
-        <div className="flex items-center justify-between mb-6">
+      <main className="max-w-4xl mx-auto px-4 md:px-6 py-6 md:py-8">
+        <div className="flex flex-wrap items-center justify-between gap-3 mb-6">
           <div>
             <Link to="/admin" className="text-sm text-gray-400 hover:text-gray-600">&larr; Dashboard</Link>
             <h2 className="text-2xl font-bold text-gray-800 mt-1">Subjects</h2>
@@ -60,7 +60,7 @@ export const AdminSubjects = () => {
         </div>
 
         {showForm && (
-          <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-100 mb-6 flex gap-3 items-start">
+          <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-100 mb-6 flex flex-col md:flex-row gap-3 items-start">
             <div className="flex-1">
               <Input
                 {...register("name")}
@@ -69,16 +69,16 @@ export const AdminSubjects = () => {
               />
               {errors.name && <p className="text-xs text-destructive mt-1">{errors.name.message}</p>}
             </div>
-            <div className="w-40">
+            <div className="w-full md:w-40">
               <Input
                 {...register("code")}
                 placeholder="Code (optional)"
               />
             </div>
-            <button onClick={handleSubmit(onAdd)} disabled={createMutation.isPending} className="px-4 py-2 bg-green-600 text-white rounded-lg text-sm font-medium disabled:opacity-50 shrink-0 h-10">
+            <button onClick={handleSubmit(onAdd)} disabled={createMutation.isPending} className="px-4 py-2 bg-green-600 text-white rounded-lg text-sm font-medium disabled:opacity-50 shrink-0 h-10 w-full md:w-auto">
               {createMutation.isPending ? "Saving..." : "Save"}
             </button>
-            <button onClick={() => setShowForm(false)} className="px-4 py-2 text-gray-500 text-sm shrink-0 h-10">Cancel</button>
+            <button onClick={() => setShowForm(false)} className="px-4 py-2 text-gray-500 text-sm shrink-0 h-10 w-full md:w-auto">Cancel</button>
           </div>
         )}
 
