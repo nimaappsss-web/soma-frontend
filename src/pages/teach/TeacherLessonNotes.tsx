@@ -1,6 +1,5 @@
 import { useState, useMemo } from "react";
 import toast from "react-hot-toast";
-
 import { useAuth } from "../../contexts/AuthContext";
 import { useTeacherProfile } from "../../features/teacher/api";
 import {
@@ -17,18 +16,14 @@ import { Input } from "../../components/ui/input";
 import { Textarea } from "../../components/ui/textarea";
 import { SelectDropdown } from "../../components/ui/select-dropdown";
 import type { LessonNote, GenerateResponse } from "../../features/lesson-notes/types";
-
 const genId = () => crypto.randomUUID();
-
 const emptyContent = (): GenerateResponse => ({
   subject: "", className: "", term: "", week: 0, topic: "", duration: "",
   topicSummary: "", backgroundInfo: "", behaviouralObjectives: [],
   instructionalMaterials: [], previousKnowledge: "", introduction: "",
   presentationSteps: [], evaluation: "", conclusion: "", assignment: "", remarks: "",
 });
-
 type FieldType = "textarea" | "list" | "steps";
-
 const FIELD_ORDER: Array<{ key: keyof GenerateResponse; label: string; type: FieldType }> = [
   { key: "duration", label: "Duration", type: "textarea" },
   { key: "topicSummary", label: "Topic Summary", type: "textarea" },
@@ -43,13 +38,11 @@ const FIELD_ORDER: Array<{ key: keyof GenerateResponse; label: string; type: Fie
   { key: "assignment", label: "Assignment / Homework", type: "textarea" },
   { key: "remarks", label: "Remarks", type: "textarea" },
 ];
-
 export const TeacherLessonNotes = () => {
   const { user } = useAuth();
   const { formClass } = useTeacherProfile();
   const notes = useLessonNotes(user?.id ?? "");
   const { activeTerm } = useActiveTerm();
-
   const [editingId, setEditingId] = useState<string | null>(null);
   const [className, setClassName] = useState(formClass ?? "");
   const [subjectName, setSubjectName] = useState("");
@@ -57,14 +50,11 @@ export const TeacherLessonNotes = () => {
   const [term, setTerm] = useState(() => (activeTerm ? termNumber(activeTerm.term) : 1));
   const [content, setContent] = useState<GenerateResponse>(emptyContent());
   const [saving, setSaving] = useState(false);
-
   const { data: subjects = [] } = useCurriculumSubjects(className);
   const { data: topics = [] } = useCurriculumTopics(className, subjectName);
   const { generate, generating } = useGenerateLessonNote();
   const online = navigator.onLine;
-
   const editNote = editingId ? notes.find((n) => n.id === editingId) : null;
-
   const weekOptions = useMemo(() => {
     const seen = new Set<number>();
     return topics.filter((t: { week: number }) => {
@@ -73,7 +63,6 @@ export const TeacherLessonNotes = () => {
       return true;
     });
   }, [topics]);
-
   const newNote = () => {
     setEditingId(null);
     setClassName(formClass ?? "");
@@ -82,7 +71,6 @@ export const TeacherLessonNotes = () => {
     setTerm(activeTerm ? termNumber(activeTerm.term) : 1);
     setContent(emptyContent());
   };
-
   const openNote = (note: LessonNote) => {
     setEditingId(note.id);
     setClassName(note.className);
@@ -91,7 +79,6 @@ export const TeacherLessonNotes = () => {
     setTerm(note.term);
     setContent({ ...note.content });
   };
-
   const handleGenerate = async () => {
     if (!subjectName || !className || !week) { toast.error("Select class, subject and week"); return; }
     try {
@@ -105,18 +92,15 @@ export const TeacherLessonNotes = () => {
       toast.error("Generation failed — check connection");
     }
   };
-
   const updateField = (key: keyof GenerateResponse, value: string) => {
     setContent((prev) => ({ ...prev, [key]: value }));
   };
-
   const updateList = (key: "behaviouralObjectives" | "instructionalMaterials", value: string) => {
     setContent((prev) => ({
       ...prev,
       [key]: value.split("\n").filter(Boolean),
     }));
   };
-
   const updateStep = (index: number, field: string, value: string) => {
     setContent((prev) => {
       const steps = prev.presentationSteps.map((s) => ({ ...s }));
@@ -124,7 +108,6 @@ export const TeacherLessonNotes = () => {
       return { ...prev, presentationSteps: steps };
     });
   };
-
   const addStep = () => {
     setContent((prev) => ({
       ...prev,
@@ -134,7 +117,6 @@ export const TeacherLessonNotes = () => {
       ],
     }));
   };
-
   const removeStep = (index: number) => {
     setContent((prev) => ({
       ...prev,
@@ -143,7 +125,6 @@ export const TeacherLessonNotes = () => {
         .map((s, i) => ({ ...s, step: i + 1 })),
     }));
   };
-
   const handleSave = async () => {
     if (!subjectName || !className) { toast.error("Subject and class required"); return; }
     if (!content.topic) { toast.error("Generate a plan or enter a topic"); return; }
@@ -171,7 +152,6 @@ export const TeacherLessonNotes = () => {
       setSaving(false);
     }
   };
-
   const handleDelete = async () => {
     if (!editingId) return;
     await deleteLessonNote(editingId, user!.id);
@@ -179,10 +159,8 @@ export const TeacherLessonNotes = () => {
     setContent(emptyContent());
     toast.success("Deleted");
   };
-
   const renderField = (field: (typeof FIELD_ORDER)[number]) => {
     const val = content[field.key];
-
     if (field.type === "list") {
       const text = Array.isArray(val) ? (val as string[]).join("\n") : "";
       return (
@@ -198,7 +176,6 @@ export const TeacherLessonNotes = () => {
         </div>
       );
     }
-
     if (field.type === "steps") {
       const steps = Array.isArray(val) ? (val as GenerateResponse["presentationSteps"]) : [];
       return (
@@ -232,7 +209,6 @@ export const TeacherLessonNotes = () => {
         </div>
       );
     }
-
     return (
       <div key={field.key}>
         <label className="block text-xs font-medium text-gray-500 mb-1 uppercase tracking-wide">
@@ -246,11 +222,9 @@ export const TeacherLessonNotes = () => {
       </div>
     );
   };
-
   return (
     <div className="p-4 md:p-8">
       <h2 className="text-2xl font-bold text-gray-800 mb-6">Lesson Notes</h2>
-
       <div className="flex flex-col lg:flex-row gap-6">
         <div className="w-full lg:w-56 shrink-0">
           <button
@@ -279,7 +253,6 @@ export const TeacherLessonNotes = () => {
             )}
           </div>
         </div>
-
         <div className="flex-1 min-w-0">
           <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
             <div className="grid grid-cols-1 md:grid-cols-4 gap-3 mb-6">
@@ -322,18 +295,15 @@ export const TeacherLessonNotes = () => {
                 </button>
               </div>
             </div>
-
             {content.topic && (
               <div className="mb-4 p-3 bg-blue-50 rounded-lg">
                 <p className="text-sm font-medium text-blue-800">{content.topic}</p>
                 <p className="text-xs text-blue-600">{content.subject} · {content.className} · {content.term} · Week {content.week} · {content.duration}</p>
               </div>
             )}
-
             <div className="space-y-4">
               {FIELD_ORDER.map(renderField)}
             </div>
-
             <div className="flex gap-3 mt-6 pt-4 border-t border-gray-100">
               <button
                 onClick={handleSave}

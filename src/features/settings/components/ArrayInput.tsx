@@ -1,6 +1,5 @@
 import { useState } from "react";
 import { Input } from "../../../components/ui/input";
-
 export const ArrayInput = ({
   value,
   onChange,
@@ -11,17 +10,14 @@ export const ArrayInput = ({
   disabled: boolean;
 }) => {
   const [input, setInput] = useState("");
-
   const add = () => {
     if (!input.trim()) return;
     onChange([...value, input.trim()]);
     setInput("");
   };
-
   const remove = (idx: number) => {
     onChange(value.filter((_, i) => i !== idx));
   };
-
   return (
     <div>
       <div className="flex flex-wrap gap-2 mb-2">

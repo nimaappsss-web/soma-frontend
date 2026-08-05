@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 
 import { Button } from "@/components/ui/button";
 import { useBulkCreateStudents } from "../api";
@@ -7,6 +7,8 @@ import {
   isValidRow,
   type BulkStudentRow,
 } from "../utils/bulkParse";
+import { normalizeName } from "@/utils/dedupe";
+import { db } from "@/db/db";
 import { BulkInputView } from "./BulkInputView";
 import { BulkPreviewTable } from "./BulkPreviewTable";
 
@@ -25,7 +27,24 @@ type Step = "input" | "preview";
 export const BulkAddStudents = ({ classes, onClose }: BulkAddStudentsProps) => {
   const [step, setStep] = useState<Step>("input");
   const [rows, setRows] = useState<BulkStudentRow[]>([]);
+  const [existingNamesByClass, setExistingNamesByClass] = useState<Map<string, Set<string>>>(new Map());
   const bulkCreate = useBulkCreateStudents();
+
+  useEffect(() => {
+    let active = true;
+    (async () => {
+      const students = await db.students.toArray();
+      const map = new Map<string, Set<string>>();
+      for (const s of students) {
+        if (!s.classId) continue;
+        const set = map.get(s.classId) ?? new Set<string>();
+        set.add(normalizeName(s.name));
+        map.set(s.classId, set);
+      }
+      if (active) setExistingNamesByClass(map);
+    })();
+    return () => { active = false; };
+  }, []);
 
   const handleParsed = useCallback((parsed: BulkStudentRow[]) => {
     const classByName = new Map(classes.map((c) => [c.name.toLowerCase().trim(), c.id]));
@@ -90,18 +109,19 @@ export const BulkAddStudents = ({ classes, onClose }: BulkAddStudentsProps) => {
           <BulkPreviewTable
             rows={rows}
             classes={classes}
+            existingNamesByClass={existingNamesByClass}
             onUpdateRow={updateRow}
             onRemoveRow={removeRow}
             onAddRow={addRow}
           />
 
           <div className="flex gap-3 pt-2">
-            <Button
+            <button
               onClick={handleSave}
               disabled={bulkCreate.isPending || validCount === 0}
             >
               {bulkCreate.isPending ? "Saving..." : `Save ${validCount} Students`}
-            </Button>
+            </button>
             <Button variant="outline" onClick={() => setStep("input")}>
               Back
             </Button>

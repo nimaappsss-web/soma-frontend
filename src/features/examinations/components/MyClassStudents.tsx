@@ -1,20 +1,16 @@
 import { useNavigate } from "react-router";
 import { Profile2User, ArrowRight2 } from "iconsax-react";
-
 import { useTeacherProfile } from "../../teacher/api";
 import { useActiveTerm } from "../../calendar/api";
 import { termLabel } from "../../calendar/utils/term";
 import { useStudents } from "../../students/api";
 import { Avatar } from "../../../components/ui/Avatar";
-
 export const MyClassStudents = () => {
   const navigate = useNavigate();
   const { formClassId, formClass, schoolName, isLoading: profileLoading } = useTeacherProfile();
   const { activeTerm } = useActiveTerm();
-
   const { data: students, isLoading: studentsLoading, error } = useStudents(formClassId ?? "", "ACTIVE");
   const sortedStudents = [...students].sort((a, b) => a.name.localeCompare(b.name));
-
   if (profileLoading) {
     return (
       <div className="p-4 md:p-6 w-full">
@@ -24,7 +20,6 @@ export const MyClassStudents = () => {
       </div>
     );
   }
-
   if (!formClassId) {
     return (
       <div className="p-4 md:p-6 w-full">
@@ -38,10 +33,8 @@ export const MyClassStudents = () => {
       </div>
     );
   }
-
   const term = activeTerm?.term ?? "";
   const subtitle = [schoolName, formClass, term ? termLabel(term).label : ""].filter(Boolean).join(" · ");
-
   return (
     <div className="p-4 md:p-6 w-full">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
@@ -53,7 +46,6 @@ export const MyClassStudents = () => {
           {sortedStudents.length} student{sortedStudents.length === 1 ? "" : "s"}
         </p>
       </div>
-
       {studentsLoading ? (
         <div className="mt-4 bg-white rounded-xl border border-gray100 p-8 text-center">
           <div className="h-8 w-8 animate-spin rounded-full border-2 border-gray100 border-t-gray900 mx-auto" />

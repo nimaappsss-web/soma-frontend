@@ -214,18 +214,25 @@ export const SelectDropdown = ({
       </button>
 
       {open &&
-        pos &&
-        createPortal(
+        (inDialog ? (
           <div
-            ref={menuRef}
-            onPointerDownCapture={inDialog ? (e) => e.stopPropagation() : undefined}
-            style={inDialog ? { ...menuStyle, pointerEvents: "auto" } : menuStyle}
-            className="fixed z-[100] rounded-xl border border-input bg-background shadow-lg"
+            className="absolute left-0 right-0 top-full z-50 mt-1.5 rounded-xl border border-input bg-background shadow-lg"
           >
             {menu}
-          </div>,
-          document.body,
-        )}
+          </div>
+        ) : (
+          pos &&
+          createPortal(
+            <div
+              ref={menuRef}
+              style={menuStyle}
+              className="fixed z-[100] rounded-xl border border-input bg-background shadow-lg"
+            >
+              {menu}
+            </div>,
+            document.body,
+          )
+        ))}
 
       {hasError && <p className="text-xs text-red-500 mt-2">{hasError.message}</p>}
     </div>

@@ -89,9 +89,9 @@ export const CalendarHolidays = () => {
             onChange={(e) => setForm({ ...form, reason: e.target.value })}
             placeholder="Reason (e.g. Democracy Day)"
           />
-          <Button onClick={handleCreate} disabled={isPending} className="w-full">
+          <button onClick={handleCreate} disabled={isPending} className="w-full">
             {createMutation.isPending ? "Adding..." : "Mark as Holiday"}
-          </Button>
+          </button>
         </div>
       )}
 

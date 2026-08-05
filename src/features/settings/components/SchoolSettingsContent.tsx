@@ -1,6 +1,5 @@
 import { useState, useRef, useEffect } from "react";
 import toast from "react-hot-toast";
-
 import { useSchoolSettings } from "../api";
 import { useUpdateSchool } from "../../../features/principal/api";
 import { uploadFile } from "../../../utils/upload";
@@ -9,7 +8,6 @@ import { ArrayInput } from "./ArrayInput";
 import { Input } from "../../../components/ui/input";
 import { Textarea } from "../../../components/ui/textarea";
 import type { SchoolSetting } from "../types";
-
 export const SchoolSettingsContent = () => {
   const { data: settings, isLoading } = useSchoolSettings();
   const updateSchool = useUpdateSchool();
@@ -17,7 +15,6 @@ export const SchoolSettingsContent = () => {
   const [values, setValues] = useState<Record<string, unknown>>({});
   const [logoFile, setLogoFile] = useState<File | null>(null);
   const [savingSchool, setSavingSchool] = useState(false);
-
   useEffect(() => {
     if (settings && settings.length > 0) {
       const initial: Record<string, unknown> = {};
@@ -37,10 +34,8 @@ export const SchoolSettingsContent = () => {
       });
     }
   }, [settings]);
-
   const setVal = (key: string, val: unknown) =>
     setValues((prev) => ({ ...prev, [key]: val }));
-
   const onSaveSchool = async () => {
     setSavingSchool(true);
     try {
@@ -72,7 +67,6 @@ export const SchoolSettingsContent = () => {
       setSavingSchool(false);
     }
   };
-
   if (isLoading) {
     return (
       <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100 text-center">
@@ -80,7 +74,6 @@ export const SchoolSettingsContent = () => {
       </div>
     );
   }
-
   if (!settings || settings.length === 0) {
     return (
       <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100 text-center">
@@ -88,7 +81,6 @@ export const SchoolSettingsContent = () => {
       </div>
     );
   }
-
   return (
     <div className="space-y-6">
       <section className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
@@ -119,7 +111,6 @@ export const SchoolSettingsContent = () => {
     </div>
   );
 };
-
 const SettingField = ({
   setting,
   value,
@@ -136,11 +127,9 @@ const SettingField = ({
   onLogoFile: (f: File | null) => void;
 }) => {
   const disabled = !setting.editable;
-
   return (
     <div>
       <label className="block text-xs text-gray-500 mb-1">{setting.label}</label>
-
       {setting.type === "text" && (
         <Input
           type="text"
@@ -150,7 +139,6 @@ const SettingField = ({
           className="disabled:bg-gray-50 disabled:text-gray-400"
         />
       )}
-
       {setting.type === "textarea" && (
         <Textarea
           value={(value as string) ?? ""}
@@ -160,7 +148,6 @@ const SettingField = ({
           className="disabled:bg-gray-50 disabled:text-gray-400"
         />
       )}
-
       {setting.type === "image" && (
         <div className="flex items-center gap-4">
           <div className="w-16 h-16 rounded-lg border border-gray-200 overflow-hidden bg-gray-50 flex items-center justify-center">
@@ -193,7 +180,6 @@ const SettingField = ({
           />
         </div>
       )}
-
       {setting.type === "pattern" && (
         <div>
           <Input
@@ -208,7 +194,6 @@ const SettingField = ({
           </p>
         </div>
       )}
-
       {setting.type === "multi-select" && (
         <div>
           <div className="flex flex-wrap gap-2">
@@ -239,7 +224,6 @@ const SettingField = ({
           </div>
         </div>
       )}
-
       {setting.type === "array" && (
         <ArrayInput
           value={(Array.isArray(value) ? value : []) as string[]}
@@ -247,7 +231,6 @@ const SettingField = ({
           disabled={disabled}
         />
       )}
-
       {!setting.editable && setting.editableReason && (
         <p className="text-xs text-amber-600 mt-1">{setting.editableReason}</p>
       )}

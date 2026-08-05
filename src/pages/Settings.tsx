@@ -4,7 +4,6 @@ import toast from "react-hot-toast";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-
 import { Avatar } from "../components/ui/Avatar";
 import { Input } from "../components/ui/input";
 import { SelectDropdown } from "../components/ui/select-dropdown";
@@ -15,7 +14,6 @@ import { SchoolSettingsContent } from "../features/settings";
 import { uploadFile } from "../utils/upload";
 import { addToQueue } from "../sync/syncQueue";
 import { transformError } from "../utils/transformError";
-
 const accountSchema = z.object({
   name: z.string().min(1, "Name is required"),
   phone: z.string().optional(),
@@ -23,9 +21,7 @@ const accountSchema = z.object({
   gender: z.enum(["M", "F", ""]).optional(),
   dateOfBirth: z.string().optional(),
 });
-
 type AccountForm = z.infer<typeof accountSchema>;
-
 const passwordSchema = z.object({
   currentPassword: z.string().min(1, "Current password is required"),
   newPassword: z.string().min(6, "New password must be at least 6 characters"),
@@ -34,21 +30,14 @@ const passwordSchema = z.object({
   message: "Passwords don't match",
   path: ["confirmPassword"],
 });
-
 type PasswordForm = z.infer<typeof passwordSchema>;
-
-
-
 export const Settings = () => {
   const { user, logout } = useAuth();
   const { data: profile } = useMe();
   const changePassword = useChangePassword();
   const fileInputRef = useRef<HTMLInputElement>(null);
-
-
   const [pendingImage, setPendingImage] = useState<File | null>(null);
   const [saving, setSaving] = useState(false);
-
   const accountForm = useForm<AccountForm>({
     resolver: zodResolver(accountSchema),
     defaultValues: {
@@ -59,7 +48,6 @@ export const Settings = () => {
       dateOfBirth: "",
     },
   });
-
   useEffect(() => {
     if (profile) {
       accountForm.reset({
@@ -71,28 +59,23 @@ export const Settings = () => {
       });
     }
   }, [profile, user, accountForm]);
-
   const passwordForm = useForm<PasswordForm>({
     resolver: zodResolver(passwordSchema),
     defaultValues: { currentPassword: "", newPassword: "", confirmPassword: "" },
   });
-
   const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
     setPendingImage(file);
   };
-
   const onSaveAccount = async (data: AccountForm) => {
     if (!user) return;
     setSaving(true);
     try {
       let imageUrl: string | null | undefined;
-
       if (pendingImage) {
         imageUrl = await uploadFile(pendingImage);
       }
-
       const payload: Record<string, unknown> = {};
       if (data.name !== user.name) payload.name = data.name;
       if (data.phone !== (user.phone ?? "")) payload.phone = data.phone || null;
@@ -100,12 +83,10 @@ export const Settings = () => {
       if (data.gender) payload.gender = data.gender;
       if (data.dateOfBirth) payload.dateOfBirth = data.dateOfBirth;
       if (imageUrl) payload.image = imageUrl;
-
       if (Object.keys(payload).length === 0) {
         toast.success("Nothing to update");
         return;
       }
-
       await addToQueue({
         userId: user.id,
         table: "users",
@@ -114,7 +95,6 @@ export const Settings = () => {
         method: "PATCH",
         payload,
       });
-
       setPendingImage(null);
       toast.success("Profile updated!");
     } catch (err) {
@@ -123,7 +103,6 @@ export const Settings = () => {
       setSaving(false);
     }
   };
-
   const onChangePassword = (data: PasswordForm) => {
     changePassword.mutate(
       { currentPassword: data.currentPassword, newPassword: data.newPassword },
@@ -138,23 +117,19 @@ export const Settings = () => {
       },
     );
   };
-
   const { tab } = useParams<{ tab: string }>();
   const isAdmin = ["principal", "admin"].includes(user?.role?.toLowerCase() ?? "");
   const sidebarItems = isAdmin
     ? [{ id: "account", label: "Account Settings" }, { id: "school", label: "School" }]
     : [{ id: "account", label: "Account Settings" }];
-
   if (!tab || !["account", "school"].includes(tab)) {
     return <Navigate to="/settings/account" replace />;
   }
   if (tab === "school" && !isAdmin) {
     return <Navigate to="/settings/account" replace />;
   }
-
   const previewUrl = pendingImage ? URL.createObjectURL(pendingImage) : null;
   const imageToShow = pendingImage ? previewUrl : null;
-
   return (
     <div className="min-h-screen bg-gray-50">
       <header className="bg-white border-b border-gray-200 px-4 md:px-6 py-4 flex flex-wrap items-center justify-between gap-3">
@@ -171,7 +146,6 @@ export const Settings = () => {
           </button>
         </div>
       </header>
-
       <main className="max-w-5xl mx-auto px-4 md:px-6 py-6 md:py-8">
         <div className="flex items-center justify-between mb-6">
           <div>
@@ -181,7 +155,6 @@ export const Settings = () => {
             <h2 className="text-2xl font-bold text-gray-800 mt-1">Settings</h2>
           </div>
         </div>
-
         <div className="flex flex-col lg:flex-row gap-4 lg:gap-8">
           <nav className="w-full lg:w-56 shrink-0">
             <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-x-auto lg:overflow-visible">
@@ -202,7 +175,6 @@ export const Settings = () => {
               </div>
             </div>
           </nav>
-
           <div className="flex-1 min-w-0">
             {tab === "account" && (
             <div className="space-y-6">
@@ -243,7 +215,6 @@ export const Settings = () => {
                     </div>
                   </div>
                 </section>
-
                 <section className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
                   <h3 className="font-semibold text-gray-800 mb-4">Personal Information</h3>
                   <form onSubmit={accountForm.handleSubmit(onSaveAccount)} className="space-y-4">
@@ -316,7 +287,6 @@ export const Settings = () => {
                     </button>
                   </form>
                 </section>
-
                 <section className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
                   <h3 className="font-semibold text-gray-800 mb-4">Change Password</h3>
                   <form onSubmit={passwordForm.handleSubmit(onChangePassword)} className="space-y-4">
@@ -363,7 +333,6 @@ export const Settings = () => {
                 </section>
               </div>
             )}
-
             {tab === "school" && isAdmin && (
               <SchoolSettingsContent />
             )}

@@ -101,9 +101,9 @@ export const StudentScoreCard = ({
       </div>
 
       <div className="flex items-center gap-2 w-full">
-        <Button onClick={tap(onNext)} className="flex-1 active:scale-95 transition-transform">
+        <button onClick={tap(onNext)} className="flex-1 active:scale-95 transition-transform">
           Next
-        </Button>
+        </button>
         <Button
           type="button"
           variant="outline"

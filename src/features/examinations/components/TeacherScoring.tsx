@@ -421,14 +421,14 @@ const SubjectBlock = ({
                           className="w-full h-11 rounded-full border border-gray100 bg-white pl-11 pr-11 text-sm text-gray900 placeholder:text-gray400 focus:outline-none focus:border-gray900 transition-colors"
                         />
                         {search && (
-                          <button
-                            type="button"
-                            onClick={() => setSearch("")}
-                            className="absolute right-3 top-1/2 -translate-y-1/2 flex h-7 w-7 items-center justify-center rounded-full text-gray400 hover:bg-gray50 hover:text-gray900 transition-colors"
-                            aria-label="Clear search"
-                          >
-                            <CloseCircle size={16} variant="Bold" color="#8C8C8C" />
-                          </button>
+<button
+                          type="button"
+                          onClick={() => setSearch("")}
+                          className="absolute right-3 top-1/2 -translate-y-1/2 flex h-7 w-7 items-center justify-center rounded-full text-gray400 hover:bg-gray50 hover:text-gray900 transition-colors"
+                          aria-label="Clear search"
+                        >
+                          <CloseCircle size={16} variant="Bold" color="#8C8C8C" />
+                        </button>
                         )}
                       </div>
 
@@ -505,13 +505,13 @@ const SubjectBlock = ({
                           )}
                         </div>
 
-                        <Button
+                        <button
                           onClick={handleSave}
                           disabled={enteredCount === 0 || saveMutation.isPending}
                           className="w-full sm:w-auto sm:self-end active:scale-95 transition-transform"
                         >
                           {saveMutation.isPending ? "Saving…" : `Save (${enteredCount})`}
-                        </Button>
+                        </button>
                       </div>
 
                       <div className="mt-3">

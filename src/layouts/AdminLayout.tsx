@@ -21,7 +21,6 @@ import {
   ArrowLeft2,
   SearchNormal,
 } from "iconsax-react";
-
 import { useAuth } from "../contexts/AuthContext";
 import { Avatar } from "../components/ui/Avatar";
 import { SchoolSetupWizard } from "../features/principal/components/SchoolSetupWizard";
@@ -30,11 +29,8 @@ import { useSidebarCollapse } from "../hooks/useSidebarCollapse";
 import { MobileHeader } from "../components/mobile";
 import { SearchModal } from "../components/others/SearchModal";
 import { cn } from "../lib/utils";
-
 import type { IconProps } from "iconsax-react";
-
 type IconComponent = React.FC<IconProps>;
-
 interface NavItem {
   label: string;
   to: string;
@@ -42,7 +38,6 @@ interface NavItem {
   hasCaret?: boolean;
   children?: { label: string; to: string }[];
 }
-
 const group1: NavItem[] = [
   { label: "Home", to: "/admin", Icon: Home2 },
   { label: "Students", to: "/admin/students", Icon: Teacher },
@@ -58,7 +53,6 @@ const group1: NavItem[] = [
   },
   { label: "Parents", to: "/admin/parents", Icon: Profile2User },
 ];
-
 const group2: NavItem[] = [
   { label: "Classes", to: "/admin/classes", Icon: Teacher },
   { label: "Subjects", to: "/admin/subjects", Icon: Book },
@@ -68,9 +62,7 @@ const group2: NavItem[] = [
     label: "CA & Exams",
     to: "/admin/examinations",
     Icon: StatusUp,
-    hasCaret: true,
     children: [
-      { label: "Scoring", to: "/admin/examinations/scoring" },
       { label: "Configure", to: "/admin/examinations/configure" },
     ],
   },
@@ -86,18 +78,15 @@ const group2: NavItem[] = [
     ],
   },
 ];
-
 const group3: NavItem[] = [
   { label: "Finance", to: "/admin/finance", Icon: Card },
   { label: "Moments", to: "/admin/moments", Icon: MagicStar },
   { label: "Reports", to: "/admin/reports", Icon: Chart },
 ];
-
 const group4: NavItem[] = [
   { label: "Announcements", to: "/admin/announcements", Icon: VolumeHigh },
   { label: "Settings", to: "/admin/settings", Icon: Setting2 },
 ];
-
 const SidebarNav = ({
   items,
   expandedItems,
@@ -117,10 +106,8 @@ const SidebarNav = ({
     {items.map((item) => {
       const isExpanded = expandedItems[item.label] ?? false;
       const hasChildren = item.children && item.children.length > 0;
-
       if (hasChildren) {
         const active = isChildActive(item.children!);
-
         if (collapsed) {
           return (
             <NavLink
@@ -140,7 +127,6 @@ const SidebarNav = ({
             </NavLink>
           );
         }
-
         return (
           <div key={item.label}>
             <button
@@ -195,7 +181,6 @@ const SidebarNav = ({
           </div>
         );
       }
-
       return (
         <NavLink
           key={item.to}
@@ -220,7 +205,6 @@ const SidebarNav = ({
     })}
   </>
 );
-
 export const AdminLayout = () => {
   const { user } = useAuth();
   const location = useLocation();
@@ -228,22 +212,16 @@ export const AdminLayout = () => {
   const { collapsed, toggle } = useSidebarCollapse();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
-
   const needsSchoolSetup = user?.needsSchoolSetup ?? user?.hasSchool === false;
-
   if (needsSchoolSetup) {
     return <SchoolSetupWizard />;
   }
-
   const toggleExpanded = (label: string) => {
     setExpandedItems((prev) => ({ ...prev, [label]: !prev[label] }));
   };
-
   const isChildActive = (children: { label: string; to: string }[]) =>
     children.some((child) => location.pathname.startsWith(child.to));
-
   const closeMobile = () => setMobileOpen(false);
-
   const sidebarContent = (
     <>
       {/* Nav */}
@@ -256,7 +234,6 @@ export const AdminLayout = () => {
         <div className="border-t border-gray100 my-2" />
         <SidebarNav items={group4} expandedItems={expandedItems} toggleExpanded={toggleExpanded} isChildActive={isChildActive} collapsed={collapsed} onNavigate={closeMobile} />
       </nav>
-
       {/* Bottom: School info */}
       <div className={cn("border-t border-gray100 mt-1 shrink-0", collapsed ? "px-[12px] pb-4 pt-3" : "px-3 pb-4 pt-3")}>
         {collapsed ? (
@@ -275,11 +252,9 @@ export const AdminLayout = () => {
       </div>
     </>
   );
-
   return (
     <div className="flex h-dvh bg-offWhite overflow-hidden">
       {user?.needsPhoneSetup && <PhoneSetupDialog />}
-
       {/* Mobile sidebar overlay */}
       <div
         className={cn(
@@ -315,7 +290,6 @@ export const AdminLayout = () => {
         </div>
         {sidebarContent}
       </aside>
-
       {/* Desktop sidebar — hidden on mobile */}
       <aside
         className={cn(
@@ -350,21 +324,17 @@ export const AdminLayout = () => {
             </>
           )}
         </div>
-
         {sidebarContent}
-
         {/* Double-click edge to collapse */}
         <div
           onDoubleClick={toggle}
           className="absolute top-0 right-0 h-full w-[4px] cursor-col-resize hover:bg-gray200 transition-colors"
         />
       </aside>
-
       {/* Right side: header + content */}
       <div className="flex-1 flex flex-col min-w-0">
         {/* Mobile header */}
         <MobileHeader onMenuClick={() => setMobileOpen(true)} />
-
         {/* Desktop header — hidden on mobile */}
         <header className="h-[62px] shrink-0 bg-pureWhite border-b border-gray100 items-center justify-end px-6 hidden md:flex">
           <div className="flex items-center gap-3">
@@ -386,12 +356,10 @@ export const AdminLayout = () => {
             </div>
           </div>
         </header>
-
         <main className="flex-1 overflow-y-auto">
           <Outlet />
         </main>
       </div>
-
       {/* Search modal */}
       <SearchModal open={searchOpen} onOpenChange={setSearchOpen} />
     </div>

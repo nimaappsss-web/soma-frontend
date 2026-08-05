@@ -384,9 +384,9 @@ const SchoolSection = () => {
               <Label htmlFor="address">Address</Label>
               <Input id="address" {...register("address")} />
             </div>
-            <Button type="submit" disabled={(!isDirty && !isArmsDirty) || updateSchool.isPending} className="w-full">
+            <button type="submit" disabled={(!isDirty && !isArmsDirty) || updateSchool.isPending} className="w-full">
               {updateSchool.isPending ? "Saving..." : "Save Changes"}
-            </Button>
+            </button>
           </form>
         )}
       </CardContent>

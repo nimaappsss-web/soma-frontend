@@ -1,10 +1,8 @@
 import { Avatar } from "../../../components/ui/Avatar";
 import { useTeachers, useResendInvite } from "../../teacher/api";
-
 export const TeacherListSection = () => {
   const { data, isLoading, error } = useTeachers();
   const resendMutation = useResendInvite();
-
   if (isLoading) {
     return (
       <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
@@ -13,7 +11,6 @@ export const TeacherListSection = () => {
       </div>
     );
   }
-
   if (error) {
     return (
       <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
@@ -22,20 +19,16 @@ export const TeacherListSection = () => {
       </div>
     );
   }
-
   const teachers = data?.teachers ?? [];
   const pendingInvites = data?.pendingInvites ?? [];
-
   if (teachers.length === 0 && pendingInvites.length === 0) {
     return null;
   }
-
   const formatExpiry = (seconds: number) => {
     if (seconds < 60) return "Expiring soon";
     const hours = Math.round(seconds / 3600);
     return `${hours}h remaining`;
   };
-
   return (
     <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
       <h3 className="font-semibold text-gray-800 mb-4">Teachers</h3>

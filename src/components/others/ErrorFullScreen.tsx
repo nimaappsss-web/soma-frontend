@@ -4,6 +4,7 @@ import { Danger } from "iconsax-react";
 import React from "react";
 
 import { useHandleLogout } from "../../hooks/useLogout";
+import { Button } from "../ui/button";
 
 interface ErrorFullScreenProps {
   message?: string;
@@ -35,9 +36,9 @@ export const ErrorFullScreen: React.FC<ErrorFullScreenProps> = ({
               Try Again
             </button>
           )}
-          <button className="text-white mt-4" onClick={handleLogout}>
+          <Button variant="ghost" className="text-white mt-4" onClick={handleLogout}>
             Logout
-          </button>
+          </Button>
         </div>
       </div>
     </div>

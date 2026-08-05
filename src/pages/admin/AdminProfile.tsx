@@ -2,7 +2,6 @@ import { useState, useRef, useEffect } from "react";
 import { Link } from "react-router";
 import toast from "react-hot-toast";
 import { useQuery } from "@tanstack/react-query";
-
 import { useAuth } from "../../contexts/AuthContext";
 import { Avatar } from "../../components/ui/Avatar";
 import { Input } from "../../components/ui/input";
@@ -13,17 +12,14 @@ import { uploadFile } from "../../utils/upload";
 import { addToQueue } from "../../sync/syncQueue";
 import { transformError } from "../../utils/transformError";
 import type { User } from "../../features/auth/types";
-
 export const AdminProfile = () => {
   const { user, logout } = useAuth();
   const fileInputRef = useRef<HTMLInputElement>(null);
-
   const { data: profile } = useQuery<User>({
     queryKey: ["profile", user?.id],
     queryFn: () => fetchData(`/users/${user?.id}`, "GET"),
     enabled: !!user?.id,
   });
-
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
   const [address, setAddress] = useState("");
@@ -33,7 +29,6 @@ export const AdminProfile = () => {
   const [pendingImage, setPendingImage] = useState<File | null>(null);
   const [saving, setSaving] = useState(false);
   const [formReady, setFormReady] = useState(false);
-
   useEffect(() => {
     if (profile && !formReady) {
       setName(profile.name ?? "");
@@ -42,24 +37,20 @@ export const AdminProfile = () => {
       setFormReady(true);
     }
   }, [profile, formReady]);
-
   const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
     setPendingImage(file);
     setProfilePictureUrl(URL.createObjectURL(file));
   };
-
   const handleSave = async () => {
     if (!user) return;
     setSaving(true);
     try {
       let finalPictureUrl = profilePictureUrl;
-
       if (pendingImage) {
         finalPictureUrl = await uploadFile(pendingImage);
       }
-
       const payload: Record<string, unknown> = {};
       if (name !== user.name) payload.name = name;
       if (phone !== (user.phone ?? "")) payload.phone = phone || null;
@@ -68,12 +59,10 @@ export const AdminProfile = () => {
       if (dateOfBirth) payload.dateOfBirth = dateOfBirth;
       if (finalPictureUrl !== (user.image ?? null))
         payload.image = finalPictureUrl;
-
       if (Object.keys(payload).length === 0) {
         toast.success("Nothing to update");
         return;
       }
-
       await addToQueue({
         userId: user.id,
         table: "users",
@@ -82,7 +71,6 @@ export const AdminProfile = () => {
         method: "PATCH",
         payload,
       });
-
       setPendingImage(null);
       toast.success("Profile updated!");
     } catch (err) {
@@ -91,7 +79,6 @@ export const AdminProfile = () => {
       setSaving(false);
     }
   };
-
   return (
     <div className="min-h-screen bg-gray-50">
       <header className="bg-white border-b border-gray-200 px-4 md:px-6 py-4 flex flex-wrap items-center justify-between gap-3">
@@ -107,7 +94,6 @@ export const AdminProfile = () => {
           </button>
         </div>
       </header>
-
       <main className="max-w-2xl mx-auto px-4 md:px-6 py-6 md:py-8">
         <div className="flex items-center justify-between mb-6">
           <div>
@@ -117,7 +103,6 @@ export const AdminProfile = () => {
             <h2 className="text-2xl font-bold text-gray-800 mt-1">Profile</h2>
           </div>
         </div>
-
         <div className="space-y-6">
           <section className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
             <h3 className="font-semibold text-gray-800 mb-4">Profile Picture</h3>
@@ -148,7 +133,6 @@ export const AdminProfile = () => {
               </div>
             </div>
           </section>
-
           <section className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
             <h3 className="font-semibold text-gray-800 mb-4">Personal Information</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -207,7 +191,6 @@ export const AdminProfile = () => {
               </div>
             </div>
           </section>
-
           <button
             onClick={handleSave}
             disabled={saving}

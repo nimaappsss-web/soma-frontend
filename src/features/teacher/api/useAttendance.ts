@@ -75,7 +75,7 @@ export const useAttendance = ({ classId, date }: { classId: string; date: string
     : undefined;
 
   return {
-    data: cached && cached.length > 0 ? mapped : (query.data ?? undefined),
+    data: cached !== undefined ? mapped : (query.data ?? undefined),
     isLoading: (cached === undefined || (cached.length === 0 && query.isLoading)),
     error: query.error ?? undefined,
   };

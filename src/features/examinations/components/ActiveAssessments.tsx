@@ -1,22 +1,18 @@
 import { useMemo, useState } from "react";
 import { useNavigate } from "react-router";
 import { ArrowRight2, Profile2User, StatusUp } from "iconsax-react";
-
 import { useAuth } from "../../../contexts/AuthContext";
 import { useMyAssignments } from "../../teacher/api/useMyAssignments";
 import { useActiveExamScores } from "../api/useActiveExamScores";
 import { SelectDropdown } from "../../../components/ui/select-dropdown";
 import { cn } from "../../../lib/utils";
-
 export const ActiveAssessments = () => {
   const { user } = useAuth();
   const userId = user?.id ?? "";
   const navigate = useNavigate();
   const [selectedClassId, setSelectedClassId] = useState("");
-
   const { data: assignments = [], isLoading: assignmentsLoading } = useMyAssignments(userId);
   const { data: rows = [], isLoading: rowsLoading, error } = useActiveExamScores(selectedClassId || undefined);
-
   const cards = useMemo(() => {
     return rows.map((r) => {
       const total = r.rosterCount > 0 ? r.rosterCount : r.count;
@@ -24,7 +20,6 @@ export const ActiveAssessments = () => {
       return { ...r, total, pct };
     });
   }, [rows]);
-
   const classOptions = useMemo(() => {
     const map = new Map<string, string>();
     for (const a of assignments) {
@@ -37,14 +32,11 @@ export const ActiveAssessments = () => {
       ...Array.from(map, ([id, name]) => ({ value: id, label: name })),
     ];
   }, [assignments]);
-
   const visibleCards = useMemo(
     () => (selectedClassId ? cards.filter((c) => c.classId === selectedClassId) : cards),
     [cards, selectedClassId],
   );
-
   const isLoading = rowsLoading || assignmentsLoading;
-
   const classGroups = useMemo(() => {
     const map = new Map<string, { classId: string; className: string; latest: number; items: typeof cards }>();
     for (const c of visibleCards) {
@@ -58,7 +50,6 @@ export const ActiveAssessments = () => {
     }
     return Array.from(map.values()).sort((a, b) => b.latest - a.latest);
   }, [visibleCards]);
-
   return (
     <div className="p-4 md:p-6 w-full">
       <div className="mb-4 flex flex-wrap items-start justify-between gap-3">
@@ -76,7 +67,6 @@ export const ActiveAssessments = () => {
           className="w-44 md:w-52"
         />
       </div>
-
       {isLoading ? (
         <div className="bg-white rounded-xl border border-gray100 p-8 text-center">
           <div className="h-8 w-8 animate-spin rounded-full border-2 border-gray100 border-t-gray900 mx-auto" />
@@ -149,7 +139,6 @@ export const ActiveAssessments = () => {
                         {c.componentType}
                       </span>
                     </div>
-
                     <div>
                       <div className="mb-1.5 flex items-center justify-between text-xs">
                         <span className="text-gray500">
@@ -167,7 +156,6 @@ export const ActiveAssessments = () => {
                         />
                       </div>
                     </div>
-
                     <div className="flex items-center justify-between border-t border-gray100 pt-3">
                       <span className="flex items-center gap-1.5 text-xs font-medium text-springgreen600">
                         <span className="h-1.5 w-1.5 rounded-full bg-springgreen600" />

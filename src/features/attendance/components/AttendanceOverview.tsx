@@ -3,28 +3,22 @@ import { cn } from "@/lib/utils";
 import { localDateKey } from "../../../utils/date";
 import { AttendanceTodayView } from "./AttendanceTodayView";
 import { AttendanceCalendarView } from "./AttendanceCalendarView";
-
 type Tab = "today" | "calendar";
-
-const now = new Date();
-const today = localDateKey(now);
-
 export const AttendanceOverview = () => {
+  const now = new Date();
+  const today = localDateKey(now);
   const [tab, setTab] = useState<Tab>("today");
   const [date, setDate] = useState<string>(today);
   const [month, setMonth] = useState<number>(now.getMonth() + 1);
   const [year, setYear] = useState<number>(now.getFullYear());
-
   const handleMonthChange = (m: number, y: number) => {
     setMonth(m);
     setYear(y);
   };
-
   const tabs: Array<{ key: Tab; label: string }> = [
     { key: "today", label: "Today" },
     { key: "calendar", label: "Calendar" },
   ];
-
   return (
     <div className="p-4 md:p-6 w-full">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
@@ -47,7 +41,6 @@ export const AttendanceOverview = () => {
           ))}
         </div>
       </div>
-
       {tab === "today" ? (
         <AttendanceTodayView date={date} onDateChange={setDate} />
       ) : (

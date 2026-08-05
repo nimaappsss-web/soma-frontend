@@ -68,7 +68,7 @@ export const useSubjects = (schoolId?: string) => {
   const filtered = userSchoolId
     ? cached.filter((s) => s.schoolId === userSchoolId)
     : cached;
-  const valid = filtered.length > 0 ? filtered : (networkQuery.data?.subjects ?? []);
+  const valid = data !== undefined ? filtered : (networkQuery.data?.subjects ?? []);
 
   return {
     data: valid,

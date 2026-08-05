@@ -2,10 +2,10 @@ import { useState } from "react";
 import { Link } from "react-router";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-
 import { Avatar } from "../../components/ui/Avatar";
 import { Input } from "../../components/ui/input";
 import { SelectDropdown } from "../../components/ui/select-dropdown";
+import { DuplicateConfirmDialog } from "../../components/others/DuplicateConfirmDialog";
 import { useAuth } from "../../contexts/AuthContext";
 import { useSchoolSettings } from "../../features/settings/api/useSchoolSettings";
 import {
@@ -17,36 +17,33 @@ import {
   createClassSchema,
   type CreateClassFormData,
 } from "../../features/principal/utils/validationSchema";
-
+import { namesMatch } from "../../utils/dedupe";
 const SCHOOL_TYPE_LABEL: Record<string, string> = {
   creche: "Creche",
   kg: "Kindergarten",
   primary: "Primary",
   secondary: "Secondary",
 };
-
 const schoolTypeLabel = (t: string) => SCHOOL_TYPE_LABEL[t] ?? t.charAt(0).toUpperCase() + t.slice(1);
-
 export const AdminClasses = () => {
   const { user, logout } = useAuth();
-  const { data, isLoading } = useClasses();
+  const { data: classesData, isLoading } = useClasses();
   const { data: settings } = useSchoolSettings();
   const createMutation = useCreateClass();
   const deleteMutation = useDeleteClass();
   const [showForm, setShowForm] = useState(false);
   const [selectedSchoolType, setSelectedSchoolType] = useState("");
-
+  const [dupState, setDupState] = useState<{ payload: CreateClassFormData; match: string } | null>(null);
   const schoolTypeOptions = (() => {
     const declared = settings?.find((s) => s.key === "schoolType");
     const declaredTypes: string[] = Array.isArray(declared?.value) ? (declared.value as string[]) : [];
-    const classTypes = (data?.classes ?? [])
+    const classTypes = (classesData?.classes ?? [])
       .map((c) => c.schoolType)
       .filter((t): t is string => !!t);
     return [...new Set([...declaredTypes, ...classTypes])]
       .sort()
       .map((t) => ({ value: t, label: schoolTypeLabel(t) }));
   })();
-
   const {
     register,
     handleSubmit,
@@ -56,8 +53,12 @@ export const AdminClasses = () => {
     resolver: zodResolver(createClassSchema),
     defaultValues: { name: "", level: "" },
   });
-
   const onAdd = (data: CreateClassFormData) => {
+    const existing = (classesData?.classes ?? []).find((c) => namesMatch(c.name, data.name));
+    if (existing) {
+      setDupState({ payload: data, match: existing.name });
+      return;
+    }
     createMutation.mutate(
       { name: data.name, level: data.level, schoolType: selectedSchoolType || undefined },
       {
@@ -69,7 +70,20 @@ export const AdminClasses = () => {
       },
     );
   };
-
+  const confirmAdd = () => {
+    if (!dupState) return;
+    createMutation.mutate(
+      { name: dupState.payload.name, level: dupState.payload.level, schoolType: selectedSchoolType || undefined },
+      {
+        onSuccess: () => {
+          reset();
+          setSelectedSchoolType("");
+          setShowForm(false);
+          setDupState(null);
+        },
+      },
+    );
+  };
   return (
     <div className="min-h-screen bg-gray-50">
       <header className="bg-white border-b border-gray-200 px-4 md:px-6 py-4 flex flex-wrap items-center justify-between gap-3">
@@ -89,7 +103,6 @@ export const AdminClasses = () => {
           </button>
         </div>
       </header>
-
       <main className="max-w-4xl mx-auto px-4 md:px-6 py-6 md:py-8">
         <div className="flex flex-wrap items-center justify-between gap-3 mb-6">
           <div>
@@ -108,7 +121,6 @@ export const AdminClasses = () => {
             Add Class
           </button>
         </div>
-
         {showForm && (
           <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-100 mb-6 flex flex-col md:flex-row gap-3 items-start">
             <div className="flex-1">
@@ -162,17 +174,16 @@ export const AdminClasses = () => {
             </button>
           </div>
         )}
-
         <div className="bg-white rounded-xl shadow-sm border border-gray-100">
           {isLoading ? (
             <p className="text-sm text-gray-400 p-6 text-center">Loading...</p>
-          ) : !data || data.classes.length === 0 ? (
+          ) : !classesData || classesData.classes.length === 0 ? (
             <p className="text-sm text-gray-400 p-6 text-center">
               No classes yet.
             </p>
           ) : (
             <div className="divide-y divide-gray-100">
-              {data.classes.map((c) => (
+              {classesData.classes.map((c) => (
                 <div
                   key={c.id}
                   className="px-6 py-3 flex items-center justify-between"
@@ -198,6 +209,21 @@ export const AdminClasses = () => {
           )}
         </div>
       </main>
+      <DuplicateConfirmDialog
+        open={!!dupState}
+        onOpenChange={(open) => { if (!open) setDupState(null); }}
+        title="Class already exists"
+        description={dupState ? `"${dupState.match}" is already a class in your school.` : ""}
+        highlight="Adding it again will create a duplicate class."
+        confirmLabel="Add anyway"
+        onConfirm={confirmAdd}
+      >
+        {dupState && (
+          <div className="rounded-lg border border-gray100 bg-gray50 px-3 py-2 text-sm">
+            <span className="font-medium text-gray900">{dupState.match}</span>
+          </div>
+        )}
+      </DuplicateConfirmDialog>
     </div>
   );
 };

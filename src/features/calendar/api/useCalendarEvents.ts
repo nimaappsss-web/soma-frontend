@@ -81,8 +81,16 @@ export const useCalendarEvents = ({ from, to, type }: UseCalendarEventsParams = 
 
   const cachedList = cached?.map(fromCache) ?? [];
 
+  const filteredCached = cachedList.filter((e) => {
+    const d = e.date.slice(0, 10);
+    if (from && d < from) return false;
+    if (to && d > to) return false;
+    if (type && e.type !== type) return false;
+    return true;
+  });
+
   return {
-    data: cached !== undefined ? { events: cachedList } : (query.data ?? { events: [] }),
+    data: cached !== undefined ? { events: filteredCached } : (query.data ?? { events: [] }),
     isLoading: (cached === undefined || (Array.isArray(cached) && cached.length === 0 && query.isLoading)),
     error: query.error ?? undefined,
   };

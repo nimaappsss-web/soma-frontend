@@ -1,12 +1,10 @@
 import { useState, useRef, useEffect } from "react";
 import { ArrowDown2 } from "iconsax-react";
 import { cn } from "@/lib/utils";
-
 interface TermOption {
   value: string;
   label: string;
 }
-
 interface TermDropdownProps {
   options: TermOption[];
   value: string;
@@ -14,7 +12,6 @@ interface TermDropdownProps {
   placeholder?: string;
   className?: string;
 }
-
 export const TermDropdown = ({
   options,
   value,
@@ -25,7 +22,6 @@ export const TermDropdown = ({
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
   const selected = options.find((o) => o.value === value);
-
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
       if (ref.current && !ref.current.contains(e.target as Node)) {
@@ -35,7 +31,6 @@ export const TermDropdown = ({
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
-
   return (
     <div ref={ref} className={cn("relative", className)}>
       <button
@@ -52,7 +47,6 @@ export const TermDropdown = ({
           className={cn("text-gray400 shrink-0 transition-transform", open && "rotate-180")}
         />
       </button>
-
       <div
         className={cn(
           "absolute z-50 mt-1 w-full rounded-xl border border-gray200 bg-white shadow-lg max-h-60 overflow-y-auto transition-all duration-200 origin-top",

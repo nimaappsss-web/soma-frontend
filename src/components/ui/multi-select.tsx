@@ -56,7 +56,7 @@ export const MultiSelect = ({
   }, [open, searchable]);
 
   useEffect(() => {
-    if (!open || !inDialog) return;
+    if (!open || inDialog) return;
     const update = () => {
       const el = btnRef.current;
       if (!el) return;
@@ -80,7 +80,7 @@ export const MultiSelect = ({
   }, [open, inDialog]);
 
   useLayoutEffect(() => {
-    if (!open || !inDialog || !pos || pos.flipped) return;
+    if (!open || inDialog || !pos || pos.flipped) return;
     const el = menuRef.current;
     if (!el) return;
     const h = el.offsetHeight;
@@ -236,22 +236,21 @@ export const MultiSelect = ({
 
       {open &&
         (inDialog ? (
+          <div className="absolute z-50 mt-1 w-full rounded-xl border border-input bg-background shadow-lg">
+            {menu}
+          </div>
+        ) : (
           pos &&
           createPortal(
             <div
               ref={menuRef}
-              onPointerDownCapture={(e) => e.stopPropagation()}
-              style={{ ...menuStyle, pointerEvents: "auto" }}
+              style={menuStyle}
               className="fixed z-[100] rounded-xl border border-input bg-background shadow-lg"
             >
               {menu}
             </div>,
             document.body,
           )
-        ) : (
-          <div className="absolute z-50 mt-1 w-full rounded-xl border border-input bg-background shadow-lg">
-            {menu}
-          </div>
         ))}
 
       {hasError && (

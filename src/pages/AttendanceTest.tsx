@@ -1,21 +1,17 @@
 import { useLiveQuery } from "dexie-react-hooks";
 import { useState, useEffect } from "react";
-
 import { db } from "../db/db";
 import { StudentSwipeCard } from "../components/ui/StudentSwipeCard";
-
 interface SwipeState {
   studentId: string;
   status: "present" | "absent";
   index: number;
   timestamp: number;
 }
-
 export const AttendanceTest = () => {
   const students = useLiveQuery(() => db.students.toArray());
   const [lastSwipe, setLastSwipe] = useState<SwipeState | null>(null);
   const [currentIndex, setCurrentIndex] = useState(0);
-
   useEffect(() => {
     if (lastSwipe) {
       const timer = setTimeout(() => {
@@ -24,7 +20,6 @@ export const AttendanceTest = () => {
       return () => clearTimeout(timer);
     }
   }, [lastSwipe]);
-
   const handleSwipe = (id: string, status: "present" | "absent") => {
     console.log(`Student ${id} marked as ${status}`);
     setLastSwipe({
@@ -35,7 +30,6 @@ export const AttendanceTest = () => {
     });
     setCurrentIndex((prev) => prev + 1);
   };
-
   const handleUndo = () => {
     if (lastSwipe) {
       console.log(
@@ -45,13 +39,11 @@ export const AttendanceTest = () => {
       setLastSwipe(null);
     }
   };
-
   return (
     <div className="p-8">
       <h1 className="text-2xl font-bold text-blue-700 mb-4">
         Soma — Dexie Test
       </h1>
-
       <h2 className="font-semibold mb-2">Students in DB:</h2>
       {students?.length === 0 && (
         <p className="text-gray-400">No students yet</p>
@@ -67,7 +59,6 @@ export const AttendanceTest = () => {
           </li>
         ))}
       </ul>
-
       <button
         className="mt-6 bg-blue-600 text-white px-4 py-2 rounded-lg text-sm"
         onClick={() =>
@@ -84,7 +75,6 @@ export const AttendanceTest = () => {
       >
         Add Test Student
       </button>
-
       <div className="flex relative h-screen items-center justify-center overflow-hidden">
         {students && students.length > 0 && (
           <>
@@ -97,7 +87,6 @@ export const AttendanceTest = () => {
               markedCount={0}
               totalStudents={students.length}
             />
-
             {lastSwipe && (
               <div className="fixed bottom-8 left-1/2 -translate-x-1/2 bg-gray-900 text-white px-6 py-3 rounded-lg flex items-center gap-4 shadow-lg">
                 <span className="text-sm">

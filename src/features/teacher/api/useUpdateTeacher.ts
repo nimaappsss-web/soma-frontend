@@ -1,11 +1,10 @@
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation } from "@tanstack/react-query";
 import toast from "react-hot-toast";
 
 import { transformError } from "../../../utils/transformError";
 import { useAuth } from "../../../contexts/AuthContext";
 import { addToQueue } from "../../../sync/syncQueue";
 import { db } from "../../../db/db";
-import { teachers } from "../../../lib/queryKeys";
 import type { UpdateTeacherPayload } from "../types";
 import type { TeacherCache } from "../../../db/db";
 
@@ -18,7 +17,6 @@ interface UpdateTeacherVars {
 
 export const useUpdateTeacher = () => {
   const { user } = useAuth();
-  const queryClient = useQueryClient();
 
   return useMutation<void, Error, UpdateTeacherVars>({
     mutationFn: async ({ id, data }) => {
@@ -43,8 +41,6 @@ export const useUpdateTeacher = () => {
     },
     onSuccess: async () => {
       toast.success("Teacher updated!");
-      queryClient.invalidateQueries({ queryKey: teachers.lists() });
-      queryClient.invalidateQueries({ queryKey: teachers.details() });
     },
     onError: async (error) => {
       toast.error(transformError(error));

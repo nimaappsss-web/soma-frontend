@@ -1,11 +1,9 @@
 import { CloudCross, Refresh } from "iconsax-react";
-
 interface EmptyStateProps {
   loading: boolean;
   error?: string;
   onRetry: () => void;
 }
-
 export const EmptyState = ({ loading, error, onRetry }: EmptyStateProps) => {
   if (loading) {
     return (
@@ -14,7 +12,6 @@ export const EmptyState = ({ loading, error, onRetry }: EmptyStateProps) => {
       </div>
     );
   }
-
   return (
     <div className="bg-white rounded-xl border border-gray100 p-8 mt-4 text-center">
       <CloudCross size={28} className="mx-auto text-gray300 mb-2" />

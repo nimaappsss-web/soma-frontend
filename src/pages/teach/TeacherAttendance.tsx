@@ -53,7 +53,9 @@ export const TeacherAttendance = () => {
 
   const availability = useAttendanceAvailability(today);
   const { data: todayEventsData } = useCalendarEvents({ from: today, to: today });
-  const todayEvents = (todayEventsData?.events ?? []).filter((e) => e.type !== "HOLIDAY");
+  const todayEvents = (todayEventsData?.events ?? []).filter(
+    (e) => e.type !== "HOLIDAY" && e.date.slice(0, 10) === today,
+  );
 
   const blockedReason = availability.reason?.message;
   const gatingBlocked = availability.status === "blocked";
@@ -115,13 +117,13 @@ export const TeacherAttendance = () => {
     staleTime: 5 * 60 * 1000,
   });
 
-  const hasSavedData = cachedAttendance !== undefined && cachedAttendance.length > 0;
+  const hasSavedData = (cachedAttendance ?? []).length > 0;
   const isMarked = userMarked || hasSavedData;
 
   if (!initialized.current && hasSavedData && !userMarked) {
     initialized.current = true;
     const prefill: Record<string, AttendanceStatus> = {};
-    for (const r of cachedAttendance) {
+    for (const r of cachedAttendance ?? []) {
       prefill[r.studentId] = r.status;
     }
     setAttendance(prefill);
@@ -204,7 +206,7 @@ export const TeacherAttendance = () => {
     setView("list");
     if (cachedAttendance?.length) {
       const prefill: Record<string, AttendanceStatus> = {};
-      for (const r of cachedAttendance) {
+    for (const r of cachedAttendance ?? []) {
         prefill[r.studentId] = r.status;
       }
       setAttendance(prefill);
@@ -251,7 +253,7 @@ export const TeacherAttendance = () => {
     [students],
   );
 
-  if (profileLoading || cachedAttendance === undefined) {
+  if (profileLoading) {
     return <p className="text-sm text-gray-400 p-8">Loading...</p>;
   }
 
@@ -270,7 +272,7 @@ export const TeacherAttendance = () => {
   const totalStudents = students?.length ?? 0;
 
   return (
-    <div className="p-6 max-w-4xl">
+    <div className="p-4 md:p-6 w-full">
       <div className="mb-4 flex items-center justify-between">
         <div>
           <h1 className="text-xl font-bold text-gray-800">
@@ -439,12 +441,12 @@ export const TeacherAttendance = () => {
           </div>
           {view === "list" && (
             <div className="flex justify-end mb-4">
-              <Button
+              <button
                 onClick={handleSave}
                 disabled={markedCount === 0}
               >
                 Save ({markedCount})
-              </Button>
+              </button>
             </div>
           )}
 

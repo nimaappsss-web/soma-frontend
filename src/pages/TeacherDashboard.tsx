@@ -1,9 +1,7 @@
 import { Link } from "react-router";
-
 import { useAuth } from "../contexts/AuthContext";
 import { useTeacherProfile } from "../features/teacher/api";
 import { FormClassCard, SubjectAssignmentsCard } from "../features/teacher/components";
-
 export const TeacherDashboard = () => {
   const { logout } = useAuth();
   const {
@@ -14,7 +12,6 @@ export const TeacherDashboard = () => {
     role,
     isLoading,
   } = useTeacherProfile();
-
   return (
     <div className="min-h-screen bg-gray-50">
       <header className="bg-white border-b border-gray-200 px-4 md:px-6 py-4 flex flex-wrap items-center justify-between gap-3">
@@ -33,14 +30,11 @@ export const TeacherDashboard = () => {
           </button>
         </div>
       </header>
-
       <main className="max-w-5xl mx-auto px-4 md:px-6 py-6 md:py-8">
         <h2 className="text-2xl font-bold text-gray-800 mb-6">Dashboard</h2>
-
         {isLoading && (
           <p className="text-sm text-gray-400 mb-4">Refreshing data...</p>
         )}
-
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
           <Link
             to="/attendance"
@@ -61,7 +55,6 @@ export const TeacherDashboard = () => {
             </p>
           </Link>
         </div>
-
         <FormClassCard formClass={formClass} />
         <SubjectAssignmentsCard assignments={assignments} />
       </main>

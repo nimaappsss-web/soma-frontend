@@ -1,16 +1,13 @@
 import { useState } from "react";
 import { useLiveQuery } from "dexie-react-hooks";
 import toast from "react-hot-toast";
-
 import { useAuth } from "../contexts/AuthContext";
 import { db } from "../db/db";
 import { StudentCACard } from "../components/ui/StudentCACard";
 import { Input } from "../components/ui/input";
 import { SelectDropdown } from "../components/ui/select-dropdown";
 import { useActiveTerm } from "../features/calendar/api";
-
 const ASSESSMENT_TYPES = ["Quiz", "Test", "Assignment", "Project", "Exam"];
-
 export const ContinuousAssessment = () => {
   const { user } = useAuth();
   const { activeTerm } = useActiveTerm();
@@ -28,31 +25,24 @@ export const ContinuousAssessment = () => {
   const [scores, setScores] = useState<Record<string, number>>({});
   const [index, setIndex] = useState(0);
   const [savedCount, setSavedCount] = useState(0);
-
   const classes = [...new Set(students?.map((s) => s.classId) ?? [])];
   const filtered = selectedClass
     ? students?.filter((s) => s.classId === selectedClass) ?? []
     : students ?? [];
-
   const current = filtered[index];
   const isComplete = index >= filtered.length;
-
   const handleScoreChange = (studentId: string, score: number) => {
     setScores((prev) => ({ ...prev, [studentId]: score }));
   };
-
   const handleAutoAdvance = () => {
     setIndex((prev) => Math.min(prev + 1, filtered.length));
   };
-
   const handlePrev = () => {
     setIndex((prev) => Math.max(prev - 1, 0));
   };
-
   const handleNext = () => {
     setIndex((prev) => Math.min(prev + 1, filtered.length));
   };
-
   const handleSave = async () => {
     if (!activeTerm) {
       toast.error("No active term — set up terms first");
@@ -74,13 +64,11 @@ export const ContinuousAssessment = () => {
       syncStatus: "pending" as const,
       createdAt: Date.now(),
     }));
-
     await db.caScores.bulkPut(entries);
     setSavedCount((prev) => prev + entries.length);
     setScores({});
     setIndex(0);
   };
-
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col">
       <header className="bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between">
@@ -89,7 +77,6 @@ export const ContinuousAssessment = () => {
           &larr; Dashboard
         </a>
       </header>
-
       <div className="flex flex-wrap gap-3 px-6 py-4 items-end border-b border-gray-100 bg-white">
         <div className="flex flex-col gap-1">
           <label className="text-xs text-gray-500 font-medium">Class</label>
@@ -103,7 +90,6 @@ export const ContinuousAssessment = () => {
             }}
           />
         </div>
-
         <div className="flex flex-col gap-1">
           <label className="text-xs text-gray-500 font-medium">Type</label>
           <SelectDropdown
@@ -112,7 +98,6 @@ export const ContinuousAssessment = () => {
             onChange={setAssessmentType}
           />
         </div>
-
         <div className="flex flex-col gap-1">
           <label className="text-xs text-gray-500 font-medium">Max Score</label>
           <Input
@@ -123,7 +108,6 @@ export const ContinuousAssessment = () => {
             min={1}
           />
         </div>
-
         <button
           onClick={handleSave}
           disabled={Object.keys(scores).length === 0}
@@ -131,14 +115,12 @@ export const ContinuousAssessment = () => {
         >
           Save {Object.keys(scores).length > 0 ? `(${Object.keys(scores).length})` : ""}
         </button>
-
         {savedCount > 0 && (
           <span className="text-xs text-green-600">
             Last save: {savedCount} score{savedCount > 1 ? "s" : ""}
           </span>
         )}
       </div>
-
       <div className="flex-1 flex items-center justify-center px-4 py-8">
         {filtered.length === 0 ? (
           <p className="text-gray-400 text-sm">
@@ -163,7 +145,6 @@ export const ContinuousAssessment = () => {
             <p className="text-center text-sm text-gray-400 mb-4">
               {index + 1} / {filtered.length}
             </p>
-
             <StudentCACard
               key={current.id}
               student={current}
@@ -172,7 +153,6 @@ export const ContinuousAssessment = () => {
               onScoreChange={handleScoreChange}
               onAutoAdvance={handleAutoAdvance}
             />
-
             <div className="flex justify-center gap-3 mt-6">
               <button
                 onClick={handlePrev}

@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { Button } from "./ui/button";
 
 interface BeforeInstallPromptEvent extends Event {
   prompt: () => Promise<void>;
@@ -49,15 +50,17 @@ export function InstallPWA() {
   if (showIOSGuide) {
     return (
       <div className="fixed bottom-0 left-0 right-0 z-50 bg-white border-t border-gray100 px-6 pb-8 pt-4 rounded-t-2xl shadow-lg">
-        <button
+        <Button
           onClick={() => setShowIOSGuide(false)}
           className="absolute right-4 top-4 text-gray400 hover:text-gray900"
           aria-label="Dismiss"
+          variant="ghost"
+          size="icon"
         >
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
             <path d="M18 6 6 18M6 6l12 12" />
           </svg>
-        </button>
+        </Button>
         <p className="text-sm font-semibold text-gray900">Install Soma on your iPhone</p>
         <ol className="mt-3 space-y-2 text-sm text-gray600">
           <li className="flex items-start gap-2">

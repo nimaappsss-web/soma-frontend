@@ -10,39 +10,31 @@ import {
   ArrowLeft2,
   SearchNormal,
 } from "iconsax-react";
-
 import { useAuth } from "../contexts/AuthContext";
 import { Avatar } from "../components/ui/Avatar";
 import { useSidebarCollapse } from "../hooks/useSidebarCollapse";
 import { MobileHeader } from "../components/mobile";
 import { SearchModal } from "../components/others/SearchModal";
 import { cn } from "../lib/utils";
-
 import type { IconProps } from "iconsax-react";
-
 type IconComponent = React.FC<IconProps>;
-
 interface NavItem {
   label: string;
   to: string;
   Icon: IconComponent;
   end?: boolean;
 }
-
 const navItems: NavItem[] = [
   { label: "Home", to: "/parent", Icon: Home, end: true },
   { label: "Children", to: "/parent/children", Icon: Teacher },
   { label: "Announcements", to: "/parent/announcements", Icon: Speaker },
 ];
-
 export const ParentLayout = () => {
   const { user } = useAuth();
   const { collapsed, toggle } = useSidebarCollapse();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
-
   const closeMobile = () => setMobileOpen(false);
-
   const sidebarContent = (
     <>
       {/* Nav */}
@@ -69,7 +61,6 @@ export const ParentLayout = () => {
           </NavLink>
         ))}
       </nav>
-
       {/* Settings */}
       <div className={cn("pt-1 shrink-0", collapsed ? "px-[12px]" : "px-3")}>
         <NavLink
@@ -90,7 +81,6 @@ export const ParentLayout = () => {
           {!collapsed && <span>Settings</span>}
         </NavLink>
       </div>
-
       {/* Bottom: School info */}
       <div className={cn("border-t border-gray100 mt-1 shrink-0", collapsed ? "px-[12px] pb-4 pt-3" : "px-3 pb-4 pt-3")}>
         {collapsed ? (
@@ -109,7 +99,6 @@ export const ParentLayout = () => {
       </div>
     </>
   );
-
   return (
     <div className="flex h-dvh bg-offWhite overflow-hidden">
       {/* Mobile sidebar overlay */}
@@ -147,7 +136,6 @@ export const ParentLayout = () => {
         </div>
         {sidebarContent}
       </aside>
-
       {/* Desktop sidebar — hidden on mobile */}
       <aside
         className={cn(
@@ -182,20 +170,16 @@ export const ParentLayout = () => {
             </>
           )}
         </div>
-
         {sidebarContent}
-
         {/* Double-click edge */}
         <div
           onDoubleClick={toggle}
           className="absolute top-0 right-0 h-full w-[4px] cursor-col-resize hover:bg-gray200 transition-colors"
         />
       </aside>
-
       {/* Right side: header + content */}
       <div className="flex-1 flex flex-col min-w-0">
         <MobileHeader onMenuClick={() => setMobileOpen(true)} />
-
         <header className="h-[62px] shrink-0 bg-pureWhite border-b border-gray100 items-center justify-end px-6 hidden md:flex">
           <div className="flex items-center gap-3">
             <button
@@ -216,12 +200,10 @@ export const ParentLayout = () => {
             </div>
           </div>
         </header>
-
         <main className="flex-1 overflow-y-auto">
           <Outlet />
         </main>
       </div>
-
       {/* Search modal */}
       <SearchModal open={searchOpen} onOpenChange={setSearchOpen} />
     </div>

@@ -1,6 +1,5 @@
 import { useNavigate, useParams } from "react-router";
 import { ArrowLeft2, DocumentText, Profile2User } from "iconsax-react";
-
 import { useTeacherProfile } from "../../teacher/api";
 import { useActiveTerm } from "../../calendar/api";
 import { termLabel } from "../../calendar/utils/term";
@@ -9,29 +8,23 @@ import { useStudentReport } from "../api/useStudentReport";
 import { useReportSettings } from "../../report-card/api";
 import { ReportCardPreview } from "../../report-card/components/ReportCardPreview";
 import { cn } from "../../../lib/utils";
-
 const gradeTone = (grade: string) => {
   const g = grade.toUpperCase();
   if (g.startsWith("A")) return "text-green-600";
   if (g.startsWith("B") || g.startsWith("C")) return "text-blue-600";
   return "text-amber-600";
 };
-
 export const StudentReportView = () => {
   const { studentId = "" } = useParams();
   const navigate = useNavigate();
   const { formClassId, formClass, schoolName } = useTeacherProfile();
   const { activeTerm } = useActiveTerm();
   const { settings } = useReportSettings();
-
   const { data: students } = useStudents(formClassId ?? "", "ACTIVE");
   const student = students.find((s) => s.id === studentId);
-
   const { data: report, isLoading, error } = useStudentReport(studentId);
-
   const term = activeTerm?.term ?? "";
   const termLabelText = term ? termLabel(term).label : "Term";
-
   return (
     <div className="p-4 md:p-6 w-full">
       <button
@@ -41,7 +34,6 @@ export const StudentReportView = () => {
         <ArrowLeft2 size={16} />
         Back to My Class
       </button>
-
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div>
           <h1 className="text-xl md:text-2xl font-bold text-gray900">{student?.name ?? "Student Report"}</h1>
@@ -50,7 +42,6 @@ export const StudentReportView = () => {
           </p>
         </div>
       </div>
-
       {isLoading ? (
         <div className="mt-4 bg-white rounded-xl border border-gray100 p-8 text-center">
           <div className="h-8 w-8 animate-spin rounded-full border-2 border-gray100 border-t-gray900 mx-auto" />
@@ -93,7 +84,6 @@ export const StudentReportView = () => {
               </div>
             ))}
           </div>
-
           {/* Subjects table */}
           <div className="bg-white rounded-xl border border-gray100 overflow-hidden">
             <div className="px-4 py-3 border-b border-gray100">
@@ -127,7 +117,6 @@ export const StudentReportView = () => {
               </table>
             </div>
           </div>
-
           {/* Report card preview */}
           <div className="bg-white rounded-xl border border-gray100 p-4 md:p-6">
             <h2 className="text-sm font-semibold text-gray900">Report Card Preview</h2>

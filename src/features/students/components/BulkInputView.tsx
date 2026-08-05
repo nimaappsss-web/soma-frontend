@@ -1,20 +1,15 @@
 import { useState, useRef, useCallback } from "react";
-
-import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { SelectDropdown } from "@/components/ui/select-dropdown";
 import type { BulkStudentRow } from "../utils/bulkParse";
 import { parseCSV, parseExcel, parseTextarea } from "../utils/bulkParse";
-
 interface BulkInputViewProps {
   classes: { id: string; name: string }[];
   onParsed: (rows: BulkStudentRow[]) => void;
 }
-
 type InputMode = "file" | "paste";
-
 export const BulkInputView = ({ classes, onParsed }: BulkInputViewProps) => {
   const [mode, setMode] = useState<InputMode>("file");
   const [file, setFile] = useState<File | null>(null);
@@ -22,12 +17,10 @@ export const BulkInputView = ({ classes, onParsed }: BulkInputViewProps) => {
   const [defaultClassId, setDefaultClassId] = useState("");
   const [parseError, setParseError] = useState("");
   const fileRef = useRef<HTMLInputElement>(null);
-
   const parseFile = useCallback(
     async (f: File) => {
       setParseError("");
       const ext = f.name.split(".").pop()?.toLowerCase();
-
       try {
         let rows: BulkStudentRow[] = [];
         if (ext === "csv") {
@@ -48,7 +41,6 @@ export const BulkInputView = ({ classes, onParsed }: BulkInputViewProps) => {
     },
     [defaultClassId, onParsed],
   );
-
   const handleFileChange = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
       const f = e.target.files?.[0];
@@ -58,7 +50,6 @@ export const BulkInputView = ({ classes, onParsed }: BulkInputViewProps) => {
     },
     [parseFile],
   );
-
   const handleDrop = useCallback(
     (e: React.DragEvent) => {
       e.preventDefault();
@@ -69,14 +60,12 @@ export const BulkInputView = ({ classes, onParsed }: BulkInputViewProps) => {
     },
     [parseFile],
   );
-
   const handlePasteParse = useCallback(() => {
     if (!rawInput.trim()) return;
     const rows = parseTextarea(rawInput, defaultClassId || undefined);
     if (rows.length === 0) return;
     onParsed(rows);
   }, [rawInput, defaultClassId, onParsed]);
-
   return (
     <div className="space-y-4">
       <div>
@@ -90,7 +79,6 @@ export const BulkInputView = ({ classes, onParsed }: BulkInputViewProps) => {
           onChange={setDefaultClassId}
         />
       </div>
-
       <div className="flex gap-2 border-b border-gray-200 pb-3">
         <button
           onClick={() => setMode("file")}
@@ -109,7 +97,6 @@ export const BulkInputView = ({ classes, onParsed }: BulkInputViewProps) => {
           Paste Data
         </button>
       </div>
-
       {mode === "file" ? (
         <div>
           <Label className="text-xs text-gray-500 mb-1 block">
@@ -161,13 +148,12 @@ export const BulkInputView = ({ classes, onParsed }: BulkInputViewProps) => {
             className="font-mono"
           />
           <div className="mt-3">
-            <Button onClick={handlePasteParse} disabled={!rawInput.trim()}>
+            <button onClick={handlePasteParse} disabled={!rawInput.trim()}>
               Preview ({rawInput.trim().split("\n").filter(Boolean).length} lines)
-            </Button>
+            </button>
           </div>
         </div>
       )}
-
       {parseError && <p className="text-xs text-red-500">{parseError}</p>}
     </div>
   );

@@ -20,6 +20,7 @@ import { TeacherExaminationsLayout, TeacherExaminationsIndex } from "./features/
 import { useAnimatedFavicon } from "./hooks/useAnimatedFavicon";
 import { TeacherStudents } from "./pages/teach/TeacherStudents";
 import { AdminStudents } from "./pages/admin/AdminStudents";
+import { StudentDetails } from "./pages/StudentDetails";
 import { AdminTeachers } from "./pages/admin/AdminTeachers";
 import { AdminTeacherDetails } from "./pages/admin/AdminTeacherDetails";
 import { AdminSubjects } from "./pages/admin/AdminSubjects";
@@ -51,9 +52,8 @@ import { TimetableManagement } from "./features/timetable/components/TimetableMa
 import { AttendanceOverview } from "./features/attendance/components/AttendanceOverview";
 import { AttendanceClasses } from "./features/attendance/components/AttendanceClasses";
 import { AttendanceAbsentees } from "./features/attendance/components/AttendanceAbsentees";
-import { ExaminationsLayout, ExaminationsIndex } from "./features/examinations/components/ExaminationsLayout";
+import { ExaminationsLayout } from "./features/examinations/components/ExaminationsLayout";
 import { SchemeConfig } from "./features/examinations/components/SchemeConfig";
-import { Scoring } from "./features/examinations/components/Scoring";
 import { CalendarLayout, CalendarEvents, CalendarHolidays, CalendarTerms } from "./features/calendar/components/CalendarManagement";
 import { ReportsManagement } from "./features/reports/components/ReportsManagement";
 
@@ -108,6 +108,7 @@ function App() {
         <Route path="/admin" element={<ProtectedRoute><AdminLayout /></ProtectedRoute>}>
           <Route index element={<DashboardHome />} />
           <Route path="students" element={<AdminStudents />} />
+          <Route path="students/:id" element={<StudentDetails />} />
           <Route path="teachers" element={<AdminTeachers />} />
           <Route path="teachers/:id" element={<AdminTeacherDetails />} />
           <Route path="staff" element={<StaffManagement />} />
@@ -120,8 +121,7 @@ function App() {
           <Route path="attendance/classes" element={<AttendanceClasses />} />
           <Route path="attendance/absentees" element={<AttendanceAbsentees />} />
           <Route path="examinations" element={<ExaminationsLayout />}>
-            <Route index element={<ExaminationsIndex />} />
-            <Route path="scoring" element={<Scoring />} />
+            <Route index element={<SchemeConfig />} />
             <Route path="configure" element={<SchemeConfig />} />
           </Route>
           <Route path="calendar" element={<CalendarLayout />}>
@@ -139,6 +139,7 @@ function App() {
         <Route path="/teach" element={<ProtectedRoute><TeacherLayout /></ProtectedRoute>}>
           <Route index element={<TeacherDashboard />} />
           <Route path="students" element={<TeacherStudents />} />
+          <Route path="students/:id" element={<StudentDetails />} />
           <Route path="attendance" element={<TeacherAttendance />} />
           <Route path="ca-and-exams" element={<TeacherExaminationsLayout />}>
             <Route index element={<TeacherExaminationsIndex />} />

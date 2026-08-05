@@ -225,12 +225,12 @@ export const StudentSwipeCard = ({
               ↩ Undo Last
             </Button>
           )}
-          <Button
+          <button
             onClick={onSave}
             className="flex-1 text-sm bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white shadow-lg shadow-blue-200"
           >
             Confirm & Save
-          </Button>
+          </button>
         </div>
       </div>
     );
@@ -271,24 +271,24 @@ export const StudentSwipeCard = ({
           }}
         >
           <div
-            className="absolute inset-y-0 left-0 w-1/2 bg-gradient-to-r from-red-500/20 to-transparent pointer-events-none z-20"
-            style={{ opacity: amplifiedDragX < -20 ? Math.min(0.8, Math.abs(amplifiedDragX) / 150) : 0 }}
+            className="absolute inset-y-0 left-0 w-1/2 bg-gradient-to-r from-red-500/40 to-transparent pointer-events-none z-20"
+            style={{ opacity: amplifiedDragX < -20 ? Math.min(0.95, Math.abs(amplifiedDragX) / 130) : 0 }}
           />
 
           <div
-            className="absolute inset-y-0 right-0 w-1/2 bg-gradient-to-l from-green-500/20 to-transparent pointer-events-none z-20"
-            style={{ opacity: amplifiedDragX > 20 ? Math.min(0.8, amplifiedDragX / 150) : 0 }}
+            className="absolute inset-y-0 right-0 w-1/2 bg-gradient-to-l from-green-500/40 to-transparent pointer-events-none z-20"
+            style={{ opacity: amplifiedDragX > 20 ? Math.min(0.95, amplifiedDragX / 130) : 0 }}
           />
 
           <div
             className="absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none z-30 transition-all duration-150"
             style={{
-              opacity: amplifiedDragX < -30 ? Math.min(1, Math.abs(amplifiedDragX) / 100) : 0,
+              opacity: amplifiedDragX < -30 ? Math.min(1, Math.abs(amplifiedDragX) / 80) : 0,
               transform: `translateX(${Math.min(0, amplifiedDragX * 0.1)}px)`,
             }}
           >
             <div className="flex flex-col items-center gap-1">
-              <div className="w-10 h-10 rounded-full bg-white/90 flex items-center justify-center shadow-lg">
+              <div className="w-10 h-10 rounded-full bg-white/95 flex items-center justify-center shadow-lg">
                 <svg className="w-5 h-5 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
                 </svg>
@@ -300,12 +300,12 @@ export const StudentSwipeCard = ({
           <div
             className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none z-30 transition-all duration-150"
             style={{
-              opacity: amplifiedDragX > 30 ? Math.min(1, amplifiedDragX / 100) : 0,
+              opacity: amplifiedDragX > 30 ? Math.min(1, amplifiedDragX / 80) : 0,
               transform: `translateX(${Math.max(0, amplifiedDragX * 0.1)}px)`,
             }}
           >
             <div className="flex flex-col items-center gap-1">
-              <div className="w-10 h-10 rounded-full bg-white/90 flex items-center justify-center shadow-lg">
+              <div className="w-10 h-10 rounded-full bg-white/95 flex items-center justify-center shadow-lg">
                 <svg className="w-5 h-5 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
                 </svg>

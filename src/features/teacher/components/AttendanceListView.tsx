@@ -1,14 +1,12 @@
 import { Avatar } from "../../../components/ui/Avatar";
 import type { Student } from "../../../features/students/types";
 import type { AttendanceStatus } from "../types";
-
 interface AttendanceListViewProps {
   students: Student[];
   attendance: Record<string, AttendanceStatus>;
   onMark: (studentId: string, status: AttendanceStatus) => void;
   readOnly?: boolean;
 }
-
 const statusIcons: Record<AttendanceStatus, { icon: string; active: string; inactive: string }> = {
   present: {
     icon: "✓",
@@ -26,10 +24,8 @@ const statusIcons: Record<AttendanceStatus, { icon: string; active: string; inac
     inactive: "text-gray-300 hover:text-amber-500 hover:bg-amber-50",
   },
 };
-
 export const AttendanceListView = ({ students, attendance, onMark, readOnly }: AttendanceListViewProps) => {
   if (students.length === 0) return null;
-
   return (
     <div className="bg-white rounded-xl shadow-sm border border-gray-100 divide-y divide-gray-100">
       {students.map((s) => {

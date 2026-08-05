@@ -108,7 +108,7 @@ export interface StudentAcademics {
 
 export interface MonthlyAttendanceDay {
   date: string;
-  status: "present" | "absent" | "holiday";
+  status: "present" | "absent" | "holiday" | "future";
 }
 
 export interface StudentMonthlyAttendance {

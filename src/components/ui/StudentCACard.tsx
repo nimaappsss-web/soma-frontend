@@ -3,7 +3,6 @@ import { useSpeechToText } from "../../hooks/useSpeechToText";
 import { spokenToNumber } from "../../utils/spokenNumber";
 import { Avatar } from "./Avatar";
 import type { Student } from "../../db/db";
-
 interface StudentCACardProps {
   student: Student;
   score: number;
@@ -11,7 +10,6 @@ interface StudentCACardProps {
   onScoreChange: (studentId: string, score: number) => void;
   onAutoAdvance: () => void;
 }
-
 export const StudentCACard = ({
   student,
   score,
@@ -25,7 +23,6 @@ export const StudentCACard = ({
   const [voiceFeedback, setVoiceFeedback] = useState("");
   const { isListening, startListening, supported: voiceSupported } = useSpeechToText();
   const inputRef = useRef<HTMLInputElement>(null);
-
   useEffect(() => {
     setAnimClass("animate-in");
     setConfirmed(false);
@@ -33,7 +30,6 @@ export const StudentCACard = ({
     setVoiceFeedback("");
     inputRef.current?.focus();
   }, [student.id]);
-
   const commitScore = (value: number) => {
     const clamped = Math.max(0, Math.min(maxScore, value));
     onScoreChange(student.id, clamped);
@@ -44,7 +40,6 @@ export const StudentCACard = ({
       setTimeout(onAutoAdvance, 300);
     }, 600);
   };
-
   const handleVoiceInput = () => {
     setVoiceFeedback("Listening...");
     startListening((text) => {
@@ -57,30 +52,25 @@ export const StudentCACard = ({
       }
     });
   };
-
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === "Enter") {
       commitScore(score);
     }
   };
-
   const padNumber = (n: number) => {
     const next = score * 10 + n;
     if (next <= maxScore) {
       onScoreChange(student.id, next);
     }
   };
-
   const padDelete = () => {
     onScoreChange(student.id, Math.floor(score / 10));
   };
-
   const digits = [
     [1, 2, 3],
     [4, 5, 6],
     [7, 8, 9],
   ];
-
   return (
     <div
       className={`w-full max-w-md mx-auto bg-white rounded-2xl shadow-xl border border-gray-100 p-8 flex flex-col items-center gap-5 transition-all duration-300 ${
@@ -96,13 +86,10 @@ export const StudentCACard = ({
         imageUrl={student.imageUrl ?? null}
         size={80}
       />
-
       <p className="text-lg font-semibold text-gray-800 text-center">
         {student.name}
       </p>
-
       <p className="text-sm text-gray-400">{student.classId}</p>
-
       <input
         ref={inputRef}
         type="number"
@@ -117,7 +104,6 @@ export const StudentCACard = ({
         className="w-full h-14 rounded-xl border-2 border-gray-200 bg-gray-50 px-4 text-3xl text-center font-bold text-gray-800 outline-none transition-all [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
         placeholder="—"
       />
-
       <div className="flex items-center gap-3">
         {voiceSupported ? (
           <button
@@ -143,7 +129,6 @@ export const StudentCACard = ({
             Open keypad
           </button>
         )}
-
         <button
           type="button"
           onClick={() => setShowNumpad(!showNumpad)}
@@ -153,11 +138,9 @@ export const StudentCACard = ({
           {showNumpad ? "Hide keypad" : "Keypad"}
         </button>
       </div>
-
       {voiceFeedback && (
         <p className="text-xs text-gray-500 text-center">{voiceFeedback}</p>
       )}
-
       {showNumpad && (
         <div className="w-full animate-in transition-all">
           <div className="grid grid-cols-3 gap-2">
@@ -201,7 +184,6 @@ export const StudentCACard = ({
           </div>
         </div>
       )}
-
       {confirmed ? (
         <p className="text-sm text-green-600 font-medium">
           {score} saved &mdash; moving to next...

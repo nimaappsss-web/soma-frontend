@@ -1,18 +1,14 @@
 import { useState } from "react";
-
 import { Avatar } from "../../../components/ui/Avatar";
 import { useParents } from "../api/useParents";
 import { useResendParentInvite } from "../api/useResendParentInvite";
-
 interface ParentsListSectionProps {
   limit?: number;
 }
-
 export const ParentsListSection = ({ limit = 10 }: ParentsListSectionProps) => {
   const [page, setPage] = useState(1);
   const { data, isLoading, error } = useParents(page, limit);
   const resendMutation = useResendParentInvite();
-
   if (isLoading) {
     return (
       <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
@@ -21,7 +17,6 @@ export const ParentsListSection = ({ limit = 10 }: ParentsListSectionProps) => {
       </div>
     );
   }
-
   if (error) {
     return (
       <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
@@ -30,9 +25,7 @@ export const ParentsListSection = ({ limit = 10 }: ParentsListSectionProps) => {
       </div>
     );
   }
-
   const allParents = data?.parents ?? [];
-
   // Deduplicate: if same email has both "active" and "pending", prefer the "pending" entry
   const byEmail = new Map<string, typeof allParents[0]>();
   const pendingEmails = new Set(allParents.filter((p) => p.status === "pending").map((p) => p.email));
@@ -48,7 +41,6 @@ export const ParentsListSection = ({ limit = 10 }: ParentsListSectionProps) => {
   const registered = merged.filter((p) => p.status === "active");
   const total = data?.total ?? 0;
   const totalPages = data?.totalPages ?? 1;
-
   if (merged.length === 0) {
     return (
       <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
@@ -57,20 +49,17 @@ export const ParentsListSection = ({ limit = 10 }: ParentsListSectionProps) => {
       </div>
     );
   }
-
   const formatExpiry = (seconds: number) => {
     if (seconds < 60) return "Expiring soon";
     const hours = Math.round(seconds / 3600);
     return `${hours}h remaining`;
   };
-
   return (
     <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
       <div className="flex items-center justify-between mb-4">
         <h3 className="font-semibold text-gray-800">Parents</h3>
         <span className="text-xs text-gray-400">{total} total</span>
       </div>
-
       {pendingInvites.length > 0 && (
         <div className="mb-6">
           <h4 className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-2">Pending Invites</h4>
@@ -107,7 +96,6 @@ export const ParentsListSection = ({ limit = 10 }: ParentsListSectionProps) => {
           </div>
         </div>
       )}
-
       {registered.length > 0 && (
         <div>
           {pendingInvites.length > 0 && (
@@ -144,7 +132,6 @@ export const ParentsListSection = ({ limit = 10 }: ParentsListSectionProps) => {
           </div>
         </div>
       )}
-
       {totalPages > 1 && (
         <div className="flex items-center justify-center gap-3 mt-4 pt-3 border-t border-gray-100">
           <button

@@ -26,15 +26,24 @@ export const DayDetailPanel = ({ day, plain = false }: DayDetailPanelProps) => {
   const weekday = dateObj ? DAY_NAMES[dateObj.getDay()] : day.dayOfWeek;
 
   if (!day.isSchoolDay) {
+    const isHoliday = day.isHoliday;
+    const isWeekend = weekday === "Saturday" || weekday === "Sunday";
+    const badge = isHoliday ? "Holiday" : isWeekend ? "Weekend" : "No attendance recorded";
+    const description = isHoliday
+      ? "This is a school holiday."
+      : isWeekend
+        ? "No school on the weekend."
+        : "No attendance recorded for this day yet.";
+
     return (
       <div className={wrapper}>
         <p className="text-sm font-semibold text-gray900">{day.date}</p>
         <p className="text-xs text-gray500 mt-0.5">{weekday}</p>
         <div className="mt-4">
           <span className="inline-flex items-center rounded-full bg-amber500/10 text-amber500 px-2.5 py-1 text-xs font-medium">
-            {day.isHoliday ? "Holiday" : "Not a school day"}
+            {badge}
           </span>
-          <p className="text-xs text-gray500 mt-3">No attendance recorded on this day.</p>
+          <p className="text-xs text-gray500 mt-3">{description}</p>
         </div>
       </div>
     );

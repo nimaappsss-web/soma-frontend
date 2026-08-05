@@ -14,7 +14,6 @@ import {
   SearchNormal,
   StatusUp,
 } from "iconsax-react";
-
 import { useAuth } from "../contexts/AuthContext";
 import { useMyFormClass } from "../features/teacher/api/useMyFormClass";
 import { Avatar } from "../components/ui/Avatar";
@@ -22,11 +21,8 @@ import { useSidebarCollapse } from "../hooks/useSidebarCollapse";
 import { MobileHeader } from "../components/mobile";
 import { SearchModal } from "../components/others/SearchModal";
 import { cn } from "../lib/utils";
-
 import type { IconProps } from "iconsax-react";
-
 type IconComponent = React.FC<IconProps>;
-
 interface NavItem {
   label: string;
   to: string;
@@ -35,7 +31,6 @@ interface NavItem {
   hasCaret?: boolean;
   children?: { label: string; to: string }[];
 }
-
 const navItems: NavItem[] = [
   { label: "Home", to: "/teach", Icon: Home, end: true },
   { label: "Attendance", to: "/teach/attendance", Icon: ClipboardTick },
@@ -53,7 +48,6 @@ const navItems: NavItem[] = [
   { label: "Lesson Notes", to: "/teach/lesson-notes", Icon: Book1 },
   { label: "Announcements", to: "/teach/announcements", Icon: Speaker },
 ];
-
 export const TeacherLayout = () => {
   const { user } = useAuth();
   const location = useLocation();
@@ -61,10 +55,8 @@ export const TeacherLayout = () => {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const [expandedItems, setExpandedItems] = useState<Record<string, boolean>>({});
-
   const { data: formClassInfo } = useMyFormClass(user?.id ?? "");
   const isFormTeacher = !!formClassInfo?.formClassId;
-
   const visibleNavItems: NavItem[] = useMemo(
     () =>
       navItems.map((item) => {
@@ -78,30 +70,24 @@ export const TeacherLayout = () => {
       }),
     [isFormTeacher],
   );
-
   const closeMobile = () => setMobileOpen(false);
-
   const toggleExpanded = (label: string) => {
     setExpandedItems((prev) => ({ ...prev, [label]: !prev[label] }));
   };
-
   const isChildActive = (children: { label: string; to: string }[]) => {
     if (children.some((child) => child.to.startsWith("/teach/ca-and-exams"))) {
       return location.pathname.startsWith("/teach/ca-and-exams");
     }
     return children.some((child) => location.pathname.startsWith(child.to));
   };
-
   const sidebarContent = (
     <>
       {/* Nav */}
       <nav className={cn("flex-1 py-4 space-y-0.5 overflow-y-auto", collapsed ? "px-[12px]" : "px-3")}>
         {visibleNavItems.map((item) => {
           const hasChildren = item.children && item.children.length > 0;
-
           if (hasChildren) {
             const active = isChildActive(item.children!);
-
             if (collapsed) {
               return (
                 <NavLink
@@ -121,9 +107,7 @@ export const TeacherLayout = () => {
                 </NavLink>
               );
             }
-
             const isExpanded = expandedItems[item.label] ?? active;
-
             return (
               <div key={item.label}>
                 <button
@@ -178,7 +162,6 @@ export const TeacherLayout = () => {
               </div>
             );
           }
-
           return (
             <NavLink
               key={item.to}
@@ -202,7 +185,6 @@ export const TeacherLayout = () => {
           );
         })}
       </nav>
-
       {/* Settings */}
       <div className={cn("pt-1 shrink-0", collapsed ? "px-[12px]" : "px-3")}>
         <NavLink
@@ -223,7 +205,6 @@ export const TeacherLayout = () => {
           {!collapsed && <span>Settings</span>}
         </NavLink>
       </div>
-
       {/* Bottom: School info */}
       <div className={cn("border-t border-gray100 mt-1 shrink-0", collapsed ? "px-[12px] pb-4 pt-3" : "px-3 pb-4 pt-3")}>
         {collapsed ? (
@@ -242,7 +223,6 @@ export const TeacherLayout = () => {
       </div>
     </>
   );
-
   return (
     <div className="flex h-dvh bg-offWhite overflow-hidden">
       {/* Mobile sidebar overlay */}
@@ -280,7 +260,6 @@ export const TeacherLayout = () => {
         </div>
         {sidebarContent}
       </aside>
-
       {/* Desktop sidebar — hidden on mobile */}
       <aside
         className={cn(
@@ -315,20 +294,16 @@ export const TeacherLayout = () => {
             </>
           )}
         </div>
-
         {sidebarContent}
-
         {/* Double-click edge */}
         <div
           onDoubleClick={toggle}
           className="absolute top-0 right-0 h-full w-[4px] cursor-col-resize hover:bg-gray200 transition-colors"
         />
       </aside>
-
       {/* Right side: header + content */}
       <div className="flex-1 flex flex-col min-w-0">
         <MobileHeader onMenuClick={() => setMobileOpen(true)} />
-
         <header className="h-[62px] shrink-0 bg-pureWhite border-b border-gray100 items-center justify-end px-6 hidden md:flex">
           <div className="flex items-center gap-3">
             <button
@@ -349,12 +324,10 @@ export const TeacherLayout = () => {
             </div>
           </div>
         </header>
-
         <main className="flex-1 overflow-y-auto">
           <Outlet />
         </main>
       </div>
-
       {/* Search modal */}
       <SearchModal open={searchOpen} onOpenChange={setSearchOpen} />
     </div>

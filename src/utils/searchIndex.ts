@@ -44,7 +44,6 @@ export const searchIndex: SearchItem[] = [
   { id: "page-admin-profile", label: "My Profile", description: "View and edit your principal profile", path: "/admin/profile", icon: "UserEdit", category: "page", roles: ["principal"], keywords: ["personal", "avatar", "name", "phone"] },
   { id: "page-attendance-classes", label: "Attendance by Class", description: "View attendance grouped by class", path: "/admin/attendance/classes", icon: "ClipboardTick", category: "page", roles: ["principal"], keywords: ["class", "per class", "roll", "record"] },
   { id: "page-attendance-absentees", label: "Absentees", description: "See students marked absent", path: "/admin/attendance/absentees", icon: "ClipboardTick", category: "page", roles: ["principal"], keywords: ["absent", "missing", "truant", "away"] },
-  { id: "page-exam-scoring", label: "Exam Scoring", description: "Record and review CA and exam scores", path: "/admin/examinations/scoring", icon: "StatusUp", category: "page", roles: ["principal"], keywords: ["score", "grade", "marks", "record"] },
   { id: "page-exam-configure", label: "Exam Configuration", description: "Configure assessment schemes and scoring", path: "/admin/examinations/configure", icon: "Setting2", category: "page", roles: ["principal"], keywords: ["scheme", "setup", "config", "assessment"] },
 
   // Teacher

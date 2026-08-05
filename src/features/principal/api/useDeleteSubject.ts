@@ -1,22 +1,32 @@
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation } from "@tanstack/react-query";
 import toast from "react-hot-toast";
 
 import { transformError } from "../../../utils/transformError";
-import { fetchData } from "../../../utils/fetchData";
-import { subjectKeys } from "../utils/query-keys";
+import { useAuth } from "../../../contexts/AuthContext";
+import { addToQueue } from "../../../sync/syncQueue";
+import { db } from "../../../db/db";
 import type { AxiosErrorResponse } from "../types";
 
 export const useDeleteSubject = () => {
-  const queryClient = useQueryClient();
+  const { user } = useAuth();
 
   return useMutation<{ message: string }, AxiosErrorResponse, string>({
-    mutationFn: (id) => fetchData(`/subjects/${id}`, "DELETE"),
-    onSuccess: async () => {
-      toast.success("Subject removed!");
-      queryClient.invalidateQueries({ queryKey: subjectKeys.lists() });
-      queryClient.invalidateQueries({ queryKey: subjectKeys.details() });
+    mutationFn: async (id) => {
+      await db.subjects.delete(id);
+      await addToQueue({
+        userId: user!.id,
+        table: "subjects",
+        recordId: id,
+        endpoint: `/subjects/${id}`,
+        method: "DELETE",
+        payload: null,
+      });
+      return { message: "Subject removed" };
     },
-    onError: async (error) => {
+    onSuccess: () => {
+      toast.success("Subject removed!");
+    },
+    onError: (error) => {
       toast.error(transformError(error));
     },
   });

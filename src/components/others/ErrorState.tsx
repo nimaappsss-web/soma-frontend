@@ -1,7 +1,6 @@
 import { InfoCircle } from "iconsax-react";
 import React from "react";
 import clsx from "clsx";
-
 interface ErrorStateProps {
   message?: string;
   onRetry?: () => void;
@@ -11,7 +10,6 @@ interface ErrorStateProps {
   buttonClassName?: string;
   icon?: React.ReactNode;
 }
-
 const ErrorState: React.FC<ErrorStateProps> = ({
   message = "Failed to load data. Please try again.",
   onRetry,
@@ -62,5 +60,4 @@ const ErrorState: React.FC<ErrorStateProps> = ({
     </div>
   );
 };
-
 export default ErrorState;

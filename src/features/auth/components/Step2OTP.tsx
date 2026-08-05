@@ -1,11 +1,8 @@
 import { Link } from "react-router";
-
-import { Button } from "../../../components/ui/button";
 import { OtpInputField } from "../../../components/ui/otp-input";
 import { ErrorMessage } from "../../../components/others/ErrorMessage";
 import { transformError } from "../../../utils/transformError";
 import { SignupLayout } from "../../../layouts/SignupLayout";
-
 interface Step2OTPProps {
   email: string;
   otp: string;
@@ -17,7 +14,6 @@ interface Step2OTPProps {
   cooldown: number;
   error: React.ReactNode;
 }
-
 export const Step2OTP = ({
   email,
   otp,
@@ -39,13 +35,11 @@ export const Step2OTP = ({
             className="h-[30px] w-auto mb-8"
           />
         </div>
-
         <div className="text-center">
           <h1 className="text-[22px] sm:text-[24px] mx-auto text-center font-light text-gray-900 leading-snug">
             Activate your account
           </h1>
         </div>
-
         {error && (
           <div className="mt-5">
             <ErrorMessage>
@@ -53,21 +47,17 @@ export const Step2OTP = ({
             </ErrorMessage>
           </div>
         )}
-
         <div className="mt-2 w-full max-w-[342px] mx-auto">
           <p className="text-sm text-black/50 mt-2">
             We've sent an email to <span className="font-bold">{email}.</span>{" "}
             Check your inbox to activate your account and get started.
           </p>
-
           <div className="mt-6 bg-offWhite rounded-lg px-4 py-3">
             <span className="text-sm text-gray-700">{email}</span>
           </div>
-
           <div className="mt-6">
             <OtpInputField value={otp} onChange={onOtpChange} numDigits={6} />
           </div>
-
           <div className="mt-4 text-center">
             <span className="text-sm text-gray-500">
               Haven't received an email?{" "}
@@ -85,16 +75,14 @@ export const Step2OTP = ({
                   : "Send again"}
             </button>
           </div>
-
-          <Button
+          <button
             type="button"
             disabled={isPending}
             className="w-full mt-6"
             onClick={onVerify}
           >
             {isPending ? "Verifying..." : "Verify"}
-          </Button>
-
+          </button>
           <p className="text-center text-sm text-gray-500 mt-6">
             Already have an account?{" "}
             <Link

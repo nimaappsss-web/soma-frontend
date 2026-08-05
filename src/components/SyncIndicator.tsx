@@ -1,16 +1,12 @@
 import { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "motion/react";
-
 import { useSync } from "../contexts/SyncContext";
-
 export const SyncIndicator = () => {
   const { pendingCount, failedCount, isSyncing, syncProgress, syncTotal, lastSyncedAt, triggerSync, clearFailed } = useSync();
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
-
   const hasIssues = pendingCount > 0 || failedCount > 0;
   const percent = syncTotal > 0 ? Math.round((syncProgress / syncTotal) * 100) : 0;
-
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
       if (ref.current && !ref.current.contains(e.target as Node)) {
@@ -20,7 +16,6 @@ export const SyncIndicator = () => {
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
-
   return (
     <div ref={ref} className="fixed bottom-4 right-4 z-50">
       <button
@@ -61,7 +56,6 @@ export const SyncIndicator = () => {
           </svg>
         )}
       </button>
-
       <AnimatePresence>
         {open && failedCount > 0 && (
           <motion.div

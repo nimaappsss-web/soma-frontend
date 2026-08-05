@@ -4,7 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import { db } from "../../../db/db";
 import { fetchData } from "../../../utils/fetchData";
 import { useAuth } from "../../../contexts/AuthContext";
-import { parseLocalDate } from "../../../utils/date";
+import { localDateKey, parseLocalDate } from "../../../utils/date";
 import { attendanceKeys } from "../utils/query-keys";
 import type {
   AttendanceAvailability,
@@ -57,6 +57,12 @@ export const useAttendanceAvailability = (date: string): AttendanceAvailabilityR
 
   if (query.data) {
     if (query.data.available) {
+      return { status: "school-day" };
+    }
+    // The server judges "future" in its own timezone, which can lag the
+    // device's clock by a day. If the requested date is the device's actual
+    // local today, treat it as a timezone artifact and allow marking.
+    if (query.data.reason?.type === "FUTURE" && date === localDateKey()) {
       return { status: "school-day" };
     }
     return {

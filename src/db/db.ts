@@ -85,6 +85,8 @@ export interface TeacherCache {
   role: string;
   formClassId?: string | null;
   formClass?: string | null;
+  dateOfBirth?: string | null;
+  employmentDate?: string | null;
   createdAt?: string;
 }
 
@@ -311,6 +313,41 @@ export interface ReportSettingsCache {
   updatedAt: number;
 }
 
+export interface StudentTimelineCache {
+  id: string;
+  userId: string;
+  studentId: string;
+  eventsJson: string;
+  createdAt: number;
+}
+
+export interface StudentAcademicsCache {
+  id: string;
+  userId: string;
+  studentId: string;
+  term: string;
+  session: string;
+  dataJson: string;
+  createdAt: number;
+}
+
+export interface StudentMonthlyAttendanceCache {
+  id: string;
+  userId: string;
+  studentId: string;
+  month: number;
+  year: number;
+  dataJson: string;
+  createdAt: number;
+}
+
+export interface StudentStatsCache {
+  id: string;
+  userId: string;
+  dataJson: string;
+  createdAt: number;
+}
+
 export const db = new Dexie("somaDB") as Dexie & {
   students: EntityTable<Student, "id">;
   attendance: EntityTable<AttendanceRecord, "id">;
@@ -340,6 +377,10 @@ export const db = new Dexie("somaDB") as Dexie & {
   examTermResults: EntityTable<ExamTermResultsCache, "id">;
   examStudentReports: EntityTable<ExamStudentReportCache, "id">;
   reportSettings: EntityTable<ReportSettingsCache, "id">;
+  studentTimeline: EntityTable<StudentTimelineCache, "id">;
+  studentAcademics: EntityTable<StudentAcademicsCache, "id">;
+  studentMonthlyAttendance: EntityTable<StudentMonthlyAttendanceCache, "id">;
+  studentStats: EntityTable<StudentStatsCache, "id">;
 };
 
 db.version(11).stores({
@@ -707,6 +748,41 @@ db.version(27).stores({
   examTermResults: "id, userId, classId, term",
   examStudentReports: "id, userId, studentId, term",
   reportSettings: "id, userId",
+});
+
+db.version(28).stores({
+  students: "id, name, classId, status, schoolId, userId, [userId+classId]",
+  attendance: "id, studentId, className, schoolId, date, syncStatus, userId, [date+className], [userId+date+className]",
+  caScores: "id, studentId, className, schoolId, term, session, syncStatus, userId",
+  subjects: "id, schoolId, userId",
+  classes: "id, level, schoolId, userId, [userId+level]",
+  teacherFormClass: "id",
+  teacherAssignments: "id, userId",
+  teachers: "id, userId",
+  pendingInvites: "id, userId",
+  teacherDetails: "id, userId",
+  parents: "id, status, schoolId, userId",
+  syncQueue: "++id, status, createdAt, table, userId",
+  lessonNotes: "id, userId",
+  schoolSettings: "id, userId",
+  calendarEvents: "id, userId",
+  holidays: "id, userId",
+  academicTerms: "id, userId",
+  announcements: "id, userId",
+  attendanceSnapshots: "key",
+  attendanceNotes: "id, userId, [userId+date+className]",
+  examScores: "id, userId, examKey, studentId, syncStatus",
+  examScheme: "id, userId",
+  exams: "id, userId, term, classId, subjectId",
+  examRosters: "id, userId, examId",
+  examActiveSummaries: "id, userId, classId, examKey",
+  examTermResults: "id, userId, classId, term",
+  examStudentReports: "id, userId, studentId, term",
+  reportSettings: "id, userId",
+  studentTimeline: "id, userId, studentId",
+  studentAcademics: "id, userId, studentId, term, session",
+  studentMonthlyAttendance: "id, userId, studentId, month, year",
+  studentStats: "id, userId",
 });
 
 

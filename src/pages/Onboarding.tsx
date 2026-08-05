@@ -2,7 +2,6 @@ import { useState, useEffect, useCallback, useRef } from "react";
 import { useNavigate, useSearchParams } from "react-router";
 import { GoogleLogin } from "@react-oauth/google";
 import toast from "react-hot-toast";
-
 import { Step1Email } from "../features/auth/components/Step1Email";
 import { Step2OTP } from "../features/auth/components/Step2OTP";
 import { Step3Profile } from "../features/auth/components/Step3Profile";
@@ -15,27 +14,22 @@ import {
 import { useAuth } from "../contexts/AuthContext";
 import { getPostAuthPath } from "../features/auth/utils/routing";
 import { transformError } from "../utils/transformError";
-
 const RESEND_COOLDOWN = 30;
-
 export const Onboarding = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const initialStep = Number(searchParams.get("step")) || 1;
   const savedEmail = searchParams.get("email") || "";
-
   const [step, setStep] = useState(initialStep);
   const [email, setEmail] = useState(savedEmail);
   const [otp, setOtp] = useState("");
   const [registrationToken, setRegistrationToken] = useState("");
   const [cooldown, setCooldown] = useState(0);
-
   const updateStep = (newStep: number, extras?: Record<string, string>) => {
     setStep(newStep);
     const params: Record<string, string> = { step: String(newStep) };
     if (extras) Object.assign(params, extras);
     setSearchParams(params);
   };
-
   const startRegistrationMutation = useStartRegistration();
   const verifyOTPMutation = useVerifyRegistrationOTP();
   const completeProfileMutation = useCompleteProfile();
@@ -43,13 +37,11 @@ export const Onboarding = () => {
   const { setTokens } = useAuth();
   const navigate = useNavigate();
   const googleBtnRef = useRef<HTMLDivElement>(null);
-
   useEffect(() => {
     if (cooldown <= 0) return;
     const timer = setInterval(() => setCooldown((prev) => prev - 1), 1000);
     return () => clearInterval(timer);
   }, [cooldown]);
-
   useEffect(() => {
     if (otp.length === 6) {
       verifyOTPMutation.mutate(
@@ -63,7 +55,6 @@ export const Onboarding = () => {
       );
     }
   }, [otp]);
-
   const handleEmailSubmit = (data: { email: string }) => {
     setEmail(data.email);
     startRegistrationMutation.mutate(
@@ -76,7 +67,6 @@ export const Onboarding = () => {
       },
     );
   };
-
   const handleResend = useCallback(() => {
     if (cooldown > 0) return;
     startRegistrationMutation.mutate(
@@ -84,7 +74,6 @@ export const Onboarding = () => {
       { onSuccess: () => setCooldown(RESEND_COOLDOWN) },
     );
   }, [cooldown, email, startRegistrationMutation]);
-
   const handleVerify = () => {
     if (otp.length === 6) {
       verifyOTPMutation.mutate(
@@ -98,7 +87,6 @@ export const Onboarding = () => {
       );
     }
   };
-
   const handleProfileSubmit = (data: {
     firstName: string;
     lastName: string;
@@ -121,7 +109,6 @@ export const Onboarding = () => {
       },
     );
   };
-
   const handleGoBackToOTP = () => {
     completeProfileMutation.reset();
     setOtp("");
@@ -132,7 +119,6 @@ export const Onboarding = () => {
       { onSuccess: () => setCooldown(RESEND_COOLDOWN) },
     );
   };
-
   const handleGoogleSuccess = (credentialResponse: { credential?: string }) => {
     if (!credentialResponse.credential) return;
     googleAuthMutation.mutate(
@@ -145,23 +131,18 @@ export const Onboarding = () => {
       },
     );
   };
-
   const triggerGoogleLogin = () => {
     const btn = googleBtnRef.current?.querySelector("div[role='button']") as HTMLElement | null;
     btn?.click();
   };
-
   const profileError = completeProfileMutation.error;
   const profileErrorMessage = profileError ? transformError(profileError) : null;
   const isTokenError = profileErrorMessage?.toLowerCase().includes("registration token");
-
   const stepError =
     startRegistrationMutation.error ||
     verifyOTPMutation.error ||
     profileError;
-
   const errorMessage = stepError ? transformError(stepError) : null;
-
   if (step === 1) {
     return (
       <>
@@ -180,7 +161,6 @@ export const Onboarding = () => {
       </>
     );
   }
-
   if (step === 2) {
     return (
       <Step2OTP
@@ -196,7 +176,6 @@ export const Onboarding = () => {
       />
     );
   }
-
   return (
     <Step3Profile
       email={email}

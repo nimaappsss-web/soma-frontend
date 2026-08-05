@@ -1,6 +1,7 @@
-import { useEffect, useState, useCallback, createElement } from "react";
+import { useEffect, useState, useCallback, useMemo, createElement } from "react";
 import { useNavigate } from "react-router";
 import { Command } from "cmdk";
+import { useLiveQuery } from "dexie-react-hooks";
 import {
   SearchNormal,
   Home2, Teacher, Profile2User, Briefcase, Book, Book1,
@@ -12,10 +13,9 @@ import {
 } from "iconsax-react";
 import { Dialog, DialogContent } from "../ui/dialog";
 import { useAuth } from "../../contexts/AuthContext";
+import { db, type ClassCache, type Student, type TeacherCache, type ParentCache, type SubjectCache } from "../../db/db";
 import { searchIndex, type SearchItem, type IconName } from "../../utils/searchIndex";
-
 import type { IconProps } from "iconsax-react";
-
 const iconMap: Record<IconName, React.FC<IconProps>> = {
   Home2, Teacher, Profile2User, Briefcase, Book, Book1,
   Calendar, CalendarTick, ClipboardTick, StatusUp, Card,
@@ -24,14 +24,11 @@ const iconMap: Record<IconName, React.FC<IconProps>> = {
   Refresh, CalendarAdd, TickCircle, Lock, User, UserEdit,
   Logout, Clock, Filter, ProfileTick, Document,
 };
-
 /* -------------------------------------------------------------------------- */
 /*                           Recent searches storage                           */
 /* -------------------------------------------------------------------------- */
-
 const RECENT_KEY = "soma-recent-searches";
 const MAX_RECENT = 5;
-
 function getRecentSearches(): SearchItem[] {
   try {
     const raw = localStorage.getItem(RECENT_KEY);
@@ -47,37 +44,166 @@ function getRecentSearches(): SearchItem[] {
     return [];
   }
 }
-
 function addRecentSearch(item: SearchItem) {
   const recent = getRecentSearches().filter((r) => r.id !== item.id);
   recent.unshift(item);
   localStorage.setItem(RECENT_KEY, JSON.stringify(recent.slice(0, MAX_RECENT)));
 }
-
 /* -------------------------------------------------------------------------- */
 /*                              Search Modal                                  */
 /* -------------------------------------------------------------------------- */
-
 interface SearchModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }
-
 export const SearchModal = ({ open, onOpenChange }: SearchModalProps) => {
   const { user } = useAuth();
   const navigate = useNavigate();
   const [recentSearches, setRecentSearches] = useState<SearchItem[]>(getRecentSearches);
-
-  // Filter index by user role (normalized to lowercase)
   const userRole = user?.role?.toLowerCase() ?? "";
+  const isTeacher = userRole === "teacher";
+  const isPrincipal = userRole === "principal";
+  const userId = user?.id ?? "";
+  // ── Dexie live-queries ──
+  const classes = useLiveQuery<ClassCache[]>(
+    () => {
+      if (!userId) return Promise.resolve([] as ClassCache[]);
+      return db.classes.where("userId").equals(userId).toArray();
+    },
+    [userId],
+  );
+  const classNameMap = useMemo(() => {
+    const m = new Map<string, string>();
+    for (const c of classes ?? []) m.set(c.id, c.name);
+    return m;
+  }, [classes]);
+  const students = useLiveQuery<Student[]>(
+    () => {
+      if (!userId) return Promise.resolve([] as Student[]);
+      return db.students.where("userId").equals(userId).toArray();
+    },
+    [userId],
+  );
+  const teachers = useLiveQuery<TeacherCache[]>(
+    () => {
+      if (!userId) return Promise.resolve([] as TeacherCache[]);
+      return db.teachers.where("userId").equals(userId).toArray();
+    },
+    [userId],
+  );
+  const parents = useLiveQuery<ParentCache[]>(
+    () => {
+      if (!userId) return Promise.resolve([] as ParentCache[]);
+      return db.parents.where("userId").equals(userId).toArray();
+    },
+    [userId],
+  );
+  const subjects = useLiveQuery<SubjectCache[]>(
+    () => {
+      if (!userId) return Promise.resolve([] as SubjectCache[]);
+      return db.subjects.where("userId").equals(userId).toArray();
+    },
+    [userId],
+  );
+  const formClassData = useLiveQuery<{ formClassId: string | null } | undefined>(
+    () => {
+      if (!userId) return Promise.resolve(undefined);
+      return db.teacherFormClass.get(userId);
+    },
+    [userId],
+  );
+  const formClassId = formClassData?.formClassId;
+  // ── Build searchable records from Dexie ──
+  const recordItems: SearchItem[] = useMemo(() => {
+    const items: SearchItem[] = [];
+    // Students
+    const studentList = isTeacher && formClassId
+      ? (students ?? []).filter((s) => s.classId === formClassId && s.status === "ACTIVE")
+      : isPrincipal
+        ? (students ?? []).filter((s) => s.status === "ACTIVE")
+        : [];
+    for (const s of studentList.slice(0, 25)) {
+      const className = classNameMap.get(s.classId) ?? "";
+      items.push({
+        id: `student-${s.id}`,
+        label: s.name,
+        description: [s.admissionNo, className].filter(Boolean).join(" · "),
+        path: isTeacher ? `/teach/students/${s.id}` : `/admin/students/${s.id}`,
+        icon: "User",
+        category: "action",
+        roles: [userRole],
+        keywords: [s.name, s.admissionNo, className].filter(Boolean) as string[],
+      });
+    }
+    // Teachers (principal)
+    if (isPrincipal) {
+      for (const t of (teachers ?? []).slice(0, 10)) {
+        items.push({
+          id: `teacher-${t.id}`,
+          label: t.name,
+          description: t.email,
+          path: "/admin/teachers",
+          icon: "Briefcase",
+          category: "action",
+          roles: ["principal"],
+          keywords: [t.name, t.email],
+        });
+      }
+    }
+    // Parents (principal)
+    if (isPrincipal) {
+      for (const p of (parents ?? []).slice(0, 10)) {
+        const childNames = p.students?.map((s) => s.name).join(", ") ?? "";
+        items.push({
+          id: `parent-${p.id}`,
+          label: p.name,
+          description: childNames || p.email,
+          path: "/admin/parents",
+          icon: "Profile2User",
+          category: "action",
+          roles: ["principal"],
+          keywords: [p.name, p.email, childNames].filter(Boolean),
+        });
+      }
+    }
+    // Classes (principal)
+    if (isPrincipal) {
+      for (const c of (classes ?? []).slice(0, 10)) {
+        items.push({
+          id: `class-${c.id}`,
+          label: c.name,
+          description: c.level,
+          path: "/admin/students",
+          icon: "Teacher",
+          category: "action",
+          roles: ["principal"],
+          keywords: [c.name, c.level],
+        });
+      }
+    }
+    // Subjects (principal)
+    if (isPrincipal) {
+      for (const s of (subjects ?? []).slice(0, 10)) {
+        items.push({
+          id: `subject-${s.id}`,
+          label: s.name,
+          description: s.code ?? "",
+          path: "/admin/subjects",
+          icon: "Book",
+          category: "action",
+          roles: ["principal"],
+          keywords: [s.name, s.code].filter(Boolean) as string[],
+        });
+      }
+    }
+    return items;
+  }, [students, teachers, parents, classes, subjects, userRole, isTeacher, isPrincipal, formClassId, classNameMap]);
+  // Static pages/actions from the search index
   const roleFiltered = searchIndex.filter((item) =>
     item.roles.some((r) => r.toLowerCase() === userRole),
   );
-
-  // Pages and actions
   const pages = roleFiltered.filter((item) => item.category === "page");
   const actions = roleFiltered.filter((item) => item.category === "action");
-
   const handleSelect = useCallback(
     (item: SearchItem) => {
       addRecentSearch(item);
@@ -87,7 +213,6 @@ export const SearchModal = ({ open, onOpenChange }: SearchModalProps) => {
     },
     [navigate, onOpenChange],
   );
-
   // Cmd+K global shortcut
   useEffect(() => {
     if (!open) {
@@ -101,14 +226,12 @@ export const SearchModal = ({ open, onOpenChange }: SearchModalProps) => {
       return () => document.removeEventListener("keydown", handler);
     }
   }, [open, onOpenChange]);
-
   // Refresh recent when modal opens
   useEffect(() => {
     if (open) {
       setRecentSearches(getRecentSearches());
     }
   }, [open]);
-
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
@@ -130,7 +253,7 @@ export const SearchModal = ({ open, onOpenChange }: SearchModalProps) => {
             <SearchNormal variant="Linear" size={22} color="#8C8C8C" />
             <Command.Input
               autoFocus
-              placeholder="Search pages, actions..."
+              placeholder="Search pages, actions, records..."
               className="flex-1 bg-transparent text-sm text-gray900 placeholder:text-gray400 focus:outline-none"
             />
             <button
@@ -140,13 +263,11 @@ export const SearchModal = ({ open, onOpenChange }: SearchModalProps) => {
               ESC
             </button>
           </div>
-
           {/* Results */}
           <Command.List className="max-h-[400px] overflow-y-auto p-2">
             <Command.Empty className="py-8 text-center text-sm text-gray400">
               No results found.
             </Command.Empty>
-
             {/* Recent searches */}
             {recentSearches.length > 0 && (
               <Command.Group heading={<GroupHeading text="Recent" />}>
@@ -159,7 +280,6 @@ export const SearchModal = ({ open, onOpenChange }: SearchModalProps) => {
                 ))}
               </Command.Group>
             )}
-
             {/* Pages */}
             {pages.length > 0 && (
               <Command.Group heading={<GroupHeading text="Pages" />}>
@@ -172,7 +292,6 @@ export const SearchModal = ({ open, onOpenChange }: SearchModalProps) => {
                 ))}
               </Command.Group>
             )}
-
             {/* Actions */}
             {actions.length > 0 && (
               <Command.Group heading={<GroupHeading text="Actions" />}>
@@ -185,8 +304,19 @@ export const SearchModal = ({ open, onOpenChange }: SearchModalProps) => {
                 ))}
               </Command.Group>
             )}
+            {/* Records */}
+            {recordItems.length > 0 && (
+              <Command.Group heading={<GroupHeading text="Records" />}>
+                {recordItems.map((item) => (
+                  <CommandItem
+                    key={item.id}
+                    item={item}
+                    onSelect={handleSelect}
+                  />
+                ))}
+              </Command.Group>
+            )}
           </Command.List>
-
           {/* Footer */}
           <div className="px-4 py-2.5 border-t border-gray100 bg-gray50 flex items-center justify-between text-[11px] text-gray400">
             <div className="flex items-center gap-3">
@@ -210,11 +340,9 @@ export const SearchModal = ({ open, onOpenChange }: SearchModalProps) => {
     </Dialog>
   );
 };
-
 /* -------------------------------------------------------------------------- */
 /*                              Sub-components                                */
 /* -------------------------------------------------------------------------- */
-
 function GroupHeading({ text }: { text: string }) {
   return (
     <span className="text-[11px] font-medium text-gray400 uppercase tracking-wider">
@@ -222,7 +350,6 @@ function GroupHeading({ text }: { text: string }) {
     </span>
   );
 }
-
 function CommandItem({
   item,
   onSelect,
@@ -231,7 +358,6 @@ function CommandItem({
   onSelect: (item: SearchItem) => void;
 }) {
   const Icon = iconMap[item.icon];
-
   return (
     <Command.Item
       value={`${item.label} ${item.description} ${item.keywords.join(" ")}`}

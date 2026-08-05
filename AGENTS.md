@@ -408,6 +408,21 @@ Route groups:
 
 ## Critical Rules
 
+### Always Pass Explicit `color` to iconsax-react Icons (NEVER `currentColor`)
+
+`iconsax-react` icons render with `stroke="currentColor"` by default. If you rely on `currentColor` / a `className` text color (or an undefined token like `text-gray400`), the icon renders **invisible**. EVERY icon you add MUST receive an explicit `color` hex prop:
+
+```tsx
+<ArrowRight size={14} color="#8C8C8C" />   // ✅ always this
+<ArrowRight size={14} color="#FFFFFF" />   // ✅ on dark backgrounds
+<Medal size={14} className="text-amber500" />  // ❌ no color prop — invisible
+<Element4 size={14} />                         // ❌ NO explicit color — invisible
+```
+
+Use the theme hex values: gray500 `#8C8C8C`, gray900 `#0D0D0D`, gray300 `#BBBBBB`, white `#FFFFFF`, springgreen600 `#34A853`, red500 `#CD432F`, amber500 `#FBBC05`, azure500 `#4285F4`, indigo500 `#8C37C3`.
+
+For toggle/segmented icons that change state, pass the color explicitly per state (e.g. `color={active ? "#FFFFFF" : "#8C8C8C"}`). Note: `text-gray400` does NOT exist in the theme — use `gray500` or the explicit hex above.
+
 ### Always Stash Before Destructive Git Operations
 
 Before running any command that could discard uncommitted work (`git checkout HEAD`, `git checkout --`, `git reset --hard`, `git restore`, etc.), ALWAYS run `git stash push -m "<description>"` first. If the operation is cancelled or errors, apply the stash back with `git stash pop`.

@@ -2,13 +2,11 @@ import { useMemo } from "react";
 import { cn } from "@/lib/utils";
 import { localDateKey } from "../../../utils/date";
 import type { AttendanceCalendarAnalytics } from "../types";
-
 const DAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 const MONTHS = [
   "January", "February", "March", "April", "May", "June",
   "July", "August", "September", "October", "November", "December",
 ];
-
 interface SchoolCalendarProps {
   analytics?: AttendanceCalendarAnalytics;
   month: number;
@@ -17,13 +15,11 @@ interface SchoolCalendarProps {
   onDateSelect: (date: string) => void;
   onMonthChange: (month: number, year: number) => void;
 }
-
 const cellBg = (percentage: number) => {
   if (percentage >= 80) return "bg-springgreen600 text-white";
   if (percentage >= 50) return "bg-amber500 text-white";
   return "bg-red500 text-white";
 };
-
 export const SchoolCalendar = ({
   analytics,
   month,
@@ -39,36 +35,28 @@ export const SchoolCalendar = ({
     }
     return map;
   }, [analytics]);
-
   const cells = useMemo(() => {
     const daysInMonth = new Date(year, month, 0).getDate();
     const firstDay = new Date(year, month - 1, 1).getDay();
     const today = localDateKey();
-
     const list: Array<{ key: string; dateKey: string; day: number; inMonth: boolean; isToday: boolean }> = [];
-
     for (let i = firstDay - 1; i >= 0; i--) {
       const d = new Date(year, month - 1, -i);
       list.push({ key: `lead-${i}`, dateKey: localDateKey(d), day: d.getDate(), inMonth: false, isToday: false });
     }
-
     for (let d = 1; d <= daysInMonth; d++) {
       const dateKey = localDateKey(new Date(year, month - 1, d));
       list.push({ key: dateKey, dateKey, day: d, inMonth: true, isToday: dateKey === today });
     }
-
     const remaining = 42 - list.length;
     for (let d = 1; d <= remaining; d++) {
       const date = new Date(year, month, d);
       list.push({ key: `tail-${d}`, dateKey: localDateKey(date), day: d, inMonth: false, isToday: false });
     }
-
     return list;
   }, [month, year]);
-
   const goPrev = () => onMonthChange(month === 1 ? 12 : month - 1, month === 1 ? year - 1 : year);
   const goNext = () => onMonthChange(month === 12 ? 1 : month + 1, month === 12 ? year + 1 : year);
-
   return (
     <div className="bg-white rounded-xl border border-gray100 p-5">
       <div className="flex items-center justify-between mb-5">
@@ -94,19 +82,16 @@ export const SchoolCalendar = ({
           </svg>
         </button>
       </div>
-
       <div className="grid grid-cols-7 mb-1">
         {DAYS.map((d) => (
           <div key={d} className="text-center text-[11px] font-medium text-gray400 py-2">{d}</div>
         ))}
       </div>
-
       <div className="grid grid-cols-7">
         {cells.map((c) => {
           const day = dayMap.get(c.dateKey);
           const isSelected = c.dateKey === selectedDate;
           const showData = c.inMonth && !!day && day.isSchoolDay;
-
           return (
             <button
               key={c.key}

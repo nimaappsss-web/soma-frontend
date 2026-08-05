@@ -253,14 +253,14 @@ export const VerifyTeacher = () => {
             </p>
           )}
 
-          <Button
+          <button
             type="button"
             disabled={sendOTPMutation.isPending}
             className="w-full mt-5.25"
             onClick={handleSendOTP}
           >
             {sendOTPMutation.isPending ? "Sending OTP..." : "Send OTP"}
-          </Button>
+          </button>
         </div>
       </AuthLayout>
     );
@@ -423,9 +423,9 @@ export const VerifyTeacher = () => {
             />
           </div>
 
-          <Button type="submit" disabled={acceptMutation.isPending} className="w-full mt-5.25">
+          <button type="submit" disabled={acceptMutation.isPending} className="w-full mt-5.25">
             {acceptMutation.isPending ? "Setting up..." : "Accept Invite"}
-          </Button>
+          </button>
         </form>
       </div>
     </AuthLayout>

@@ -7,7 +7,6 @@ import { DateInput } from "@/components/ui/date-input";
 import { ClassFilter } from "./ClassFilter";
 import { OfflineBanner } from "./OfflineBanner";
 import { EmptyState } from "./EmptyState";
-
 export const AttendanceAbsentees = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
@@ -15,12 +14,10 @@ export const AttendanceAbsentees = () => {
   const [classId, setClassId] = useState("");
   const { data, savedAt, isLoading, isStale, isEmpty, error, refetch } =
     useSchoolAttendanceToday(date, classId || undefined);
-
   const absentees = useMemo(
     () => data?.byClass?.flatMap((c) => c.absentees) ?? [],
     [data],
   );
-
   return (
     <div className="p-4 md:p-6 w-full">
       <div className="flex items-center justify-between gap-3">
@@ -44,11 +41,9 @@ export const AttendanceAbsentees = () => {
           <DateInput value={date} onChange={setDate} label="Date" dropdownAlign="right" className="w-full sm:w-auto" />
         </div>
       </div>
-
       <div className="mt-4">
         <OfflineBanner isStale={isStale} savedAt={savedAt} dataDate={data?.date} requestedDate={date} />
       </div>
-
       {isEmpty ? (
         <div className="mt-4">
           <EmptyState loading={isLoading} error={error?.response?.data?.message ?? error?.message} onRetry={refetch} />

@@ -1,6 +1,5 @@
 import { useState, useRef } from "react";
 import toast from "react-hot-toast";
-
 import { useAuth } from "../../contexts/AuthContext";
 import { useTeacherDetail } from "../../features/teacher/api";
 import { Avatar } from "../../components/ui/Avatar";
@@ -11,71 +10,62 @@ import { db } from "../../db/db";
 import { addToQueue } from "../../sync/syncQueue";
 import { uploadFile } from "../../utils/upload";
 import { transformError } from "../../utils/transformError";
-
 export const TeacherSettings = () => {
   const { user } = useAuth();
   const { data: teacher, isLoading } = useTeacherDetail(user!.id);
   const fileInputRef = useRef<HTMLInputElement>(null);
-
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
   const [address, setAddress] = useState("");
   const [gender, setGender] = useState<"M" | "F" | "">("");
   const [dateOfBirth, setDateOfBirth] = useState("");
+  const [employmentDate, setEmploymentDate] = useState("");
   const [profilePictureUrl, setProfilePictureUrl] = useState<string | null>(null);
   const [pendingImage, setPendingImage] = useState<File | null>(null);
   const [saving, setSaving] = useState(false);
-
   const [formReady, setFormReady] = useState(false);
-
   if (!formReady && teacher) {
     setName(teacher.name ?? "");
     setPhone(teacher.phone ?? "");
     setAddress(teacher.address ?? "");
     setGender(teacher.gender ?? "");
     setDateOfBirth(teacher.dateOfBirth ?? "");
+    setEmploymentDate(teacher.employmentDate ?? "");
     setProfilePictureUrl(teacher.profilePictureUrl ?? null);
     setFormReady(true);
   }
-
   const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-
     setPendingImage(file);
     setProfilePictureUrl(URL.createObjectURL(file));
   };
-
   const handleSave = async () => {
     if (!teacher) return;
     setSaving(true);
     try {
       let finalPictureUrl = profilePictureUrl;
-
       if (pendingImage) {
         finalPictureUrl = await uploadFile(pendingImage);
       }
-
       const payload: Record<string, unknown> = {};
       if (name !== teacher.name) payload.name = name;
       if (phone !== (teacher.phone ?? "")) payload.phone = phone || null;
       if (address !== (teacher.address ?? "")) payload.address = address || null;
       if ((gender || null) !== (teacher.gender ?? null)) payload.gender = gender || null;
       if (dateOfBirth !== (teacher.dateOfBirth ?? "")) payload.dateOfBirth = dateOfBirth || null;
+      if (employmentDate !== (teacher.employmentDate ?? "")) payload.employmentDate = employmentDate || null;
       if (finalPictureUrl !== (teacher.profilePictureUrl ?? null))
         payload.profilePictureUrl = finalPictureUrl;
-
       if (Object.keys(payload).length === 0) {
         toast.success("Nothing to update");
         return;
       }
-
       const existing = await db.teacherDetails.where({ id: teacher.id, userId: user!.id }).first();
       if (existing?.detailJson) {
         const merged = { ...JSON.parse(existing.detailJson), ...payload };
         await db.teacherDetails.put({ id: teacher.id, userId: user!.id, detailJson: JSON.stringify(merged) });
       }
-
       await addToQueue({
         userId: user!.id,
         table: "teachers",
@@ -84,7 +74,6 @@ export const TeacherSettings = () => {
         method: "PATCH",
         payload,
       });
-
       setPendingImage(null);
       toast.success("Profile updated!");
     } catch (err) {
@@ -93,21 +82,17 @@ export const TeacherSettings = () => {
       setSaving(false);
     }
   };
-
   const formClassName = teacher?.formClass
     ? typeof teacher.formClass === "object"
       ? teacher.formClass.name
       : teacher.formClass
     : "None";
-
   if (isLoading) {
     return <p className="text-sm text-gray-400 p-8">Loading...</p>;
   }
-
   return (
     <div className="p-8 max-w-2xl">
       <h2 className="text-2xl font-bold text-gray-800 mb-6">Settings</h2>
-
       <div className="space-y-6">
         <section className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
           <h3 className="font-semibold text-gray-800 mb-4">Profile Picture</h3>
@@ -144,7 +129,6 @@ export const TeacherSettings = () => {
             </div>
           </div>
         </section>
-
         <section className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
           <h3 className="font-semibold text-gray-800 mb-4">Personal Information</h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -193,6 +177,14 @@ export const TeacherSettings = () => {
                   onChange={(e) => setDateOfBirth(e.target.value)}
                 />
               </div>
+              <div>
+                <label className="block text-xs text-gray-500 mb-1">Employment Date</label>
+                <Input
+                  type="date"
+                  value={employmentDate}
+                  onChange={(e) => setEmploymentDate(e.target.value)}
+                />
+              </div>
             <div className="md:col-span-2">
               <label className="block text-xs text-gray-500 mb-1">Address</label>
               <Textarea
@@ -203,7 +195,6 @@ export const TeacherSettings = () => {
             </div>
           </div>
         </section>
-
         <section className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
           <h3 className="font-semibold text-gray-800 mb-4">Account</h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -227,7 +218,6 @@ export const TeacherSettings = () => {
             </div>
           </div>
         </section>
-
         <button
           onClick={handleSave}
           disabled={saving}

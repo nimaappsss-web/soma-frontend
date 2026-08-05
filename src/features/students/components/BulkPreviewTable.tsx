@@ -4,10 +4,12 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { SelectDropdown } from "@/components/ui/select-dropdown";
 import { isValidRow, type BulkStudentRow } from "../utils/bulkParse";
+import { normalizeName } from "@/utils/dedupe";
 
 interface BulkPreviewTableProps {
   rows: BulkStudentRow[];
   classes: { id: string; name: string }[];
+  existingNamesByClass?: Map<string, Set<string>>;
   onUpdateRow: (key: string, field: keyof BulkStudentRow, value: string) => void;
   onRemoveRow: (key: string) => void;
   onAddRow: () => void;
@@ -25,12 +27,43 @@ const getRowErrors = (row: BulkStudentRow): string[] => {
 export const BulkPreviewTable = ({
   rows,
   classes,
+  existingNamesByClass,
   onUpdateRow,
   onRemoveRow,
   onAddRow,
 }: BulkPreviewTableProps) => {
   const [page, setPage] = useState(1);
   const [showInvalidOnly, setShowInvalidOnly] = useState(false);
+
+  const warnings = useMemo(() => {
+    const map = new Map<string, string[]>();
+    const seen = new Map<string, string>();
+
+    for (const row of rows) {
+      if (!isValidRow(row) || !row.classId) continue;
+      const key = `${normalizeName(row.name)}::${row.classId}`;
+      const prior = seen.get(key);
+      if (prior) {
+        map.set(row._key, [...(map.get(row._key) ?? []), "Same name as another row in this list"]);
+        if (!map.has(prior)) map.set(prior, []);
+        map.set(prior, [...(map.get(prior) ?? []), "Same name as another row in this list"]);
+        continue;
+      }
+      seen.set(key, row._key);
+
+      if (existingNamesByClass?.get(row.classId)?.has(normalizeName(row.name))) {
+        map.set(row._key, [...(map.get(row._key) ?? []), "Name already exists in this class"]);
+      }
+    }
+
+    return map;
+  }, [rows, existingNamesByClass]);
+
+  const duplicateCount = useMemo(() => {
+    const counted = new Set<string>();
+    for (const list of warnings.values()) list.forEach((w) => counted.add(w));
+    return counted.size;
+  }, [warnings]);
 
   const { validCount, invalidCount, filtered } = useMemo(() => {
     let valid = 0;
@@ -66,6 +99,11 @@ export const BulkPreviewTable = ({
             valid
             {invalidCount > 0 && (
               <span className="text-red-400 ml-1">({invalidCount} with errors)</span>
+            )}
+            {duplicateCount > 0 && (
+              <span className="text-amber-600 ml-1">
+                ({duplicateCount} possible duplicate{duplicateCount > 1 ? "s" : ""})
+              </span>
             )}
           </span>
         </div>
@@ -117,6 +155,7 @@ export const BulkPreviewTable = ({
                   onUpdate={onUpdateRow}
                   onRemove={onRemoveRow}
                   errors={getRowErrors(row)}
+                  warnings={warnings.get(row._key)}
                 />
               ))
             )}
@@ -183,6 +222,7 @@ interface BulkPreviewRowProps {
   onUpdate: (key: string, field: keyof BulkStudentRow, value: string) => void;
   onRemove: (key: string) => void;
   errors: string[];
+  warnings?: string[];
 }
 
 const BulkPreviewRow = memo(({
@@ -192,18 +232,21 @@ const BulkPreviewRow = memo(({
   onUpdate,
   onRemove,
   errors,
+  warnings,
 }: BulkPreviewRowProps) => {
   const update = (field: keyof BulkStudentRow, value: string) =>
     onUpdate(row._key, field, value);
 
+  const allIssues = [...errors, ...(warnings ?? [])];
+
   return (
-    <tr className={`border-b border-gray-100 ${errors.length > 0 ? "bg-red-50/30" : ""}`}>
+    <tr className={`border-b border-gray-100 ${errors.length > 0 ? "bg-red-50/30" : warnings && warnings.length > 0 ? "bg-amber-50/30" : ""}`}>
       <td className="py-1.5 px-3">
         <span
-          className={`text-xs ${errors.length > 0 ? "text-red-500 font-medium cursor-help" : "text-gray-400"}`}
-          title={errors.length > 0 ? errors.join("; ") : undefined}
+          className={`text-xs ${allIssues.length > 0 ? "text-amber-500 font-medium cursor-help" : "text-gray-400"}`}
+          title={allIssues.length > 0 ? allIssues.join("; ") : undefined}
         >
-          {errors.length > 0 ? "⚠" : globalIndex + 1}
+          {errors.length > 0 ? "⚠" : warnings && warnings.length > 0 ? "❗" : globalIndex + 1}
         </span>
       </td>
       <td className="py-1.5 px-3">

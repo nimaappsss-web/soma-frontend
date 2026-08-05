@@ -12,9 +12,9 @@ import {
   seedActiveExamSummaries,
   type ActiveExamSummariesResponse,
 } from "../features/examinations/utils/activeSummaries";
+import { seedReportSettings } from "../features/report-card/utils/reportCardCache";
 import { seedTermResults } from "../features/examinations/utils/termResultsCache";
 import type { TermResultsResponse } from "../features/examinations/types";
-import { seedReportSettings } from "../features/report-card/utils/reportCardCache";
 import type { ReportSettings } from "../features/report-card/types";
 
 export interface SyncProgress {

@@ -1,9 +1,7 @@
 import { Avatar } from "../components/ui/Avatar";
 import { useAuth } from "../contexts/AuthContext";
-
 export const StaffDashboard = () => {
   const { user, logout } = useAuth();
-
   return (
     <div className="min-h-screen bg-gray-50">
       <header className="bg-white border-b border-gray-200 px-4 md:px-6 py-4 flex flex-wrap items-center justify-between gap-3">
@@ -23,7 +21,6 @@ export const StaffDashboard = () => {
           </button>
         </div>
       </header>
-
       <main className="max-w-5xl mx-auto px-4 md:px-6 py-6 md:py-8">
         <h2 className="text-2xl font-bold text-gray-800 mb-6">Staff Portal</h2>
         <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">

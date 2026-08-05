@@ -128,9 +128,9 @@ export const InviteTeacherModal = ({ open, onClose }: InviteTeacherModalProps) =
                 <Button type="button" variant="outline" onClick={handleClose} className="w-full">
                   Cancel
                 </Button>
-                <Button type="submit" disabled={inviteMutation.isPending} className="w-full">
+                <button type="submit" disabled={inviteMutation.isPending} className="w-full">
                   {inviteMutation.isPending ? "Sending..." : "Send Invite"}
-                </Button>
+                </button>
               </div>
             </form>
           )}
@@ -166,13 +166,13 @@ export const InviteTeacherModal = ({ open, onClose }: InviteTeacherModalProps) =
                     <Button type="button" variant="outline" onClick={handleClose} className="w-full">
                       Cancel
                     </Button>
-                    <Button
+                    <button
                       onClick={handleGenerate}
                       disabled={generateMutation.isPending}
                       className="w-full"
                     >
                       {generateMutation.isPending ? "Generating..." : "Generate Link"}
-                    </Button>
+                    </button>
                   </div>
                 </>
               )}

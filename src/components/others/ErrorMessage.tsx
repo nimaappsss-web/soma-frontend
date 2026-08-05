@@ -1,16 +1,13 @@
 import { cn } from "@/lib/utils";
 import { InfoCircle, CloseCircle } from "iconsax-react";
-
 interface ErrorMessageProps {
   children: React.ReactNode;
   onDismiss?: () => void;
   className?: string;
   action?: React.ReactNode;
 }
-
 export const ErrorMessage = ({ children, onDismiss, className, action }: ErrorMessageProps) => {
   if (!children) return null;
-
   return (
     <div
       className={cn(

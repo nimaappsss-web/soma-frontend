@@ -9,32 +9,25 @@ import { OfflineBanner } from "./OfflineBanner";
 import { StatCards } from "./StatCards";
 import { EmptyState } from "./EmptyState";
 import { DayState } from "./DayState";
-
 const pctOf = (c: { total: number; present: number }) =>
   c.total > 0 ? Math.round((c.present / c.total) * 100) : 0;
-
 export const AttendanceClasses = () => {
   const navigate = useNavigate();
   const [date, setDate] = useState<string>(localDateKey());
   const { data, savedAt, isLoading, isStale, isEmpty, error, refetch } =
     useSchoolAttendanceSummary(date);
-
   const { data: classesData } = useClasses();
-
   const from = shiftDateKey(date, -6);
   const { data: rangeData } = useSchoolAttendanceRange(from, date);
   const sparklineData = (rangeData?.days ?? []).map((d) => d.percentage);
-
   const marked = useMemo(
     () => (data?.byClass ?? []).filter((c) => c.total > 0 && c.present + c.absent > 0),
     [data],
   );
-
   const unmarked = useMemo(() => {
     const markedIds = new Set(marked.map((c) => c.classId));
     return (classesData?.classes ?? []).filter((c) => !markedIds.has(c.id));
   }, [classesData, marked]);
-
   return (
     <div className="p-4 md:p-6 w-full">
       <div className="flex items-center justify-between gap-3">
@@ -53,11 +46,9 @@ export const AttendanceClasses = () => {
         </div>
         <DateInput value={date} onChange={setDate} label="Date" dropdownAlign="right" className="w-full sm:w-auto" />
       </div>
-
       <div className="mt-4">
         <OfflineBanner isStale={isStale} savedAt={savedAt} dataDate={data?.date} requestedDate={date} />
       </div>
-
       {isEmpty ? (
         <div className="mt-4">
           <EmptyState loading={isLoading} error={error?.response?.data?.message ?? error?.message} onRetry={refetch} />
@@ -75,7 +66,6 @@ export const AttendanceClasses = () => {
               <div className="mt-4">
                 <StatCards data={data} isLoading={isLoading} sparklineData={sparklineData} />
               </div>
-
           <div className="mt-4 space-y-3">
             {[...marked]
               .sort((a, b) => pctOf(b) - pctOf(a))
@@ -98,14 +88,12 @@ export const AttendanceClasses = () => {
                       </Link>
                     </div>
                   </div>
-
                   <div className="h-2 bg-gray100 rounded-full overflow-hidden mt-3">
                     <div
                       className={`h-full rounded-full ${barColor}`}
                       style={{ width: `${Math.min(100, pct)}%` }}
                     />
                   </div>
-
                   <div className="flex items-center gap-4 mt-3 text-xs text-gray500">
                     <span className="flex items-center gap-1.5">
                       <span className="h-1.5 w-1.5 rounded-full bg-gray300" />
@@ -124,7 +112,6 @@ export const AttendanceClasses = () => {
               );
             })}
           </div>
-
           {unmarked.length > 0 && (
             <div className="mt-6">
               <div className="flex items-center gap-2 mb-3">

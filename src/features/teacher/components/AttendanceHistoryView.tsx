@@ -8,7 +8,7 @@ import { useAuth } from "../../../contexts/AuthContext";
 import { db } from "../../../db/db";
 import { fetchData } from "../../../utils/fetchData";
 import { localDateKey } from "../../../utils/date";
-import type { AttendanceQueryResponse, AttendanceRecord as ApiAttendanceRecord } from "../types";
+import type { AttendanceQueryResponse, AttendanceRecord as ApiAttendanceRecord, AttendanceReason } from "../types";
 import type { Student as ApiStudent } from "../../students/types";
 
 interface AttendanceHistoryViewProps {
@@ -26,41 +26,45 @@ export const AttendanceHistoryView = ({ classId, formClass }: AttendanceHistoryV
   const { user } = useAuth();
   const today = localDateKey();
   const [date, setDate] = useState(today);
-  const [blockedReason, setBlockedReason] = useState<string | null>(null);
+  const [blockedReason, setBlockedReason] = useState<AttendanceReason | null>(null);
 
-  useQuery({
+  const historyQuery = useQuery({
     queryKey: ["attendance", "history", classId, date],
     queryFn: async () => {
       const res = await fetchData<AttendanceQueryResponse>(
         `/attendance?classId=${classId}&date=${date}`,
         "GET",
       );
-      setBlockedReason(res.reason && res.reason.available === false ? (res.reason.message ?? null) : null);
-      if (res.records?.length) {
-        const hasPending = await db.attendance
-          .where("[userId+date+className]").equals([user!.id, date, formClass ?? ""])
-          .filter((r) => r.syncStatus === "pending")
-          .count();
-        if (hasPending === 0) {
-          await db.transaction("rw", db.attendance, async () => {
-            await db.attendance
-              .where("[userId+date+className]").equals([user!.id, date, formClass ?? ""])
-              .delete();
-            await db.attendance.bulkPut(
-              (res.records as ApiAttendanceRecord[]).map((r) => ({
-                id: r.id,
-                userId: user!.id,
-                studentId: r.studentId,
-                className: formClass ?? "",
-                schoolId: user?.schoolId ?? "",
-                status: r.status,
-                date,
-                syncStatus: "synced" as const,
-                createdAt: Date.now(),
-              })),
-            );
-          });
+      setBlockedReason(res.reason && res.reason.available === false ? res.reason : null);
+      try {
+        if (res.records?.length) {
+          const hasPending = await db.attendance
+            .where("[userId+date+className]").equals([user!.id, date, formClass ?? ""])
+            .filter((r) => r.syncStatus === "pending")
+            .count();
+          if (hasPending === 0) {
+            await db.transaction("rw", db.attendance, async () => {
+              await db.attendance
+                .where("[userId+date+className]").equals([user!.id, date, formClass ?? ""])
+                .delete();
+              await db.attendance.bulkPut(
+                (res.records as ApiAttendanceRecord[]).map((r) => ({
+                  id: r.id,
+                  userId: user!.id,
+                  studentId: r.studentId,
+                  className: formClass ?? "",
+                  schoolId: user?.schoolId ?? "",
+                  status: r.status,
+                  date,
+                  syncStatus: "synced" as const,
+                  createdAt: Date.now(),
+                })),
+              );
+            });
+          }
         }
+      } catch (err) {
+        console.warn("Attendance history cache write failed:", err);
       }
       return res;
     },
@@ -68,7 +72,7 @@ export const AttendanceHistoryView = ({ classId, formClass }: AttendanceHistoryV
     staleTime: 5 * 60 * 1000,
   });
 
-  const records = useLiveQuery(
+  const liveRecords = useLiveQuery(
     () => {
       if (!user?.id) return Promise.resolve([] as import("../../../db/db").AttendanceRecord[]);
       return db.attendance.where("[userId+date+className]").equals([user.id, date, formClass ?? ""]).toArray();
@@ -84,13 +88,22 @@ export const AttendanceHistoryView = ({ classId, formClass }: AttendanceHistoryV
     [date, formClass, user?.id],
   );
 
+  const apiRecords = useMemo(() => {
+    const recs = historyQuery.data?.records ?? [];
+    if (liveRecords === undefined && recs.length) return recs;
+    if (liveRecords === undefined) return recs;
+    return undefined;
+  }, [historyQuery.data, liveRecords]);
+
+  const records = liveRecords !== undefined ? liveRecords : (apiRecords as ApiAttendanceRecord[] | undefined);
+
   const studentIds = [...new Set((records ?? []).map((r) => r.studentId))];
   const cachedStudents = useLiveQuery(
     () => {
-      if (!user?.id || studentIds.length === 0) return Promise.resolve([] as (import("../../../db/db").Student | undefined)[]);
-      return db.students.where("[userId+classId]").equals([user.id, classId]).toArray();
+      if (!user?.id) return Promise.resolve([] as import("../../../db/db").Student[]);
+      return db.students.where("userId").equals(user.id).toArray();
     },
-    [studentIds.join(","), user?.id, classId],
+    [user?.id],
   );
 
   const studentMap = new Map<string, { name: string; admissionNo: string | null }>();
@@ -107,11 +120,15 @@ export const AttendanceHistoryView = ({ classId, formClass }: AttendanceHistoryV
         `/students?classId=${classId}&status=ACTIVE&limit=200`,
         "GET",
       );
-      if (res.students?.length) {
-        const userId = user!.id;
-        await db.students.bulkPut(
-          (res.students as ApiStudent[]).map((s) => ({ ...s, userId, createdAt: Date.now() }) as any),
-        );
+      try {
+        if (res.students?.length) {
+          const userId = user!.id;
+          await db.students.bulkPut(
+            (res.students as ApiStudent[]).map((s) => ({ ...s, userId, createdAt: Date.now() }) as any),
+          );
+        }
+      } catch (err) {
+        console.warn("Student roster cache write failed:", err);
       }
       return res;
     },
@@ -131,15 +148,7 @@ export const AttendanceHistoryView = ({ classId, formClass }: AttendanceHistoryV
     });
   }, [records, cachedStudents]);
 
-  if (records === undefined || cachedStudents === undefined || dayNote === undefined) {
-    return (
-      <div className="flex items-center justify-center py-8">
-        <p className="text-sm text-gray-400">Loading...</p>
-      </div>
-    );
-  }
-
-  if (missingIds.length > 0) {
+  if (records === undefined && historyQuery.isLoading) {
     return (
       <div className="flex items-center justify-center py-8">
         <p className="text-sm text-gray-400">Loading...</p>
@@ -153,11 +162,11 @@ export const AttendanceHistoryView = ({ classId, formClass }: AttendanceHistoryV
         <Input
           type="date"
           value={date}
-          onChange={(e) => setDate(e.target.value)}
+          onChange={(e) => { setDate(e.target.value); setBlockedReason(null); }}
           className="h-10"
         />
         <span className="text-xs text-gray-400">
-          {records.length} record(s)
+          {(records ?? []).length} record(s)
         </span>
       </div>
 
@@ -168,11 +177,21 @@ export const AttendanceHistoryView = ({ classId, formClass }: AttendanceHistoryV
         </div>
       )}
 
-      {!records.length ? (
+      {!records?.length ? (
         blockedReason ? (
           <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-8 text-center">
-            <p className="text-sm text-gray-500 mb-1">Not a school day</p>
-            <p className="text-xs text-gray-400">{blockedReason}</p>
+            <p className="text-sm text-gray-500 mb-1">
+              {blockedReason.type === "HOLIDAY"
+                ? "Holiday"
+                : blockedReason.type === "WEEKEND"
+                  ? "Weekend"
+                  : blockedReason.type === "OUT_OF_TERM"
+                    ? "Outside the academic term"
+                    : blockedReason.type === "FUTURE"
+                      ? "Future date"
+                      : "Not a school day"}
+            </p>
+            <p className="text-xs text-gray-400">{blockedReason.message ?? "No school on this day."}</p>
           </div>
         ) : (
           <p className="text-sm text-gray-400 text-center py-8">
@@ -189,10 +208,10 @@ export const AttendanceHistoryView = ({ classId, formClass }: AttendanceHistoryV
                 className="px-5 py-3 flex items-center justify-between"
               >
                 <div className="flex items-center gap-3">
-                  <Avatar name={s?.name ?? r.studentId} size={28} />
+                  <Avatar name={s?.name ?? "Unknown student"} size={28} />
                   <div>
                     <span className="text-gray-800 font-medium text-sm">
-                      {s?.name ?? r.studentId}
+                      {s?.name ?? "Unknown student"}
                     </span>
                     {s?.admissionNo && (
                       <span className="ml-2 text-xs text-gray-400">{s.admissionNo}</span>

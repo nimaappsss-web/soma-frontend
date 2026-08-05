@@ -1,7 +1,6 @@
 import { useState, useRef, useEffect, isValidElement, cloneElement } from "react";
 import { Add } from "iconsax-react";
 import { cn } from "@/lib/utils";
-
 interface QuickAddItem {
   label: string;
   icon: React.ReactNode;
@@ -9,15 +8,12 @@ interface QuickAddItem {
   bgColor: string;
   iconColor: string;
 }
-
 interface QuickAddButtonProps {
   items: QuickAddItem[];
 }
-
 export const QuickAddButton = ({ items }: QuickAddButtonProps) => {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
-
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
       if (ref.current && !ref.current.contains(e.target as Node)) {
@@ -27,14 +23,12 @@ export const QuickAddButton = ({ items }: QuickAddButtonProps) => {
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
-
   const renderIcon = (icon: React.ReactNode, color: string) => {
     if (isValidElement(icon)) {
       return cloneElement(icon as React.ReactElement<{ color?: string }>, { color });
     }
     return icon;
   };
-
   return (
     <div ref={ref} className="relative">
       <button
@@ -49,7 +43,6 @@ export const QuickAddButton = ({ items }: QuickAddButtonProps) => {
           className={cn("transition-transform duration-300", open && "rotate-[180deg]")}
         />
       </button>
-
       <div
         className={cn(
           "absolute right-0 top-full mt-2 w-[200px] rounded-xl border border-gray100 bg-white shadow-lg py-2 z-50 transition-all duration-200 origin-top-right",
