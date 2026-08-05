@@ -69,14 +69,14 @@ export const TeacherStudents = () => {
           No students in this class.
         </p>
       ) : view === "grid" ? (
-        <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
+        <div className="grid grid-cols-2 gap-5 sm:grid-cols-3 lg:grid-cols-4">
           {students.map((s) => {
             const celeb = getCelebration(s.dateOfBirth, "birthday");
             return (
             <Link
               key={s.id}
               to={`/teach/students/${s.id}`}
-              className="group relative overflow-hidden rounded-tl-3xl rounded-tr-[28px] rounded-br-3xl rounded-bl-[28px] border border-gray100 bg-white p-5 pt-7 transition-all hover:-translate-y-0.5 hover:border-gray300 hover:shadow-[0_16px_30px_-14px_rgba(0,0,0,0.18)]"
+              className="group relative overflow-hidden rounded-tl-3xl rounded-tr-[28px] rounded-br-3xl rounded-bl-[28px] border border-gray100 bg-white p-6 pt-9 transition-all hover:-translate-y-0.5 hover:border-gray300 hover:shadow-[0_16px_30px_-14px_rgba(0,0,0,0.18)]"
             >
               {celeb && <CelebrationDecor type={celeb.type} years={celeb.years} />}
               <div className="absolute left-6 top-6 h-1 w-10 rounded-full bg-black/15" />
@@ -88,24 +88,24 @@ export const TeacherStudents = () => {
                 alt=""
                 className="pointer-events-none absolute -bottom-2 -right-3 w-28 opacity-[0.12] transition-opacity group-hover:opacity-20"
               />
-              <div className="relative flex flex-col items-center pt-1">
+              <div className="relative flex flex-col items-center pt-2">
                 <div className="relative">
-                  <div className="absolute -inset-2 rounded-full bg-gradient-to-br from-black/10 via-transparent to-black/5 blur-md" />
+                  <div className="absolute -inset-2.5 rounded-full bg-gradient-to-br from-black/10 via-transparent to-black/5 blur-md" />
                   <Avatar
                     name={s.name}
-                    size={64}
+                    size={72}
                     className="relative border-2 border-white shadow-[0_8px_20px_-6px_rgba(0,0,0,0.2)] ring-1 ring-black/5"
                   />
                 </div>
-                <p className="mt-4 w-full truncate text-center text-sm font-semibold text-gray900">
+                <p className="mt-5 w-full truncate text-center text-[15px] font-semibold text-gray900">
                   {s.name}
                 </p>
                 {s.admissionNo && (
-                  <p className="mt-0.5 w-full truncate text-center text-xs text-gray500">
+                  <p className="mt-1 w-full truncate text-center text-xs text-gray500">
                     {s.admissionNo}
                   </p>
                 )}
-                <span className="mt-2.5 rounded-full bg-offWhite px-2.5 py-1 text-[10px] font-medium uppercase tracking-wide text-gray500">
+                <span className="mt-3 rounded-full bg-offWhite px-3 py-1.5 text-[11px] font-medium uppercase tracking-wide text-gray500">
                   {s.gender ?? "—"}
                 </span>
               </div>

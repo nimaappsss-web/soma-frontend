@@ -224,7 +224,7 @@ if (item.method === "POST" || item.method === "PUT") {
     if (response.id !== item.recordId) {
       await table.delete(item.recordId);
     }
-  }
+  }chec
 }
 ```
 

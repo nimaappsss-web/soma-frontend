@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { Link, useParams, useLocation } from "react-router";
 import {
   ArrowLeft2,
@@ -5,6 +6,7 @@ import {
   Call,
   Calendar,
   Clock,
+  Edit,
   Location,
   Medal,
   Message,
@@ -14,10 +16,14 @@ import {
 } from "iconsax-react";
 
 import { Avatar } from "../components/ui/Avatar";
-import { useStudentDetail, useStudentAcademics, useStudentMonthlyAttendance, useStudentTimeline } from "../features/students/api";
+import { Button } from "../components/ui/button";
+import { useStudentDetail, useStudentAcademics, useStudentMonthlyAttendance, useStudentTimeline, useUpdateStudent } from "../features/students/api";
+import { StudentFormDialog } from "../features/students/components/StudentFormDialog";
 import type { TimelineEvent } from "../features/students/types";
+import type { UpdateStudentPayload } from "../features/students/types";
 import { useClasses } from "../features/principal/api";
 import { useActiveTerm } from "../features/calendar/api";
+import { localDateKey } from "../utils/date";
 import { cn } from "../lib/utils";
 
 const formatDate = (iso?: string | null) =>
@@ -89,6 +95,8 @@ export const StudentDetails = () => {
     year: now.getFullYear(),
   });
   const { timeline: timelineData } = useStudentTimeline({ studentId: id ?? "" });
+  const updateMutation = useUpdateStudent();
+  const [editing, setEditing] = useState(false);
 
   if (isLoading) {
     return (
@@ -119,11 +127,9 @@ export const StudentDetails = () => {
   const termLabel = activeTerm ? `${activeTerm.term} Term` : "Active term";
   const days = attendance?.days ?? [];
 
-  const today = new Date();
-  today.setHours(23, 59, 59, 999);
+  const todayKey = localDateKey();
   const daysWithFuture = days.map((d) => {
-    const dDate = new Date(d.date);
-    if (dDate > today && d.status === "absent") {
+    if (d.status === "absent" && d.date >= todayKey) {
       return { ...d, status: "future" as const };
     }
     return d;
@@ -147,6 +153,17 @@ export const StudentDetails = () => {
           </p>
         </div>
         <div className="flex flex-col items-end gap-1.5 shrink-0">
+          {!isTeacher && (
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => setEditing(true)}
+              className="mb-1"
+            >
+              <Edit size={14} color="#0D0D0D" />
+              Edit
+            </Button>
+          )}
           <span className="rounded-full bg-gray100 px-2.5 py-0.5 text-[11px] font-medium text-gray700 capitalize">
             Student
           </span>
@@ -314,6 +331,20 @@ export const StudentDetails = () => {
           </ol>
         )}
       </div>
+
+      <StudentFormDialog
+        open={editing}
+        onOpenChange={setEditing}
+        student={student}
+        classes={(classesData?.classes ?? []).map((c) => ({ value: c.id, label: c.name }))}
+        isSaving={updateMutation.isPending}
+        onSubmit={(payload) =>
+          updateMutation.mutate(
+            { id: student.id, data: payload as UpdateStudentPayload },
+            { onSuccess: () => setEditing(false) },
+          )
+        }
+      />
     </div>
   );
 };

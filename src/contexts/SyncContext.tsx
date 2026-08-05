@@ -59,7 +59,6 @@ export const SyncProvider = ({ children }: { children: ReactNode }) => {
   const flush = useCallback(async () => {
     if (!user || flushingRef.current) return;
     flushingRef.current = true;
-    setIsSyncing(true);
 
     try {
       const pending = await db.syncQueue
@@ -69,6 +68,12 @@ export const SyncProvider = ({ children }: { children: ReactNode }) => {
         .toArray();
 
       const total = pending.length;
+      if (total === 0) {
+        setLastSyncedAt(new Date().toISOString());
+        return;
+      }
+
+      setIsSyncing(true);
       setSyncTotal(total);
       setSyncProgress(0);
 

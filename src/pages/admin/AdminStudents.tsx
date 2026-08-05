@@ -8,19 +8,17 @@ import { Input } from "../../components/ui/input";
 import { SelectDropdown } from "../../components/ui/select-dropdown";
 import { Button } from "../../components/ui/button";
 import { useAuth } from "../../contexts/AuthContext";
-import { useAllStudents, useCreateStudent, useStudentDetail, useDeleteStudent, useBulkDeleteStudents } from "../../features/students/api";
+import { useAllStudents, useCreateStudent, useUpdateStudent, useDeleteStudent, useBulkDeleteStudents } from "../../features/students/api";
 import { BulkAddStudents } from "../../features/students/components/BulkAddStudents";
+import { StudentFormDialog } from "../../features/students/components/StudentFormDialog";
 import { useClasses } from "../../features/principal/api";
-import { createStudentSchema, editStudentSchema, type CreateStudentFormData, type EditStudentFormData } from "../../features/students/utils/validationSchema";
+import { createStudentSchema, type CreateStudentFormData } from "../../features/students/utils/validationSchema";
 import { findDuplicateStudents, type StudentDuplicate } from "../../features/students/utils/dedupe";
-import type { Student, CreateStudentPayload } from "../../features/students/types";
+import type { Student, CreateStudentPayload, UpdateStudentPayload } from "../../features/students/types";
 import { DuplicateConfirmDialog } from "../../components/others/DuplicateConfirmDialog";
-import { db } from "../../db/db";
-import type { Student as StudentCache } from "../../db/db";
-import { addToQueue } from "../../sync/syncQueue";
-import { transformError } from "../../utils/transformError";
+import { CelebrationDecor } from "../../components/ui/CelebrationDecor";
+import { getCelebration } from "../../utils/celebrations";
 import { cn } from "../../lib/utils";
-import toast from "react-hot-toast";
 type ViewMode = "list" | "grid";
 const VIEW_STORAGE_KEY = "soma:admin:students-view";
 const readView = (): ViewMode =>
@@ -38,12 +36,11 @@ export const AdminStudents = () => {
   const createMutation = useCreateStudent();
   const deleteMutation = useDeleteStudent();
   const bulkDeleteMutation = useBulkDeleteStudents();
+  const updateMutation = useUpdateStudent();
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [showForm, setShowForm] = useState(false);
   const [showBulk, setShowBulk] = useState(false);
   const [editingStudent, setEditingStudent] = useState<Student | null>(null);
-  const [detailId, setDetailId] = useState<string | null>(null);
-  const { data: studentDetail } = useStudentDetail(detailId ?? "");
   const [dupState, setDupState] = useState<{ payload: CreateStudentPayload; matches: StudentDuplicate[] } | null>(null);
   const filtered = useMemo(
     () => classFilter
@@ -133,81 +130,17 @@ export const AdminStudents = () => {
     reset();
     setShowForm(false);
   };
-  const {
-    register: editRegister,
-    handleSubmit: handleEditSubmit,
-    reset: resetEdit,
-    control: editControl,
-    formState: { errors: editErrors, isDirty: editDirty },
-  } = useForm<EditStudentFormData>({
-    resolver: zodResolver(editStudentSchema),
-  });
   const startEditing = (s: Student) => {
     setEditingStudent(s);
-    setDetailId(s.id);
     setShowForm(false);
     setShowBulk(false);
-    resetEdit({
-      name: s.name,
-      gender: s.gender ?? "",
-      dateOfBirth: s.dateOfBirth?.split("T")[0] ?? "",
-      address: s.address ?? "",
-      parentName: s.parentName ?? "",
-      parentPhone: s.parentPhone ?? "",
-      parentEmail: s.parentEmail ?? "",
-      status: s.status,
-      classId: s.classId,
-    });
   };
-  useEffect(() => {
-    if (!studentDetail || !editingStudent || editDirty) return;
-    resetEdit({
-      name: studentDetail.name,
-      gender: studentDetail.gender ?? "",
-      dateOfBirth: studentDetail.dateOfBirth?.split("T")[0] ?? "",
-      address: studentDetail.address ?? "",
-      parentName: studentDetail.parentName ?? "",
-      parentPhone: studentDetail.parentPhone ?? "",
-      parentEmail: studentDetail.parentEmail ?? "",
-      status: studentDetail.status,
-      classId: studentDetail.classId,
-    });
-  }, [studentDetail]);
-  const [savingEdit, setSavingEdit] = useState(false);
-  const onEdit = async (formData: EditStudentFormData) => {
+  const handleUpdateSubmit = (payload: Record<string, unknown>) => {
     if (!editingStudent) return;
-    setSavingEdit(true);
-    try {
-      const { id } = editingStudent;
-      const payload: Record<string, unknown> = {};
-      for (const [key, value] of Object.entries(formData)) {
-        if (value !== "" && value !== undefined) payload[key] = value;
-      }
-      const existing = await db.students.where({ id, userId: user!.id }).first();
-      const merged = { ...existing, ...payload, userId: user!.id, createdAt: Date.now() } as StudentCache;
-      await db.students.put(merged, id);
-      await addToQueue({
-        userId: user!.id,
-        table: "students",
-        recordId: id,
-        endpoint: `/students/${id}`,
-        method: "PATCH",
-        payload,
-      });
-      toast.success("Student updated!");
-      setEditingStudent(null);
-      setDetailId(null);
-      resetEdit();
-    } catch (err) {
-      toast.error(transformError(err));
-    } finally {
-      setSavingEdit(false);
-    }
-  };
-  const cancelEdit = () => {
-    setEditingStudent(null);
-    setDetailId(null);
-    resetEdit();
+    updateMutation.mutate(
+      { id: editingStudent.id, data: payload as UpdateStudentPayload },
+      { onSuccess: () => setEditingStudent(null) },
+    );
   };
   const field = (label: string, key: keyof CreateStudentFormData, placeholder: string, type = "text") => (
     <div>
@@ -242,7 +175,7 @@ export const AdminStudents = () => {
   );
   return (
     <div className="p-4 md:p-6 w-full">
-      <div className="flex flex-wrap items-center justify-between gap-3 mb-6">
+      <div className="flex flex-wrap items-end justify-between gap-3 mb-6">
         <h1 className="text-2xl font-semibold text-gray-900">Students</h1>
         <div className="flex flex-wrap gap-3">
           <div className="flex items-center gap-1 rounded-lg border border-gray100 bg-white p-1">
@@ -274,14 +207,12 @@ export const AdminStudents = () => {
           />
           <Button
             variant="outline"
-            size="sm"
             onClick={() => { setShowBulk(true); setShowForm(false); }}
           >
             Bulk Add
           </Button>
           <Button
             variant="default"
-            size="sm"
             onClick={() => { if (!classFilter) return; setShowForm(true); setShowBulk(false); }}
             disabled={!classFilter}
           >
@@ -324,108 +255,8 @@ export const AdminStudents = () => {
           </div>
         </div>
       )}
-      {editingStudent && (
-        <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100 mb-6">
-          <h3 className="font-semibold text-gray-800 mb-4">Edit Student — {editingStudent.name}</h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label className="block text-xs text-gray-500 mb-1">Full Name *</label>
-              <Input type="text" {...editRegister("name")} />
-              {editErrors.name && <p className="text-xs text-destructive mt-1">{editErrors.name.message}</p>}
-            </div>
-            <div>
-              <label className="block text-xs text-gray-500 mb-1">Class *</label>
-              <Controller
-                control={editControl}
-                name="classId"
-                render={({ field }) => (
-                  <SelectDropdown
-                    placeholder="Select class"
-                    options={(classesData?.classes ?? []).map((c) => ({ value: c.id, label: c.name }))}
-                    value={field.value ?? ""}
-                    onChange={field.onChange}
-                  />
-                )}
-              />
-              {editErrors.classId && <p className="text-xs text-destructive mt-1">{editErrors.classId.message}</p>}
-            </div>
-            <div>
-              <label className="block text-xs text-gray-500 mb-1">Gender</label>
-              <Controller
-                control={editControl}
-                name="gender"
-                render={({ field }) => (
-                  <SelectDropdown
-                    placeholder="Select"
-                    options={[
-                      { value: "M", label: "Male" },
-                      { value: "F", label: "Female" },
-                    ]}
-                    value={field.value ?? ""}
-                    onChange={field.onChange}
-                  />
-                )}
-              />
-            </div>
-            <div>
-              <label className="block text-xs text-gray-500 mb-1">Date of Birth</label>
-              <Input type="date" {...editRegister("dateOfBirth")} />
-            </div>
-            <div>
-              <label className="block text-xs text-gray-500 mb-1">Status</label>
-              <Controller
-                control={editControl}
-                name="status"
-                render={({ field }) => (
-                  <SelectDropdown
-                    options={[
-                      { value: "ACTIVE", label: "Active" },
-                      { value: "TRANSFERRED", label: "Transferred" },
-                      { value: "WITHDRAWN", label: "Withdrawn" },
-                      { value: "GRADUATED", label: "Graduated" },
-                    ]}
-                    value={field.value ?? "ACTIVE"}
-                    onChange={field.onChange}
-                  />
-                )}
-              />
-            </div>
-            <div>
-              <label className="block text-xs text-gray-500 mb-1">Address</label>
-              <Input type="text" {...editRegister("address")} placeholder="15 Awolowo Road, Ikoyi" />
-            </div>
-            <div className="md:col-span-2 border-t border-gray-100 pt-4">
-              <p className="text-xs font-medium text-gray-500 mb-3 uppercase tracking-wide">Parent/Guardian</p>
-            </div>
-            <div>
-              <label className="block text-xs text-gray-500 mb-1">Parent Name</label>
-              <Input type="text" {...editRegister("parentName")} />
-            </div>
-            <div>
-              <label className="block text-xs text-gray-500 mb-1">Parent Phone</label>
-              <Input type="tel" {...editRegister("parentPhone")} />
-            </div>
-            <div>
-              <label className="block text-xs text-gray-500 mb-1">Parent Email</label>
-              <Input type="email" {...editRegister("parentEmail")} />
-              {editErrors.parentEmail && <p className="text-xs text-destructive mt-1">{editErrors.parentEmail.message}</p>}
-            </div>
-          </div>
-          <div className="flex gap-3 mt-6">
-            <button
-              onClick={handleEditSubmit(onEdit)}
-              disabled={savingEdit}
-              className="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium disabled:opacity-50 hover:bg-blue-700"
-            >
-              {savingEdit ? "Saving..." : "Update"}
-            </button>
-            <button onClick={cancelEdit} className="px-4 py-2 text-gray-500 text-sm hover:text-gray-700">
-              Cancel
-            </button>
-          </div>
-        </div>
-      )}
-        {selectedIds.size > 0 && (
+
+      {selectedIds.size > 0 && (
           <div className="mb-4 flex items-center gap-3 bg-white rounded-xl border border-gray-100 px-6 py-3">
             <span className="text-sm text-gray-500">{selectedIds.size} selected</span>
             <button
@@ -451,14 +282,29 @@ export const AdminStudents = () => {
             {classFilter ? "No students in this class." : "No students yet."}
           </p>
         ) : view === "grid" ? (
-          <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
+          <>
+            <div className="mb-3 flex items-center gap-2 text-xs font-medium text-gray-400">
+              <input
+                type="checkbox"
+                checked={allSelected}
+                onChange={toggleSelectAll}
+                className="h-4 w-4 cursor-pointer rounded-md border-gray-300 accent-black"
+              />
+              <span>{allSelected ? "Deselect all" : "Select all"}</span>
+              {selectedIds.size > 0 && (
+                <span className="text-gray-500">({selectedIds.size} selected)</span>
+              )}
+            </div>
+            <div className="grid grid-cols-2 gap-5 sm:grid-cols-3 lg:grid-cols-4">
             {filtered.map((s) => {
               const className = classesData?.classes.find((c) => c.id === s.classId)?.name;
+              const celeb = getCelebration(s.dateOfBirth, "birthday");
               return (
                 <div
                   key={s.id}
-                  className="group relative overflow-hidden rounded-tl-3xl rounded-tr-[28px] rounded-br-3xl rounded-bl-[28px] border border-gray100 bg-white p-5 pt-7 transition-all hover:-translate-y-0.5 hover:border-gray300 hover:shadow-[0_16px_30px_-14px_rgba(0,0,0,0.18)]"
+                  className="group relative overflow-hidden rounded-tl-3xl rounded-tr-[28px] rounded-br-3xl rounded-bl-[28px] border border-gray100 bg-white p-6 pt-9 transition-all hover:-translate-y-0.5 hover:border-gray300 hover:shadow-[0_16px_30px_-14px_rgba(0,0,0,0.18)]"
                 >
+                  {celeb && <CelebrationDecor type={celeb.type} years={celeb.years} />}
                   <div className="absolute left-6 top-6 h-1 w-10 rounded-full bg-black/15" />
                   <div className="absolute right-6 top-6 h-6 w-6 rounded-full border-2 border-dashed border-black/20" />
                   <div className="pointer-events-none absolute -right-10 -top-12 h-28 w-28 rounded-full bg-[radial-gradient(circle,rgba(0,0,0,0.06)_0%,transparent_70%)]" />
@@ -472,34 +318,34 @@ export const AdminStudents = () => {
                     type="checkbox"
                     checked={selectedIds.has(s.id)}
                     onChange={() => toggleSelect(s.id)}
-                    className="absolute bottom-4 right-4 z-20 h-4 w-4 cursor-pointer rounded-md border-gray-300 accent-black"
+                    className="absolute bottom-5 right-5 z-20 h-4 w-4 cursor-pointer rounded-md border-gray-300 accent-black"
                   />
-                  <div className="relative flex flex-col items-center pt-1">
+                  <div className="relative flex flex-col items-center pt-2">
                     <Link
                       to={`/admin/students/${s.id}`}
                       className="relative flex flex-col items-center"
                       aria-label={`View ${s.name}`}
                     >
-                      <div className="absolute -inset-2 rounded-full bg-gradient-to-br from-black/10 via-transparent to-black/5 blur-md" />
+                      <div className="absolute -inset-2.5 rounded-full bg-gradient-to-br from-black/10 via-transparent to-black/5 blur-md" />
                       <Avatar
                         name={s.name}
-                        size={64}
+                        size={72}
                         className="relative border-2 border-white shadow-[0_8px_20px_-6px_rgba(0,0,0,0.2)] ring-1 ring-black/5"
                       />
-                      <p className="mt-4 w-full truncate text-center text-sm font-semibold text-gray900">
+                      <p className="mt-5 w-full truncate text-center text-[15px] font-semibold text-gray900">
                         {s.name}
                       </p>
                     </Link>
                     {s.admissionNo && (
-                      <p className="mt-0.5 w-full truncate text-center text-xs text-gray500">{s.admissionNo}</p>
+                      <p className="mt-1 w-full truncate text-center text-xs text-gray500">{s.admissionNo}</p>
                     )}
-                    <div className="mt-2.5 flex items-center gap-1.5">
+                    <div className="mt-3 flex flex-wrap items-center justify-center gap-1.5">
                       {className && (
-                        <span className="rounded-full bg-offWhite px-2.5 py-1 text-[10px] font-medium text-gray500">
+                        <span className="rounded-full bg-offWhite px-3 py-1.5 text-[11px] font-medium text-gray500">
                           {className}
                         </span>
                       )}
-                      <span className="rounded-full bg-offWhite px-2.5 py-1 text-[10px] font-medium uppercase tracking-wide text-gray500">
+                      <span className="rounded-full bg-offWhite px-3 py-1.5 text-[11px] font-medium uppercase tracking-wide text-gray500">
                         {s.gender ?? "—"}
                       </span>
                     </div>
@@ -507,7 +353,8 @@ export const AdminStudents = () => {
                 </div>
               );
             })}
-          </div>
+            </div>
+          </>
         ) : (
           <div className="bg-white rounded-xl shadow-sm border border-gray100">
             <div className="divide-y divide-gray-100">
@@ -603,6 +450,14 @@ export const AdminStudents = () => {
           </div>
         )}
       </DuplicateConfirmDialog>
+      <StudentFormDialog
+        open={!!editingStudent}
+        onOpenChange={(open) => { if (!open) setEditingStudent(null); }}
+        student={editingStudent}
+        classes={(classesData?.classes ?? []).map((c) => ({ value: c.id, label: c.name }))}
+        isSaving={updateMutation.isPending}
+        onSubmit={handleUpdateSubmit}
+      />
     </div>
   );
 };

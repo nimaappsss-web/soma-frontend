@@ -45,8 +45,21 @@ export const useStudents = (classId: string, status: string = "ACTIVE", _userId?
             .delete();
         }
         if (res.students?.length) {
+          const existing = await db.students
+            .where("[userId+classId]")
+            .equals([userId, classId])
+            .toArray();
+          const existingById = new Map(existing.map((e) => [e.id, e]));
           await db.students.bulkPut(
-            res.students.map((s: Record<string, unknown>) => ({ ...s, userId, createdAt: Date.now() }) as any),
+            res.students.map(
+              (s: Record<string, unknown>) =>
+                ({
+                  ...existingById.get(s.id as string),
+                  ...s,
+                  userId,
+                  createdAt: Date.now(),
+                }) as any,
+            ),
           );
         }
       });

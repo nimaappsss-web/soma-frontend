@@ -41,13 +41,23 @@ export const useAllStudents = (userId: string) => {
       }
 
       await db.transaction("rw", db.students, async () => {
+        const existing = await db.students.where("userId").equals(userId).toArray();
+        const existingById = new Map(existing.map((e) => [e.id, e]));
         if (!hasPendingNonDelete) {
           await db.students.where("userId").equals(userId).delete();
         }
         const studentsToWrite = (res.students ?? []).filter((s: Student) => !pendingDeleteIds.has(s.id));
         if (studentsToWrite.length) {
           await db.students.bulkPut(
-            studentsToWrite.map((s: Record<string, unknown>) => ({ ...s, userId, createdAt: Date.now() }) as any),
+            studentsToWrite.map(
+              (s: Record<string, unknown>) =>
+                ({
+                  ...existingById.get(s.id as string),
+                  ...s,
+                  userId,
+                  createdAt: Date.now(),
+                }) as any,
+            ),
           );
         }
       });
