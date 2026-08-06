@@ -241,7 +241,7 @@ const BulkPreviewRow = memo(({
   const allIssues = [...errors, ...(warnings ?? [])];
 
   return (
-    <tr className={`border-b border-gray-100 ${errors.length > 0 ? "bg-red-50/30" : warnings && warnings.length > 0 ? "bg-amber-50/30" : ""}`}>
+    <tr className={`border-b border-gray-100 ${errors.length > 0 ? "bg-red-50/30" : ""}`}>
       <td className="py-2 px-3">
         <Checkbox />
       </td>

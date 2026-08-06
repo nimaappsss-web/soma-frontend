@@ -27,7 +27,7 @@ export const studentSortOptions: SelectOption[] = [
 
 interface StudentPageHeaderProps {
   title?: string;
-  subtitle?: string;
+  subtitle?: ReactNode;
   classOptions: SelectOption[];
   classValue: string;
   onClassChange: (value: string) => void;
@@ -61,16 +61,17 @@ export const StudentPageHeader = ({
   const [filterOpen, setFilterOpen] = useState(false);
 
   return (
-    <div className="flex flex-col sm:flex-row md:flex-col xl:flex-row items-start xl:items-center justify-between gap-3 mb-5">
-      {/* Group 1: Title + Filters */}
-      <div className="flex flex-wrap items-center gap-2.5">
-        <div className="shrink-0">
-          <h1 className="text-[18px] sm:text-2xl font-semibold text-gray-900">
-            {title}
-          </h1>
-          {subtitle && <p className="text-sm text-gray-500 mt-1">{subtitle}</p>}
-        </div>
+    <div className="flex flex-row md:flex-col xl:flex-row items-center justify-between gap-3 mb-5">
+      {/* Group 1: Title + Subtitle paired */}
+      <div className="flex items-center gap-2.5 shrink-0">
+        <h1 className="text-[18px] sm:text-2xl font-semibold text-gray-900">
+          {title}
+        </h1>
+        {subtitle}
+      </div>
 
+      {/* Group 2: Filters + View toggle + Actions paired */}
+      <div className="flex flex-1 items-center justify-end gap-2.5 flex-wrap xl:flex-nowrap">
         {/* Desktop inline filters */}
         <div className="hidden md:flex items-center gap-2.5 flex-wrap xl:flex-nowrap">
           <SelectDropdown
@@ -121,32 +122,22 @@ export const StudentPageHeader = ({
         <button
           type="button"
           onClick={() => setFilterOpen(true)}
-          className="flex md:hidden h-10 items-center gap-2 rounded-full border border-input bg-background px-4 text-sm text-gray800"
+          className="flex md:hidden h-[44px] w-[44px] items-center justify-center rounded-[15px] border border-input bg-background shrink-0"
         >
           <Filter size={16} color="#0D0D0D" variant="Linear" />
-          Filters
         </button>
-      </div>
 
-      {/* Group 2: View toggle + Actions */}
-      <div className="flex items-center gap-2.5 justify-end sm:justify-auto w-full sm:w-auto">
-        <div className="flex h-[44px] items-center gap-1 rounded-[15px] border border-input bg-background p-1">
+        <div className="flex h-[44px] items-center gap-1 rounded-[15px] border border-input bg-background p-1 shrink-0">
           <button
             type="button"
             onClick={() => onViewChange("list")}
             aria-label="List view"
             className={cn(
               "flex h-[30px] w-[30px] items-center justify-center rounded-[10px] transition-colors",
-              view === "list"
-                ? "bg-gray900 text-white"
-                : "text-gray500 hover:text-gray900",
+              view === "list" ? "bg-gray900 text-white" : "text-gray500 hover:text-gray900",
             )}
           >
-            <RowVertical
-              size={16}
-              color={view === "list" ? "#FFFFFF" : "#0D0D0D"}
-              variant="Bold"
-            />
+            <RowVertical size={16} color={view === "list" ? "#FFFFFF" : "#0D0D0D"} variant="Bold" />
           </button>
           <button
             type="button"
@@ -154,16 +145,10 @@ export const StudentPageHeader = ({
             aria-label="Grid view"
             className={cn(
               "flex h-[30px] w-[30px] items-center justify-center rounded-[10px] transition-colors",
-              view === "grid"
-                ? "bg-gray900 text-white"
-                : "text-gray500 hover:text-gray900",
+              view === "grid" ? "bg-gray900 text-white" : "text-gray500 hover:text-gray900",
             )}
           >
-            <Grid2
-              size={16}
-              color={view === "grid" ? "#FFFFFF" : "#0D0D0D"}
-              variant="Bold"
-            />
+            <Grid2 size={16} color={view === "grid" ? "#FFFFFF" : "#0D0D0D"} variant="Bold" />
           </button>
         </div>
 

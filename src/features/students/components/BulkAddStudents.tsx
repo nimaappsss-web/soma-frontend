@@ -8,10 +8,15 @@ import {
   type BulkStudentRow,
 } from "../utils/bulkParse";
 import { normalizeName } from "@/utils/dedupe";
+import {
+  collectDuplicateRows,
+  type ExistingStudentRef,
+} from "../utils/dedupe";
 import { db } from "@/db/db";
 import { BulkPreviewTable } from "./BulkPreviewTable";
 import { SelectDropdown } from "@/components/ui/select-dropdown";
 import { parseCSV, parseExcel } from "../utils/bulkParse";
+import { DuplicateConfirmDialog } from "@/components/others/DuplicateConfirmDialog";
 
 interface ClassOption {
   id: string;
@@ -29,6 +34,8 @@ export const BulkAddStudents = ({ classes, onClose }: BulkAddStudentsProps) => {
   const [step, setStep] = useState<Step>("upload");
   const [rows, setRows] = useState<BulkStudentRow[]>([]);
   const [existingNamesByClass, setExistingNamesByClass] = useState<Map<string, Set<string>>>(new Map());
+  const [existingByClass, setExistingByClass] = useState<Map<string, ExistingStudentRef[]>>(new Map());
+  const [dupKeys, setDupKeys] = useState<Set<string>>(new Set());
   const [defaultClassId, setDefaultClassId] = useState("");
   const [replaceExisting, setReplaceExisting] = useState(false);
   const [parseError, setParseError] = useState("");
@@ -41,13 +48,25 @@ export const BulkAddStudents = ({ classes, onClose }: BulkAddStudentsProps) => {
     (async () => {
       const students = await db.students.toArray();
       const map = new Map<string, Set<string>>();
+      const refs = new Map<string, ExistingStudentRef[]>();
       for (const s of students) {
         if (!s.classId) continue;
         const set = map.get(s.classId) ?? new Set<string>();
         set.add(normalizeName(s.name));
         map.set(s.classId, set);
+        const list = refs.get(s.classId) ?? [];
+        list.push({
+          id: s.id,
+          name: s.name,
+          gender: s.gender,
+          parentName: s.parentName ?? null,
+        });
+        refs.set(s.classId, list);
       }
-      if (active) setExistingNamesByClass(map);
+      if (active) {
+        setExistingNamesByClass(map);
+        setExistingByClass(refs);
+      }
     })();
     return () => { active = false; };
   }, []);
@@ -156,9 +175,31 @@ export const BulkAddStudents = ({ classes, onClose }: BulkAddStudentsProps) => {
     const valid = rows.filter(isValidRow);
     if (valid.length === 0) return;
 
+    const duplicates = collectDuplicateRows(valid, existingByClass);
+    if (duplicates.size > 0) {
+      setDupKeys(duplicates);
+      return;
+    }
+
+    doImport(valid);
+  };
+
+  const doImport = (valid: BulkStudentRow[]) => {
     bulkCreate.mutate(toBulkPayload(valid), {
       onSuccess: () => onClose(),
     });
+  };
+
+  const skipDuplicates = () => {
+    const clean = rows.filter((r) => !dupKeys.has(r._key));
+    setDupKeys(new Set());
+    if (clean.filter(isValidRow).length > 0) doImport(clean.filter(isValidRow));
+  };
+
+  const importAll = () => {
+    const valid = rows.filter(isValidRow);
+    setDupKeys(new Set());
+    doImport(valid);
   };
 
   const validCount = rows.filter(isValidRow).length;
@@ -309,6 +350,31 @@ export const BulkAddStudents = ({ classes, onClose }: BulkAddStudentsProps) => {
           </div>
         )}
       </div>
+
+      <DuplicateConfirmDialog
+        open={dupKeys.size > 0}
+        onOpenChange={(open) => { if (!open) setDupKeys(new Set()); }}
+        title="Possible duplicate students"
+        description={`${dupKeys.size} row${dupKeys.size === 1 ? "" : "s"} ${dupKeys.size === 1 ? "matches" : "match"} a student already in this class or another row in the list.`}
+        highlight="Skipping duplicates imports the remaining students. Importing anyway may create duplicate records."
+        confirmLabel={`Import ${dupKeys.size} anyway`}
+        secondaryLabel={`Skip ${dupKeys.size}`}
+        onConfirm={importAll}
+        onSecondary={skipDuplicates}
+      >
+        <div className="max-h-48 overflow-y-auto space-y-1.5">
+          {rows
+            .filter((r) => dupKeys.has(r._key))
+            .map((r) => (
+              <div key={r._key} className="flex items-center justify-between gap-2 rounded-lg border border-amber-100 bg-amber-50/50 px-3 py-1.5 text-sm">
+                <span className="font-medium text-gray900 truncate">{r.name || "Unnamed"}</span>
+                <span className="text-xs text-gray500 shrink-0">
+                  {classes.find((c) => c.id === r.classId)?.name ?? "Unknown class"}
+                </span>
+              </div>
+            ))}
+        </div>
+      </DuplicateConfirmDialog>
     </div>
   );
 };

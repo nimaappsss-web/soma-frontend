@@ -258,8 +258,6 @@ export const AdminStudents = () => {
                   className="group relative overflow-hidden rounded-tl-3xl rounded-tr-[28px] rounded-br-3xl rounded-bl-[28px] border border-gray100 bg-white p-6 pt-9 transition-all hover:-translate-y-0.5 hover:border-gray300 hover:shadow-[0_16px_30px_-14px_rgba(0,0,0,0.18)]"
                 >
                   {celeb && <CelebrationDecor type={celeb.type} years={celeb.years} />}
-                  <div className="absolute left-6 top-6 h-1 w-10 rounded-full bg-black/15" />
-                  <div className="absolute right-6 top-6 h-6 w-6 rounded-full border-2 border-dashed border-black/20" />
                   <div className="pointer-events-none absolute -right-10 -top-12 h-28 w-28 rounded-full bg-[radial-gradient(circle,rgba(0,0,0,0.06)_0%,transparent_70%)]" />
                   <div className="pointer-events-none absolute -bottom-12 -left-10 h-28 w-28 rounded-full bg-[radial-gradient(circle,rgba(0,0,0,0.05)_0%,transparent_70%)]" />
                   <img
@@ -271,7 +269,7 @@ export const AdminStudents = () => {
                     checked={selectedIds.has(s.id)}
                     onCheckedChange={() => toggleSelect(s.id)}
                     aria-label={`Select ${s.name}`}
-                    className="absolute bottom-5 right-5 z-20"
+                    className="absolute top-5 right-5 z-20"
                   />
                   <div className="relative flex flex-col items-center pt-2">
                     <Link

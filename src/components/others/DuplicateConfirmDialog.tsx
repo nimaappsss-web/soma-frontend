@@ -12,6 +12,8 @@ interface DuplicateConfirmDialogProps {
   confirmLabel?: string;
   cancelLabel?: string;
   onConfirm: () => void;
+  secondaryLabel?: string;
+  onSecondary?: () => void;
   children?: ReactNode;
   className?: string;
 }
@@ -25,6 +27,8 @@ export const DuplicateConfirmDialog = ({
   confirmLabel = "Add anyway",
   cancelLabel = "Cancel",
   onConfirm,
+  secondaryLabel,
+  onSecondary,
   children,
   className,
 }: DuplicateConfirmDialogProps) => (
@@ -38,12 +42,25 @@ export const DuplicateConfirmDialog = ({
         {children}
         {highlight && <p className="text-xs text-gray500">{highlight}</p>}
         <div className="flex gap-3 pt-2">
-          <Button onClick={onConfirm} className="flex-1">
-            {confirmLabel}
-          </Button>
-          <Button variant="outline" onClick={() => onOpenChange(false)} className="flex-1">
-            {cancelLabel}
-          </Button>
+          {secondaryLabel && onSecondary ? (
+            <>
+              <Button onClick={onSecondary} variant="outline" className="flex-1">
+                {secondaryLabel}
+              </Button>
+              <Button onClick={onConfirm} className="flex-1">
+                {confirmLabel}
+              </Button>
+            </>
+          ) : (
+            <>
+              <Button onClick={onConfirm} className="flex-1">
+                {confirmLabel}
+              </Button>
+              <Button variant="outline" onClick={() => onOpenChange(false)} className="flex-1">
+                {cancelLabel}
+              </Button>
+            </>
+          )}
         </div>
       </div>
     </DialogContent>

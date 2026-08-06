@@ -55,7 +55,7 @@ export const useAllStudents = (userId: string) => {
                   ...existingById.get(s.id as string),
                   ...s,
                   userId,
-                  createdAt: Date.now(),
+                  createdAt: existingById.get(s.id as string)?.createdAt ?? Date.now(),
                 }) as any,
             ),
           );

@@ -43,7 +43,7 @@ export const ProfileDropdown = () => {
         </div>
       </button>
       {open && (
-        <div className="absolute right-0 top-full mt-2 w-52 rounded-xl border border-gray100 bg-white p-1.5 shadow-lg">
+        <div className="absolute right-0 top-full mt-2 z-[60] w-52 rounded-xl border border-gray100 bg-white p-1.5 shadow-lg">
           <button
             type="button"
             onClick={handleLogout}
