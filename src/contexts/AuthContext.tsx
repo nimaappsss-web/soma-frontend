@@ -152,15 +152,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const logout = useCallback(async () => {
     const refreshToken = refreshTokenStorage.get();
-    try {
-      await authApi.logout(refreshToken);
-    } catch {
-      /* ignore */
-    }
     storage.clear();
     setUser(null);
     window.dispatchEvent(new Event(AUTH_EVENT));
     navigate("/login");
+    if (refreshToken) {
+      authApi.logout(refreshToken).catch(() => {});
+    }
   }, [navigate]);
 
   return (

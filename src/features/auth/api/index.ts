@@ -23,3 +23,4 @@ export { useLogout } from "./useLogout";
 export { useUpdateProfile } from "./useUpdateProfile";
 export { useVerifyLoginOTP } from "./useVerifyLoginOTP";
 export { useVerifyPhoneOTP } from "./useVerifyPhoneOTP";
+export { useSetPassword } from "./useSetPassword";

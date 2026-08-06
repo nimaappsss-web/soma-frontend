@@ -5,6 +5,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "../../contexts/AuthContext";
 import { Avatar } from "../../components/ui/Avatar";
 import { Input } from "../../components/ui/input";
+import { DateInput } from "../../components/ui/date-input";
 import { SelectDropdown } from "../../components/ui/select-dropdown";
 import { Textarea } from "../../components/ui/textarea";
 import { fetchData } from "../../utils/fetchData";
@@ -175,11 +176,7 @@ export const AdminProfile = () => {
               </div>
               <div>
                 <label className="block text-xs text-gray-500 mb-1">Date of Birth</label>
-                <Input
-                  type="date"
-                  value={dateOfBirth}
-                  onChange={(e) => setDateOfBirth(e.target.value)}
-                />
+                <DateInput value={dateOfBirth} onChange={setDateOfBirth} />
               </div>
               <div className="md:col-span-2">
                 <label className="block text-xs text-gray-500 mb-1">Address</label>

@@ -3,6 +3,7 @@ import { useState, useMemo } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "../../../components/ui/dialog";
 import { Button } from "../../../components/ui/button";
 import { Input } from "../../../components/ui/input";
+import { DateInput } from "../../../components/ui/date-input";
 import { Label } from "../../../components/ui/label";
 import { SelectDropdown } from "../../../components/ui/select-dropdown";
 import { useClasses } from "../../principal/api/useClasses";
@@ -217,10 +218,9 @@ export const CreateAssessmentDialog = ({ open, onClose, defaultClassId }: Create
 
           <div className="space-y-2">
             <Label>Date</Label>
-            <Input
-              type="date"
+            <DateInput
               value={date}
-              onChange={(e) => handleDateChange(e.target.value)}
+              onChange={handleDateChange}
             />
             {dateRejection && (
               <p className="text-xs text-red500">{dateReasonMessage(dateRejection)}</p>

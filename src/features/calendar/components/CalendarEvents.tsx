@@ -1,6 +1,7 @@
 import { useState } from "react";
 
 import { Input } from "../../../components/ui/input";
+import { DateInput } from "../../../components/ui/date-input";
 import { Button } from "../../../components/ui/button";
 import { SelectDropdown } from "../../../components/ui/select-dropdown";
 import { Textarea } from "../../../components/ui/textarea";
@@ -146,10 +147,9 @@ export const CalendarEvents = () => {
             onChange={(e) => setForm({ ...form, title: e.target.value })}
             placeholder="Event title"
           />
-          <Input
+          <DateInput
             value={form.date}
-            onChange={(e) => setForm({ ...form, date: e.target.value })}
-            type="date"
+            onChange={(v) => setForm({ ...form, date: v })}
           />
           <div className="flex gap-3">
             <SelectDropdown

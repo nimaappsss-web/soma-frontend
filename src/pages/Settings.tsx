@@ -6,6 +6,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { Avatar } from "../components/ui/Avatar";
 import { Input } from "../components/ui/input";
+import { DateInput } from "../components/ui/date-input";
 import { SelectDropdown } from "../components/ui/select-dropdown";
 import { Textarea } from "../components/ui/textarea";
 import { useAuth } from "../contexts/AuthContext";
@@ -265,9 +266,12 @@ export const Settings = () => {
                       </div>
                       <div>
                         <label className="block text-xs text-gray-500 mb-1">Date of Birth</label>
-                        <Input
-                          type="date"
-                          {...accountForm.register("dateOfBirth")}
+                        <Controller
+                          control={accountForm.control}
+                          name="dateOfBirth"
+                          render={({ field }) => (
+                            <DateInput value={field.value ?? ""} onChange={field.onChange} />
+                          )}
                         />
                       </div>
                       <div className="md:col-span-2">

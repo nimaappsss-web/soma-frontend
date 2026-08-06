@@ -17,13 +17,13 @@ const OtpInputField = ({ value, onChange, numDigits = 6, disabled, className }: 
       onChange={onChange}
       numInputs={numDigits}
       inputType="text"
-      containerStyle={cn("flex gap-1.5 sm:gap-2 justify-center", className)}
+      containerStyle={cn("flex gap-2.5 sm:gap-3 justify-center", className)}
       renderInput={(inputProps, _index) => (
         <input
           {...inputProps}
           disabled={disabled}
           className={cn(
-            "w-10 sm:w-11 h-11 text-center text-lg font-medium rounded-full border border-input bg-background",
+            "flex-1 aspect-square max-w-12 text-center text-lg font-medium rounded-full border border-gray-300 bg-background",
             "focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2",
             "disabled:cursor-not-allowed disabled:opacity-50",
           )}

@@ -74,6 +74,11 @@ export const Login = () => {
     }
   };
 
+  const handleGoToOTP = () => {
+    if (isOTPStep || !identifier) return;
+    handleSendOTP({ email: identifier });
+  };
+
   const handleEmailSubmit = (data: { email: string }) => {
     setIdentifier(data.email);
     checkIdentifier.mutate(
@@ -98,13 +103,28 @@ export const Login = () => {
 
   const handleSendOTP = (data: { email: string }) => {
     setIdentifier(data.email);
-    setIdentifierInfo({});
-    sendOTPMutation.mutate(data.email, {
-      onSuccess: () => {
-        setOtpSent(true);
-        setStep("otp");
+    checkIdentifier.mutate(
+      { identifier: data.email },
+      {
+        onSuccess: (res) => {
+          setIdentifierInfo(res);
+          sendOTPMutation.mutate(data.email, {
+            onSuccess: () => {
+              setOtpSent(true);
+              setStep("otp");
+            },
+          });
+        },
+        onError: () => {
+          sendOTPMutation.mutate(data.email, {
+            onSuccess: () => {
+              setOtpSent(true);
+              setStep("otp");
+            },
+          });
+        },
       },
-    });
+    );
   };
 
   const handlePasswordSubmit = (data: { email: string; password: string }) => {
@@ -131,7 +151,12 @@ export const Login = () => {
       {
         onSuccess: (res) => {
           login(res);
-          navigate(getPostAuthPath(res.user));
+          navigate(
+            res.user.needsRegistration
+              ? "/set-password"
+              : getPostAuthPath(res.user),
+            { replace: true },
+          );
         },
       },
     );
@@ -193,28 +218,33 @@ export const Login = () => {
         )}
 
         <div>
-          {!isEmailStep && identifierInfo?.name ? (
-            <>
-              <h1 className="text-2xl font-medium text-gray-900">
-                Welcome back, {identifierInfo.name.split(" ")[0]}
-              </h1>
-              <p className="text-sm text-black/50 mt-2">
-                Enter your password or use OTP to log in.
-              </p>
-            </>
-          ) : !isEmailStep ? (
-            <>
-              <h1 className="text-2xl font-medium text-gray-900">Welcome back</h1>
-              <p className="text-sm text-black/50 mt-2">
-                Enter your password or use OTP to log in.
-              </p>
-            </>
-          ) : (
+          {isEmailStep ? (
             <>
               <h1 className="text-2xl font-medium text-gray-900">Log in</h1>
               <p className="text-sm text-black/50 mt-2">
                 Enter email to access your school's account.
               </p>
+            </>
+          ) : (
+            <>
+              <h1 className="text-[32px] font-medium text-gray-900">
+                Welcome back{identifierInfo?.name ? `, ${identifierInfo.name.split(" ")[0]}` : ""}
+              </h1>
+              {!isOTPStep && (
+                <p className="text-sm mt-2" style={{ color: "#9098AC" }}>
+                  Enter your password or{" "}
+                  <button
+                    type="button"
+                    onClick={handleGoToOTP}
+                    disabled={sendOTPMutation.isPending}
+                    className="underline underline-offset-2 disabled:opacity-50"
+                    style={{ color: "#9098AC" }}
+                  >
+                    use OTP
+                  </button>{" "}
+                  to log in.
+                </p>
+              )}
             </>
           )}
         </div>
@@ -241,6 +271,7 @@ export const Login = () => {
             onSubmit={handleVerifyOTP}
             onSendAgain={handleSendAgain}
             isPending={verifyOTPMutation.isPending}
+            isResending={sendOTPMutation.isPending}
             identifier={identifier}
           />
         )}
@@ -269,44 +300,47 @@ export const Login = () => {
         )}
 
         {isOTPStep && (
-          <div className="text-center mt-4 h-fit">
-            <Button
+          <div className="mt-3 text-right">
+            <button
               type="button"
-              variant="link"
               onClick={handleToggleMode}
-              className="text-sm"
+              className="text-sm underline"
             >
               {modeToggleLabel}
-            </Button>
+            </button>
           </div>
         )}
 
-        <div className="relative mt-4 mb-4.25">
-          <div className="absolute inset-0 flex items-center">
-            <div className="w-[90%] mx-auto border-t border-white" />
-          </div>
-          <div className="relative flex justify-center text-xs">
-            <span className="bg-offWhite px-3 text-gray-400">Or</span>
-          </div>
-        </div>
+        {isEmailStep && (
+          <>
+            <div className="relative mt-4 mb-4.25">
+              <div className="absolute inset-0 flex items-center">
+                <div className="w-[90%] mx-auto border-t border-white" />
+              </div>
+              <div className="relative flex justify-center text-xs">
+                <span className="bg-offWhite px-3 text-gray-400">Or</span>
+              </div>
+            </div>
 
-        <div className="mt-4 mb-4.25 relative">
-          <Button
-            type="button"
-            variant="outline"
-            className="w-full h-11 rounded-full bg-pureWhite flex items-center justify-center gap-2.5 border-gray-200"
-            onClick={triggerGoogleLogin}
-          >
-            <img src="/icons/googleIcon.svg" alt="Google" className="w-4 h-4" />
-            Continue with Google
-          </Button>
-          <div ref={googleBtnRef} className="absolute opacity-0 pointer-events-none overflow-hidden w-0 h-0">
-            <GoogleLogin
-              onSuccess={handleGoogleSuccess}
-              onError={() => toast.error("Google sign-in failed")}
-            />
-          </div>
-        </div>
+            <div className="mt-4 mb-4.25 relative">
+              <Button
+                type="button"
+                variant="outline"
+                className="w-full h-11 rounded-full bg-pureWhite flex items-center justify-center gap-2.5 border-gray-200"
+                onClick={triggerGoogleLogin}
+              >
+                <img src="/icons/googleIcon.svg" alt="Google" className="w-4 h-4" />
+                Continue with Google
+              </Button>
+              <div ref={googleBtnRef} className="absolute opacity-0 pointer-events-none overflow-hidden w-0 h-0">
+                <GoogleLogin
+                  onSuccess={handleGoogleSuccess}
+                  onError={() => toast.error("Google sign-in failed")}
+                />
+              </div>
+            </div>
+          </>
+        )}
 
         <p className="text-center text-sm text-gray-500 mt-5.25">
           Don't have an account?{" "}

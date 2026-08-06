@@ -5,6 +5,7 @@ function normalizeRole(role: string): string {
 }
 
 export function getPostAuthPath(user: User): string {
+  if (user.needsRegistration) return "/set-password";
   if (user.emailVerified === false) return "/onboarding";
   if (user.hasSchool === false) return "/admin";
 

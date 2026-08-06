@@ -2,6 +2,7 @@ import { useState, useRef, useEffect, useLayoutEffect, useMemo } from "react";
 import { createPortal } from "react-dom";
 import { cn } from "../../lib/utils";
 import { SearchNormal, CloseCircle } from "iconsax-react";
+import { Checkbox } from "./checkbox";
 import type { CSSProperties } from "react";
 import type { FieldError } from "react-hook-form";
 
@@ -177,11 +178,10 @@ export const MultiSelect = ({
               key={option.value}
               className="flex cursor-pointer items-center gap-2 px-4 py-2.5 text-sm transition-colors hover:bg-accent"
             >
-              <input
-                type="checkbox"
+              <Checkbox
                 checked={selected.includes(option.value)}
-                onChange={() => toggle(option.value)}
-                className="h-4 w-4 rounded border-gray-300 accent-black"
+                onCheckedChange={() => toggle(option.value)}
+                className="shrink-0"
               />
               {option.label}
             </label>

@@ -4,6 +4,7 @@ import { useAuth } from "../../contexts/AuthContext";
 import { useTeacherDetail } from "../../features/teacher/api";
 import { Avatar } from "../../components/ui/Avatar";
 import { Input } from "../../components/ui/input";
+import { DateInput } from "../../components/ui/date-input";
 import { SelectDropdown } from "../../components/ui/select-dropdown";
 import { Textarea } from "../../components/ui/textarea";
 import { db } from "../../db/db";
@@ -171,19 +172,11 @@ export const TeacherSettings = () => {
               </div>
               <div>
                 <label className="block text-xs text-gray-500 mb-1">Date of Birth</label>
-                <Input
-                  type="date"
-                  value={dateOfBirth}
-                  onChange={(e) => setDateOfBirth(e.target.value)}
-                />
+                <DateInput value={dateOfBirth} onChange={setDateOfBirth} />
               </div>
               <div>
                 <label className="block text-xs text-gray-500 mb-1">Employment Date</label>
-                <Input
-                  type="date"
-                  value={employmentDate}
-                  onChange={(e) => setEmploymentDate(e.target.value)}
-                />
+                <DateInput value={employmentDate} onChange={setEmploymentDate} />
               </div>
             <div className="md:col-span-2">
               <label className="block text-xs text-gray-500 mb-1">Address</label>

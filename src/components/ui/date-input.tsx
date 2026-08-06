@@ -1,4 +1,6 @@
-import { useState } from "react";
+import { useState, useRef, useEffect, useLayoutEffect } from "react";
+import type { CSSProperties } from "react";
+import { createPortal } from "react-dom";
 import type { FieldError, UseFormRegisterReturn } from "react-hook-form";
 import { Calendar as CalendarIcon } from "iconsax-react";
 
@@ -15,6 +17,16 @@ interface DateInputProps {
   className?: string;
   disabled?: boolean;
   dropdownAlign?: "left" | "right";
+  min?: string;
+}
+
+interface MenuPos {
+  btnTop: number;
+  btnBottom: number;
+  left: number;
+  width: number;
+  height: number;
+  flipped: boolean;
 }
 
 const formatDate = (date: string) => {
@@ -22,6 +34,8 @@ const formatDate = (date: string) => {
   const d = new Date(date);
   return d.toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" });
 };
+
+const CALENDAR_WIDTH = 280;
 
 const DateInput = ({
   value = "",
@@ -32,14 +46,101 @@ const DateInput = ({
   className,
   disabled,
   dropdownAlign = "left",
+  min,
 }: DateInputProps) => {
   const [open, setOpen] = useState(false);
+  const [pos, setPos] = useState<MenuPos | null>(null);
+  const wrapperRef = useRef<HTMLDivElement>(null);
+  const btnRef = useRef<HTMLButtonElement>(null);
+  const menuRef = useRef<HTMLDivElement>(null);
+
+  const inDialog = typeof document !== "undefined" && !!document.querySelector('[role="dialog"]');
+
+  useEffect(() => {
+    if (!open) return;
+    const update = () => {
+      const el = btnRef.current;
+      if (!el) return;
+      const r = el.getBoundingClientRect();
+      setPos((p) => ({
+        btnTop: r.top,
+        btnBottom: r.bottom,
+        left: r.left,
+        width: r.width,
+        height: p?.height ?? 0,
+        flipped: p?.flipped ?? false,
+      }));
+    };
+    update();
+    window.addEventListener("scroll", update, true);
+    window.addEventListener("resize", update);
+    return () => {
+      window.removeEventListener("scroll", update, true);
+      window.removeEventListener("resize", update);
+    };
+  }, [open]);
+
+  useLayoutEffect(() => {
+    if (!open || !pos || pos.flipped) return;
+    const el = menuRef.current;
+    if (!el) return;
+    const h = el.offsetHeight;
+    if (pos.btnBottom + 8 + h > window.innerHeight - 8) {
+      setPos((p) => (p ? { ...p, height: h, flipped: true } : p));
+    }
+  }, [open, pos]);
+
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      const target = e.target as Node;
+      if (wrapperRef.current && wrapperRef.current.contains(target)) return;
+      if (menuRef.current && menuRef.current.contains(target)) return;
+      setOpen(false);
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  const handleToggle = () => {
+    if (disabled) return;
+    if (!open) {
+      const el = btnRef.current;
+      if (el) {
+        const r = el.getBoundingClientRect();
+        setPos({ btnTop: r.top, btnBottom: r.bottom, left: r.left, width: r.width, height: 0, flipped: false });
+      }
+    }
+    setOpen(!open);
+  };
+
+  const handleSelect = (date: string) => {
+    onChange?.(date);
+    setOpen(false);
+  };
+
+  const menuStyle: CSSProperties | undefined = pos
+    ? {
+        top: pos.flipped ? Math.max(4, pos.btnTop - pos.height - 8) : pos.btnBottom + 8,
+        left: dropdownAlign === "right" ? pos.left + pos.width - CALENDAR_WIDTH : pos.left,
+        width: CALENDAR_WIDTH,
+      }
+    : undefined;
+
+  const calendar = (
+    <Calendar
+      value={value}
+      min={min}
+      onChange={handleSelect}
+      onClose={() => setOpen(false)}
+    />
+  );
 
   return (
-    <div className="relative">
+    <div ref={wrapperRef} className={cn("relative", className && "w-full")}>
       <button
+        ref={btnRef}
         type="button"
-        onClick={() => !disabled && setOpen(!open)}
+        onClick={handleToggle}
         disabled={disabled}
         className={cn(
           "flex h-[45px] items-center rounded-[20px] border border-input bg-background px-4 text-sm cursor-pointer",
@@ -54,25 +155,27 @@ const DateInput = ({
         <span className={cn("flex-1 truncate text-left", !value && "text-placeholder")}>
           {value ? formatDate(value) : placeholder}
         </span>
-        <CalendarIcon variant="Bold" size={16} className="text-gray400 shrink-0 ml-2" />
+        <CalendarIcon variant="Bold" size={16} color="#B3B3B3" className="shrink-0 ml-2" />
       </button>
 
-      <div
-        className={cn(
-          "absolute z-50 top-full mt-2 transition-all duration-200",
-          dropdownAlign === "right" ? "right-0 origin-top-right" : "left-0 origin-top-left",
-          open ? "opacity-100 scale-100" : "opacity-0 scale-95 pointer-events-none",
-        )}
-      >
-        <Calendar
-          value={value}
-          onChange={(date) => {
-            onChange?.(date);
-            setOpen(false);
-          }}
-          onClose={() => setOpen(false)}
-        />
-      </div>
+      {open &&
+        (inDialog ? (
+          <div className={cn("absolute z-50 top-full mt-2", dropdownAlign === "right" ? "right-0" : "left-0")}>
+            {calendar}
+          </div>
+        ) : (
+          pos &&
+          createPortal(
+            <div
+              ref={menuRef}
+              style={menuStyle}
+              className="fixed z-[100]"
+            >
+              {calendar}
+            </div>,
+            document.body,
+          )
+        ))}
     </div>
   );
 };

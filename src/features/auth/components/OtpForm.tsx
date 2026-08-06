@@ -2,6 +2,7 @@ import { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Input } from "../../../components/ui/input";
+import { Button } from "../../../components/ui/button";
 import { OtpInputField } from "../../../components/ui/otp-input";
 import {
   loginVerifyOTPSchema,
@@ -11,9 +12,10 @@ interface OtpFormProps {
   onSubmit: (data: LoginVerifyOTPFormData) => void;
   onSendAgain: () => void;
   isPending: boolean;
+  isResending?: boolean;
   identifier: string;
 }
-export const OtpForm = ({ onSubmit, onSendAgain, isPending, identifier }: OtpFormProps) => {
+export const OtpForm = ({ onSubmit, onSendAgain, isPending, isResending, identifier }: OtpFormProps) => {
   const form = useForm<LoginVerifyOTPFormData>({
     resolver: zodResolver(loginVerifyOTPSchema),
     defaultValues: { otp: "" },
@@ -26,7 +28,7 @@ export const OtpForm = ({ onSubmit, onSendAgain, isPending, identifier }: OtpFor
   }, [otpValue]);
   return (
     <form onSubmit={form.handleSubmit(onSubmit)}>
-      <p className="text-sm text-gray-500 mt-4">
+      <p className="text-sm mt-4" style={{ color: "#9098AC" }}>
         Enter the 6-digit verification code sent to your email.
       </p>
       <div className="mt-5.25">
@@ -54,18 +56,19 @@ export const OtpForm = ({ onSubmit, onSendAgain, isPending, identifier }: OtpFor
         <button
           type="button"
           onClick={onSendAgain}
-          className="text-sm font-medium underline"
+          disabled={isResending}
+          className="text-sm font-medium underline disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          Send again
+          {isResending ? "Sending..." : "Send again"}
         </button>
       </div>
-      <button
+      <Button
         type="submit"
         disabled={isPending}
         className="w-full mt-5.25"
       >
-        {isPending ? "Verifying..." : "Verify"}
-      </button>
+        {isPending ? "Verifying..." : "Log in"}
+      </Button>
     </form>
   );
 };

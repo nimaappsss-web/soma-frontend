@@ -11,7 +11,7 @@ import {
   SearchNormal,
 } from "iconsax-react";
 import { useAuth } from "../contexts/AuthContext";
-import { Avatar } from "../components/ui/Avatar";
+import { ProfileDropdown } from "../components/ui/ProfileDropdown";
 import { useSidebarCollapse } from "../hooks/useSidebarCollapse";
 import { MobileHeader } from "../components/mobile";
 import { SearchModal } from "../components/others/SearchModal";
@@ -192,11 +192,7 @@ export const ParentLayout = () => {
               <NotificationBing variant="Linear" size={22} color="currentColor" />
             </button>
             <div className="flex items-center gap-2.5 ml-1">
-              <Avatar name={user?.name ?? "?"} size={40} className="bg-gray900 text-white" />
-              <div>
-                <p className="text-sm font-semibold text-gray900 leading-tight">{user?.name}</p>
-                <p className="text-[11px] text-gray400 capitalize leading-tight">{user?.role}</p>
-              </div>
+              <ProfileDropdown />
             </div>
           </div>
         </header>

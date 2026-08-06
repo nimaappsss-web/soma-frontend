@@ -3,7 +3,7 @@ import { useLiveQuery } from "dexie-react-hooks";
 import { useQuery } from "@tanstack/react-query";
 
 import { Avatar } from "../../../components/ui/Avatar";
-import { Input } from "../../../components/ui/input";
+import { DateInput } from "../../../components/ui/date-input";
 import { useAuth } from "../../../contexts/AuthContext";
 import { db } from "../../../db/db";
 import { fetchData } from "../../../utils/fetchData";
@@ -159,10 +159,9 @@ export const AttendanceHistoryView = ({ classId, formClass }: AttendanceHistoryV
   return (
     <div>
       <div className="flex items-center gap-3 mb-4">
-        <Input
-          type="date"
+        <DateInput
           value={date}
-          onChange={(e) => { setDate(e.target.value); setBlockedReason(null); }}
+          onChange={(v) => { setDate(v); setBlockedReason(null); }}
           className="h-10"
         />
         <span className="text-xs text-gray-400">

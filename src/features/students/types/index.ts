@@ -17,6 +17,7 @@ export interface Student {
   dateOfBirth?: string | null;
   address?: string | null;
   imageUrl?: string | null;
+  parentTitle?: string | null;
   parentName?: string | null;
   parentPhone?: string | null;
   parentEmail?: string | null;
@@ -31,6 +32,7 @@ export interface CreateStudentPayload {
   dateOfBirth?: string;
   address?: string;
   imageUrl?: string;
+  parentTitle?: string;
   parentName?: string;
   parentPhone?: string;
   parentEmail?: string;
@@ -44,6 +46,7 @@ export interface UpdateStudentPayload {
   dateOfBirth?: string;
   address?: string;
   imageUrl?: string;
+  parentTitle?: string;
   parentName?: string;
   parentPhone?: string;
   parentEmail?: string;

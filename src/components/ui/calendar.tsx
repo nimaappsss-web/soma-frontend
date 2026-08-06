@@ -6,6 +6,7 @@ interface CalendarProps {
   value?: string;
   onChange?: (date: string) => void;
   onClose?: () => void;
+  min?: string;
 }
 
 const DAYS = ["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"];
@@ -17,7 +18,7 @@ const MONTHS = [
 const getDaysInMonth = (year: number, month: number) => new Date(year, month + 1, 0).getDate();
 const getFirstDayOfMonth = (year: number, month: number) => new Date(year, month, 1).getDay();
 
-export const Calendar = ({ value, onChange, onClose }: CalendarProps) => {
+export const Calendar = ({ value, onChange, onClose, min }: CalendarProps) => {
   const today = new Date();
   const selected = value ? new Date(value) : null;
 
@@ -66,6 +67,7 @@ export const Calendar = ({ value, onChange, onClose }: CalendarProps) => {
   const selectDate = (day: number) => {
     const date = new Date(viewYear, viewMonth, day);
     const iso = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
+    if (min && iso < min) return;
     onChange?.(iso);
     onClose?.();
   };
@@ -166,16 +168,20 @@ export const Calendar = ({ value, onChange, onClose }: CalendarProps) => {
             ))}
             {Array.from({ length: daysInMonth }).map((_, i) => {
               const day = i + 1;
+              const iso = `${viewYear}-${String(viewMonth + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
+              const isDisabled = !!min && iso < min;
               return (
                 <button
                   key={day}
                   type="button"
                   onClick={() => selectDate(day)}
+                  disabled={isDisabled}
                   className={cn(
                     "h-8 w-8 rounded-full text-sm flex items-center justify-center transition-colors",
                     isSelected(day) && "bg-gray900 text-white font-medium",
                     !isSelected(day) && isToday(day) && "bg-gray100 text-gray900 font-medium",
                     !isSelected(day) && !isToday(day) && "text-gray700 hover:bg-gray50",
+                    isDisabled && "opacity-30 pointer-events-none",
                   )}
                 >
                   {day}

@@ -2,7 +2,7 @@ import { useState, useMemo } from "react";
 import { motion, AnimatePresence } from "motion/react";
 
 import toast from "react-hot-toast";
-import { Input } from "../../../components/ui/input";
+import { DateInput } from "../../../components/ui/date-input";
 import { Button } from "../../../components/ui/button";
 import { useAcademicTerms, useCreateAcademicTerm, useUpdateAcademicTerm, useDeleteAcademicTerm } from "../api";
 import type { CreateAcademicTermPayload, UpdateAcademicTermPayload, AcademicTerm } from "../types";
@@ -100,11 +100,11 @@ const TermRow = ({
               <div className="flex gap-3">
                 <div className="flex-1">
                   <label className="block text-xs text-gray-500 mb-1">Start Date</label>
-                  <Input value={editForm.startDate ?? ""} onChange={(e) => onEditFormChange("startDate", e.target.value)} type="date" />
+                  <DateInput value={editForm.startDate ?? ""} onChange={(v) => onEditFormChange("startDate", v)} />
                 </div>
                 <div className="flex-1">
                   <label className="block text-xs text-gray-500 mb-1">End Date</label>
-                  <Input value={editForm.endDate ?? ""} onChange={(e) => onEditFormChange("endDate", e.target.value)} type="date" min={editForm.startDate || undefined} />
+                  <DateInput value={editForm.endDate ?? ""} onChange={(v) => onEditFormChange("endDate", v)} min={editForm.startDate || undefined} />
                 </div>
               </div>
               <div className="flex gap-2">
@@ -254,19 +254,17 @@ export const CalendarTerms = () => {
                 <div className="flex gap-3">
                   <div className="flex-1">
                     <label className="block text-xs text-gray-500 mb-1">Start Date</label>
-                    <Input
+                    <DateInput
                       value={form.startDate}
-                      onChange={(e) => setForm({ ...form, startDate: e.target.value })}
-                      type="date"
+                      onChange={(v) => setForm({ ...form, startDate: v })}
                       min={minStartDate}
                     />
                   </div>
                   <div className="flex-1">
                     <label className="block text-xs text-gray-500 mb-1">End Date</label>
-                    <Input
+                    <DateInput
                       value={form.endDate}
-                      onChange={(e) => setForm({ ...form, endDate: e.target.value })}
-                      type="date"
+                      onChange={(v) => setForm({ ...form, endDate: v })}
                       min={form.startDate || minStartDate}
                     />
                   </div>

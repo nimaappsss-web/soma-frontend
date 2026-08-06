@@ -18,6 +18,7 @@ interface SelectDropdownProps {
   hasError?: FieldError;
   className?: string;
   buttonClassName?: string;
+  menuClassName?: string;
   disabled?: boolean;
   searchable?: boolean;
 }
@@ -39,6 +40,7 @@ export const SelectDropdown = ({
   hasError,
   className,
   buttonClassName,
+  menuClassName,
   disabled,
   searchable,
 }: SelectDropdownProps) => {
@@ -145,8 +147,10 @@ export const SelectDropdown = ({
         <div className="p-2 pb-0">
           <div className="relative">
             <SearchNormal
-              className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-placeholder pointer-events-none"
+              size={16}
+              color="#B3B3B3"
               variant="Bold"
+              className="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none"
             />
             <input
               ref={inputRef}
@@ -196,7 +200,7 @@ export const SelectDropdown = ({
         onClick={handleToggle}
         disabled={disabled}
         className={cn(
-          "flex h-11 w-full items-center justify-between rounded-full border border-input bg-background px-4 py-2 text-base focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50 md:text-sm",
+          "flex h-11 w-full items-center justify-between overflow-hidden rounded-full border border-input bg-background px-4 py-2 text-base focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50 md:text-sm",
           !value && "text-placeholder",
           hasError && "border-red-500",
           buttonClassName,
@@ -216,7 +220,7 @@ export const SelectDropdown = ({
       {open &&
         (inDialog ? (
           <div
-            className="absolute left-0 right-0 top-full z-50 mt-1.5 rounded-xl border border-input bg-background shadow-lg"
+            className={cn("absolute left-0 right-0 top-full z-50 mt-1.5 rounded-xl border border-input bg-background shadow-lg", menuClassName)}
           >
             {menu}
           </div>
@@ -226,7 +230,7 @@ export const SelectDropdown = ({
             <div
               ref={menuRef}
               style={menuStyle}
-              className="fixed z-[100] rounded-xl border border-input bg-background shadow-lg"
+              className={cn("fixed z-[100] rounded-xl border border-input bg-background shadow-lg", menuClassName)}
             >
               {menu}
             </div>,

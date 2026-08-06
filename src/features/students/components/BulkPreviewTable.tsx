@@ -3,6 +3,8 @@ import { useState, useMemo, memo } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { SelectDropdown } from "@/components/ui/select-dropdown";
+import { DateInput } from "@/components/ui/date-input";
+import { Checkbox } from "@/components/ui/checkbox";
 import { isValidRow, type BulkStudentRow } from "../utils/bulkParse";
 import { normalizeName } from "@/utils/dedupe";
 
@@ -15,7 +17,7 @@ interface BulkPreviewTableProps {
   onAddRow: () => void;
 }
 
-const PAGE_SIZE = 50;
+const PAGE_SIZE = 32;
 
 const getRowErrors = (row: BulkStudentRow): string[] => {
   const errors: string[] = [];
@@ -33,7 +35,7 @@ export const BulkPreviewTable = ({
   onAddRow,
 }: BulkPreviewTableProps) => {
   const [page, setPage] = useState(1);
-  const [showInvalidOnly, setShowInvalidOnly] = useState(false);
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
 
   const warnings = useMemo(() => {
     const map = new Map<string, string[]>();
@@ -59,90 +61,79 @@ export const BulkPreviewTable = ({
     return map;
   }, [rows, existingNamesByClass]);
 
-  const duplicateCount = useMemo(() => {
-    const counted = new Set<string>();
-    for (const list of warnings.values()) list.forEach((w) => counted.add(w));
-    return counted.size;
-  }, [warnings]);
-
-  const { validCount, invalidCount, filtered } = useMemo(() => {
+  const { validCount, invalidCount, duplicateCount } = useMemo(() => {
     let valid = 0;
     let invalid = 0;
     for (const row of rows) {
       if (isValidRow(row)) valid++;
       else invalid++;
     }
-    const f = showInvalidOnly ? rows.filter((r) => !isValidRow(r)) : rows;
-    return { validCount: valid, invalidCount: invalid, filtered: f };
-  }, [rows, showInvalidOnly]);
+    const dupSet = new Set<string>();
+    for (const list of warnings.values()) list.forEach((w) => dupSet.add(w));
+    return { validCount: valid, invalidCount: invalid, duplicateCount: dupSet.size };
+  }, [rows, warnings]);
 
-  const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
+  const totalPages = Math.max(1, Math.ceil(rows.length / PAGE_SIZE));
   const safePage = Math.min(page, totalPages);
   const start = (safePage - 1) * PAGE_SIZE;
-  const pageRows = filtered.slice(start, start + PAGE_SIZE);
+  const pageRows = rows.slice(start, start + PAGE_SIZE);
 
   if (safePage !== page) setPage(safePage);
 
-  return (
-    <div className="space-y-3">
-      <div className="flex items-center justify-between gap-4">
-        <div className="flex items-center gap-3">
-          <Button variant="outline" size="sm" onClick={onAddRow}>
-            + Add Row
-          </Button>
-          <span className="text-xs text-gray-400">
-            <span className="text-green-600 font-medium">{validCount}</span>
-            {" / "}
-            <span className={invalidCount > 0 ? "text-red-500 font-medium" : ""}>
-              {rows.length}
-            </span>{" "}
-            valid
-            {invalidCount > 0 && (
-              <span className="text-red-400 ml-1">({invalidCount} with errors)</span>
-            )}
-            {duplicateCount > 0 && (
-              <span className="text-amber-600 ml-1">
-                ({duplicateCount} possible duplicate{duplicateCount > 1 ? "s" : ""})
-              </span>
-            )}
-          </span>
-        </div>
+  const allSelected = pageRows.length > 0 && pageRows.every((r) => selectedIds.has(r._key));
+  const toggleSelectAll = () => {
+    if (allSelected) {
+      setSelectedIds(new Set());
+    } else {
+      setSelectedIds(new Set(pageRows.map((r) => r._key)));
+    }
+  };
 
+  return (
+    <div className="px-[52px]">
+      {/* Stats badges */}
+      <div className="flex items-center gap-3 mb-6">
+        <span className="rounded-full bg-green-50 text-green-700 text-xs font-medium px-3 py-1.5">
+          {validCount} / {rows.length} valid
+        </span>
+        {duplicateCount > 0 && (
+          <span className="rounded-full bg-amber-50 text-amber-700 text-xs font-medium px-3 py-1.5">
+            {duplicateCount} possible duplicate{duplicateCount > 1 ? "s" : ""}
+          </span>
+        )}
         {invalidCount > 0 && (
-          <button
-            onClick={() => { setShowInvalidOnly(!showInvalidOnly); setPage(1); }}
-            className={`text-xs px-3 py-1.5 rounded-md border transition-colors ${
-              showInvalidOnly
-                ? "bg-red-50 border-red-200 text-red-600"
-                : "border-gray-200 text-gray-500 hover:border-red-200 hover:text-red-500"
-            }`}
-          >
-            {showInvalidOnly ? "Show all" : `Show errors only (${invalidCount})`}
-          </button>
+          <span className="rounded-full bg-red-50 text-red-700 text-xs font-medium px-3 py-1.5">
+            {invalidCount} with error(s)
+          </span>
         )}
       </div>
 
-      <div className="overflow-x-auto border border-gray-200 rounded-lg">
+      {/* Table */}
+      <div className="overflow-x-auto border border-gray-200 rounded-xl bg-white">
         <table className="w-full text-sm">
           <thead>
-            <tr className="bg-gray-50 border-b border-gray-200">
-              <th className="text-left py-2.5 px-3 font-medium text-gray-500 text-xs w-10">#</th>
-              <th className="text-left py-2.5 px-3 font-medium text-gray-500 text-xs">Name *</th>
-              <th className="text-left py-2.5 px-3 font-medium text-gray-500 text-xs">Class *</th>
-              <th className="text-left py-2.5 px-3 font-medium text-gray-500 text-xs w-20">Gender</th>
-              <th className="text-left py-2.5 px-3 font-medium text-gray-500 text-xs w-28">DOB</th>
-              <th className="text-left py-2.5 px-3 font-medium text-gray-500 text-xs">Address</th>
-              <th className="text-left py-2.5 px-3 font-medium text-gray-500 text-xs">Parent Name</th>
-              <th className="text-left py-2.5 px-3 font-medium text-gray-500 text-xs">Parent Phone</th>
-              <th className="text-left py-2.5 px-3 font-medium text-gray-500 text-xs">Parent Email</th>
+            <tr className="border-b border-gray-200">
+              <th className="text-left py-3 px-3 font-medium text-gray500 text-xs w-10">
+                <Checkbox checked={allSelected} onCheckedChange={toggleSelectAll} />
+              </th>
+              <th className="text-left py-3 px-3 font-medium text-gray500 text-xs">Student ID</th>
+              <th className="text-left py-3 px-3 font-medium text-gray500 text-xs">First Name</th>
+              <th className="text-left py-3 px-3 font-medium text-gray500 text-xs">Last Name</th>
+              <th className="text-left py-3 px-3 font-medium text-gray500 text-xs">Class</th>
+              <th className="text-left py-3 px-3 font-medium text-gray500 text-xs">Gender</th>
+              <th className="text-left py-3 px-3 font-medium text-gray500 text-xs">Date of Birth</th>
+              <th className="text-left py-3 px-3 font-medium text-gray500 text-xs">Guardian</th>
+              <th className="text-left py-3 px-3 font-medium text-gray500 text-xs">Guardian Email</th>
+              <th className="text-left py-3 px-3 font-medium text-gray500 text-xs">Contact</th>
+              <th className="text-left py-3 px-3 font-medium text-gray500 text-xs">Address</th>
               <th className="w-10" />
             </tr>
           </thead>
           <tbody>
             {pageRows.length === 0 ? (
               <tr>
-                <td colSpan={10} className="text-center py-8 text-gray-400 text-sm">
-                  {showInvalidOnly ? "No rows with errors" : "No rows"}
+                <td colSpan={12} className="text-center py-8 text-gray400 text-sm">
+                  No rows
                 </td>
               </tr>
             ) : (
@@ -150,7 +141,6 @@ export const BulkPreviewTable = ({
                 <BulkPreviewRow
                   key={row._key}
                   row={row}
-                  globalIndex={rows.indexOf(row)}
                   classes={classes}
                   onUpdate={onUpdateRow}
                   onRemove={onRemoveRow}
@@ -161,20 +151,33 @@ export const BulkPreviewTable = ({
             )}
           </tbody>
         </table>
+
+        {/* Add row button */}
+        <div className="p-3">
+          <button
+            onClick={onAddRow}
+            className="flex items-center gap-1.5 text-sm text-gray500 border border-dashed border-gray300 rounded-lg px-4 py-2 hover:bg-gray50 transition-colors"
+          >
+            <span className="text-lg leading-none">+</span> Add row
+          </button>
+        </div>
       </div>
 
-      {totalPages > 1 && (
-        <div className="flex items-center justify-between pt-1">
-          <span className="text-xs text-gray-400">
-            {start + 1}–{Math.min(start + PAGE_SIZE, filtered.length)} of {filtered.length}
-          </span>
+      {/* Pagination */}
+      <div className="flex items-center justify-between mt-4">
+        <div className="flex items-center gap-2 text-xs text-gray500">
+          <span>Showing</span>
+          <span className="font-medium text-gray900">{PAGE_SIZE}</span>
+          <span>rows per page</span>
+        </div>
+        {totalPages > 1 && (
           <div className="flex items-center gap-1">
             <button
               onClick={() => setPage((p) => Math.max(1, p - 1))}
               disabled={safePage <= 1}
-              className="px-2.5 py-1.5 text-xs rounded-md border border-gray-200 hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+              className="w-7 h-7 flex items-center justify-center text-xs rounded-md border border-gray-200 hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
             >
-              Prev
+              ‹
             </button>
             {Array.from({ length: Math.min(totalPages, 7) }, (_, i) => {
               let pageNum: number;
@@ -193,8 +196,8 @@ export const BulkPreviewTable = ({
                   onClick={() => setPage(pageNum)}
                   className={`w-7 h-7 text-xs rounded-md transition-colors ${
                     pageNum === safePage
-                      ? "bg-blue-600 text-white"
-                      : "border border-gray-200 hover:bg-gray-50 text-gray-600"
+                      ? "bg-gray900 text-white"
+                      : "border border-gray-200 hover:bg-gray-50 text-gray600"
                   }`}
                 >
                   {pageNum}
@@ -204,20 +207,19 @@ export const BulkPreviewTable = ({
             <button
               onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
               disabled={safePage >= totalPages}
-              className="px-2.5 py-1.5 text-xs rounded-md border border-gray-200 hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+              className="w-7 h-7 flex items-center justify-center text-xs rounded-md border border-gray-200 hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
             >
-              Next
+              ›
             </button>
           </div>
-        </div>
-      )}
+        )}
+      </div>
     </div>
   );
 };
 
 interface BulkPreviewRowProps {
   row: BulkStudentRow;
-  globalIndex: number;
   classes: { id: string; name: string }[];
   onUpdate: (key: string, field: keyof BulkStudentRow, value: string) => void;
   onRemove: (key: string) => void;
@@ -227,7 +229,6 @@ interface BulkPreviewRowProps {
 
 const BulkPreviewRow = memo(({
   row,
-  globalIndex,
   classes,
   onUpdate,
   onRemove,
@@ -241,23 +242,35 @@ const BulkPreviewRow = memo(({
 
   return (
     <tr className={`border-b border-gray-100 ${errors.length > 0 ? "bg-red-50/30" : warnings && warnings.length > 0 ? "bg-amber-50/30" : ""}`}>
-      <td className="py-1.5 px-3">
-        <span
-          className={`text-xs ${allIssues.length > 0 ? "text-amber-500 font-medium cursor-help" : "text-gray-400"}`}
-          title={allIssues.length > 0 ? allIssues.join("; ") : undefined}
-        >
-          {errors.length > 0 ? "⚠" : warnings && warnings.length > 0 ? "❗" : globalIndex + 1}
-        </span>
+      <td className="py-2 px-3">
+        <Checkbox />
       </td>
-      <td className="py-1.5 px-3">
+      <td className="py-2 px-3">
+        <span className="text-xs text-gray400 font-mono">—</span>
+      </td>
+      <td className="py-2 px-3">
         <Input
-          value={row.name}
-          onChange={(e) => update("name", e.target.value)}
+          value={row.name.split(" ")[0] ?? row.name}
+          onChange={(e) => {
+            const last = row.name.split(" ").slice(1).join(" ");
+            update("name", last ? `${e.target.value} ${last}` : e.target.value);
+          }}
           className={`h-8 text-sm ${!row.name.trim() || row.name.trim().length < 2 ? "border-red-400" : ""}`}
-          placeholder="Full name *"
+          placeholder="First name"
         />
       </td>
-      <td className="py-1.5 px-3">
+      <td className="py-2 px-3">
+        <Input
+          value={row.name.split(" ").slice(1).join(" ")}
+          onChange={(e) => {
+            const first = row.name.split(" ")[0] ?? "";
+            update("name", e.target.value ? `${first} ${e.target.value}` : first);
+          }}
+          className="h-8 text-sm"
+          placeholder="Last name"
+        />
+      </td>
+      <td className="py-2 px-3">
         <SelectDropdown
           placeholder="Select class *"
           options={classes.map((c) => ({ value: c.id, label: c.name }))}
@@ -266,7 +279,7 @@ const BulkPreviewRow = memo(({
           buttonClassName={`h-8 rounded-md px-2 text-sm ${!row.classId ? "border-red-400" : ""}`}
         />
       </td>
-      <td className="py-1.5 px-3">
+      <td className="py-2 px-3">
         <SelectDropdown
           placeholder="—"
           options={[
@@ -278,39 +291,22 @@ const BulkPreviewRow = memo(({
           buttonClassName="h-8 rounded-md px-2 text-sm"
         />
       </td>
-      <td className="py-1.5 px-3">
-        <Input
-          type="date"
+      <td className="py-2 px-3">
+        <DateInput
           value={row.dateOfBirth ?? ""}
-          onChange={(e) => update("dateOfBirth", e.target.value)}
+          onChange={(v) => update("dateOfBirth", v)}
           className="h-8 text-sm"
         />
       </td>
-      <td className="py-1.5 px-3">
-        <Input
-          value={row.address ?? ""}
-          onChange={(e) => update("address", e.target.value)}
-          className="h-8 text-sm"
-          placeholder="Address"
-        />
-      </td>
-      <td className="py-1.5 px-3">
+      <td className="py-2 px-3">
         <Input
           value={row.parentName ?? ""}
           onChange={(e) => update("parentName", e.target.value)}
           className="h-8 text-sm"
-          placeholder="Parent name"
+          placeholder="Guardian name"
         />
       </td>
-      <td className="py-1.5 px-3">
-        <Input
-          value={row.parentPhone ?? ""}
-          onChange={(e) => update("parentPhone", e.target.value)}
-          className="h-8 text-sm"
-          placeholder="080..."
-        />
-      </td>
-      <td className="py-1.5 px-3">
+      <td className="py-2 px-3">
         <Input
           value={row.parentEmail ?? ""}
           onChange={(e) => update("parentEmail", e.target.value)}
@@ -318,10 +314,26 @@ const BulkPreviewRow = memo(({
           placeholder="parent@email.com"
         />
       </td>
-      <td className="py-1.5 px-3">
+      <td className="py-2 px-3">
+        <Input
+          value={row.parentPhone ?? ""}
+          onChange={(e) => update("parentPhone", e.target.value)}
+          className="h-8 text-sm"
+          placeholder="080..."
+        />
+      </td>
+      <td className="py-2 px-3">
+        <Input
+          value={row.address ?? ""}
+          onChange={(e) => update("address", e.target.value)}
+          className="h-8 text-sm"
+          placeholder="Address"
+        />
+      </td>
+      <td className="py-2 px-3">
         <button
           onClick={() => onRemove(row._key)}
-          className="text-red-400 hover:text-red-600 text-sm transition-colors"
+          className="text-gray400 hover:text-red-500 text-sm transition-colors"
           title="Remove row"
         >
           ✕

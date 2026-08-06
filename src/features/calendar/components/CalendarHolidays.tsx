@@ -3,6 +3,7 @@ import { Edit, Trash } from "iconsax-react";
 
 import { Input } from "../../../components/ui/input";
 import { Button } from "../../../components/ui/button";
+import { DateInput } from "../../../components/ui/date-input";
 import { useHolidays, useCreateHoliday, useUpdateHoliday, useDeleteHoliday } from "../api";
 import type { CreateHolidayPayload, UpdateHolidayPayload } from "../types";
 
@@ -79,10 +80,9 @@ export const CalendarHolidays = () => {
 
       {showForm && (
         <div className="bg-white rounded-xl border border-gray-100 p-5 mb-6 space-y-3">
-          <Input
+          <DateInput
             value={form.date}
-            onChange={(e) => setForm({ ...form, date: e.target.value })}
-            type="date"
+            onChange={(v) => setForm({ ...form, date: v })}
           />
           <Input
             value={form.reason}
@@ -103,10 +103,9 @@ export const CalendarHolidays = () => {
             <div key={h.id} className="bg-white rounded-xl border border-gray-100 p-4">
               {editingId === h.id ? (
                 <div className="space-y-3">
-                  <Input
+                  <DateInput
                     value={editForm.date ?? ""}
-                    onChange={(e) => setEditForm({ ...editForm, date: e.target.value })}
-                    type="date"
+                    onChange={(v) => setEditForm({ ...editForm, date: v })}
                   />
                   <Input
                     value={editForm.reason ?? ""}

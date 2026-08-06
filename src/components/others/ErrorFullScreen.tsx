@@ -3,7 +3,7 @@
 import { Danger } from "iconsax-react";
 import React from "react";
 
-import { useHandleLogout } from "../../hooks/useLogout";
+import { useAuth } from "../../contexts/AuthContext";
 import { Button } from "../ui/button";
 
 interface ErrorFullScreenProps {
@@ -15,7 +15,7 @@ export const ErrorFullScreen: React.FC<ErrorFullScreenProps> = ({
   message = "Unable to load user data. Please try again.",
   onRetry,
 }) => {
-  const { handleLogout } = useHandleLogout();
+  const { logout } = useAuth();
 
   return (
     <div className="fixed inset-0 top-[0px] lg:top-[0px] z-[998] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
@@ -36,7 +36,7 @@ export const ErrorFullScreen: React.FC<ErrorFullScreenProps> = ({
               Try Again
             </button>
           )}
-          <Button variant="ghost" className="text-white mt-4" onClick={handleLogout}>
+          <Button variant="ghost" className="text-white mt-4" onClick={logout}>
             Logout
           </Button>
         </div>

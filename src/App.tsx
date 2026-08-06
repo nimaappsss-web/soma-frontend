@@ -40,6 +40,7 @@ import { AdminSettings } from "./pages/AdminSettings";
 import { AdminProfile } from "./pages/admin/AdminProfile";
 import { Onboarding } from "./pages/Onboarding";
 import { Login } from "./pages/Login";
+import { SetPassword } from "./pages/SetPassword";
 import { ForgotPassword } from "./pages/ForgotPassword";
 import { ResetPassword } from "./pages/ResetPassword";
 import { Settings } from "./pages/Settings";
@@ -87,6 +88,14 @@ function App() {
             <GuestRoute>
               <ResetPassword />
             </GuestRoute>
+          }
+        />
+        <Route
+          path="/set-password"
+          element={
+            <ProtectedRoute>
+              <SetPassword />
+            </ProtectedRoute>
           }
         />
         <Route
