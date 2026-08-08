@@ -4,6 +4,7 @@ import toast from "react-hot-toast";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
+import { ArrowLeft2 } from "iconsax-react";
 import { Avatar } from "../components/ui/Avatar";
 import { Input } from "../components/ui/input";
 import { DateInput } from "../components/ui/date-input";
@@ -150,8 +151,12 @@ export const Settings = () => {
       <main className="max-w-5xl mx-auto px-4 md:px-6 py-6 md:py-8">
         <div className="flex items-center justify-between mb-6">
           <div>
-            <Link to="/" className="text-sm text-gray-400 hover:text-gray-600">
-              &larr; Dashboard
+            <Link
+              to="/"
+              aria-label="Back to Dashboard"
+              className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-black text-white transition-colors hover:bg-gray900 active:scale-95"
+            >
+              <ArrowLeft2 variant="Linear" size={16} color="#FFFFFF" />
             </Link>
             <h2 className="text-2xl font-bold text-gray-800 mt-1">Settings</h2>
           </div>

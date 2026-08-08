@@ -1,9 +1,16 @@
 import { z } from "zod";
 
 export const createClassSchema = z.object({
-  name: z.string().min(1, "Class name is required"),
+  name: z.string().optional(),
   level: z.string().min(1, "Level is required"),
+  arm: z.string().optional().or(z.literal("")),
   schoolType: z.string().optional(),
+});
+
+export const updateClassSchema = z.object({
+  name: z.string().optional(),
+  level: z.string().min(1, "Level is required"),
+  arm: z.string().optional().or(z.literal("")),
 });
 
 export const createSubjectSchema = z.object({
@@ -26,6 +33,7 @@ export const schoolUpdateSchema = z.object({
 });
 
 export type CreateClassFormData = z.infer<typeof createClassSchema>;
+export type UpdateClassFormData = z.infer<typeof updateClassSchema>;
 export type CreateSubjectFormData = z.infer<typeof createSubjectSchema>;
 export type InviteTeacherFormData = z.infer<typeof inviteTeacherSchema>;
 export type SchoolUpdateFormData = z.infer<typeof schoolUpdateSchema>;

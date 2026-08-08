@@ -82,6 +82,7 @@ export interface User {
   phone?: string | null;
   role: string;
   active?: boolean;
+  approvalStatus?: "APPROVED" | "PENDING" | "REJECTED";
   schoolId?: string;
   schoolName?: string;
   image?: string;

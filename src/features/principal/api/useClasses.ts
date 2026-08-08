@@ -73,11 +73,11 @@ export const useClasses = (schoolId?: string) => {
   const filtered = userSchoolId
     ? cached.filter((c) => c.schoolId === userSchoolId)
     : cached;
-  const valid = filtered.length > 0 ? filtered : (networkQuery.data?.classes ?? []);
+  const valid = data !== undefined ? filtered : (networkQuery.data?.classes ?? []);
 
   return {
     data: { classes: valid, levels: [...new Set(valid.map((c) => c.level))] },
-    isLoading: data === undefined && networkQuery.isLoading,
+    isLoading: data === undefined || (filtered.length === 0 && networkQuery.isLoading),
     error: networkQuery.error ?? undefined,
   };
 };

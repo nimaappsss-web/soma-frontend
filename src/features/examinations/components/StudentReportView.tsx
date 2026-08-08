@@ -29,10 +29,10 @@ export const StudentReportView = () => {
     <div className="p-4 md:p-6 w-full">
       <button
         onClick={() => navigate("/teach/ca-and-exams/my-class")}
-        className="mb-4 inline-flex items-center gap-1.5 text-sm text-gray500 transition-colors hover:text-gray900"
+        aria-label="Back to My Class"
+        className="mb-4 flex h-8 w-8 items-center justify-center rounded-full bg-black text-white transition-colors hover:bg-gray900 active:scale-95"
       >
-        <ArrowLeft2 size={16} />
-        Back to My Class
+        <ArrowLeft2 variant="Linear" size={16} color="#FFFFFF" />
       </button>
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div>

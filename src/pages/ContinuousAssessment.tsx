@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useLiveQuery } from "dexie-react-hooks";
 import toast from "react-hot-toast";
+import { ArrowLeft2 } from "iconsax-react";
 import { useAuth } from "../contexts/AuthContext";
 import { db } from "../db/db";
 import { StudentCACard } from "../components/ui/StudentCACard";
@@ -73,8 +74,12 @@ export const ContinuousAssessment = () => {
     <div className="min-h-screen bg-gray-50 flex flex-col">
       <header className="bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between">
         <h1 className="text-xl font-bold text-blue-700">Continuous Assessment</h1>
-        <a href="/dashboard" className="text-sm text-gray-500 hover:text-gray-700">
-          &larr; Dashboard
+        <a
+          href="/dashboard"
+          aria-label="Back to Dashboard"
+          className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-black text-white transition-colors hover:bg-gray900 active:scale-95"
+        >
+          <ArrowLeft2 variant="Linear" size={16} color="#FFFFFF" />
         </a>
       </header>
       <div className="flex flex-wrap gap-3 px-6 py-4 items-end border-b border-gray-100 bg-white">

@@ -1,7 +1,8 @@
 import { useMemo, useState } from "react";
-import { NavLink, Outlet, useLocation } from "react-router";
+import { Navigate, NavLink, Outlet, useLocation } from "react-router";
 import {
   Home,
+  Book,
   ClipboardTick,
   Profile2User,
   Book1,
@@ -33,6 +34,7 @@ interface NavItem {
 }
 const navItems: NavItem[] = [
   { label: "Home", to: "/teach", Icon: Home, end: true },
+  { label: "Subjects", to: "/teach/subjects", Icon: Book },
   { label: "Attendance", to: "/teach/attendance", Icon: ClipboardTick },
   { label: "Students", to: "/teach/students", Icon: Profile2User },
   {
@@ -80,10 +82,17 @@ export const TeacherLayout = () => {
     }
     return children.some((child) => location.pathname.startsWith(child.to));
   };
+  const isLocked =
+    user?.role?.toLowerCase() === "teacher" &&
+    (user?.approvalStatus === "PENDING" || user?.approvalStatus === "REJECTED");
+  const navLockedClass = isLocked ? "pointer-events-none opacity-40" : "";
+  if (isLocked && location.pathname !== "/teach") {
+    return <Navigate to="/teach" replace />;
+  }
   const sidebarContent = (
     <>
       {/* Nav */}
-      <nav className={cn("flex-1 py-4 space-y-0.5 overflow-y-auto", collapsed ? "px-[12px]" : "px-3")}>
+      <nav className={cn("flex-1 py-4 space-y-0.5 overflow-y-auto", collapsed ? "px-[12px]" : "px-3", navLockedClass)}>
         {visibleNavItems.map((item) => {
           const hasChildren = item.children && item.children.length > 0;
           if (hasChildren) {
@@ -186,7 +195,7 @@ export const TeacherLayout = () => {
         })}
       </nav>
       {/* Settings */}
-      <div className={cn("pt-1 shrink-0", collapsed ? "px-[12px]" : "px-3")}>
+      <div className={cn("pt-1 shrink-0", collapsed ? "px-[12px]" : "px-3", navLockedClass)}>
         <NavLink
           to="/teach/settings"
           onClick={closeMobile}

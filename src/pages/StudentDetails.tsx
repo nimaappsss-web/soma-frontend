@@ -111,9 +111,10 @@ export const StudentDetails = () => {
       <div className="p-6">
         <Link
           to={backTo}
-          className="inline-flex items-center gap-2 rounded-full border border-gray100 px-3 py-1.5 text-xs font-medium text-gray700 hover:border-gray200 hover:text-gray900 transition-colors"
+          aria-label="Back to Students"
+          className="flex h-8 w-8 items-center justify-center rounded-full bg-black text-white transition-colors hover:bg-gray900 active:scale-95"
         >
-<ArrowLeft2 size={14} color="#0D0D0D" /> Back to Students
+          <ArrowLeft2 variant="Linear" size={16} color="#FFFFFF" />
         </Link>
         <div className="mt-4 rounded-xl border border-gray100 bg-white p-10 text-center">
           <p className="text-sm text-gray500">Could not load this student.</p>
@@ -139,9 +140,10 @@ export const StudentDetails = () => {
     <div className="p-4 md:p-6">
       <Link
         to={backTo}
-        className="inline-flex items-center gap-2 rounded-full border border-gray100 px-3 py-1.5 text-xs font-medium text-gray700 hover:border-gray200 hover:text-gray900 transition-colors"
+        aria-label="Back to Students"
+        className="flex h-8 w-8 items-center justify-center rounded-full bg-black text-white transition-colors hover:bg-gray900 active:scale-95"
       >
-        <ArrowLeft2 size={14} color="#0D0D0D" /> Back to Students
+        <ArrowLeft2 variant="Linear" size={16} color="#FFFFFF" />
       </Link>
 
       <div className="mt-4 rounded-xl border border-gray100 bg-white p-5 flex flex-wrap items-center gap-4">

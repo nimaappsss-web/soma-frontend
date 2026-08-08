@@ -26,7 +26,7 @@ interface OperationsSectionProps {
 }
 
 export const OperationsSection = ({ stats, isLoading }: OperationsSectionProps) => (
-  <div className="bg-white rounded-xl border border-gray100 p-5">
+  <div className="bg-white rounded-3xl border border-gray100 p-5">
     <h3 className="text-sm font-semibold text-gray900 mb-4">Parent & Student Operations</h3>
     <div className="space-y-3">
       <OperationsRow label="Active Parent App Users" value={1062} />

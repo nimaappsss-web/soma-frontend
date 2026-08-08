@@ -24,10 +24,10 @@ export const AttendanceAbsentees = () => {
         <div className="flex items-center gap-3">
           <button
             onClick={() => navigate("/admin/attendance")}
-            className="h-10 w-10 md:h-9 md:w-9 flex items-center justify-center rounded-full border border-gray100 text-gray700 hover:bg-gray50 transition-colors active:scale-95"
+            className="h-8 w-8 flex items-center justify-center rounded-full bg-black text-white transition-colors hover:bg-gray900 active:scale-95"
             aria-label="Back"
           >
-            <ArrowLeft2 variant="Linear" size={16} color="#242425" />
+            <ArrowLeft2 variant="Linear" size={16} color="#FFFFFF" />
           </button>
           <div>
             <h1 className="text-xl md:text-2xl font-bold text-gray900">Absentees</h1>

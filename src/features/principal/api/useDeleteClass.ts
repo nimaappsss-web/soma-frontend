@@ -1,22 +1,32 @@
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation } from "@tanstack/react-query";
 import toast from "react-hot-toast";
 
 import { transformError } from "../../../utils/transformError";
-import { fetchData } from "../../../utils/fetchData";
-import { classKeys } from "../utils/query-keys";
+import { useAuth } from "../../../contexts/AuthContext";
+import { addToQueue } from "../../../sync/syncQueue";
+import { db } from "../../../db/db";
 import type { AxiosErrorResponse } from "../types";
 
 export const useDeleteClass = () => {
-  const queryClient = useQueryClient();
+  const { user } = useAuth();
 
   return useMutation<{ message: string }, AxiosErrorResponse, string>({
-    mutationFn: (id) => fetchData(`/classes/${id}`, "DELETE"),
-    onSuccess: async () => {
-      toast.success("Class removed!");
-      queryClient.invalidateQueries({ queryKey: classKeys.lists() });
-      queryClient.invalidateQueries({ queryKey: classKeys.details() });
+    mutationFn: async (id) => {
+      await db.classes.delete(id);
+      await addToQueue({
+        userId: user!.id,
+        table: "classes",
+        recordId: id,
+        endpoint: `/classes/${id}`,
+        method: "DELETE",
+        payload: null,
+      });
+      return { message: "Class removed" };
     },
-    onError: async (error) => {
+    onSuccess: () => {
+      toast.success("Class removed!");
+    },
+    onError: (error) => {
       toast.error(transformError(error));
     },
   });

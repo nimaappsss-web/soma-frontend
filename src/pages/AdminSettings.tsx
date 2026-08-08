@@ -3,10 +3,12 @@ import { useForm, useWatch, Controller, type Control } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import toast from "react-hot-toast";
-import { User, Building } from "iconsax-react";
+import { User, Building, ArrowRight } from "iconsax-react";
+import { Link } from "react-router";
 
 import { useAuth } from "../contexts/AuthContext";
 import { useUpdateSchool, useSchoolInfo } from "../features/principal/api";
+import { useSchoolSettings } from "../features/settings/api/useSchoolSettings";
 import { useGenerateAdmission } from "../features/students/api";
 import { useChangePassword } from "../features/auth/api";
 import { schoolUpdateSchema, type SchoolUpdateFormData } from "../features/principal/utils/validationSchema";
@@ -22,6 +24,7 @@ import { Avatar } from "../components/ui/Avatar";
 import { cn } from "../lib/utils";
 import { TagInput } from "../components/ui/tag-input";
 import { MultiSelect } from "../components/ui/multi-select";
+import { DeleteConfirmDialog } from "../components/others/DeleteConfirmDialog";
 
 const NIGERIAN_STATES = ["Lagos", "Abuja", "Rivers", "Kano", "Oyo", "Kaduna"];
 
@@ -247,8 +250,14 @@ const SchoolSection = () => {
   const updateSchool = useUpdateSchool();
 
   const { data: school, isLoading } = useSchoolInfo();
+  const { data: settings } = useSchoolSettings();
+  const armsSetting = settings?.find((s) => s.key === "arms");
+  const armsEditable = armsSetting?.editable !== false;
+
   const [arms, setArms] = useState<string[]>([]);
   const savedArms = useRef<string[]>([]);
+  const [confirmReplace, setConfirmReplace] = useState(false);
+  const [pendingSave, setPendingSave] = useState<SchoolUpdateFormData | null>(null);
 
   useEffect(() => {
     if (school) {
@@ -298,7 +307,7 @@ const SchoolSection = () => {
 
   const { data: preview } = useGenerateAdmission(true);
 
-  const onSave = (data: SchoolUpdateFormData) => {
+  const doSave = (data: SchoolUpdateFormData) => {
     updateSchool.mutate(
       {
         name: data.name,
@@ -307,15 +316,26 @@ const SchoolSection = () => {
         lga: data.lga,
         schoolType: data.schoolType,
         address: data.address || undefined,
-        arms: arms.length ? arms : undefined,
+        arms: arms,
       },
       {
         onSuccess: () => {
           savedArms.current = arms;
           reset(data);
+          setConfirmReplace(false);
+          setPendingSave(null);
         },
       },
     );
+  };
+
+  const onSave = (data: SchoolUpdateFormData) => {
+    if (isArmsDirty) {
+      setPendingSave(data);
+      setConfirmReplace(true);
+      return;
+    }
+    doSave(data);
   };
 
   return (
@@ -375,21 +395,52 @@ const SchoolSection = () => {
                 <TagInput
                   value={arms}
                   onChange={setArms}
-                  placeholder="Type arm and press Enter"
+                  disabled={!armsEditable}
+                  placeholder={armsEditable ? "Type arm and press Enter" : "Arms locked"}
                 />
-                <p className="text-xs text-gray-400">Each arm becomes a class section (e.g. JSS 1A, JSS 1B).</p>
+                {armsEditable ? (
+                  <p className="text-xs text-gray-400">Each arm becomes a class section (e.g. JSS 1A, JSS 1B).</p>
+                ) : (
+                  <p className="text-xs text-amber-600">
+                    {armsSetting?.editableReason ?? "Cannot be changed after students have been registered."}
+                  </p>
+                )}
+                {!armsEditable && (
+                  <Link
+                    to="/admin/classes?add=1"
+                    className="inline-flex items-center gap-1 text-xs font-medium text-blue-600 hover:text-blue-700"
+                  >
+                    Add arms by creating new classes
+                    <ArrowRight size={12} color="#2563EB" />
+                  </Link>
+                )}
               </div>
             </div>
             <div className="space-y-2">
               <Label htmlFor="address">Address</Label>
               <Input id="address" {...register("address")} />
             </div>
-            <button type="submit" disabled={(!isDirty && !isArmsDirty) || updateSchool.isPending} className="w-full">
+            <Button
+              type="submit"
+              disabled={(!isDirty && !isArmsDirty) || updateSchool.isPending}
+              className="w-full"
+            >
               {updateSchool.isPending ? "Saving..." : "Save Changes"}
-            </button>
+            </Button>
           </form>
         )}
       </CardContent>
+      <DeleteConfirmDialog
+        open={confirmReplace}
+        onOpenChange={setConfirmReplace}
+        title="Replace classes?"
+        description="Changing arms will replace the existing standard classes — the current no-arm classes will be replaced with the new arm sections (e.g. JSS 1 → JSS 1A, JSS 1B)."
+        confirmInputLabel="Type REPLACE to continue"
+        confirmInputPlaceholder="REPLACE"
+        confirmInputValue="REPLACE"
+        confirmLabel="Replace"
+        onConfirm={() => pendingSave && doSave(pendingSave)}
+      />
     </Card>
   );
 };

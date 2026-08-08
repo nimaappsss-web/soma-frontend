@@ -69,6 +69,32 @@ export type UpdateExamComponentPayload = Partial<
   Pick<ExamComponent, "name" | "type" | "maxScore" | "sortOrder">
 >;
 
+export interface UpdateSchemePayload {
+  id: string;
+  schoolTypes: string[];
+  term: string;
+  session?: string;
+}
+
+export interface DeleteSchemePayload {
+  id: string;
+  term: string;
+  session?: string;
+}
+
+export interface DeleteComponentPayload {
+  id: string;
+  term: string;
+  session?: string;
+}
+
+export interface UpdateComponentPayload {
+  id: string;
+  data: UpdateExamComponentPayload;
+  term: string;
+  session?: string;
+}
+
 export interface ComponentMutationResponse {
   component: ExamComponent;
   schemeTotal: number;

@@ -1,5 +1,5 @@
 import { useState, useMemo, useEffect, useCallback, useRef } from "react";
-import { Link } from "react-router";
+import { Link, useSearchParams } from "react-router";
 import { Add, AddSquare, ArrowDown2, Trash } from "iconsax-react";
 import { Avatar } from "../../components/ui/Avatar";
 import { Checkbox } from "../../components/ui/checkbox";
@@ -29,7 +29,8 @@ export const AdminStudents = () => {
   const { user } = useAuth();
   const { data: classesData } = useClasses();
   const { data: allStudents, isLoading } = useAllStudents(user?.id ?? "");
-  const [classFilter, setClassFilter] = useState("");
+  const [searchParams] = useSearchParams();
+  const [classFilter, setClassFilter] = useState(() => searchParams.get("classId") ?? "");
   const [statusFilter, setStatusFilter] = useState("");
   const [sortOrder, setSortOrder] = useState("");
   const [searchTerm, setSearchTerm] = useState("");

@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from "react";
 import { Link } from "react-router";
 import toast from "react-hot-toast";
 import { useQuery } from "@tanstack/react-query";
+import { ArrowLeft2 } from "iconsax-react";
 import { useAuth } from "../../contexts/AuthContext";
 import { Avatar } from "../../components/ui/Avatar";
 import { Input } from "../../components/ui/input";
@@ -98,8 +99,12 @@ export const AdminProfile = () => {
       <main className="max-w-2xl mx-auto px-4 md:px-6 py-6 md:py-8">
         <div className="flex items-center justify-between mb-6">
           <div>
-            <Link to="/admin" className="text-sm text-gray-400 hover:text-gray-600">
-              &larr; Dashboard
+            <Link
+              to="/admin"
+              aria-label="Back to Dashboard"
+              className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-black text-white transition-colors hover:bg-gray900 active:scale-95"
+            >
+              <ArrowLeft2 variant="Linear" size={16} color="#FFFFFF" />
             </Link>
             <h2 className="text-2xl font-bold text-gray-800 mt-1">Profile</h2>
           </div>

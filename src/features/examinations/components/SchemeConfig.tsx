@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo } from "react";
+import { Link } from "react-router";
 import toast from "react-hot-toast";
 import { CalendarTick, Add, Copy, Trash, Edit, Setting2, Warning2 } from "iconsax-react";
 
@@ -204,7 +205,7 @@ export const SchemeConfig = () => {
     if (editingId) {
       const payload: UpdateExamComponentPayload = { name: form.name.trim(), type: form.type, maxScore };
       updateComponentMutation.mutate(
-        { id: editingId, data: payload },
+        { id: editingId, data: payload, term },
         { onSuccess: () => { setComponentDialog(null); setForm(EMPTY_FORM); } },
       );
       return;
@@ -236,7 +237,7 @@ export const SchemeConfig = () => {
       );
     } else if (scopeDialog.scheme?.schemeId) {
       updateSchemeMutation.mutate(
-        { id: scopeDialog.scheme.schemeId, schoolTypes: selectedScope },
+        { id: scopeDialog.scheme.schemeId, schoolTypes: selectedScope, term },
         { onSuccess: () => setScopeDialog(null) },
       );
     }
@@ -244,9 +245,10 @@ export const SchemeConfig = () => {
 
   const handleDeleteScheme = () => {
     if (!deleteScheme?.schemeId) return;
-    deleteSchemeMutation.mutate(deleteScheme.schemeId, {
-      onSuccess: () => setDeleteScheme(null),
-    });
+    deleteSchemeMutation.mutate(
+      { id: deleteScheme.schemeId, term },
+      { onSuccess: () => setDeleteScheme(null) },
+    );
   };
 
   const hasComponents = schemes.some((s) => s.components.length > 0);
@@ -261,11 +263,7 @@ export const SchemeConfig = () => {
           </p>
         </div>
         <div className="flex flex-col sm:flex-row sm:items-center gap-3">
-          {terms.length === 0 ? (
-            <p className="text-xs text-gray500 sm:text-right sm:max-w-[220px]">
-              Set up terms in Calendar → Terms to configure a score scheme.
-            </p>
-          ) : (
+          {terms.length === 0 ? null : (
             <>
               <SelectDropdown
                 options={termOptions}
@@ -291,6 +289,25 @@ export const SchemeConfig = () => {
         </div>
       </div>
 
+      {terms.length === 0 && (
+        <div className="mt-4 flex items-start gap-3 rounded-xl border border-amber500/30 bg-amber500/5 px-4 py-4">
+          <Warning2 size={18} variant="Bold" color="#B45309" className="shrink-0 mt-0.5" />
+          <div className="flex-1">
+            <p className="text-sm font-medium text-gray900">No academic terms configured</p>
+            <p className="text-xs text-gray500 mt-1">
+              You need to create at least one term before you can configure CA &amp; exam score schemes.
+            </p>
+            <Link
+              to="/admin/calendar/terms"
+              className="inline-flex items-center gap-1.5 mt-2.5 text-xs font-medium text-gray900 underline underline-offset-2 hover:text-gray600 transition-colors"
+            >
+              <CalendarTick size={13} color="#0D0D0D" />
+              Go to Calendar → Terms
+            </Link>
+          </div>
+        </div>
+      )}
+
       {uncoveredTypes.length > 0 && schemes.length > 0 && (
         <div className="mt-4 flex items-start gap-3 rounded-xl border border-amber500/30 bg-amber500/5 px-4 py-3">
           <Warning2 size={16} variant="Bold" color="#B45309" className="shrink-0 mt-0.5" />
@@ -306,7 +323,7 @@ export const SchemeConfig = () => {
         <div className="mt-4 bg-white rounded-xl border border-gray100 p-8 text-center">
           <div className="h-8 w-8 animate-spin rounded-full border-2 border-gray100 border-t-gray900 mx-auto" />
         </div>
-      ) : schemes.length === 0 ? (
+      ) : terms.length === 0 ? null : schemes.length === 0 ? (
         <div className="mt-4 bg-white rounded-xl border border-gray100 p-8 text-center">
           <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-gray100">
             <CalendarTick size={22} variant="Bold" color="#0D0D0D" />
@@ -455,7 +472,7 @@ export const SchemeConfig = () => {
                           variant="outline"
                           size="icon"
                           className="rounded-full shrink-0"
-                          onClick={() => deleteComponentMutation.mutate(c.id)}
+                          onClick={() => deleteComponentMutation.mutate({ id: c.id, term })}
                           disabled={isPending}
                           aria-label="Delete component"
                         >

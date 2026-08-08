@@ -5,6 +5,7 @@ import toast from "react-hot-toast";
 import { DateInput } from "../../../components/ui/date-input";
 import { Button } from "../../../components/ui/button";
 import { useAcademicTerms, useCreateAcademicTerm, useUpdateAcademicTerm, useDeleteAcademicTerm } from "../api";
+import { isDateInRange } from "../utils/term";
 import type { CreateAcademicTermPayload, UpdateAcademicTermPayload, AcademicTerm } from "../types";
 
 const TERM_ORDER = ["first", "second", "third"] as const;
@@ -43,6 +44,7 @@ const TermRow = ({
   term,
   index,
   total,
+  isActive,
   onEdit,
   onDelete,
   isPending,
@@ -55,6 +57,7 @@ const TermRow = ({
   term: AcademicTerm;
   index: number;
   total: number;
+  isActive: boolean;
   onEdit: () => void;
   onDelete: () => void;
   isPending: boolean;
@@ -72,7 +75,7 @@ const TermRow = ({
       <div className="flex flex-col items-center">
         <div
           className={`relative z-10 flex h-12 w-12 shrink-0 items-center justify-center rounded-full text-sm font-semibold transition-colors ${
-            term.isCurrent
+            isActive
               ? "bg-gray-900 text-white ring-4 ring-green-100"
               : "bg-gray-50 text-gray-400 ring-1 ring-gray-200"
           }`}
@@ -86,7 +89,7 @@ const TermRow = ({
       <div className={`min-w-0 flex-1 pb-10 ${index < total - 1 ? "" : "pb-0"}`}>
         <div
           className={`rounded-xl border p-5 transition-all ${
-            term.isCurrent
+            isActive
               ? "border-green-200 bg-green-50/30"
               : "border-gray-100 bg-white hover:border-gray-200"
           }`}
@@ -100,11 +103,11 @@ const TermRow = ({
               <div className="flex gap-3">
                 <div className="flex-1">
                   <label className="block text-xs text-gray-500 mb-1">Start Date</label>
-                  <DateInput value={editForm.startDate ?? ""} onChange={(v) => onEditFormChange("startDate", v)} />
+                  <DateInput className="w-full" value={editForm.startDate ?? ""} onChange={(v) => onEditFormChange("startDate", v)} />
                 </div>
                 <div className="flex-1">
                   <label className="block text-xs text-gray-500 mb-1">End Date</label>
-                  <DateInput value={editForm.endDate ?? ""} onChange={(v) => onEditFormChange("endDate", v)} min={editForm.startDate || undefined} />
+                  <DateInput className="w-full" value={editForm.endDate ?? ""} onChange={(v) => onEditFormChange("endDate", v)} min={editForm.startDate || undefined} />
                 </div>
               </div>
               <div className="flex gap-2">
@@ -121,7 +124,7 @@ const TermRow = ({
               <div className="min-w-0">
                 <div className="flex items-center gap-2 mb-1">
                   <p className="text-base font-semibold text-gray-900">{info.label}</p>
-                  {term.isCurrent && (
+                  {isActive && (
                     <span className="inline-flex items-center gap-1 rounded-full bg-green-100 px-2 py-0.5 text-[11px] font-medium text-green-700">
                       <span className="h-1.5 w-1.5 rounded-full bg-green-500" />
                       Active
@@ -160,7 +163,14 @@ export const CalendarTerms = () => {
   const [editForm, setEditForm] = useState<UpdateAcademicTermPayload>({});
 
   const terms = data?.terms ?? [];
-  const hasCurrent = terms.some((t) => t.isCurrent);
+  const activeTermId = useMemo(() => {
+    const today = new Date();
+    const byDate = terms.find((t) => isDateInRange(t.startDate, t.endDate, today));
+    if (byDate) return byDate.id;
+    const flagged = terms.find((t) => t.isCurrent);
+    return flagged?.id ?? null;
+  }, [terms]);
+  const hasCurrent = activeTermId !== null;
 
   const { nextTerm, prevTerm } = useMemo(() => {
     const existing = new Set(terms.map((t) => t.term));
@@ -255,6 +265,7 @@ export const CalendarTerms = () => {
                   <div className="flex-1">
                     <label className="block text-xs text-gray-500 mb-1">Start Date</label>
                     <DateInput
+                      className="w-full"
                       value={form.startDate}
                       onChange={(v) => setForm({ ...form, startDate: v })}
                       min={minStartDate}
@@ -263,6 +274,7 @@ export const CalendarTerms = () => {
                   <div className="flex-1">
                     <label className="block text-xs text-gray-500 mb-1">End Date</label>
                     <DateInput
+                      className="w-full"
                       value={form.endDate}
                       onChange={(v) => setForm({ ...form, endDate: v })}
                       min={form.startDate || minStartDate}
@@ -304,6 +316,7 @@ export const CalendarTerms = () => {
               term={t}
               index={i}
               total={terms.length}
+              isActive={t.id === activeTermId}
               onEdit={() => startEditing(t)}
               onDelete={() => deleteMutation.mutate(t.id)}
               isPending={isPending}

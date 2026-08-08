@@ -16,4 +16,5 @@ export { useAttendanceTeacherSummary } from "./useAttendanceTeacherSummary";
 export { useAttendanceCalendar } from "./useAttendanceCalendar";
 export { useAttendanceAvailability } from "./useAttendanceAvailability";
 export { useClearAttendance } from "./useClearAttendance";
+export { useSetTeacherApproval } from "./useSetTeacherApproval";
 export { attendanceKeys } from "../utils/query-keys";

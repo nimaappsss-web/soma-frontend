@@ -72,7 +72,7 @@ export const useSubjects = (schoolId?: string) => {
 
   return {
     data: valid,
-    isLoading: data === undefined && networkQuery.isLoading,
+    isLoading: data === undefined || (cached.length === 0 && networkQuery.isLoading),
     error: networkQuery.error ?? undefined,
   };
 };

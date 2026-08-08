@@ -1,7 +1,6 @@
 import { Link } from "react-router";
 import { OtpInputField } from "../../../components/ui/otp-input";
 import { ErrorMessage } from "../../../components/others/ErrorMessage";
-import { transformError } from "../../../utils/transformError";
 import { SignupLayout } from "../../../layouts/SignupLayout";
 interface Step2OTPProps {
   email: string;
@@ -41,10 +40,8 @@ export const Step2OTP = ({
           </h1>
         </div>
         {error && (
-          <div className="mt-5">
-            <ErrorMessage>
-              {transformError(error) as React.ReactNode}
-            </ErrorMessage>
+          <div className="mx-auto mt-5 w-full max-w-[342px]">
+            <ErrorMessage>{error}</ErrorMessage>
           </div>
         )}
         <div className="mt-2 w-full max-w-[342px] mx-auto">

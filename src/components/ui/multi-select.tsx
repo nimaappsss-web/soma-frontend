@@ -212,13 +212,15 @@ export const MultiSelect = ({
               className="inline-flex items-center gap-1 rounded-full bg-black/5 px-2.5 py-0.5 text-sm"
             >
               {opt.label}
-              <button
-                type="button"
+              <span
+                role="button"
+                tabIndex={-1}
+                aria-label={`Remove ${opt.label}`}
                 onClick={(e) => remove(opt.value, e)}
-                className="hover:text-black/70"
+                className="cursor-pointer hover:text-black/70"
               >
                 <CloseCircle size={14} variant="Bold" color="currentColor" />
-              </button>
+              </span>
             </span>
           ))
         )}

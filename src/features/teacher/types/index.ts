@@ -29,6 +29,8 @@ export interface Teacher {
   role: string;
   formClassId?: string | null;
   formClass?: string | null;
+  active?: boolean;
+  approvalStatus?: "APPROVED" | "PENDING" | "REJECTED";
   dateOfBirth?: string | null;
   employmentDate?: string | null;
   createdAt?: string;
@@ -45,6 +47,7 @@ export interface TeacherDetail {
   dateOfBirth?: string | null;
   profilePictureUrl?: string | null;
   active?: boolean;
+  approvalStatus?: "APPROVED" | "PENDING" | "REJECTED";
   createdAt?: string;
   employmentDate?: string | null;
   formClassId?: string | null;

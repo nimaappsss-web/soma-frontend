@@ -97,10 +97,11 @@ export const SyncProvider = ({ children }: { children: ReactNode }) => {
           } else if (item.method === "POST" || item.method === "PUT") {
             const table = db[item.table as keyof typeof db] as any;
             if (table && response && typeof response === "object" && "id" in response) {
-              await table.put({ ...response, userId: item.userId });
-              if (response.id !== item.recordId) {
-                await table.delete(item.recordId);
-              }
+              // Keep the client-generated id as the record's identity. The id was
+              // sent to the backend in the payload (and the backend stores under it),
+              // so never replace it with a server id or delete the temp record.
+              // This keeps deletes/updates targeting the same id the backend holds.
+              await table.put({ ...response, id: item.recordId, userId: item.userId });
             }
           }
 

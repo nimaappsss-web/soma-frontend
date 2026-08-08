@@ -5,17 +5,21 @@ import { useQuery } from "@tanstack/react-query";
 import { zodResolver } from "@hookform/resolvers/zod";
 
 import { useAcceptInvite } from "../features/principal/api";
-import { useInviteInfo, useSendOTPByEmail, useVerifyOTP } from "../features/auth/api";
+import { useInviteInfo, useSendOTPByEmail, useVerifyRegistrationOTP } from "../features/auth/api";
 import { useAuth } from "../contexts/AuthContext";
 import { getPostAuthPath } from "../features/auth/utils/routing";
 import { completeRegistrationSchema, type CompleteRegistrationFormData } from "../features/auth/utils/validationSchema";
 import { Trash, ArrowLeft2 } from "iconsax-react";
+import { motion } from "motion/react";
 import { MultiSelect, type SelectOption } from "../components/ui/multi-select";
 import { SelectDropdown } from "../components/ui/select-dropdown";
 import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
 import { OtpInputField } from "../components/ui/otp-input";
+import { WarningBanner } from "../components/others/WarningBanner";
 import { AuthLayout } from "../layouts/AuthLayout";
+import { SomaLoader } from "../components/ui/SomaLoader";
+import { cn } from "../lib/utils";
 import { transformError } from "../utils/transformError";
 import { API_BASE_URL } from "../lib/axios";
 import type { SubjectCache, ClassCache } from "../db/db";
@@ -47,7 +51,7 @@ export const VerifyTeacher = () => {
   const { setTokens } = useAuth();
   const acceptMutation = useAcceptInvite();
   const sendOTPMutation = useSendOTPByEmail();
-  const verifyOTPMutation = useVerifyOTP();
+  const verifyRegistrationOTPMutation = useVerifyRegistrationOTP();
 
   const urlStep = searchParams.get("step");
   const initialStep: Step =
@@ -57,10 +61,17 @@ export const VerifyTeacher = () => {
     { subjectId: "", classIds: [] },
   ]);
   const [formClassId, setFormClassId] = useState("");
+  const [formConflict, setFormConflict] = useState<{
+    classId: string;
+    className: string;
+    teacherName: string;
+  } | null>(null);
+  const [alertFlash, setAlertFlash] = useState(0);
   const [email, setEmail] = useState(searchParams.get("email") ?? "");
   const [emailError, setEmailError] = useState("");
   const [otp, setOtp] = useState("");
   const lastSubmittedOtpRef = useRef("");
+  const registrationTokenRef = useRef("");
 
   const goToStep = useCallback(
     (next: Step, nextEmail?: string) => {
@@ -127,12 +138,17 @@ export const VerifyTeacher = () => {
   useEffect(() => {
     if (otp.length === 6 && otp !== lastSubmittedOtpRef.current) {
       lastSubmittedOtpRef.current = otp;
-      verifyOTPMutation.mutate(
+      verifyRegistrationOTPMutation.mutate(
         { email: email.trim(), code: otp },
-        { onSuccess: () => goToStep("register") },
+        {
+          onSuccess: (data) => {
+            registrationTokenRef.current = data.registrationToken;
+            goToStep("register");
+          },
+        },
       );
     }
-  }, [otp, email, verifyOTPMutation, goToStep]);
+  }, [otp, email, verifyRegistrationOTPMutation, goToStep]);
 
   const handleSendOTP = () => {
     const trimmed = email.trim();
@@ -170,8 +186,43 @@ export const VerifyTeacher = () => {
     );
   };
 
+  const handleFormClassChange = (classId: string) => {
+    setFormClassId(classId);
+    if (!classId) {
+      setFormConflict(null);
+      return;
+    }
+    const cls = classList.find((c) => c.id === classId);
+    if (cls?.formTeacher?.name) {
+      setFormConflict({
+        classId,
+        className: cls.name,
+        teacherName: cls.formTeacher.name,
+      });
+      return;
+    }
+    setFormConflict(null);
+  };
+
+  const acceptFormConflict = () => {
+    if (formConflict) setFormClassId(formConflict.classId);
+    setFormConflict(null);
+  };
+
+  const declineFormConflict = () => {
+    setFormConflict((prev) =>
+      prev
+        ? { ...prev }
+        : prev,
+    );
+  };
+
   const onSubmit = (data: CompleteRegistrationFormData) => {
     if (!token) return;
+    if (formConflict) {
+      setAlertFlash((n) => n + 1);
+      return;
+    }
     setEmailError("");
     if (isOpenInvite && !email.trim()) {
       setEmailError("Email is required");
@@ -187,6 +238,7 @@ export const VerifyTeacher = () => {
           .filter((a) => a.subjectId && a.classIds.length > 0)
           .map((a) => ({ subjectId: a.subjectId, classIds: a.classIds })),
         formClassId: formClassId || undefined,
+        registrationToken: isOpenInvite ? registrationTokenRef.current : undefined,
       },
       {
         onSuccess: (res) => {
@@ -211,7 +263,9 @@ export const VerifyTeacher = () => {
   if (infoLoading) {
     return (
       <AuthLayout>
-        <p className="text-sm text-gray-400">Loading...</p>
+        <div className="flex justify-center py-8">
+          <SomaLoader descriptions={["Fetching your invitation...", "Preparing your school setup..."]} />
+        </div>
       </AuthLayout>
     );
   }
@@ -253,14 +307,14 @@ export const VerifyTeacher = () => {
             </p>
           )}
 
-          <button
+          <Button
             type="button"
             disabled={sendOTPMutation.isPending}
             className="w-full mt-5.25"
             onClick={handleSendOTP}
           >
             {sendOTPMutation.isPending ? "Sending OTP..." : "Send OTP"}
-          </button>
+          </Button>
         </div>
       </AuthLayout>
     );
@@ -274,9 +328,9 @@ export const VerifyTeacher = () => {
             type="button"
             onClick={() => goToStep("email", "")}
             aria-label="Go back"
-            className="flex items-center justify-center w-8 h-8 rounded-full border border-black bg-transparent text-black transition-colors hover:bg-gray50 mb-5"
+            className="flex h-8 w-8 items-center justify-center rounded-full bg-black text-white transition-colors hover:bg-gray900 active:scale-95 mb-5"
           >
-            <ArrowLeft2 variant="Linear" size={16} color="#0D0D0D" />
+            <ArrowLeft2 variant="Linear" size={16} color="#FFFFFF" />
           </button>
           <div>
             <h1 className="text-2xl font-medium text-gray-900">
@@ -293,14 +347,14 @@ export const VerifyTeacher = () => {
               value={otp}
               onChange={setOtp}
               numDigits={6}
-              disabled={verifyOTPMutation.isPending}
+              disabled={verifyRegistrationOTPMutation.isPending}
             />
-            {verifyOTPMutation.isPending && (
+            {verifyRegistrationOTPMutation.isPending && (
               <p className="text-xs text-placeholder mt-2 text-center">Verifying code...</p>
             )}
-            {verifyOTPMutation.isError && (
+            {verifyRegistrationOTPMutation.isError && (
               <p className="text-xs text-red-500 mt-2 text-center">
-                {transformError(verifyOTPMutation.error)}
+                {transformError(verifyRegistrationOTPMutation.error)}
               </p>
             )}
           </div>
@@ -312,7 +366,7 @@ export const VerifyTeacher = () => {
             <button
               type="button"
               onClick={handleSendOTP}
-              disabled={sendOTPMutation.isPending || verifyOTPMutation.isPending}
+              disabled={sendOTPMutation.isPending || verifyRegistrationOTPMutation.isPending}
               className="text-sm font-medium underline disabled:opacity-40"
             >
               {sendOTPMutation.isPending ? "Sending..." : "Send again"}
@@ -418,14 +472,45 @@ export const VerifyTeacher = () => {
             <SelectDropdown
               options={formClassOptions}
               value={formClassId}
-              onChange={setFormClassId}
+              onChange={handleFormClassChange}
               searchable
             />
           </div>
 
-          <button type="submit" disabled={acceptMutation.isPending} className="w-full mt-5.25">
+          {formConflict && (
+            <motion.div
+              key={alertFlash}
+              initial={{ x: 0 }}
+              animate={
+                alertFlash > 0
+                  ? { x: [0, -10, 10, -8, 8, -4, 4, 0] }
+                  : { x: 0 }
+              }
+              transition={{ duration: 0.45, ease: "easeInOut" }}
+              className="mt-3"
+            >
+              <WarningBanner
+                title={`${formConflict.teacherName} is already the class teacher of ${formConflict.className}. Do you want to continue?`}
+                className={cn(
+                  alertFlash > 0 &&
+                    "!border-red-500 ring-2 ring-red-500/20 focus-within:ring-red-500/30",
+                )}
+              >
+                <div className="flex gap-3 mt-3 max-w-[280px]">
+                  <Button type="button" className="flex-1" onClick={acceptFormConflict}>
+                    Yes, continue
+                  </Button>
+                  <Button type="button" variant="outline" className="flex-1" onClick={declineFormConflict}>
+                    No
+                  </Button>
+                </div>
+              </WarningBanner>
+            </motion.div>
+          )}
+
+          <Button type="submit" disabled={acceptMutation.isPending} className="w-full mt-5.25">
             {acceptMutation.isPending ? "Setting up..." : "Accept Invite"}
-          </button>
+          </Button>
         </form>
       </div>
     </AuthLayout>

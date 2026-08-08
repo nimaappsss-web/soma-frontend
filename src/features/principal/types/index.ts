@@ -25,6 +25,7 @@ export interface AcceptInviteRequest {
   }>;
   formClassId?: string;
   email?: string;
+  registrationToken?: string;
 }
 
 export interface GenerateInviteLinkResponse {
@@ -164,7 +165,7 @@ export interface ClassDetail {
   level: string;
   arm?: string;
   studentCount: number;
-  formTeacher: { id: string; name: string } | null;
+  formTeacher: { id: string; name: string; email?: string; phone?: string } | null;
 }
 
 export interface ClassDetailResponse {

@@ -82,12 +82,12 @@ export const InviteTeacherModal = ({ open, onClose }: InviteTeacherModalProps) =
           </DialogDescription>
         </DialogHeader>
         <div className="px-6 pb-6">
-          <div className="flex gap-1 mb-4 rounded-lg bg-gray-100 p-1 text-sm">
+          <div className="flex w-fit items-center gap-1 mb-4 rounded-[15px] border border-input bg-background p-1">
             <button
               onClick={() => setTab("email")}
               className={cn(
-                "flex-1 rounded-md px-3 py-1.5 text-center font-medium transition-colors",
-                tab === "email" ? "bg-white text-gray-900 shadow-sm" : "text-gray-500 hover:text-gray-700",
+                "flex h-8 items-center justify-center rounded-[10px] px-3 text-sm font-medium transition-colors",
+                tab === "email" ? "bg-gray900 text-white" : "text-gray500 hover:text-gray700",
               )}
             >
               By Email
@@ -95,8 +95,8 @@ export const InviteTeacherModal = ({ open, onClose }: InviteTeacherModalProps) =
             <button
               onClick={() => setTab("link")}
               className={cn(
-                "flex-1 rounded-md px-3 py-1.5 text-center font-medium transition-colors",
-                tab === "link" ? "bg-white text-gray-900 shadow-sm" : "text-gray-500 hover:text-gray-700",
+                "flex h-8 items-center justify-center rounded-[10px] px-3 text-sm font-medium transition-colors",
+                tab === "link" ? "bg-gray900 text-white" : "text-gray500 hover:text-gray700",
               )}
             >
               Shareable Link
@@ -128,9 +128,9 @@ export const InviteTeacherModal = ({ open, onClose }: InviteTeacherModalProps) =
                 <Button type="button" variant="outline" onClick={handleClose} className="w-full">
                   Cancel
                 </Button>
-                <button type="submit" disabled={inviteMutation.isPending} className="w-full">
+                <Button type="submit" disabled={inviteMutation.isPending} className="w-full">
                   {inviteMutation.isPending ? "Sending..." : "Send Invite"}
-                </button>
+                </Button>
               </div>
             </form>
           )}
@@ -149,7 +149,7 @@ export const InviteTeacherModal = ({ open, onClose }: InviteTeacherModalProps) =
                     <p className="text-xs text-gray-400 mb-1">Share this link with the teacher:</p>
                     <p className="text-sm break-all text-gray-800">{generatedLink}</p>
                   </div>
-                  <Button onClick={handleCopy} variant="outline" className="w-full">
+                  <Button onClick={handleCopy} className="w-full">
                     {copied ? "Copied!" : "Copy Link"}
                   </Button>
                   <Button type="button" variant="outline" onClick={handleClose} className="w-full">
@@ -166,13 +166,14 @@ export const InviteTeacherModal = ({ open, onClose }: InviteTeacherModalProps) =
                     <Button type="button" variant="outline" onClick={handleClose} className="w-full">
                       Cancel
                     </Button>
-                    <button
+                    <Button
+                      type="button"
                       onClick={handleGenerate}
                       disabled={generateMutation.isPending}
                       className="w-full"
                     >
                       {generateMutation.isPending ? "Generating..." : "Generate Link"}
-                    </button>
+                    </Button>
                   </div>
                 </>
               )}

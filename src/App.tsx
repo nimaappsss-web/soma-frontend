@@ -12,6 +12,8 @@ import { ContinuousAssessment } from "./pages/ContinuousAssessment";
 import { CompleteRegistration } from "./pages/CompleteRegistration";
 import { ProtectedRoute } from "./features/auth/components/ProtectedRoute";
 import { TeacherDashboard } from "./pages/teach/TeacherDashboard";
+import { TeacherSubjects } from "./pages/teach/TeacherSubjects";
+import { SubjectDetail } from "./pages/teach/SubjectDetail";
 import { TeacherExams } from "./pages/teach/TeacherExams";
 import { TeacherActiveAssessments } from "./pages/teach/TeacherActiveAssessments";
 import { TeacherResults } from "./pages/teach/TeacherResults";
@@ -28,6 +30,7 @@ import { ParentDashboard } from "./pages/ParentDashboard";
 import { ParentSetup } from "./pages/ParentSetup";
 import { GuestRoute } from "./features/auth/components/GuestRoute";
 import { AdminClasses } from "./pages/admin/AdminClasses";
+import { ClassDetails } from "./pages/admin/ClassDetails";
 import { AdminParents } from "./pages/admin/AdminParents";
 import { StaffDashboard } from "./pages/StaffDashboard";
 import { VerifyTeacher } from "./pages/VerifyTeacher";
@@ -141,12 +144,15 @@ function App() {
           </Route>
           <Route path="reports" element={<ReportsManagement />} />
           <Route path="classes" element={<AdminClasses />} />
+          <Route path="classes/:classId" element={<ClassDetails />} />
           <Route path="subjects" element={<AdminSubjects />} />
           <Route path="settings" element={<AdminSettings />} />
           <Route path="profile" element={<AdminProfile />} />
         </Route>
         <Route path="/teach" element={<ProtectedRoute><TeacherLayout /></ProtectedRoute>}>
           <Route index element={<TeacherDashboard />} />
+          <Route path="subjects" element={<TeacherSubjects />} />
+          <Route path="subjects/:subjectId" element={<SubjectDetail />} />
           <Route path="students" element={<TeacherStudents />} />
           <Route path="students/:id" element={<StudentDetails />} />
           <Route path="attendance" element={<TeacherAttendance />} />

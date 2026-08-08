@@ -63,6 +63,8 @@ export interface ClassCache {
   arm?: string;
   schoolType?: string;
   schoolId?: string;
+  studentCount?: number;
+  formTeacher?: { id: string; name: string; email?: string; phone?: string } | null;
 }
 
 export interface TeacherFormClassCache {
@@ -83,6 +85,8 @@ export interface TeacherCache {
   name: string;
   email: string;
   role: string;
+  active?: boolean;
+  approvalStatus?: "APPROVED" | "PENDING" | "REJECTED";
   formClassId?: string | null;
   formClass?: string | null;
   dateOfBirth?: string | null;

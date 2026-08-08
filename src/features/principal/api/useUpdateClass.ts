@@ -1,22 +1,40 @@
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation } from "@tanstack/react-query";
 import toast from "react-hot-toast";
 
 import { transformError } from "../../../utils/transformError";
-import { fetchData } from "../../../utils/fetchData";
-import { classKeys } from "../utils/query-keys";
+import { useAuth } from "../../../contexts/AuthContext";
+import { addToQueue } from "../../../sync/syncQueue";
+import { db, type ClassCache } from "../../../db/db";
 import type { UpdateClassPayload, AxiosErrorResponse } from "../types";
 
 export const useUpdateClass = () => {
-  const queryClient = useQueryClient();
+  const { user } = useAuth();
 
-  return useMutation<{ message: string }, AxiosErrorResponse, { id: string; data: UpdateClassPayload }>({
-    mutationFn: ({ id, data }) => fetchData(`/classes/${id}`, "PATCH", data),
-    onSuccess: async () => {
-      toast.success("Class updated!");
-      queryClient.invalidateQueries({ queryKey: classKeys.lists() });
-      queryClient.invalidateQueries({ queryKey: classKeys.details() });
+  return useMutation<ClassCache, AxiosErrorResponse, { id: string; data: UpdateClassPayload }>({
+    mutationFn: async ({ id, data }) => {
+      const existing = await db.classes.get(id);
+      const merged: ClassCache = {
+        ...existing!,
+        ...data,
+        id,
+        userId: user!.id,
+        schoolId: existing?.schoolId ?? user?.schoolId ?? "",
+      };
+      await db.classes.put(merged, id);
+      await addToQueue({
+        userId: user!.id,
+        table: "classes",
+        recordId: id,
+        endpoint: `/classes/${id}`,
+        method: "PATCH",
+        payload: data,
+      });
+      return merged;
     },
-    onError: async (error) => {
+    onSuccess: () => {
+      toast.success("Class updated!");
+    },
+    onError: (error) => {
       toast.error(transformError(error));
     },
   });

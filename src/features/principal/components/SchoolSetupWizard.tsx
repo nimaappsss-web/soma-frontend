@@ -55,7 +55,7 @@ export const SchoolSetupWizard = () => {
         lga: data.lga,
         schoolType: data.schoolType,
         address: data.address || undefined,
-        arms: arms.length ? arms : undefined,
+        arms: arms,
       },
       {
         onSuccess: (res) => {

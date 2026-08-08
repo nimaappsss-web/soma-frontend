@@ -2,6 +2,7 @@ import { useState, useRef, useMemo } from "react";
 import { Link, useSearchParams } from "react-router";
 import { useLiveQuery } from "dexie-react-hooks";
 import { useQuery } from "@tanstack/react-query";
+import { ArrowLeft2 } from "iconsax-react";
 
 import { useAuth } from "../../contexts/AuthContext";
 import { useTeacherProfile, useAttendanceAvailability } from "../../features/teacher/api";
@@ -261,8 +262,12 @@ export const TeacherAttendance = () => {
     return (
       <div className="p-8 text-center">
         <p className="text-gray-400 mb-4">You are not a class teacher.</p>
-        <Link to="/teach" className="text-blue-600 hover:underline text-sm">
-          &larr; Back to Dashboard
+        <Link
+          to="/teach"
+          aria-label="Back to Dashboard"
+          className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-black text-white transition-colors hover:bg-gray900 active:scale-95"
+        >
+          <ArrowLeft2 variant="Linear" size={16} color="#FFFFFF" />
         </Link>
       </div>
     );

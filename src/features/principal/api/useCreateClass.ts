@@ -1,9 +1,10 @@
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation } from "@tanstack/react-query";
 import toast from "react-hot-toast";
 
 import { transformError } from "../../../utils/transformError";
-import { fetchData } from "../../../utils/fetchData";
-import { classKeys } from "../utils/query-keys";
+import { useAuth } from "../../../contexts/AuthContext";
+import { addToQueue } from "../../../sync/syncQueue";
+import { db, type ClassCache } from "../../../db/db";
 import type { AxiosErrorResponse } from "../types";
 
 interface CreateClassPayload {
@@ -14,16 +15,35 @@ interface CreateClassPayload {
 }
 
 export const useCreateClass = () => {
-  const queryClient = useQueryClient();
+  const { user } = useAuth();
 
-  return useMutation<{ id: string; name: string }, AxiosErrorResponse, CreateClassPayload>({
-    mutationFn: (payload) => fetchData("/classes", "POST", payload),
-    onSuccess: async () => {
-      toast.success("Class added!");
-      queryClient.invalidateQueries({ queryKey: classKeys.lists() });
-      queryClient.invalidateQueries({ queryKey: classKeys.details() });
+  return useMutation<ClassCache, AxiosErrorResponse, CreateClassPayload>({
+    mutationFn: async (payload) => {
+      const id = crypto.randomUUID();
+      const cache: ClassCache = {
+        id,
+        userId: user!.id,
+        schoolId: user?.schoolId ?? "",
+        name: payload.name,
+        level: payload.level,
+        arm: payload.arm,
+        schoolType: payload.schoolType,
+      };
+      await db.classes.put(cache, id);
+      await addToQueue({
+        userId: user!.id,
+        table: "classes",
+        recordId: id,
+        endpoint: "/classes",
+        method: "POST",
+        payload: { ...payload, id },
+      });
+      return cache;
     },
-    onError: async (error) => {
+    onSuccess: () => {
+      toast.success("Class added!");
+    },
+    onError: (error) => {
       toast.error(transformError(error));
     },
   });

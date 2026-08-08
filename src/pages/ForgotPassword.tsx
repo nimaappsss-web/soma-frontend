@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Link } from "react-router";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { ArrowLeft2 } from "iconsax-react";
 
 import { useForgotPassword } from "../features/auth/api";
 import {
@@ -41,8 +42,12 @@ export const ForgotPassword = () => {
             <p className="text-green-600 text-sm">
               If an account with that email exists, a reset link has been sent.
             </p>
-            <Link to="/login" className="text-blue-600 hover:underline text-sm block">
-              Back to login
+            <Link
+              to="/login"
+              aria-label="Back to login"
+              className="mx-auto inline-flex h-8 w-8 items-center justify-center rounded-full bg-black text-white transition-colors hover:bg-gray900 active:scale-95"
+            >
+              <ArrowLeft2 variant="Linear" size={16} color="#FFFFFF" />
             </Link>
           </div>
         ) : (
@@ -64,8 +69,12 @@ export const ForgotPassword = () => {
             </Button>
 
             <div className="text-center">
-              <Link to="/login" className="text-blue-600 hover:underline text-sm">
-                Back to login
+              <Link
+                to="/login"
+                aria-label="Back to login"
+                className="mx-auto inline-flex h-8 w-8 items-center justify-center rounded-full bg-black text-white transition-colors hover:bg-gray900 active:scale-95"
+              >
+                <ArrowLeft2 variant="Linear" size={16} color="#FFFFFF" />
               </Link>
             </div>
           </form>
