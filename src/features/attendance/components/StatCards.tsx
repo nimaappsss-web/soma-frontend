@@ -1,5 +1,18 @@
-import { Sparklines, SparklinesLine } from "react-sparklines";
 import type { AttendanceSummary } from "../types";
+
+const MiniSparkline = ({ data, color }: { data: number[]; color: string }) => {
+  const max = Math.max(...data, 1);
+  const w = 240;
+  const h = 32;
+  const pad = 2;
+  const step = (w - pad * 2) / Math.max(data.length - 1, 1);
+  const pts = data.map((v, i) => `${pad + i * step},${h - pad - (v / max) * (h - pad * 2)}`).join(" ");
+  return (
+    <svg width="100%" height="100%" viewBox={`0 0 ${w} ${h}`} preserveAspectRatio="none">
+      <polyline points={pts} fill="none" stroke={color} strokeWidth="1.5" strokeLinejoin="round" />
+    </svg>
+  );
+};
 
 interface StatCardsProps {
   data?: AttendanceSummary;
@@ -37,15 +50,7 @@ export const StatCards = ({ data, isLoading, sparklineData }: StatCardsProps) =>
       {sub && <p className={`text-xs font-medium mt-1 ${textColor}`}>{sub}</p>}
       {trend.length > 1 && (
         <div className="w-full h-8 mt-3">
-          <Sparklines
-            data={trend}
-            width={240}
-            height={32}
-            margin={2}
-            style={{ width: "100%", height: "100%", display: "block" }}
-          >
-            <SparklinesLine color={sparkColor} style={{ fill: "none", strokeWidth: 1.5 }} />
-          </Sparklines>
+          <MiniSparkline data={trend} color={sparkColor} />
         </div>
       )}
     </div>

@@ -1,6 +1,18 @@
-import { Sparklines, SparklinesLine } from "react-sparklines";
-
 const sparklineData = [30, 45, 38, 52, 48, 65, 58, 72, 68];
+
+const MiniSparkline = ({ data, color }: { data: number[]; color: string }) => {
+  const max = Math.max(...data, 1);
+  const w = 80;
+  const h = 32;
+  const pad = 2;
+  const step = (w - pad * 2) / Math.max(data.length - 1, 1);
+  const pts = data.map((v, i) => `${pad + i * step},${h - pad - (v / max) * (h - pad * 2)}`).join(" ");
+  return (
+    <svg width="100%" height="100%" viewBox={`0 0 ${w} ${h}`} preserveAspectRatio="none">
+      <polyline points={pts} fill="none" stroke={color} strokeWidth="1.5" strokeLinejoin="round" />
+    </svg>
+  );
+};
 
 interface LargeStatCardProps {
   label: string;
@@ -15,9 +27,7 @@ export const LargeStatCard = ({ label, value, trend, trendUp }: LargeStatCardPro
     <p className="text-2xl font-bold text-gray900 mt-1">{value}</p>
     <div className="flex items-center gap-3 mt-2">
       <div className="w-20 h-8">
-        <Sparklines data={sparklineData} width={80} height={32} margin={2}>
-          <SparklinesLine color={trendUp ? "#34A853" : "#CD432F"} style={{ fill: "none", strokeWidth: 1.5 }} />
-        </Sparklines>
+        <MiniSparkline data={sparklineData} color={trendUp ? "#34A853" : "#CD432F"} />
       </div>
       {trend && (
         <span className={`text-xs font-medium ${trendUp ? "text-springgreen600" : "text-red500"}`}>
