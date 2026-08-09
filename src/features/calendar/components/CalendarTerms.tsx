@@ -229,23 +229,18 @@ export const CalendarTerms = () => {
   const isPending = createMutation.isPending || updateMutation.isPending || deleteMutation.isPending;
 
   return (
-    <div className="max-w-2xl">
-      <div className="mb-10">
-        <p className="text-[11px] font-mono uppercase tracking-[0.18em] text-gray-400 mb-1">Academic Calendar</p>
-        <h1 className="text-2xl font-semibold text-gray-900">Terms</h1>
-        <p className="text-sm text-gray-500 mt-1 max-w-md">
-          Define the terms that make up your school year. The active term is detected automatically from your school calendar.
-        </p>
+    <div>
+      <div className="flex items-center justify-between mb-6">
+        {nextTerm && (
+          <Button onClick={openForm} variant="outline" size="sm">
+            Set up {termLabel(nextTerm).label}
+          </Button>
+        )}
       </div>
 
       <div className="mb-8">
         <div className="flex items-center justify-between mb-5">
           <p className="text-sm font-medium text-gray-900">Term Schedule</p>
-          {nextTerm && (
-            <Button onClick={openForm} variant="outline" size="sm">
-              Set up {termLabel(nextTerm).label}
-            </Button>
-          )}
         </div>
 
         <AnimatePresence>

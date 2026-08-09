@@ -1,10 +1,11 @@
 import { useState } from "react";
 import { Link, useParams } from "react-router";
-import { ArrowLeft2, Book1, Building, Calendar, Call, CloseCircle, Edit2, Message, Profile2User, TickCircle } from "iconsax-react";
+import { ArrowLeft2, Book1, Building, Calendar, Call, Edit2, Message, Profile2User } from "iconsax-react";
 
 import { Avatar } from "../../components/ui/Avatar";
 import { Button } from "../../components/ui/button";
-import { useTeacherDetail, useSetTeacherApproval } from "../../features/teacher/api";
+import { WarningBanner } from "../../components/others/WarningBanner";
+import { useTeacherDetail, useSetTeacherApproval, useSetTeacherActive } from "../../features/teacher/api";
 import { EditTeacherForm } from "../../features/teacher/components/EditTeacherForm";
 import { cn } from "../../lib/utils";
 
@@ -27,10 +28,24 @@ const InfoItem = ({ icon, label, value }: { icon: React.ReactNode; label: string
   </div>
 );
 
+const teacherStatus = (teacher: {
+  approvalStatus?: "APPROVED" | "PENDING" | "REJECTED";
+  active?: boolean;
+}): { label: string; className: string } => {
+  if (teacher.approvalStatus === "PENDING")
+    return { label: "Pending Approval", className: "bg-amber500/10 text-amber500" };
+  if (teacher.approvalStatus === "REJECTED")
+    return { label: "Rejected", className: "bg-red500/10 text-red500" };
+  if (teacher.active === false)
+    return { label: "Deactivated", className: "bg-amber500/10 text-amber500" };
+  return { label: "Active", className: "bg-springgreen600/10 text-springgreen600" };
+};
+
 export const AdminTeacherDetails = () => {
   const { id } = useParams<{ id: string }>();
   const { data: teacher, isLoading, error } = useTeacherDetail(id ?? "");
   const approvalMutation = useSetTeacherApproval();
+  const activeMutation = useSetTeacherActive();
   const [editing, setEditing] = useState(false);
 
   if (isLoading) {
@@ -60,6 +75,7 @@ export const AdminTeacherDetails = () => {
   }
 
   const formClass = teacher.formClass;
+  const status = teacherStatus(teacher);
 
   return (
     <div className="p-4 md:p-6 w-full">
@@ -71,41 +87,40 @@ export const AdminTeacherDetails = () => {
         <ArrowLeft2 variant="Linear" size={16} color="#FFFFFF" />
       </Link>
 
-      <div className="mt-4 bg-white rounded-xl border border-gray100 p-5 flex flex-wrap items-center gap-4">
-        <Avatar name={teacher.name} imageUrl={teacher.profilePictureUrl} size={56} />
-        <div className="min-w-0 flex-1">
-          <h1 className="text-lg font-semibold text-gray900">{teacher.name}</h1>
-          <p className="mt-0.5 truncate text-sm text-gray400">{teacher.email}</p>
-        </div>
-        <div className="flex flex-col items-end gap-2 shrink-0">
-          <div className="flex flex-wrap items-center gap-1.5">
+      <div className="mt-4 bg-white rounded-xl border border-gray100 p-5">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
+          <div className="flex items-center gap-4 min-w-0">
+            <Avatar name={teacher.name} imageUrl={teacher.profilePictureUrl} size={60} />
+            <div className="min-w-0">
+              <div className="flex flex-wrap items-center gap-2">
+                <h1 className="text-lg font-semibold text-gray900 truncate">{teacher.name}</h1>
+                <span
+                  className={cn(
+                    "rounded-full px-2.5 py-0.5 text-[11px] font-medium capitalize",
+                    status.className,
+                  )}
+                >
+                  {status.label}
+                </span>
+              </div>
+              <p className="mt-0.5 truncate text-sm text-gray400">{teacher.email}</p>
+              <div className="mt-2 flex flex-wrap items-center gap-2">
+                <span className="rounded-full bg-gray100 px-2.5 py-0.5 text-[11px] font-medium text-gray700 capitalize">
+                  {roleLabel(teacher.role)}
+                </span>
+                {formClass && (
+                  <span className="rounded-full bg-gray100 px-2.5 py-0.5 text-[11px] font-medium text-gray700">
+                    {formClass.name}
+                  </span>
+                )}
+              </div>
+            </div>
+          </div>
+          <div className="flex shrink-0 gap-2 sm:ml-auto">
             <Button size="sm" variant="outline" onClick={() => setEditing((v) => !v)}>
               <Edit2 size={14} color="#0D0D0D" />
               {editing ? "Close Editing" : "Edit Teacher"}
             </Button>
-          </div>
-          <div className="flex flex-col items-end gap-1.5">
-            <span className="rounded-full bg-gray100 px-2.5 py-0.5 text-[11px] font-medium text-gray700 capitalize">
-              {roleLabel(teacher.role)}
-            </span>
-            <span
-              className={cn(
-                "rounded-full px-2.5 py-0.5 text-[11px] font-medium capitalize",
-                teacher.active === false ? "bg-amber500/10 text-amber500" : "bg-springgreen600/10 text-springgreen600",
-              )}
-            >
-              {teacher.active === false ? "Inactive" : "Active"}
-            </span>
-            {teacher.approvalStatus === "PENDING" && (
-              <span className="rounded-full bg-amber500/10 px-2.5 py-0.5 text-[11px] font-medium text-amber500">
-                Pending Approval
-              </span>
-            )}
-            {teacher.approvalStatus === "REJECTED" && (
-              <span className="rounded-full bg-red500/10 px-2.5 py-0.5 text-[11px] font-medium text-red500">
-                Rejected
-              </span>
-            )}
           </div>
         </div>
       </div>
@@ -122,29 +137,72 @@ export const AdminTeacherDetails = () => {
         </div>
       )}
 
-      <div className="mt-4 bg-white rounded-xl border border-gray-100 p-5">
-        <p className="text-sm text-gray400 mb-3">Manage account access</p>
-        <div className="flex flex-wrap items-center gap-3">
-          <Button
-            variant="success"
-            disabled={approvalMutation.isPending}
-            onClick={() => approvalMutation.mutate({ id: teacher.id, status: "APPROVED" })}
+      <div className="mt-4 bg-white rounded-xl border border-gray100 p-5">
+        <h2 className="text-sm font-semibold text-gray900 mb-4">Manage account access</h2>
+
+        {teacher.approvalStatus === "PENDING" && (
+          <WarningBanner
+            title="Awaiting your decision"
+            description="This teacher has registered and is awaiting your decision. Rejecting also deactivates their account."
           >
-            <TickCircle size={16} color="#FFFFFF" />
-            {approvalMutation.isPending ? "Saving..." : "Approve Teacher"}
-          </Button>
-          <Button
-            variant="destructive"
-            disabled={approvalMutation.isPending}
-            onClick={() => approvalMutation.mutate({ id: teacher.id, status: "REJECTED" })}
+            <div className="flex flex-wrap items-center gap-2.5 mt-4">
+              <Button
+                variant="success"
+                disabled={approvalMutation.isPending}
+                onClick={() => approvalMutation.mutate({ id: teacher.id, status: "APPROVED" })}
+              >
+                {approvalMutation.isPending ? "Saving..." : "Approve Teacher"}
+              </Button>
+              <Button
+                variant="destructive"
+                disabled={approvalMutation.isPending}
+                onClick={() => approvalMutation.mutate({ id: teacher.id, status: "REJECTED" })}
+              >
+                Reject Teacher
+              </Button>
+            </div>
+          </WarningBanner>
+        )}
+
+        {teacher.approvalStatus === "APPROVED" && teacher.active === true && (
+          <WarningBanner
+            title="Teacher is active"
+            description="This teacher has access to the school's teaching dashboard. Deactivating temporarily blocks them from signing in."
           >
-            <CloseCircle size={16} color="#FFFFFF" />
-            Reject Teacher
-          </Button>
-        </div>
-        <p className="mt-3 text-xs text-gray400">
-          Approved teachers can access the school's teaching dashboard. Rejected teachers lose access.
-        </p>
+            <div className="flex flex-wrap items-center gap-2.5 mt-4">
+              <Button
+                variant="outline"
+                disabled={activeMutation.isPending}
+                onClick={() => activeMutation.mutate({ id: teacher.id, active: false })}
+              >
+                {activeMutation.isPending ? "Saving..." : "Deactivate Teacher"}
+              </Button>
+            </div>
+          </WarningBanner>
+        )}
+
+        {teacher.active === false && (
+          <WarningBanner
+            title="You deactivated this teacher's account"
+            description="Would you like to activate it?"
+          >
+            <div className="flex flex-wrap items-center gap-2.5 mt-4">
+              <Button
+                variant="success"
+                disabled={activeMutation.isPending || approvalMutation.isPending}
+                onClick={() => {
+                  if (teacher.approvalStatus === "REJECTED") {
+                    approvalMutation.mutate({ id: teacher.id, status: "APPROVED" });
+                  } else {
+                    activeMutation.mutate({ id: teacher.id, active: true });
+                  }
+                }}
+              >
+                {activeMutation.isPending || approvalMutation.isPending ? "Saving..." : "Activate Teacher"}
+              </Button>
+            </div>
+          </WarningBanner>
+        )}
       </div>
 
       <div className="mt-4 grid grid-cols-1 lg:grid-cols-2 gap-4">

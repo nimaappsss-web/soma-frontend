@@ -69,10 +69,6 @@ export const CalendarHolidays = () => {
   return (
     <div className="max-w-2xl">
       <div className="flex items-center justify-between mb-6">
-        <div>
-          <h1 className="text-xl font-semibold text-gray-900">Holidays</h1>
-          <p className="text-sm text-gray-400 mt-0.5">Non-school days — attendance will not be expected</p>
-        </div>
         <Button onClick={() => setShowForm(!showForm)} variant="outline" size="sm">
           {showForm ? "Cancel" : "Add Holiday"}
         </Button>

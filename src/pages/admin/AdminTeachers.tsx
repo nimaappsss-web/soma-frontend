@@ -188,10 +188,10 @@ export const AdminTeachers = () => {
                     </div>
                     <button
                       onClick={() => resendMutation.mutate(invite.id)}
-                      disabled={resendMutation.isPending}
+                      disabled={resendMutation.isPending && resendMutation.variables === invite.id}
                       className="text-xs text-blue-600 hover:text-blue-700 disabled:opacity-50 underline"
                     >
-                      {resendMutation.isPending ? "..." : "Resend"}
+                      {resendMutation.isPending && resendMutation.variables === invite.id ? "..." : "Resend"}
                     </button>
                   </div>
                 ))}
@@ -263,10 +263,10 @@ export const AdminTeachers = () => {
                 </div>
                 <button
                   onClick={() => resendMutation.mutate(invite.id)}
-                  disabled={resendMutation.isPending}
+                  disabled={resendMutation.isPending && resendMutation.variables === invite.id}
                   className="text-xs text-blue-600 hover:text-blue-700 disabled:opacity-50 underline"
                 >
-                  {resendMutation.isPending ? "..." : "Resend"}
+                  {resendMutation.isPending && resendMutation.variables === invite.id ? "..." : "Resend"}
                 </button>
               </div>
             ))}
@@ -295,35 +295,33 @@ export const AdminTeachers = () => {
                     </div>
                   </div>
                   <div className="flex items-center gap-2 shrink-0">
-                    {t.approvalStatus !== "APPROVED" && (
-                      <Button
-                        type="button"
-                        variant="success"
-                        size="sm"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          approvalMutation.mutate({ id: t.id, status: "APPROVED" });
-                        }}
-                        disabled={approvalMutation.isPending}
-                      >
-                        <TickCircle size={14} color="#FFFFFF" />
-                        Approve
-                      </Button>
-                    )}
-                    {t.approvalStatus !== "REJECTED" && (
-                      <Button
-                        type="button"
-                        variant="destructive"
-                        size="sm"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          approvalMutation.mutate({ id: t.id, status: "REJECTED" });
-                        }}
-                        disabled={approvalMutation.isPending}
-                      >
-                        <CloseCircle size={14} color="#FFFFFF" />
-                        Reject
-                      </Button>
+                    {t.approvalStatus !== "APPROVED" && t.approvalStatus !== "REJECTED" && (
+                      <>
+                        <button
+                          type="button"
+                          aria-label="Approve teacher"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            approvalMutation.mutate({ id: t.id, status: "APPROVED" });
+                          }}
+                          disabled={approvalMutation.isPending && approvalMutation.variables?.id === t.id && approvalMutation.variables?.status === "APPROVED"}
+                          className="flex h-8 w-8 items-center justify-center rounded-full bg-springgreen600/10 transition-colors hover:bg-springgreen600/20 active:scale-95 disabled:opacity-50"
+                        >
+                          <TickCircle size={16} color="#34A853" variant="Bold" />
+                        </button>
+                        <button
+                          type="button"
+                          aria-label="Reject teacher"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            approvalMutation.mutate({ id: t.id, status: "REJECTED" });
+                          }}
+                          disabled={approvalMutation.isPending && approvalMutation.variables?.id === t.id && approvalMutation.variables?.status === "REJECTED"}
+                          className="flex h-8 w-8 items-center justify-center rounded-full bg-red500/10 transition-colors hover:bg-red500/20 active:scale-95 disabled:opacity-50"
+                        >
+                          <CloseCircle size={16} color="#CD432F" variant="Bold" />
+                        </button>
+                      </>
                     )}
                     <button
                       onClick={(e) => {

@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo } from "react";
 import { Link } from "react-router";
 import toast from "react-hot-toast";
-import { CalendarTick, Add, Copy, Trash, Edit, Setting2, Warning2 } from "iconsax-react";
+import { CalendarTick, Add, Trash, Edit, Setting2, Warning2 } from "iconsax-react";
 
 import { useExamSchemes } from "../api/useExamSchemes";
 import { useCreateExamComponent } from "../api/useCreateExamComponent";
@@ -10,7 +10,6 @@ import { useDeleteExamComponent } from "../api/useDeleteExamComponent";
 import { useDeleteExamScheme } from "../api/useDeleteExamScheme";
 import { useCreateExamScheme } from "../api/useCreateExamScheme";
 import { useUpdateExamScheme } from "../api/useUpdateExamScheme";
-import { useCopyExamComponents } from "../api/useCopyExamComponents";
 import { useClasses } from "../../principal/api/useClasses";
 import { useSchoolSettings } from "../../settings/api/useSchoolSettings";
 import { useActiveTerm } from "../../calendar/api";
@@ -102,7 +101,6 @@ export const SchemeConfig = () => {
   const deleteSchemeMutation = useDeleteExamScheme();
   const createSchemeMutation = useCreateExamScheme();
   const updateSchemeMutation = useUpdateExamScheme();
-  const copyMutation = useCopyExamComponents();
 
   const schoolTypes = useMemo(() => {
     const st = settings?.find((s) => s.key === "schoolType");
@@ -150,8 +148,7 @@ export const SchemeConfig = () => {
     deleteComponentMutation.isPending ||
     deleteSchemeMutation.isPending ||
     createSchemeMutation.isPending ||
-    updateSchemeMutation.isPending ||
-    copyMutation.isPending;
+    updateSchemeMutation.isPending;
 
   const openAddComponent = (scheme: ExamSchemeInfo) => {
     setEditingId(null);
@@ -251,8 +248,6 @@ export const SchemeConfig = () => {
     );
   };
 
-  const hasComponents = schemes.some((s) => s.components.length > 0);
-
   return (
     <div className="p-4 md:p-6 w-full">
       <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3">
@@ -271,16 +266,7 @@ export const SchemeConfig = () => {
                 onChange={setTerm}
                 buttonClassName="w-full sm:w-40"
               />
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => copyMutation.mutate({ term })}
-                disabled={isPending || hasComponents}
-              >
-                <Copy variant="Linear" size={14} color="currentColor" />
-                Copy previous scheme
-              </Button>
-              <Button size="sm" onClick={openCreateScope} disabled={isPending}>
+              <Button onClick={openCreateScope} disabled={isPending}>
                 <Add variant="Linear" size={14} color="#FFFFFF" />
                 New configuration
               </Button>

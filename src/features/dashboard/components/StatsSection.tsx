@@ -25,7 +25,7 @@ export const StatsSection = ({ stats, isLoading }: StatsSectionProps) => (
     </div>
     <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-4">
       <SmallStatCard label="Total Teachers" value={isLoading ? "—" : String(stats?.teachers.total ?? 0)} trend="+2%" trendUp />
-      <SmallStatCard label="Total Parents" value={isLoading ? "—" : String(stats?.parents.total ?? 0)} trend="+92.7%" trendUp />
+      <SmallStatCard label="Active Students" value={isLoading ? "—" : String(stats?.students.active ?? 0)} trend="+4.2%" trendUp />
       <SmallStatCard label="Active Subjects" value={isLoading ? "—" : String(stats?.subjects.total ?? 0)} />
       <SmallStatCard label="Classes" value={isLoading ? "—" : String(stats?.classes.total ?? 0)} />
     </div>

@@ -9,7 +9,7 @@ import { SomaLoader } from "../../components/ui/SomaLoader";
 
 export const TeacherSubjects = () => {
   const { user } = useAuth();
-  const { assignments, schoolName, name, isLoading } = useTeacherProfile();
+  const { assignments, schoolName, isLoading } = useTeacherProfile();
   const { data: students, isLoading: studentsLoading } = useAllStudents(user?.id ?? "");
 
   const countsByClass = useMemo(() => {
@@ -22,7 +22,6 @@ export const TeacherSubjects = () => {
   }, [students]);
 
   const loading = isLoading || studentsLoading;
-  const firstName = name?.split(" ")[0];
   const totalStudents = assignments.reduce(
     (sum, a) => sum + a.classes.reduce((acc, c) => acc + (countsByClass.get(c.id) ?? 0), 0),
     0,
@@ -40,9 +39,7 @@ export const TeacherSubjects = () => {
     <div className="p-4 md:p-6 w-full">
       <div className="mb-1">
         <p className="text-sm text-gray500">{schoolName}</p>
-        <h1 className="text-2xl font-bold text-gray900 mt-0.5">
-          My Subjects{firstName ? `, ${firstName}` : ""}
-        </h1>
+        <h1 className="text-2xl font-bold text-gray900 mt-0.5">My Subjects</h1>
       </div>
 
       {assignments.length > 0 ? (
