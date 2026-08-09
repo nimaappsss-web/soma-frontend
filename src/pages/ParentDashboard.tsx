@@ -39,7 +39,7 @@ export const ParentDashboard = () => {
   return (
     <div className="max-w-3xl mx-auto px-6 py-8">
       <div className="mb-6">
-        <h2 className="text-2xl font-bold text-gray900">Parent Portal</h2>
+        <h2 className="text-xl md:text-2xl font-bold text-gray900">Parent Portal</h2>
         <p className="text-sm text-gray500 mt-1">
           {parent?.email} &middot; {parent?.phone ?? "No phone"}
         </p>

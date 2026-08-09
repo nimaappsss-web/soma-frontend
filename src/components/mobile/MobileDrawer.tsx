@@ -35,7 +35,7 @@ export const MobileDrawer = ({ open, onClose, children }: MobileDrawerProps) => 
           "fixed inset-y-0 left-0 z-50 w-[80%] max-w-[300px] bg-pureWhite shadow-xl transition-transform duration-300 ease-out md:hidden flex flex-col",
           open ? "translate-x-0" : "-translate-x-full",
         )}
-        style={{ paddingTop: "env(safe-area-inset-top)" }}
+        style={{ paddingTop: "env(safe-area-inset-top)", paddingBottom: "env(safe-area-inset-bottom)" }}
       >
         {children}
       </aside>

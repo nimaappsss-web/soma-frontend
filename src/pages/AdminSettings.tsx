@@ -58,7 +58,7 @@ export const AdminSettings = () => {
 
   return (
     <div className="p-6 max-w-4xl">
-      <h1 className="text-2xl font-semibold text-gray-900">Settings</h1>
+      <h1 className="text-xl md:text-2xl font-bold text-gray900">Settings</h1>
 
       <div className="flex gap-3 mt-6 border-b border-gray-200">
         {tabs.map((tab) => {

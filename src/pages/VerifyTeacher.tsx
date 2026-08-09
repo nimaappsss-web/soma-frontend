@@ -126,7 +126,13 @@ export const VerifyTeacher = () => {
     classList.map((c) => ({ value: c.id, label: c.name }));
   const formClassOptions: SelectOption[] = [
     { value: "", label: "Not a class teacher" },
-    ...classOptions,
+    ...classList.map((c) => ({
+      value: c.id,
+      label: c.name,
+      badge: c.formTeacher?.name,
+      badgeTone: (c.formTeacher ? "taken" : undefined) as "taken" | undefined,
+      disabled: !!c.formTeacher,
+    })),
   ];
 
   useEffect(() => {

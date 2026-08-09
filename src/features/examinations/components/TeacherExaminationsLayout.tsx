@@ -1,5 +1,4 @@
 import { NavLink, Outlet, Navigate } from "react-router";
-import { StatusUp } from "iconsax-react";
 import { cn } from "../../../lib/utils";
 
 const tabs = [
@@ -12,10 +11,9 @@ export const TeacherExaminationsLayout = () => {
     <div className="flex flex-col min-h-full">
       <div className="p-4 md:p-6 pb-0 w-full">
         <div className="flex items-center gap-3 mb-1">
-          <StatusUp size={20} color="#B3B3B3" variant="Bold" />
-          <h1 className="text-xl font-semibold text-gray900">CA &amp; Examinations</h1>
+          <h1 className="text-xl md:text-2xl font-bold text-gray900">CA &amp; Examinations</h1>
         </div>
-        <p className="text-sm text-gray500 mb-4 ml-8">
+        <p className="text-sm text-gray500 mb-4">
           Record your subject CA &amp; exam scores, and pick up assessments you've started
         </p>
 

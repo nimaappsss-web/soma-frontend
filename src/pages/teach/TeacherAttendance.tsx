@@ -280,7 +280,7 @@ export const TeacherAttendance = () => {
     <div className="p-4 md:p-6 w-full">
       <div className="mb-4 flex items-center justify-between">
         <div>
-          <h1 className="text-xl font-bold text-gray-800">
+          <h1 className="text-xl md:text-2xl font-bold text-gray900">
             Attendance — {formClass}
           </h1>
           <p className="text-xs text-gray-400 mt-0.5">

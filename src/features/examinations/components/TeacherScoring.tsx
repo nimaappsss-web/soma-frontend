@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useRef, useCallback } from "react";
 import { useSearchParams, useNavigate } from "react-router";
 import { useLiveQuery } from "dexie-react-hooks";
 import {
@@ -11,7 +11,8 @@ import {
   SearchNormal,
   CloseCircle,
   Warning2,
-  Trash,
+  Element4,
+  Fatrows,
 } from "iconsax-react";
 
 import { useAuth } from "../../../contexts/AuthContext";
@@ -45,6 +46,7 @@ interface SubjectBlockProps {
   onToggle: () => void;
   initialClassId?: string;
   initialComponentId?: string;
+  onDirtyChange?: (subjectId: string, dirty: boolean) => void;
 }
 
 type ViewMode = "list" | "card";
@@ -56,6 +58,7 @@ const SubjectBlock = ({
   onToggle,
   initialClassId = "",
   initialComponentId = "",
+  onDirtyChange,
 }: SubjectBlockProps) => {
   const { user } = useAuth();
   const userId = user?.id ?? "";
@@ -70,13 +73,13 @@ const SubjectBlock = ({
   const [classId, setClassId] = useState<string>(() => initialClassId || classOptions[0]?.value || "");
   const [componentId, setComponentId] = useState<string>(initialComponentId);
   const [index, setIndex] = useState(0);
-  const [view, setView] = useState<ViewMode>(() =>
-    typeof window !== "undefined" && window.innerWidth < 768 ? "card" : "list",
-  );
+  const [view, setView] = useState<ViewMode>("card");
   const [scores, setScores] = useState<Record<string, number>>({});
   const [search, setSearch] = useState("");
   const [sessionDismissed, setSessionDismissed] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
+  const [switchTarget, setSwitchTarget] = useState<{ kind: "component" | "class"; value: string } | null>(null);
+  const rosterStripRef = useRef<HTMLDivElement>(null);
 
   const classSchoolType = classOptions.find((c) => c.value === classId)?.schoolType ?? "";
   const { data: schemeData } = useExamComponents(term, undefined, classSchoolType);
@@ -123,6 +126,15 @@ const SubjectBlock = ({
   }, [q]);
 
   useEffect(() => {
+    if (view !== "card" || !rosterStripRef.current) return;
+    const strip = rosterStripRef.current;
+    const activeBtn = strip.querySelector<HTMLButtonElement>("[data-active='true']");
+    if (activeBtn) {
+      activeBtn.scrollIntoView({ behavior: "smooth", inline: "center", block: "nearest" });
+    }
+  }, [index, view, q]);
+
+  useEffect(() => {
     if (!examKey || savedLoading || rosterLoading) return;
     const rosterIds = new Set(roster.map((s) => s.id));
     setScores((prev) => {
@@ -143,6 +155,17 @@ const SubjectBlock = ({
   const allScored = roster.length > 0 && enteredCount === roster.length;
   const current = rosterCards[index] ?? null;
   const isCurrentSaved = current ? savedScoreMap.has(current.studentId) : false;
+
+  const hasUnsaved = roster.some((s) => {
+    const entered = scores[s.id];
+    if (entered === undefined) return false;
+    const saved = savedScoreMap.get(s.id)?.score;
+    return saved === undefined || saved !== entered;
+  });
+
+  useEffect(() => {
+    onDirtyChange?.(assignment.subject.id, hasUnsaved);
+  }, [hasUnsaved, onDirtyChange, assignment.subject.id]);
 
   const pendingSync = useLiveQuery(
     () => {
@@ -200,7 +223,7 @@ const SubjectBlock = ({
     setScores((prev) => ({ ...prev, [studentId]: value }));
   };
 
-  const handleSave = () => {
+  const handleSave = (onSaved?: () => void) => {
     if (!classId || !componentId) return;
 
     const entries = roster
@@ -214,14 +237,31 @@ const SubjectBlock = ({
       studentNames[s.id] = s.name;
     });
 
-    saveMutation.mutate({
-      subjectId: subject.id,
-      classId,
-      componentId,
-      term,
-      scores: entries,
-      studentNames,
-    });
+    saveMutation.mutate(
+      {
+        subjectId: subject.id,
+        classId,
+        componentId,
+        term,
+        scores: entries,
+        studentNames,
+      },
+      { onSuccess: onSaved },
+    );
+  };
+
+  const requestSwitch = (kind: "component" | "class", value: string) => {
+    if (hasUnsaved) {
+      setSwitchTarget({ kind, value });
+      return;
+    }
+    applySwitch(kind, value);
+  };
+
+  const applySwitch = (kind: "component" | "class", value: string) => {
+    setSwitchTarget(null);
+    if (kind === "component") setComponentId(value);
+    else setClassId(value);
   };
 
   const handleNext = () => {
@@ -237,11 +277,11 @@ const SubjectBlock = ({
   };
 
   return (
-    <div className="bg-white rounded-xl border border-gray100 overflow-hidden">
+    <div className="bg-white rounded-xl border border-gray100">
       <button
         type="button"
         onClick={onToggle}
-        className="w-full flex items-center gap-3 p-4 text-left hover:bg-gray50/60 transition-colors"
+        className="w-full flex items-center gap-3 p-4 text-left hover:bg-gray50/60 transition-colors rounded-xl"
       >
         <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-gray100">
           <Book1 size={20} variant="Bold" color="#0D0D0D" />
@@ -274,19 +314,22 @@ const SubjectBlock = ({
             </div>
           ) : (
             <div className="pt-4">
-              <div className="w-full sm:w-64">
+              <div className="mb-6">
                 <p className="text-xs font-medium text-gray500 mb-1.5">Class</p>
                 <SelectDropdown
                   options={classOptions}
                   value={classId}
-                  onChange={setClassId}
+                  onChange={(v) => requestSwitch("class", v)}
                   placeholder="Select class"
                   searchable
                 />
               </div>
 
-              <div className="mt-4">
-                <p className="text-xs font-medium text-gray500 mb-2">Mark type</p>
+              <div className="mb-6">
+                <p className="text-xs font-medium text-gray500 mb-1">Mark type</p>
+                <p className="text-[11px] text-gray400 mb-2">
+                  Tap a mark type below to open its scoring form and enter scores out of its maximum.
+                </p>
                 <div className="flex flex-wrap gap-2">
                   {components.map((c) => {
                     const active = componentId === c.id;
@@ -294,7 +337,7 @@ const SubjectBlock = ({
                       <button
                         key={c.id}
                         type="button"
-                        onClick={() => setComponentId(c.id)}
+                        onClick={() => requestSwitch("component", c.id)}
                         className={cn(
                           "flex items-center gap-1.5 rounded-full border h-10 sm:h-9 px-4 text-sm font-medium transition-all active:scale-95",
                           active
@@ -324,7 +367,7 @@ const SubjectBlock = ({
               </div>
 
               {componentId && selectedComponent && (activeCount ?? 0) > 0 && !sessionDismissed && (
-                <div className="mt-5 flex flex-col sm:flex-row sm:items-center gap-3 rounded-xl border border-gray200 bg-offWhite px-4 py-3">
+                <div className="mb-6 rounded-xl border border-gray200 bg-offWhite p-4">
                   <div className="flex items-start gap-2.5 min-w-0">
                     <Warning2 size={17} variant="Bold" color="#0D0D0D" className="shrink-0 mt-0.5" />
                     <div className="min-w-0">
@@ -337,20 +380,19 @@ const SubjectBlock = ({
                       </p>
                     </div>
                   </div>
-                  <div className="flex items-center gap-2 sm:ml-auto shrink-0">
-                    <Button size="sm" variant="outline" onClick={() => setSessionDismissed(true)}>
+                  <div className="flex flex-wrap items-center gap-2 sm:gap-2 mt-3">
+                    <Button size="sm" variant="outline" className="flex-1 sm:flex-none" onClick={() => setSessionDismissed(true)}>
                       Continue
                     </Button>
-                    <Button size="sm" variant="outline" onClick={() => navigate("/teach/ca-and-exams/active")}>
+                    <Button size="sm" variant="outline" className="flex-1 sm:flex-none" onClick={() => navigate("/teach/ca-and-exams/active")}>
                       View active
                     </Button>
                     <Button
                       size="sm"
                       variant="outline"
                       onClick={() => setConfirmDelete(true)}
-                      className="text-red500 border-red500/40 hover:bg-red500/5"
+                      className="flex-1 sm:flex-none text-red500 border-red500/40 hover:bg-red500/5"
                     >
-                      <Trash size={14} variant="Bold" />
                       Start over
                     </Button>
                   </div>
@@ -358,7 +400,7 @@ const SubjectBlock = ({
               )}
 
               {componentId && selectedComponent && (
-                <div className="mt-5">
+                <div className="mt-2">
                   {rosterLoading ? (
                     <div className="flex items-center justify-center gap-3 rounded-xl bg-gray50 py-8">
                       <div className="h-5 w-5 animate-spin rounded-full border-2 border-gray200 border-t-gray900" />
@@ -407,28 +449,61 @@ const SubjectBlock = ({
                         />
                       </div>
 
-                      <div className="mt-4 relative max-w-sm">
-                        <SearchNormal
-                          className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 pointer-events-none"
-                          variant="Bold"
-                          color="#B3B3B3"
-                        />
-                        <input
-                          type="text"
-                          value={search}
-                          onChange={(e) => setSearch(e.target.value)}
-                          placeholder="Search student by name or admission no."
-                          className="w-full h-11 rounded-full border border-gray100 bg-white pl-11 pr-11 text-sm text-gray900 placeholder:text-gray400 focus:outline-none focus:border-gray900 transition-colors"
-                        />
-                        {search && (
-<button
-                          type="button"
-                          onClick={() => setSearch("")}
-                          className="absolute right-3 top-1/2 -translate-y-1/2 flex h-7 w-7 items-center justify-center rounded-full text-gray400 hover:bg-gray50 hover:text-gray900 transition-colors"
-                          aria-label="Clear search"
-                        >
-                          <CloseCircle size={16} variant="Bold" color="#8C8C8C" />
-                        </button>
+                      <div className="sticky top-0 z-20 bg-white -mx-4 px-4 pb-1 md:mx-0 md:px-0 pt-2 md:pt-0">
+                        <div className="relative">
+                          <SearchNormal
+                            size={16}
+                            variant="Linear"
+                            color="#B3B3B3"
+                            className="absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none"
+                          />
+                          <input
+                            type="text"
+                            value={search}
+                            onChange={(e) => setSearch(e.target.value)}
+                            placeholder="Search student by name or admission no."
+                            className="h-[45px] w-full rounded-full border border-input bg-background pl-10 pr-10 text-sm placeholder:text-placeholder focus-visible:outline-none"
+                          />
+                          {search && (
+                            <button
+                              type="button"
+                              onClick={() => setSearch("")}
+                              className="absolute right-2 top-1/2 -translate-y-1/2 flex h-7 w-7 items-center justify-center rounded-full text-gray400 hover:bg-gray50 hover:text-gray900 transition-colors"
+                              aria-label="Clear search"
+                            >
+                              <CloseCircle size={16} variant="Bold" color="#8C8C8C" />
+                            </button>
+                          )}
+                        </div>
+
+                        {view === "card" && (
+                          <div>
+                            <div
+                              ref={rosterStripRef}
+                              className="no-scrollbar flex gap-1.5 overflow-x-auto py-2.5 pl-1"
+                            >
+                              {rosterCards.map((s, i) => {
+                                const done = savedScoreMap.has(s.studentId) || scores[s.studentId] !== undefined;
+                                const isCurrent = i === index;
+                                return (
+                                  <button
+                                    key={s.studentId}
+                                    type="button"
+                                    onClick={() => setIndex(i)}
+                                    title={s.studentName}
+                                    data-active={isCurrent}
+                                    className={cn(
+                                      "h-11 w-11 sm:h-9 sm:w-9 shrink-0 rounded-full text-xs sm:text-[11px] font-bold flex items-center justify-center transition-all active:scale-95",
+                                      isCurrent && "ring-2 ring-gray900 ring-offset-2",
+                                      done ? "bg-springgreen600 text-white" : "bg-gray100 text-gray700 hover:bg-gray200",
+                                    )}
+                                  >
+                                    {initials(s.studentName)}
+                                  </button>
+                                );
+                              })}
+                            </div>
+                          </div>
                         )}
                       </div>
 
@@ -441,54 +516,32 @@ const SubjectBlock = ({
                         </div>
                       )}
 
-                      {view === "card" && (
-                        <div className="mt-4">
-                          <div className="flex gap-1.5 overflow-x-auto pb-2 -mx-4 px-4">
-                            {rosterCards.map((s, i) => {
-                              const done = savedScoreMap.has(s.studentId) || scores[s.studentId] !== undefined;
-                              const isCurrent = i === index;
-                              return (
-                                <button
-                                  key={s.studentId}
-                                  type="button"
-                                  onClick={() => setIndex(i)}
-                                  title={s.studentName}
-                                  className={cn(
-                                    "h-10 w-10 sm:h-8 sm:w-8 shrink-0 rounded-full text-[11px] sm:text-[10px] font-bold flex items-center justify-center transition-all active:scale-95",
-                                    isCurrent && "ring-2 ring-gray900 ring-offset-2",
-                                    done ? "bg-springgreen600 text-white" : "bg-gray100 text-gray700 hover:bg-gray200",
-                                  )}
-                                >
-                                  {initials(s.studentName)}
-                                </button>
-                              );
-                            })}
-                          </div>
-                        </div>
-                      )}
-
                       <div className="mt-4 flex flex-col gap-3">
                         <div className="flex items-center justify-between gap-3">
                           <div className="flex rounded-full border border-gray100 bg-offWhite p-0.5 w-fit">
                             <button
                               type="button"
                               onClick={() => setView("list")}
+                              aria-label="List view"
+                              title="List view"
                               className={cn(
-                                "rounded-full px-5 h-10 sm:h-9 text-sm sm:text-xs font-medium transition-all active:scale-95",
+                                "h-9 w-9 sm:h-10 sm:w-10 rounded-full flex items-center justify-center transition-all active:scale-95",
                                 view === "list" ? "bg-gray900 text-white" : "text-gray500 hover:text-gray900",
                               )}
                             >
-                              List
+                              <Fatrows size={18} color={view === "list" ? "#FFFFFF" : "#8C8C8C"} />
                             </button>
                             <button
                               type="button"
                               onClick={() => setView("card")}
+                              aria-label="Card view"
+                              title="Card view"
                               className={cn(
-                                "rounded-full px-5 h-10 sm:h-9 text-sm sm:text-xs font-medium transition-all active:scale-95",
+                                "h-9 w-9 sm:h-10 sm:w-10 rounded-full flex items-center justify-center transition-all active:scale-95",
                                 view === "card" ? "bg-gray900 text-white" : "text-gray500 hover:text-gray900",
                               )}
                             >
-                              Card
+                              <Element4 size={18} color={view === "card" ? "#FFFFFF" : "#8C8C8C"} />
                             </button>
                           </div>
 
@@ -506,7 +559,7 @@ const SubjectBlock = ({
                         </div>
 
                         <button
-                          onClick={handleSave}
+                          onClick={() => handleSave()}
                           disabled={enteredCount === 0 || saveMutation.isPending}
                           className="w-full sm:w-auto sm:self-end active:scale-95 transition-transform"
                         >
@@ -557,20 +610,14 @@ const SubjectBlock = ({
       <Dialog open={confirmDelete} onOpenChange={setConfirmDelete}>
         <DialogContent className="max-w-sm">
           <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <Trash size={16} variant="Bold" className="text-red500" />
-              Delete & start over?
-            </DialogTitle>
+            <DialogTitle className="pr-10">Delete & start over?</DialogTitle>
             <DialogDescription className="text-sm text-gray500">
               This clears all {activeCount ?? 0} saved scores for {selectedComponent?.name ?? "this mark type"} in{" "}
               {classOptions.find((c) => c.value === classId)?.label ?? "this class"}. They will be removed from your
               active sessions — on this device and when you're back online.
             </DialogDescription>
           </DialogHeader>
-          <div className="flex items-center justify-end gap-2 mt-2">
-            <Button variant="outline" size="sm" onClick={() => setConfirmDelete(false)} disabled={deleteScoresMutation.isPending}>
-              Cancel
-            </Button>
+          <div className="flex items-center justify-end gap-2 mt-2 pr-6 pb-6 md:pb-0">
             <Button
               variant="outline"
               size="sm"
@@ -594,6 +641,30 @@ const SubjectBlock = ({
           </div>
         </DialogContent>
       </Dialog>
+
+      <Dialog open={!!switchTarget} onOpenChange={(o) => !o && setSwitchTarget(null)}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle className="pr-10">Save before switching?</DialogTitle>
+            <DialogDescription className="text-sm text-gray500">
+              You have {enteredCount > 0 ? `${enteredCount} unsaved score${enteredCount === 1 ? "" : "s"}` : "unsaved changes"} in{" "}
+              {selectedComponent?.name ?? "this mark type"}. Save first so your progress isn't lost.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex items-center justify-end gap-2 mt-2 pr-6 pb-6 md:pb-0">
+            <Button
+              size="sm"
+              disabled={saveMutation.isPending}
+              onClick={() => {
+                if (!switchTarget) return;
+                handleSave(() => applySwitch(switchTarget.kind, switchTarget.value));
+              }}
+            >
+              {saveMutation.isPending ? "Saving…" : "Save & continue"}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
@@ -601,6 +672,7 @@ const SubjectBlock = ({
 export const TeacherScoring = () => {
   const { user } = useAuth();
   const userId = user?.id ?? "";
+  const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const focusSubjectId = searchParams.get("subjectId") ?? "";
   const focusClassId = searchParams.get("classId") ?? "";
@@ -613,6 +685,10 @@ export const TeacherScoring = () => {
 
   const [openSubject, setOpenSubject] = useState<string | null>(null);
   const [openedOnce, setOpenedOnce] = useState(false);
+  const [anyUnsaved, setAnyUnsaved] = useState(false);
+  const [confirmLeave, setConfirmLeave] = useState(false);
+  const pendingNavRef = useRef<string>("");
+  const dirtyRef = useRef<Set<string>>(new Set());
 
   useEffect(() => {
     if (!openedOnce && assignments.length > 0) {
@@ -621,6 +697,46 @@ export const TeacherScoring = () => {
       setOpenedOnce(true);
     }
   }, [assignments, openedOnce, focusSubjectId]);
+
+  const handleDirtyChange = useCallback((subjectId: string, dirty: boolean) => {
+    if (dirty) dirtyRef.current.add(subjectId);
+    else dirtyRef.current.delete(subjectId);
+    setAnyUnsaved(dirtyRef.current.size > 0);
+  }, []);
+
+  const requestNavigate = useCallback((to: string) => {
+    pendingNavRef.current = to;
+    setConfirmLeave(true);
+  }, []);
+
+  useEffect(() => {
+    if (!anyUnsaved) return;
+
+    const onBeforeUnload = (e: BeforeUnloadEvent) => {
+      e.preventDefault();
+      e.returnValue = "";
+    };
+    window.addEventListener("beforeunload", onBeforeUnload);
+
+    const onClick = (e: MouseEvent) => {
+      const target = e.target as HTMLElement;
+      const anchor = target.closest?.("a[href]");
+      if (!anchor) return;
+      const href = anchor.getAttribute("href");
+      if (!href || href.startsWith("#") || href.startsWith("mailto:") || href.startsWith("tel:")) return;
+      if (e.defaultPrevented) return;
+      if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+      e.preventDefault();
+      e.stopPropagation();
+      requestNavigate(href);
+    };
+    document.addEventListener("click", onClick, true);
+
+    return () => {
+      window.removeEventListener("beforeunload", onBeforeUnload);
+      document.removeEventListener("click", onClick, true);
+    };
+  }, [anyUnsaved, requestNavigate]);
 
   if (assignmentsLoading || termLoading) {
     return (
@@ -666,9 +782,34 @@ export const TeacherScoring = () => {
             onToggle={() => setOpenSubject((prev) => (prev === a.subject.id ? null : a.subject.id))}
             initialClassId={a.subject.id === focusSubjectId ? focusClassId : ""}
             initialComponentId={a.subject.id === focusSubjectId ? focusComponentId : ""}
+            onDirtyChange={handleDirtyChange}
           />
         ))}
       </div>
+
+      <Dialog open={confirmLeave} onOpenChange={setConfirmLeave}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle className="pr-10">Leave without saving?</DialogTitle>
+            <DialogDescription className="text-sm text-gray500">
+              You have unsaved scores. They will be lost if you navigate away.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex items-center justify-end gap-2 mt-2 pr-6 pb-6 md:pb-0">
+            <Button
+              size="sm"
+              onClick={() => {
+                const pending = pendingNavRef.current;
+                setConfirmLeave(false);
+                setAnyUnsaved(false);
+                if (pending) navigate(pending);
+              }}
+            >
+              Leave anyway
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

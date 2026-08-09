@@ -39,7 +39,7 @@ export const TeacherSubjects = () => {
     <div className="p-4 md:p-6 w-full">
       <div className="mb-1">
         <p className="text-sm text-gray500">{schoolName}</p>
-        <h1 className="text-2xl font-bold text-gray900 mt-0.5">My Subjects</h1>
+        <h1 className="text-xl md:text-2xl font-bold text-gray900 mt-0.5">My Subjects</h1>
       </div>
 
       {assignments.length > 0 ? (

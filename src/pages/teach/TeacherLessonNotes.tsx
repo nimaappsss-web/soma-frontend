@@ -224,7 +224,7 @@ export const TeacherLessonNotes = () => {
   };
   return (
     <div className="p-4 md:p-8">
-      <h2 className="text-2xl font-bold text-gray-800 mb-6">Lesson Notes</h2>
+      <h2 className="text-xl md:text-2xl font-bold text-gray900 mb-6">Lesson Notes</h2>
       <div className="flex flex-col lg:flex-row gap-6">
         <div className="w-full lg:w-56 shrink-0">
           <button

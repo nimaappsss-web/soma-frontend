@@ -55,7 +55,7 @@ export const ReportsManagement = () => {
     <div className="p-6 max-w-5xl">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-semibold text-gray-900">Report Card</h1>
+          <h1 className="text-xl md:text-2xl font-bold text-gray900">Report Card</h1>
           <p className="text-sm text-gray-400 mt-1">
             Choose the template and theme used for every student report card across the school.
           </p>

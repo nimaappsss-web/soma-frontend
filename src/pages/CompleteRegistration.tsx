@@ -50,6 +50,14 @@ export const CompleteRegistration = () => {
     label: c.name,
   }));
 
+  const formClassOptions: SelectOption[] = classes.map((c) => ({
+    value: c.id,
+    label: c.name,
+    badge: c.formTeacher?.name,
+    badgeTone: (c.formTeacher ? "taken" : undefined) as "taken" | undefined,
+    disabled: !!c.formTeacher,
+  }));
+
   const handleAddSubject = () => {
     setAssignments((prev) => [...prev, { subjectId: "", classIds: [] }]);
   };
@@ -164,7 +172,7 @@ export const CompleteRegistration = () => {
               <Label htmlFor="formClass">Class Teacher (optional)</Label>
               <SelectDropdown
                 placeholder="Not a class teacher"
-                options={classOptions}
+                options={formClassOptions}
                 value={formClassId}
                 onChange={setFormClassId}
               />

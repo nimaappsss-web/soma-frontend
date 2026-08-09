@@ -106,7 +106,7 @@ export const AdminProfile = () => {
             >
               <ArrowLeft2 variant="Linear" size={16} color="#FFFFFF" />
             </Link>
-            <h2 className="text-2xl font-bold text-gray-800 mt-1">Profile</h2>
+            <h2 className="text-xl md:text-2xl font-bold text-gray900 mt-1">Profile</h2>
           </div>
         </div>
         <div className="space-y-6">

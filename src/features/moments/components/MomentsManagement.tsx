@@ -10,7 +10,7 @@ export const MomentsManagement = () => {
   return (
     <div className="p-6 max-w-4xl">
       <div className="mb-6">
-        <h1 className="text-2xl font-semibold text-gray-900">Celebrations</h1>
+        <h1 className="text-xl md:text-2xl font-bold text-gray900">Celebrations</h1>
         <p className="text-sm text-gray-400 mt-1">Upcoming birthdays and work anniversaries</p>
       </div>
 

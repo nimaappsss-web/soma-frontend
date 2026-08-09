@@ -85,7 +85,12 @@ const DialogContent = forwardRef<
     <DialogOverlay />
     <DialogPrimitive.Content
       ref={ref}
-      className={cn(contentStyles({ variant }), className)}
+      style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
+      className={cn(
+        contentStyles({ variant }),
+        variant === "center" || variant === "middle" ? "pb-4 md:pb-6" : "",
+        className,
+      )}
       {...props}
     >
       {(variant === "center" || variant === "middle") && (

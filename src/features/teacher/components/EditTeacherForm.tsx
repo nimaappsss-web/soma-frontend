@@ -11,7 +11,7 @@ import { SelectDropdown } from "../../../components/ui/select-dropdown";
 import { MultiSelect, type SelectOption } from "../../../components/ui/multi-select";
 import { useAuth } from "../../../contexts/AuthContext";
 import { useClasses, useSubjects } from "../../principal/api";
-import { useTeacherDetail } from "../api";
+import { useTeacherDetail, useTeachers } from "../api";
 import { editTeacherSchema, type EditTeacherFormData } from "../utils/validationSchema";
 import type { UpdateTeacherPayload } from "../types";
 import { db, type TeacherCache } from "../../../db/db";
@@ -32,6 +32,7 @@ interface EditTeacherFormProps {
 export const EditTeacherForm = ({ teacherId, onDone, onCancel }: EditTeacherFormProps) => {
   const { user } = useAuth();
   const { data: teacherDetail } = useTeacherDetail(teacherId);
+  const { data: teachersData } = useTeachers();
   const { data: classesData } = useClasses();
   const { data: subjects } = useSubjects();
   const [assignments, setAssignments] = useState<AssignmentRow[]>([]);
@@ -50,7 +51,23 @@ export const EditTeacherForm = ({ teacherId, onDone, onCancel }: EditTeacherForm
   });
 
   const classes = classesData?.classes ?? [];
-  const classOptions: SelectOption[] = classes.map((c) => ({ value: c.id, label: c.name }));
+  const teachers = teachersData?.teachers ?? [];
+  const formClassOwner = new Map<string, string>();
+  teachers.forEach((t) => {
+    if (t.formClassId && t.id !== teacherId && !formClassOwner.has(t.formClassId)) {
+      formClassOwner.set(t.formClassId, t.name);
+    }
+  });
+  const classOptions: SelectOption[] = classes.map((c) => {
+    const takenBy = formClassOwner.get(c.id);
+    return {
+      value: c.id,
+      label: c.name,
+      badge: takenBy,
+      badgeTone: takenBy ? "taken" : undefined,
+      disabled: !!takenBy,
+    };
+  });
   const subjectOptions: SelectOption[] = (subjects ?? []).map((s) => ({ value: s.id, label: s.name }));
 
   useEffect(() => {
@@ -89,6 +106,11 @@ export const EditTeacherForm = ({ teacherId, onDone, onCancel }: EditTeacherForm
 
   const onSubmit = async (formData: EditTeacherFormData) => {
     if (!teacherId || !user) return;
+    const takenBy = formData.formClassId ? formClassOwner.get(formData.formClassId) : undefined;
+    if (takenBy) {
+      toast.error(`This class already has ${takenBy} as class teacher`);
+      return;
+    }
     setSaving(true);
     try {
       const payload: UpdateTeacherPayload = {
@@ -140,6 +162,17 @@ export const EditTeacherForm = ({ teacherId, onDone, onCancel }: EditTeacherForm
             value={watch("formClassId") ?? ""}
             onChange={(v) => setValue("formClassId", v)}
           />
+          {(() => {
+            const takenBy = watch("formClassId")
+              ? formClassOwner.get(watch("formClassId"))
+              : undefined;
+            if (!takenBy) return null;
+            return (
+              <p className="mt-2 text-xs text-red-500">
+                This class already has {takenBy} as class teacher
+              </p>
+            );
+          })()}
         </div>
       </div>
 

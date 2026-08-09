@@ -36,7 +36,7 @@ export const BottomSheet = ({ open, onClose, title, children }: BottomSheetProps
           "absolute inset-x-0 bottom-0 rounded-t-2xl bg-white shadow-2xl transition-transform duration-300 ease-out",
           open ? "translate-y-0" : "translate-y-full",
         )}
-        style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
+        style={{ paddingBottom: "calc(env(safe-area-inset-bottom) + 16px)" }}
       >
         <div className="mx-auto mt-2 h-1.5 w-10 rounded-full bg-gray200" />
         {title && <div className="px-5 pt-3 pb-1 text-lg font-semibold text-gray900">{title}</div>}

@@ -8,6 +8,9 @@ import type { FieldError } from "react-hook-form";
 export interface SelectOption {
   value: string;
   label: string;
+  badge?: string;
+  badgeTone?: "neutral" | "warn" | "taken";
+  disabled?: boolean;
 }
 
 interface SelectDropdownProps {
@@ -172,9 +175,11 @@ export const SelectDropdown = ({
               key={option.value}
               type="button"
               onClick={() => handleSelect(option.value)}
+              disabled={option.disabled}
               className={cn(
                 "flex w-full items-center gap-2 px-4 py-2.5 text-sm text-left transition-colors hover:bg-accent",
                 option.value === value && "font-medium",
+                option.disabled && "cursor-not-allowed text-placeholder opacity-60 hover:bg-transparent",
               )}
             >
               <span className="w-4 shrink-0">
@@ -184,7 +189,19 @@ export const SelectDropdown = ({
                   </svg>
                 )}
               </span>
-              {option.label}
+              <span className="flex-1 truncate">{option.label}</span>
+              {option.badge && (
+                <span
+                  className={cn(
+                    "shrink-0 rounded-full px-2 py-0.5 text-[11px] font-medium",
+                    option.badgeTone === "warn" || option.badgeTone === "taken"
+                      ? "bg-red-500/10 text-red-500"
+                      : "bg-accent text-placeholder",
+                  )}
+                >
+                  {option.badge}
+                </span>
+              )}
             </button>
           ))
         )}

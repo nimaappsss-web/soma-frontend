@@ -40,7 +40,7 @@ export const DashboardCalendar = () => {
   };
 
   return (
-    <div>
+    <div className="overflow-hidden">
       <div className="flex items-center justify-between mb-4">
         <h3 className="text-base font-semibold text-gray900">{monthLabel} {currentYear}</h3>
         <div className="flex items-center gap-1">

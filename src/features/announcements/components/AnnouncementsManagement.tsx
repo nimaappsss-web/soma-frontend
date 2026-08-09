@@ -43,7 +43,7 @@ export const AnnouncementsManagement = () => {
     <div className="p-6 max-w-4xl">
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-2xl font-semibold text-gray-900">Announcements</h1>
+          <h1 className="text-xl md:text-2xl font-bold text-gray900">Announcements</h1>
           <p className="text-sm text-gray-400 mt-1">Broadcast messages to staff, parents, and everyone at your school</p>
         </div>
         <Button onClick={() => setShowForm(!showForm)} variant="outline" size="sm">

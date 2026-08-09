@@ -77,8 +77,8 @@ export const DashboardHome = () => {
             bgColor="bg-[#F3EDFF]"
           />
           <TintedStatCard
-            label="Total Parents"
-            value={isLoading ? "—" : formatN(stats?.parents.total ?? 0)}
+            label="Total Students"
+            value={isLoading ? "—" : formatN(stats?.students.total ?? 0)}
             icon={<People size={18} color="#FFFFFF" />}
             bgColor="bg-[#FFF8E1]"
           />
