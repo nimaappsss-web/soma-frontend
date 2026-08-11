@@ -7,6 +7,7 @@ import type {
   SubjectCache,
   TeacherCache,
   SchoolSettingsCache,
+  ClassSubjectsCache,
 } from "../db/db";
 import {
   seedActiveExamSummaries,
@@ -48,6 +49,44 @@ const subjectsTask: SyncTask = {
     const subjects: SubjectCache[] = Array.isArray(res) ? res : res.subjects ?? [];
     await db.subjects.clear();
     await db.subjects.bulkAdd(subjects.map((s) => ({ ...s, userId: user.id, schoolId: user.schoolId ?? "" })));
+  },
+};
+
+const classSubjectsTask: SyncTask = {
+  name: "classSubjects",
+  run: async (user) => {
+    const res = await fetchData<{ classes: Array<{ classId: string; subjectIds: string[] }> }>(
+      "/subject-assignments",
+      "GET",
+    );
+
+    const pendingClassIds = new Set(
+      (await db.syncQueue
+        .where("userId")
+        .equals(user.id)
+        .toArray())
+        .filter((i) => i.table === "classSubjects" && i.status === "pending")
+        .flatMap((i) => ((i.payload as { classIds?: string[] })?.classIds ?? [])),
+    );
+
+    const rows: ClassSubjectsCache[] = (res?.classes ?? [])
+      .filter((c: { classId: string; subjectIds: string[] }) => !pendingClassIds.has(c.classId))
+      .map((c: { classId: string; subjectIds: string[] }) => ({
+        id: c.classId,
+        userId: user.id,
+        classId: c.classId,
+        subjectIds: c.subjectIds ?? [],
+        schoolId: user.schoolId ?? "",
+        updatedAt: Date.now(),
+      }));
+
+    const local = await db.classSubjects.where("userId").equals(user.id).toArray();
+    const localPending = local.filter((l) => pendingClassIds.has(l.classId));
+
+    await db.classSubjects.where("userId").equals(user.id).delete();
+    if (rows.length || localPending.length) {
+      await db.classSubjects.bulkAdd([...rows, ...localPending]);
+    }
   },
 };
 
@@ -195,6 +234,7 @@ const reportSettingsPullTask: SyncTask = {
 const principalTasks: SyncTask[] = [
   classesTask,
   subjectsTask,
+  classSubjectsTask,
   teachersTask,
   parentsTask,
   schoolSettingsTask,

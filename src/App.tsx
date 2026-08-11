@@ -5,6 +5,7 @@ import { TeacherLayout } from "./layouts/TeacherLayout";
 import { ParentLayout } from "./layouts/ParentLayout";
 import { TeacherAttendance } from "./pages/teach/TeacherAttendance";
 import { TeacherLessonNotes } from "./pages/teach/TeacherLessonNotes";
+import { TeacherTimetable } from "./pages/teach/TeacherTimetable";
 import { TeacherAnnouncements } from "./pages/teach/TeacherAnnouncements";
 import { TeacherSettings } from "./pages/teach/TeacherSettings";
 import { OnboardingRoute } from "./features/auth/components/OnboardingRoute";
@@ -53,6 +54,7 @@ import { FinanceManagement } from "./features/finance/components/FinanceManageme
 import { AnnouncementsManagement } from "./features/announcements/components/AnnouncementsManagement";
 import { MomentsManagement } from "./features/moments/components/MomentsManagement";
 import { TimetableManagement } from "./features/timetable/components/TimetableManagement";
+import { TimetableView } from "./features/timetable/components/TimetableView";
 import { AttendanceOverview } from "./features/attendance/components/AttendanceOverview";
 import { AttendanceClasses } from "./features/attendance/components/AttendanceClasses";
 import { AttendanceAbsentees } from "./features/attendance/components/AttendanceAbsentees";
@@ -129,6 +131,7 @@ function App() {
           <Route path="announcements" element={<AnnouncementsManagement />} />
           <Route path="moments" element={<MomentsManagement />} />
           <Route path="timetable" element={<TimetableManagement />} />
+          <Route path="timetable/:classId" element={<TimetableView />} />
           <Route path="attendance" element={<AttendanceOverview />} />
           <Route path="attendance/classes" element={<AttendanceClasses />} />
           <Route path="attendance/absentees" element={<AttendanceAbsentees />} />
@@ -165,6 +168,7 @@ function App() {
           <Route path="ca-and-exams/reports/:studentId" element={<StudentReportView />} />
           <Route path="results" element={<Navigate to="/teach/ca-and-exams/my-class" replace />} />
           <Route path="lesson-notes" element={<TeacherLessonNotes />} />
+          <Route path="timetable" element={<TeacherTimetable />} />
           <Route path="announcements" element={<TeacherAnnouncements />} />
           <Route path="settings" element={<TeacherSettings />} />
         </Route>

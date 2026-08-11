@@ -6,6 +6,8 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useAuth } from "../contexts/AuthContext";
 import { useCompleteRegistration } from "../features/auth/api";
 import { useSubjects, useClasses } from "../features/principal/api";
+import { useClassSubjects } from "../features/class-subjects/api";
+import { subjectIdsForClasses } from "../features/class-subjects/utils/subjectsForClasses";
 import { completeRegistrationSchema, type CompleteRegistrationFormData } from "../features/auth/utils/validationSchema";
 import { MultiSelect, type SelectOption } from "../components/ui/multi-select";
 import { SelectDropdown } from "../components/ui/select-dropdown";
@@ -29,6 +31,7 @@ export const CompleteRegistration = () => {
   const mutation = useCompleteRegistration();
   const { data: subjects = [] } = useSubjects(user?.schoolId);
   const { data: classesData } = useClasses(user?.schoolId);
+  const { data: classSubjectList = [] } = useClassSubjects(user?.schoolId);
   const classes = classesData?.classes ?? [];
 
   const {
@@ -49,6 +52,17 @@ export const CompleteRegistration = () => {
     value: c.id,
     label: c.name,
   }));
+
+  const availableSubjects = (classIds: string[], current: string): SelectOption[] => {
+    if (classIds.length === 0) return subjectOptions;
+    const allowed = subjectIdsForClasses(classSubjectList, classIds);
+    const list = subjectOptions.filter((o) => allowed.has(o.value));
+    if (current && !list.some((o) => o.value === current)) {
+      const cur = subjects.find((s) => s.id === current);
+      if (cur) list.push({ value: cur.id, label: cur.name });
+    }
+    return list;
+  };
 
   const formClassOptions: SelectOption[] = classes.map((c) => ({
     value: c.id,
@@ -140,7 +154,7 @@ export const CompleteRegistration = () => {
                       <Label className="text-xs text-muted-foreground">Subject</Label>
                       <SelectDropdown
                         placeholder="Select subject"
-                        options={subjectOptions}
+                        options={availableSubjects(a.classIds, a.subjectId)}
                         value={a.subjectId}
                         onChange={(val) => handleSubjectChange(i, val)}
                       />
@@ -152,6 +166,12 @@ export const CompleteRegistration = () => {
                         onChange={(ids) => handleClassChange(i, ids)}
                         placeholder="Select classes"
                       />
+                      {a.classIds.length > 0 && availableSubjects(a.classIds, a.subjectId).length === 0 && (
+                        <p className="text-xs text-amber500">
+                          No subjects have been assigned to the selected classes yet. Choose different classes or ask
+                          the principal to assign subjects.
+                        </p>
+                      )}
                     </div>
                     <Button
                       type="button"

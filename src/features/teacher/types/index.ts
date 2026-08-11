@@ -68,6 +68,7 @@ export interface PendingInvite {
 
 export interface UpdateTeacherPayload {
   name?: string;
+  email?: string;
   phone?: string | null;
   address?: string | null;
   gender?: "M" | "F" | null;

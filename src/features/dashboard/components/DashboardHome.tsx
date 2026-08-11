@@ -16,12 +16,13 @@ import { useCelebrations } from "../../moments/api/useCelebrations";
 import { useCalendarEvents } from "../../calendar/api";
 import { ProgressSection } from "./ProgressSection";
 import { SetupChecklist } from "./SetupChecklist";
+import { ClassSubjectsOverview } from "./ClassSubjectsOverview";
 import { AcademicsSection } from "./AcademicsSection";
 import { OperationsSection } from "./OperationsSection";
-import { TintedStatCard } from "./TintedStatCard";
-import { AttendanceCard } from "./AttendanceCard";
 import { DashboardCalendar } from "./DashboardCalendar";
 import { localDateKey } from "../../../utils/date";
+import { TintedStatCard } from "./TintedStatCard";
+import { AttendanceCard } from "./AttendanceCard";
 
 const formatN = (n: number) => String(n).replace(/\B(?=(\d{3})+(?!\d))/g, ",");
 
@@ -65,6 +66,8 @@ export const DashboardHome = () => {
         complete={isSetupComplete}
       />
       {!isSetupComplete && <SetupChecklist completed={completed} />}
+
+      <ClassSubjectsOverview />
 
       {/* Main grid — middle column wider */}
       <div className="grid grid-cols-1 lg:grid-cols-[1.3fr_2fr_1.3fr] gap-5 mt-6">
@@ -140,7 +143,7 @@ export const DashboardHome = () => {
                   </div>
                 )}
                 {birthdays.length > 0 && (
-                  <div>
+                  <div> 
                     <p className="text-xs font-medium text-gray400 uppercase tracking-wide mb-2.5">
                       Birthdays
                     </p>

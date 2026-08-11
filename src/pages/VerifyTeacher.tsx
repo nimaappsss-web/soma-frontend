@@ -23,6 +23,8 @@ import { cn } from "../lib/utils";
 import { transformError } from "../utils/transformError";
 import { API_BASE_URL } from "../lib/axios";
 import type { SubjectCache, ClassCache } from "../db/db";
+import type { ClassSubjectAssignment } from "../features/class-subjects/types";
+import { subjectIdsForClasses } from "../features/class-subjects/utils/subjectsForClasses";
 
 const fetchPublic = async <T,>(url: string): Promise<T | null> => {
   try {
@@ -118,12 +120,32 @@ export const VerifyTeacher = () => {
   });
   const classList: ClassCache[] = classesData?.classes ?? [];
 
+  const { data: classSubjectsData } = useQuery({
+    queryKey: ["class-subjects", "public", schoolId],
+    queryFn: () =>
+      fetchPublic<{ classes: ClassSubjectAssignment[] }>(`/subject-assignments?schoolId=${schoolId}`),
+    enabled: !!schoolId,
+    staleTime: 5 * 60 * 1000,
+  });
+  const classSubjectList: ClassSubjectAssignment[] = classSubjectsData?.classes ?? [];
+
   const isOpenInvite = inviteInfo?.email === null;
 
   const subjectOptions: SelectOption[] =
     subjectList.map((s) => ({ value: s.id, label: s.name }));
   const classOptions: SelectOption[] =
     classList.map((c) => ({ value: c.id, label: c.name }));
+
+  const availableSubjects = (classIds: string[], current: string): SelectOption[] => {
+    if (classIds.length === 0) return subjectOptions;
+    const allowed = subjectIdsForClasses(classSubjectList, classIds);
+    const list = subjectOptions.filter((o) => allowed.has(o.value));
+    if (current && !list.some((o) => o.value === current)) {
+      const cur = subjectList.find((s) => s.id === current);
+      if (cur) list.push({ value: cur.id, label: cur.name });
+    }
+    return list;
+  };
   const formClassOptions: SelectOption[] = [
     { value: "", label: "Not a class teacher" },
     ...classList.map((c) => ({
@@ -445,7 +467,7 @@ export const VerifyTeacher = () => {
             {assignments.map((a, i) => (
               <div key={i} className="space-y-3">
                 <SelectDropdown
-                  options={subjectOptions}
+                  options={availableSubjects(a.classIds, a.subjectId)}
                   value={a.subjectId}
                   onChange={(val) => handleSubjectChange(i, val)}
                   placeholder="Select subject"
@@ -459,6 +481,13 @@ export const VerifyTeacher = () => {
                   placeholder="Select classes"
                   searchable
                 />
+
+                {a.classIds.length > 0 && availableSubjects(a.classIds, a.subjectId).length === 0 && (
+                  <p className="text-xs text-amber500">
+                    No subjects have been assigned to the selected classes yet. Choose different classes or ask the
+                    principal to assign subjects.
+                  </p>
+                )}
 
                 <Button
                   type="button"

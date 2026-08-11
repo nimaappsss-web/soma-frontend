@@ -14,6 +14,7 @@ import {
   ArrowRight2,
   SearchNormal,
   StatusUp,
+  CalendarTick,
 } from "iconsax-react";
 import { useAuth } from "../contexts/AuthContext";
 import { useMyFormClass } from "../features/teacher/api/useMyFormClass";
@@ -48,6 +49,7 @@ const navItems: NavItem[] = [
     ],
   },
   { label: "Lesson Notes", to: "/teach/lesson-notes", Icon: Book1 },
+  { label: "Timetable", to: "/teach/timetable", Icon: CalendarTick },
   { label: "Announcements", to: "/teach/announcements", Icon: Speaker },
 ];
 export const TeacherLayout = () => {

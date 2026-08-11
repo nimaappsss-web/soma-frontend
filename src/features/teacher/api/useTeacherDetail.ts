@@ -1,5 +1,6 @@
 import { useLiveQuery } from "dexie-react-hooks";
 import { useQuery } from "@tanstack/react-query";
+import { useMemo } from "react";
 
 import { useAuth } from "../../../contexts/AuthContext";
 import { db, type TeacherDetailCache } from "../../../db/db";
@@ -29,12 +30,24 @@ export const useTeacherDetail = (id: string) => {
     },
     enabled: !!id && !!userId,
     staleTime: 5 * 60 * 1000,
+    refetchOnWindowFocus: false,
   });
 
-  const parsed: TeacherDetail | undefined = cache?.detailJson ? JSON.parse(cache.detailJson) : undefined;
+  // Memoize the parsed cache row so `data` keeps a stable reference while
+  // detailJson is unchanged — JSON.parse in render created a new object on every
+  // render, which made any effect depending on `data` (e.g. EditTeacherForm's
+  // reset) run and re-render forever ("Maximum update depth exceeded").
+  const parsed: TeacherDetail | undefined = useMemo(
+    () => (cache?.detailJson ? (JSON.parse(cache.detailJson) as TeacherDetail) : undefined),
+    [cache?.detailJson],
+  );
 
   return {
-    data: query.data ?? parsed,
+    // Dexie is the source of truth for reads (offline-first). query.data must
+    // NOT take precedence — once the query has loaded it would mask local Dexie
+    // writes (e.g. EditTeacherForm) until a refetch, so edits wouldn't reflect
+    // immediately.
+    data: parsed ?? query.data,
     isLoading: cache === undefined && query.isPending,
     error: query.error ?? undefined,
   };

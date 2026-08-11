@@ -55,8 +55,6 @@ export const SelectDropdown = ({
   const menuRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
-  const inDialog = typeof document !== "undefined" && !!document.querySelector('[role="dialog"]');
-
   useEffect(() => {
     if (open && searchable) {
       setFilter("");
@@ -117,6 +115,56 @@ export const SelectDropdown = ({
     [options, filter, searchable],
   );
 
+  const scrollRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!open) return;
+    const el = scrollRef.current;
+    if (!el) return;
+
+    const onWheel = (e: WheelEvent) => {
+      if (el.scrollHeight <= el.clientHeight) return;
+      const atTop = el.scrollTop <= 0 && e.deltaY <= 0;
+      const atBottom = el.scrollTop + el.clientHeight >= el.scrollHeight && e.deltaY >= 0;
+      if (atTop || atBottom) return;
+      e.preventDefault();
+      el.scrollTop += e.deltaY;
+    };
+
+    let lastTouchY = 0;
+    const onTouchStart = (e: TouchEvent) => {
+      lastTouchY = e.touches[0]?.clientY ?? 0;
+    };
+    const onTouchMove = (e: TouchEvent) => {
+      if (el.scrollHeight <= el.clientHeight || !e.touches[0]) return;
+      const delta = lastTouchY - e.touches[0].clientY;
+      const atTop = el.scrollTop <= 0 && delta <= 0;
+      const atBottom = el.scrollTop + el.clientHeight >= el.scrollHeight && delta >= 0;
+      if (atTop || atBottom) return;
+      e.preventDefault();
+      el.scrollTop += delta;
+      lastTouchY = e.touches[0].clientY;
+    };
+
+    el.addEventListener("wheel", onWheel, { passive: false });
+    el.addEventListener("touchstart", onTouchStart, { passive: true });
+    el.addEventListener("touchmove", onTouchMove, { passive: false });
+    return () => {
+      el.removeEventListener("wheel", onWheel);
+      el.removeEventListener("touchstart", onTouchStart);
+      el.removeEventListener("touchmove", onTouchMove);
+    };
+  }, [open]);
+
+  useEffect(() => {
+    if (!open) return;
+    const el = menuRef.current;
+    if (!el) return;
+    const onFocusIn = (e: FocusEvent) => e.stopPropagation();
+    el.addEventListener("focusin", onFocusIn, true);
+    return () => el.removeEventListener("focusin", onFocusIn, true);
+  }, [open]);
+
   const selectedLabel = options.find((o) => o.value === value)?.label || "";
 
   const handleToggle = () => {
@@ -152,7 +200,7 @@ export const SelectDropdown = ({
             <SearchNormal
               size={16}
               color="#B3B3B3"
-              variant="Bold"
+              variant="Linear"
               className="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none"
             />
             <input
@@ -166,7 +214,7 @@ export const SelectDropdown = ({
           </div>
         </div>
       )}
-      <div className="max-h-60 overflow-y-auto">
+      <div ref={scrollRef} className="max-h-60 overflow-y-auto overscroll-contain" style={{ touchAction: "none" }}>
         {filteredOptions.length === 0 ? (
           <p className="p-3 text-sm text-placeholder">No options available</p>
         ) : (
@@ -235,25 +283,20 @@ export const SelectDropdown = ({
       </button>
 
       {open &&
-        (inDialog ? (
-          <div
-            className={cn("absolute left-0 right-0 top-full z-50 mt-1.5 rounded-xl border border-input bg-background shadow-lg", menuClassName)}
-          >
-            {menu}
-          </div>
-        ) : (
-          pos &&
-          createPortal(
+        pos &&
+        createPortal(
+          <div className="pointer-events-none fixed inset-0 z-[100]">
             <div
               ref={menuRef}
-              style={menuStyle}
-              className={cn("fixed z-[100] rounded-xl border border-input bg-background shadow-lg", menuClassName)}
+              style={{ ...menuStyle, pointerEvents: "auto" }}
+              onPointerDownCapture={(e) => e.stopPropagation()}
+              className={cn("absolute rounded-xl border border-input bg-background shadow-lg", menuClassName)}
             >
               {menu}
-            </div>,
-            document.body,
-          )
-        ))}
+            </div>
+          </div>,
+          document.body,
+        )}
 
       {hasError && <p className="text-xs text-red-500 mt-2">{hasError.message}</p>}
     </div>

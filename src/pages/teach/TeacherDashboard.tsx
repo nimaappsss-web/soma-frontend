@@ -4,6 +4,9 @@ import { User, Book, Check, CloseCircle, Timer1 } from "iconsax-react";
 import { useTeacherProfile, useAttendanceClassSummary } from "../../features/teacher/api";
 import { useStudents } from "../../features/students/api";
 import { useAuth } from "../../contexts/AuthContext";
+import { useTeacherTimetableCache } from "../../features/timetable/api";
+import { TodayScheduleCard } from "../../features/timetable/components/TodayScheduleCard";
+import { greetingFor, nextClass } from "../../features/timetable/utils/todaySchedule";
 import { localDateKey } from "../../utils/date";
 import { TintedStatCard } from "../../features/dashboard/components/TintedStatCard";
 import { AttendanceCard } from "../../features/dashboard/components/AttendanceCard";
@@ -31,6 +34,8 @@ export const TeacherDashboard = () => {
     from: today,
     to: today,
   });
+  const { entries: teacherEntries, isLoading: ttLoading } = useTeacherTimetableCache(user?.id ?? "");
+  const greeting = greetingFor(nextClass(teacherEntries));
 
   const firstName = name?.split(" ")[0];
   const loading = isLoading || studentsLoading;
@@ -57,6 +62,7 @@ export const TeacherDashboard = () => {
         <h1 className="text-xl md:text-2xl font-bold text-gray900 mt-0.5">
           Hello{firstName ? `, ${firstName}` : ""}
         </h1>
+        <p className="mt-1 text-sm text-gray700">{greeting}</p>
       </div>
 
       {/* Pending approval banner */}
@@ -134,6 +140,7 @@ export const TeacherDashboard = () => {
         {/* Right */}
         <div className="flex flex-col gap-5">
           <DashboardCalendar />
+          <TodayScheduleCard entries={teacherEntries} isLoading={ttLoading} />
           <UpcomingCard
             title="My Subjects"
             sections={[

@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Trash } from "iconsax-react";
 import toast from "react-hot-toast";
 
 import { Button } from "../../../components/ui/button";
@@ -11,9 +10,11 @@ import { SelectDropdown } from "../../../components/ui/select-dropdown";
 import { MultiSelect, type SelectOption } from "../../../components/ui/multi-select";
 import { useAuth } from "../../../contexts/AuthContext";
 import { useClasses, useSubjects } from "../../principal/api";
+import { useClassSubjects } from "../../class-subjects/api";
+import { subjectIdsForClasses } from "../../class-subjects/utils/subjectsForClasses";
 import { useTeacherDetail, useTeachers } from "../api";
 import { editTeacherSchema, type EditTeacherFormData } from "../utils/validationSchema";
-import type { UpdateTeacherPayload } from "../types";
+import type { TeacherDetail, UpdateTeacherPayload } from "../types";
 import { db, type TeacherCache } from "../../../db/db";
 import { addToQueue } from "../../../sync/syncQueue";
 import { transformError } from "../../../utils/transformError";
@@ -35,6 +36,7 @@ export const EditTeacherForm = ({ teacherId, onDone, onCancel }: EditTeacherForm
   const { data: teachersData } = useTeachers();
   const { data: classesData } = useClasses();
   const { data: subjects } = useSubjects();
+  const { data: classSubjectList = [] } = useClassSubjects();
   const [assignments, setAssignments] = useState<AssignmentRow[]>([]);
   const [assignmentsTouched, setAssignmentsTouched] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -45,7 +47,7 @@ export const EditTeacherForm = ({ teacherId, onDone, onCancel }: EditTeacherForm
     reset,
     watch,
     setValue,
-    formState: { errors, isDirty },
+    formState: { errors },
   } = useForm<EditTeacherFormData>({
     resolver: zodResolver(editTeacherSchema),
   });
@@ -70,10 +72,25 @@ export const EditTeacherForm = ({ teacherId, onDone, onCancel }: EditTeacherForm
   });
   const subjectOptions: SelectOption[] = (subjects ?? []).map((s) => ({ value: s.id, label: s.name }));
 
+  const availableSubjects = (classIds: string[], current: string): SelectOption[] => {
+    if (classIds.length === 0) return subjectOptions;
+    const allowed = subjectIdsForClasses(classSubjectList, classIds);
+    const list = subjectOptions.filter((o) => allowed.has(o.value));
+    if (current && !list.some((o) => o.value === current)) {
+      const cur = (subjects ?? []).find((s) => s.id === current);
+      if (cur) list.push({ value: cur.id, label: cur.name });
+    }
+    return list;
+  };
+
   useEffect(() => {
-    if (!teacherDetail || isDirty || assignmentsTouched) return;
+    // Populate whenever the detail arrives. NOTE: this must NOT be gated on RHF
+    // isDirty — without defaultValues RHF reports isDirty=true once inputs mount
+    // ("" vs {}), so the first (async) detail load would be skipped forever.
+    if (!teacherDetail || assignmentsTouched) return;
     reset({
       name: teacherDetail.name,
+      email: teacherDetail.email ?? "",
       formClassId: teacherDetail.formClassId ?? "",
     });
     setAssignments(
@@ -82,26 +99,20 @@ export const EditTeacherForm = ({ teacherId, onDone, onCancel }: EditTeacherForm
         classIds: a.classes.map((c) => c.id),
       })),
     );
-  }, [teacherDetail, isDirty, assignmentsTouched, reset]);
+  }, [teacherDetail, assignmentsTouched, reset]);
 
-  const handleAddSubject = () => {
-    setAssignments((prev) => [...prev, { subjectId: "", classIds: [] }]);
+  const handleSubjectsChange = (ids: string[]) => {
     setAssignmentsTouched(true);
+    setAssignments((prev) =>
+      ids.map((id) => prev.find((a) => a.subjectId === id) ?? { subjectId: id, classIds: [] }),
+    );
   };
 
-  const handleRemoveSubject = (index: number) => {
-    setAssignments((prev) => prev.filter((_, i) => i !== index));
+  const handleClassesChange = (subjectId: string, classIds: string[]) => {
     setAssignmentsTouched(true);
-  };
-
-  const handleSubjectChange = (index: number, subjectId: string) => {
-    setAssignments((prev) => prev.map((a, i) => (i === index ? { ...a, subjectId } : a)));
-    setAssignmentsTouched(true);
-  };
-
-  const handleClassChange = (index: number, classIds: string[]) => {
-    setAssignments((prev) => prev.map((a, i) => (i === index ? { ...a, classIds } : a)));
-    setAssignmentsTouched(true);
+    setAssignments((prev) =>
+      prev.map((a) => (a.subjectId === subjectId ? { ...a, classIds } : a)),
+    );
   };
 
   const onSubmit = async (formData: EditTeacherFormData) => {
@@ -113,8 +124,17 @@ export const EditTeacherForm = ({ teacherId, onDone, onCancel }: EditTeacherForm
     }
     setSaving(true);
     try {
+      // Only send the email when the teacher actually changed it. The field is
+      // pre-filled from the cached detail, so sending it unconditionally could
+      // push a stale email back to the server (reverting a newer one) and
+      // wrongly force re-verification on a name-only edit.
+      const originalEmail = (teacherDetail?.email ?? "").trim().toLowerCase();
+      const nextEmail = (formData.email ?? "").trim();
+      const emailChanged = nextEmail !== "" && nextEmail.toLowerCase() !== originalEmail;
+
       const payload: UpdateTeacherPayload = {
         name: formData.name.trim(),
+        ...(emailChanged ? { email: nextEmail } : {}),
         formClassId: formData.formClassId || null,
         assignments: assignments
           .filter((a) => a.subjectId)
@@ -123,6 +143,44 @@ export const EditTeacherForm = ({ teacherId, onDone, onCancel }: EditTeacherForm
       const existing = await db.teachers.get(teacherId);
       const merged = { ...existing, ...payload, id: teacherId, userId: user.id } as TeacherCache;
       await db.teachers.put(merged, teacherId);
+
+      // Keep the cached detail fresh so reopening the form shows the saved email.
+      // NOTE: payload.assignments uses { subjectId, classIds }, which must NOT
+      // clobber the cached detail's server shape ({ subject, classes }) — doing
+      // so corrupts the cache and crashes the detail page on a.subject.name.
+      const detailRec = await db.teacherDetails.get(teacherId);
+      const baseDetail: TeacherDetail | undefined = detailRec
+        ? (JSON.parse(detailRec.detailJson) as TeacherDetail)
+        : teacherDetail;
+      if (baseDetail) {
+        const subjectById = new Map((subjects ?? []).map((s) => [s.id, s]));
+        const classById = new Map(classes.map((c) => [c.id, c]));
+        const nextAssignments: TeacherDetail["assignments"] = payload.assignments
+          .filter((a) => a.subjectId && subjectById.has(a.subjectId))
+          .map((a) => {
+            const subj = subjectById.get(a.subjectId)!;
+            const prev = baseDetail.assignments.find((d) => d.subject.id === a.subjectId);
+            return {
+              id: prev?.id ?? a.subjectId,
+              subject: { id: subj.id, name: subj.name, code: subj.code },
+              classes: (a.classIds ?? [])
+                .filter((cid) => classById.has(cid))
+                .map((cid) => {
+                  const c = classById.get(cid)!;
+                  return { id: c.id, name: c.name, level: c.level, arm: c.arm, schoolType: c.schoolType };
+                }),
+            };
+          });
+        await db.teacherDetails.put(
+          {
+            id: teacherId,
+            userId: user.id,
+            detailJson: JSON.stringify({ ...baseDetail, ...payload, assignments: nextAssignments }),
+          },
+          teacherId,
+        );
+      }
+
       await addToQueue({
         userId: user.id,
         table: "teachers",
@@ -177,48 +235,57 @@ export const EditTeacherForm = ({ teacherId, onDone, onCancel }: EditTeacherForm
       </div>
 
       <div>
-        <div className="flex items-center justify-between mb-3">
-          <Label>Subjects Taught</Label>
-          <Button type="button" variant="outline" size="sm" onClick={handleAddSubject}>
-            + Add Subject
-          </Button>
-        </div>
+        <Label htmlFor="edit-teacher-email" className="mb-1.5 block">
+          Email
+        </Label>
+        <Input
+          id="edit-teacher-email"
+          type="email"
+          placeholder="teacher@school.com"
+          registration={register("email")}
+          hasError={errors.email}
+        />
+        <p className="mt-1.5 text-xs text-placeholder">
+          Changing the email will require the teacher to verify the new address before they can sign in.
+        </p>
+      </div>
 
+      <div>
+        <Label className="mb-1.5 block">Subjects Taught</Label>
+        <MultiSelect
+          options={subjectOptions}
+          selected={assignments.map((a) => a.subjectId)}
+          onChange={handleSubjectsChange}
+          placeholder="Select subjects"
+          searchable
+        />
         {assignments.length === 0 ? (
-          <p className="text-sm text-gray-400">No subjects assigned.</p>
+          <p className="mt-1.5 text-sm text-gray-400">No subjects assigned.</p>
         ) : (
-          <div className="space-y-4">
-            {assignments.map((a, i) => (
-              <div key={i} className="rounded-lg border border-gray-100 p-3 space-y-3">
-                <SelectDropdown
-                  options={subjectOptions}
-                  value={a.subjectId}
-                  onChange={(val) => handleSubjectChange(i, val)}
-                  placeholder="Select subject"
-                  searchable
-                />
-                <div>
-                  <Label className="mb-1.5 block">Classes</Label>
-                  <MultiSelect
-                    options={classOptions}
-                    selected={a.classIds}
-                    onChange={(ids) => handleClassChange(i, ids)}
-                    placeholder="Select classes"
-                    searchable
-                  />
+          <div className="mt-3 space-y-3">
+            {assignments.map((a) => {
+              const subject = (subjects ?? []).find((s) => s.id === a.subjectId);
+              return (
+                <div key={a.subjectId} className="rounded-lg border border-gray-100 p-3 space-y-3">
+                  <p className="text-sm font-medium text-gray900">{subject?.name ?? "Subject"}</p>
+                  <div>
+                    <Label className="mb-1.5 block">Classes</Label>
+                    <MultiSelect
+                      options={classOptions}
+                      selected={a.classIds}
+                      onChange={(ids) => handleClassesChange(a.subjectId, ids)}
+                      placeholder="Select classes"
+                      searchable
+                    />
+                    {a.classIds.length > 0 && availableSubjects(a.classIds, a.subjectId).length === 0 && (
+                      <p className="mt-1.5 text-xs text-amber500">
+                        No subjects have been assigned to the selected classes yet.
+                      </p>
+                    )}
+                  </div>
                 </div>
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="sm"
-                  className="text-destructive hover:text-destructive"
-                  onClick={() => handleRemoveSubject(i)}
-                >
-                  <Trash size={14} color="#CD432F" />
-                  Remove
-                </Button>
-              </div>
-            ))}
+              );
+            })}
           </div>
         )}
       </div>

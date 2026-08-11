@@ -19,6 +19,8 @@ interface MultiSelectProps {
   className?: string;
   hasError?: FieldError;
   searchable?: boolean;
+  /** Render the dropdown via a fixed-position portal even inside a dialog, so it isn't clipped by the dialog's scrolling content. */
+  forcePortal?: boolean;
 }
 
 interface MenuPos {
@@ -38,6 +40,7 @@ export const MultiSelect = ({
   className,
   hasError,
   searchable,
+  forcePortal,
 }: MultiSelectProps) => {
   const [open, setOpen] = useState(false);
   const [filter, setFilter] = useState("");
@@ -48,6 +51,7 @@ export const MultiSelect = ({
   const inputRef = useRef<HTMLInputElement>(null);
 
   const inDialog = typeof document !== "undefined" && !!document.querySelector('[role="dialog"]');
+  const usePortal = forcePortal || !inDialog;
 
   useEffect(() => {
     if (open && searchable) {
@@ -57,7 +61,7 @@ export const MultiSelect = ({
   }, [open, searchable]);
 
   useEffect(() => {
-    if (!open || inDialog) return;
+    if (!open || !usePortal) return;
     const update = () => {
       const el = btnRef.current;
       if (!el) return;
@@ -78,17 +82,17 @@ export const MultiSelect = ({
       window.removeEventListener("scroll", update, true);
       window.removeEventListener("resize", update);
     };
-  }, [open, inDialog]);
+  }, [open, usePortal]);
 
   useLayoutEffect(() => {
-    if (!open || inDialog || !pos || pos.flipped) return;
+    if (!open || !usePortal || !pos || pos.flipped) return;
     const el = menuRef.current;
     if (!el) return;
     const h = el.offsetHeight;
     if (pos.btnBottom + 4 + h > window.innerHeight - 8) {
       setPos((p) => (p ? { ...p, height: h, flipped: true } : p));
     }
-  }, [open, inDialog, pos]);
+  }, [open, usePortal, pos]);
 
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
@@ -108,6 +112,65 @@ export const MultiSelect = ({
         : options,
     [options, filter, searchable],
   );
+
+  const scrollRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!open) return;
+    const el = scrollRef.current;
+    if (!el) return;
+
+    const onWheel = (e: WheelEvent) => {
+      if (el.scrollHeight <= el.clientHeight) return;
+      const atTop = el.scrollTop <= 0 && e.deltaY <= 0;
+      const atBottom = el.scrollTop + el.clientHeight >= el.scrollHeight && e.deltaY >= 0;
+      if (atTop || atBottom) return;
+      e.preventDefault();
+      el.scrollTop += e.deltaY;
+    };
+
+    let lastTouchY = 0;
+    const onTouchStart = (e: TouchEvent) => {
+      lastTouchY = e.touches[0]?.clientY ?? 0;
+    };
+    const onTouchMove = (e: TouchEvent) => {
+      if (el.scrollHeight <= el.clientHeight || !e.touches[0]) return;
+      const delta = lastTouchY - e.touches[0].clientY;
+      const atTop = el.scrollTop <= 0 && delta <= 0;
+      const atBottom = el.scrollTop + el.clientHeight >= el.scrollHeight && delta >= 0;
+      if (atTop || atBottom) return;
+      e.preventDefault();
+      el.scrollTop += delta;
+      lastTouchY = e.touches[0].clientY;
+    };
+
+    el.addEventListener("wheel", onWheel, { passive: false });
+    el.addEventListener("touchstart", onTouchStart, { passive: true });
+    el.addEventListener("touchmove", onTouchMove, { passive: false });
+    return () => {
+      el.removeEventListener("wheel", onWheel);
+      el.removeEventListener("touchstart", onTouchStart);
+      el.removeEventListener("touchmove", onTouchMove);
+    };
+  }, [open]);
+
+  useEffect(() => {
+    if (!open || !usePortal) return;
+    const menu = menuRef.current;
+    if (!menu) return;
+    const isInMenu = (n: Node | null) => !!n && menu.contains(n);
+    const stopIfInMenu = (e: FocusEvent) => {
+      if (isInMenu(e.target as Node | null) || isInMenu(e.relatedTarget as Node | null)) {
+        e.stopPropagation();
+      }
+    };
+    document.addEventListener("focusin", stopIfInMenu, true);
+    document.addEventListener("focusout", stopIfInMenu, true);
+    return () => {
+      document.removeEventListener("focusin", stopIfInMenu, true);
+      document.removeEventListener("focusout", stopIfInMenu, true);
+    };
+  }, [open, usePortal]);
 
   const toggle = (value: string) => {
     onChange(
@@ -157,7 +220,7 @@ export const MultiSelect = ({
       {searchable && (
         <div className="p-2 pb-0">
           <div className="relative">
-            <SearchNormal className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-placeholder pointer-events-none" variant="Bold" />
+            <SearchNormal className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-placeholder pointer-events-none" variant="Linear" color="#B3B3B3" />
             <input
               ref={inputRef}
               type="text"
@@ -169,7 +232,7 @@ export const MultiSelect = ({
           </div>
         </div>
       )}
-      <div className="max-h-60 overflow-y-auto">
+      <div ref={scrollRef} className="max-h-60 overflow-y-auto overscroll-contain" style={{ touchAction: "none" }}>
         {filteredOptions.length === 0 ? (
           <p className="p-3 text-sm text-placeholder">No options available</p>
         ) : (
@@ -198,7 +261,8 @@ export const MultiSelect = ({
         type="button"
         onClick={handleToggle}
         className={cn(
-          "flex w-full items-center flex-wrap gap-1.5 rounded-full border border-input bg-background px-4 py-2.5 text-base focus-visible:outline-none md:text-sm min-h-11 cursor-pointer",
+          "flex w-full items-center flex-wrap gap-1.5 border border-input bg-background px-4 py-2.5 text-base focus-visible:outline-none md:text-sm min-h-11 cursor-pointer",
+          selected.length > 2 ? "rounded-xl" : "rounded-full",
           selected.length === 0 && "h-11",
           hasError && "border-red-500",
         )}
@@ -237,22 +301,25 @@ export const MultiSelect = ({
       </button>
 
       {open &&
-        (inDialog ? (
-          <div className="absolute z-50 mt-1 w-full rounded-xl border border-input bg-background shadow-lg">
-            {menu}
-          </div>
-        ) : (
+        (usePortal ? (
           pos &&
           createPortal(
-            <div
-              ref={menuRef}
-              style={menuStyle}
-              className="fixed z-[100] rounded-xl border border-input bg-background shadow-lg"
-            >
-              {menu}
+            <div className="pointer-events-none fixed inset-0 z-[100]">
+              <div
+                ref={menuRef}
+                style={{ ...menuStyle, pointerEvents: "auto" }}
+                onPointerDownCapture={(e) => e.stopPropagation()}
+                className="absolute rounded-xl border border-input bg-background shadow-lg"
+              >
+                {menu}
+              </div>
             </div>,
             document.body,
           )
+        ) : (
+          <div className="absolute z-50 mt-1 w-full rounded-xl border border-input bg-background shadow-lg">
+            {menu}
+          </div>
         ))}
 
       {hasError && (
