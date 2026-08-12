@@ -6,7 +6,7 @@ import { cn } from "../../../../lib/utils";
 import { Button } from "../../../../components/ui/button";
 import { SomaLoader } from "../../../../components/ui/SomaLoader";
 import { useTimetableBuild, usePublishTimetable, useTimetableCache, useTimetableConfigs, useScheduleTemplates } from "../../api";
-import { allocateWithRetry } from "../../utils/allocate";
+import { allocateWithRetry, type AllocationResult } from "../../utils/allocate";
 import { breaksFromSchedule, defaultSchedule, normalizeSchedule } from "../../utils/draft";
 import { scheduleConfigFromTimetable, schedulesEqual, timetableConfigFromEntries, type TimetableConfigFromEntries } from "../../utils/scheduleConfig";
 import { useTimetableDraft } from "../../hooks/useTimetableDraft";
@@ -26,6 +26,20 @@ interface TimetableWizardProps {
 }
 
 const STEPS = ["Schedule", "Subjects", "Preview"];
+
+// Placeholder for steps that render no grid. The allocator is expensive (up to
+// 24 seeded passes with chained evictions) and only the Preview step (and the
+// publish action launched from it) ever reads a placement.
+const EMPTY_ALLOCATION: AllocationResult = {
+  entries: [],
+  conflicts: [],
+  suggestions: [],
+  unmet: [],
+  occupiedSlots: 0,
+  totalSlots: 0,
+  overflow: false,
+  tooFewSlots: false,
+};
 
 export const TimetableWizard = ({ classId, className, onCancel, onPublished }: TimetableWizardProps) => {
   const build = useTimetableBuild(classId);
@@ -238,12 +252,16 @@ export const TimetableWizard = ({ classId, className, onCancel, onPublished }: T
   );
 
   const allocation = useMemo(() => {
+    // Nothing renders a grid until the Preview step, so don't run the 24-seed
+    // allocator on every edit to the Schedule/Subjects steps — that synchronous
+    // CPU would stall weak devices on each keypress/toggle.
+    if (step !== 2) return EMPTY_ALLOCATION;
     const picked = subjects.filter((s) => selectedSubjects.includes(s.subjectId));
     return allocateWithRetry(
       { subjects: picked, targets, doublePeriods, schedule, busyTeachers },
       seed,
     );
-  }, [subjects, selectedSubjects, targets, doublePeriods, schedule, busyTeachers, seed]);
+  }, [subjects, selectedSubjects, targets, doublePeriods, schedule, busyTeachers, seed, step]);
 
   const handleCopySubjectConfig = (config: TimetableConfigFromEntries) => {
     const available = new Set(subjects.map((s) => s.subjectId));
