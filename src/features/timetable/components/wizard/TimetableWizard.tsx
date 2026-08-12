@@ -124,6 +124,8 @@ export const TimetableWizard = ({ classId, className, onCancel, onPublished }: T
   targetsRef.current = targets;
   const doublesRef = useRef(doublePeriods);
   doublesRef.current = doublePeriods;
+  const lockedRef = useRef(lockedConfig);
+  lockedRef.current = lockedConfig;
 
   // Remembers the config we last seeded from the cache, so we can re-seed when
   // the cache refreshes (stale → fresh) without clobbering a user's real edits:
@@ -142,7 +144,11 @@ export const TimetableWizard = ({ classId, className, onCancel, onPublished }: T
   // Reactive to entries+breaks (which publish writes instantly). Each field is
   // guarded independently so it only re-seeds while it is still at its untouched
   // default — a real in-progress draft or any user edit always wins.
+  // Skipped entirely for config-locked classes: the shared batch config is the
+  // single source of truth and must never be clobbered by the class's previous
+  // published entries (e.g. a pre-config timetable with irregular day grids).
   useEffect(() => {
+    if (lockedRef.current) return;
     if (cacheEntries.length === 0) return;
     const cfg = scheduleConfigFromTimetable(cacheEntries, cacheBreaks);
     if (cfg.length === 0) return;
@@ -184,14 +190,18 @@ export const TimetableWizard = ({ classId, className, onCancel, onPublished }: T
     };
   }, [cacheEntries, cacheBreaks, initialSchedule, publishedCfg, isFullSubjectSeed]);
 
-  // Persist every change to localStorage.
+  // Persist every change to localStorage — but only for classes WITHOUT a lock.
+  // School-type batch configs are the single source of truth for locked classes,
+  // so a stale per-class draft must never fight the config again.
   useEffect(() => {
+    if (lockedConfig) return;
     save({ step, title, schedule, selectedSubjects, targets, doublePeriods });
-  }, [save, step, title, schedule, selectedSubjects, targets, doublePeriods]);
+  }, [save, step, title, schedule, selectedSubjects, targets, doublePeriods, lockedConfig]);
 
   // Locked-mode: a shared batch configuration is the single source of truth.
   // Whatever the user once drafted/edited for this class is OVERRIDDEN — the
   // config dictates schedule, subject set, weekly targets and double periods.
+  // Any leftover legacy draft is cleared so it can't re-seed stale schedules.
   useEffect(() => {
     if (!lockedConfig) return;
     setSchedule(normalizeSchedule(lockedConfig.schedule ?? []));
@@ -200,6 +210,7 @@ export const TimetableWizard = ({ classId, className, onCancel, onPublished }: T
     setDoublePeriods(lockedConfig.doublePeriods ?? []);
     setTitle((cur) => cur || lockedConfig.name || "Weekly Timetable");
     setStep(2); // jump straight to Preview — earlier steps are config-managed (see below).
+    clear();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [lockedConfig?.id]);
 
@@ -321,7 +332,7 @@ export const TimetableWizard = ({ classId, className, onCancel, onPublished }: T
         </Button>
       </div>
 
-      {draft && step > 0 && (
+      {draft && !lockedConfig && step > 0 && (
         <div className="mb-4 flex items-center gap-2 rounded-xl border border-azure500/30 bg-azure500/5 px-4 py-3 text-sm text-azure500">
           <InfoCircle size={16} color="#4285F4" />
           Continuing where you left off — your draft was restored.

@@ -441,6 +441,14 @@ export const allocateTimetable = (
   // relocating every occupant in a chain that ends at a free slot. Each move
   // respects the moved subject's own once-per-day + teacher availability, so
   // the grid stays conflict-free. Bounded depth avoids pathological runs.
+  const isDoubleHalf = (entry: DraftEntry): boolean => {
+    const dayEntries = entries.filter(
+      (e) => e.subjectId === entry.subjectId && e.day === entry.day,
+    );
+    if (dayEntries.length !== 2) return false;
+    const periods = dayEntries.map((e) => e.period).sort((a, b) => a - b);
+    return periods[1] === periods[0] + 1;
+  };
   const placeWithEviction = (subjectId: string): boolean => {
     const picked = teacherFor.get(subjectId);
     const usedDays = new Set(entries.filter((e) => e.subjectId === subjectId).map((e) => e.day));
@@ -484,6 +492,10 @@ export const allocateTimetable = (
           found = chain;
           break;
         }
+        // A placed double is an atomic block: moving one half off would silently
+        // scatter a configured double (a "double" appearance still satisfying the
+        // target). Treat double halves as immovable and dead-end this chain.
+        if (isDoubleHalf(occ)) continue;
         const forbidden = new Set([...visited, slotKey(from)]);
         for (const t of legalMoves(occ, forbidden)) {
           if (!taken.has(slotKey(t))) {
@@ -682,7 +694,11 @@ export const regenerate = (input: AllocateInput, seed: number): AllocationResult
   allocateTimetable(input, seed);
 
 const allocScore = (r: AllocationResult): number =>
-  r.unmet.reduce((a, u) => a + u.remaining, 0) * 100 + r.conflicts.length * 10 + (r.overflow ? 5 : 0) + (r.tooFewSlots ? 5 : 0);
+  r.unmet.reduce((a, u) => a + u.remaining, 0) * 100 +
+  (r.totalSlots - r.occupiedSlots) * 10 +
+  r.conflicts.length * 10 +
+  (r.overflow ? 5 : 0) +
+  (r.tooFewSlots ? 5 : 0);
 
 /**
  * Randomized-search wrapper: `allocateTimetable` is greedy and only finds a
@@ -690,6 +706,11 @@ const allocScore = (r: AllocationResult): number =>
  * another class can box a subject in). Rerunning with fresh seeds until a fully
  * valid result appears turns that ~30–50% hit rate into a near-certainty, and
  * returns the best partial schedule if no full one exists.
+ *
+ * "Valid" means a FULL grid: no unmet targets, no conflicts AND every slot
+ * occupied. A partial grid that merely satisfies all targets would still leave
+ * holes (most often the first period of a day), changing that day's period
+ * signature and splitting the preview into separate per-day tables.
  */
 export const allocateWithRetry = (
   input: AllocateInput,
@@ -700,7 +721,14 @@ export const allocateWithRetry = (
   let bestScore = allocScore(best);
   for (let i = 1; i < attempts; i++) {
     const r = allocateTimetable(input, baseSeed + i * 31);
-    if (!r.unmet.length && r.conflicts.length === 0 && !r.overflow && !r.tooFewSlots) return r;
+    if (
+      !r.unmet.length &&
+      r.conflicts.length === 0 &&
+      !r.overflow &&
+      !r.tooFewSlots &&
+      r.occupiedSlots === r.totalSlots
+    )
+      return r;
     const s = allocScore(r);
     if (s < bestScore) {
       best = r;

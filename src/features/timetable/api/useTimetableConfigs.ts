@@ -73,7 +73,9 @@ export const useTimetableConfigs = () => {
   const data = useMemo<Record<string, TimetableConfigDto>>(() => {
     const server: Record<string, TimetableConfigDto> = {};
     for (const c of query.data?.configs ?? []) server[c.configType] = c;
-    return cached && Object.keys(cached).length > 0 ? { ...server, ...cached } : server;
+    // Server is the source of truth: a stale Dexie cache (e.g. a pre-config
+    // 3-block schedule) must never override freshly-fetched server data.
+    return cached && Object.keys(cached).length > 0 ? { ...cached, ...server } : server;
   }, [cached, query.data]);
 
   const isEmpty = Object.keys(cached ?? {}).length === 0;
