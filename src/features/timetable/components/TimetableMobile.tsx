@@ -2,7 +2,8 @@ import { useMemo } from "react";
 import { cn } from "../../../lib/utils";
 import { DAYS, type TimetableBreak } from "../types";
 import { gridRowsFromTimes, overlaps } from "../utils/allocate";
-import { buildSubjectColorMap, solidSwatch, type GridEntryData } from "./TimetableGrid";
+import { buildSubjectColorMap, solidSwatch } from "../utils/subjectColors";
+import { type GridEntryData } from "./TimetableGrid";
 
 interface TimetableMobileProps {
   periodsPerDay: number;

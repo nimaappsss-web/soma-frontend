@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { SCHOOL_TYPES } from "../../../utils/schoolType";
 
 export const principalFormSchema = z.object({
   name: z.string().min(2, "Name must be at least 2 characters"),
@@ -11,7 +12,7 @@ export const schoolFormSchema = z.object({
   name: z.string().min(2, "School name is required"),
   state: z.string().min(1, "State is required"),
   lga: z.string().min(1, "LGA is required"),
-  schoolType: z.array(z.enum(["creche", "kg", "primary", "secondary"])).min(1, "School type is required"),
+  schoolType: z.array(z.enum(SCHOOL_TYPES)).min(1, "School type is required"),
   address: z.string().optional(),
   schoolCode: z
     .string()

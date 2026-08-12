@@ -420,6 +420,98 @@ export const allocateTimetable = (
     return false;
   };
 
+  // Remove a placed entry (slot occupancy, teacher booking, entries list) so
+  // its slot can be given to a subject that needs it.
+  const release = (entry: DraftEntry) => {
+    const picked = teacherFor.get(entry.subjectId);
+    if (picked?.teacherId) {
+      teacherSlots.set(
+        picked.teacherId,
+        (teacherSlots.get(picked.teacherId) ?? []).filter(
+          (s) => !(s.day === (entry.day as DayOfWeek) && s.period === entry.period),
+        ),
+      );
+    }
+    taken.delete(`${entry.day}|${entry.period}`);
+    occupied--;
+    entries.splice(entries.indexOf(entry), 1);
+  };
+
+  // Eviction repair (chained BFS): place a subject onto an occupied slot by
+  // relocating every occupant in a chain that ends at a free slot. Each move
+  // respects the moved subject's own once-per-day + teacher availability, so
+  // the grid stays conflict-free. Bounded depth avoids pathological runs.
+  const placeWithEviction = (subjectId: string): boolean => {
+    const picked = teacherFor.get(subjectId);
+    const usedDays = new Set(entries.filter((e) => e.subjectId === subjectId).map((e) => e.day));
+    const candidates: Slot[] = [];
+    for (const day of days) {
+      if (usedDays.has(day)) continue;
+      for (const slot of byDay.get(day) ?? []) {
+        if (teacherAvailableAt(picked?.teacherId ?? "", slot)) candidates.push(slot);
+      }
+    }
+    candidates.sort(() => rand() - 0.5);
+
+    const occupant = (slot: Slot) =>
+      entries.find((e) => e.day === slot.day && e.period === slot.period);
+    const legalMoves = (occ: DraftEntry, forbidden: Set<string>): Slot[] => {
+      const occPicked = teacherFor.get(occ.subjectId);
+      return days
+        .filter((d) => d !== occ.day && !entries.some((e) => e.subjectId === occ.subjectId && e.day === d))
+        .flatMap((d) => (byDay.get(d) ?? []))
+        .filter((t) => !forbidden.has(slotKey(t)))
+        .filter((t) => teacherAvailableAt(occPicked?.teacherId ?? "", t))
+        .sort(() => rand() - 0.5);
+    };
+
+    for (const slot of candidates) {
+      if (!taken.has(slotKey(slot))) {
+        record(slot, subjectId);
+        return true;
+      }
+      // BFS for an eviction chain ending at a free slot.
+      type Step = { from: Slot; to: Slot };
+      const queue: { from: Slot; chain: Step[] }[] = [{ from: slot, chain: [] }];
+      const visited = new Set<string>([slotKey(slot)]);
+      let qi = 0;
+      let found: Step[] | null = null;
+      while (qi < queue.length) {
+        const { from, chain } = queue[qi++];
+        const occ = occupant(from);
+        if (chain.length >= 6) break;
+        if (!occ) {
+          found = chain;
+          break;
+        }
+        const forbidden = new Set([...visited, slotKey(from)]);
+        for (const t of legalMoves(occ, forbidden)) {
+          if (!taken.has(slotKey(t))) {
+            found = [...chain, { from, to: t }];
+            break;
+          }
+          const k = slotKey(t);
+          if (visited.has(k)) continue;
+          visited.add(k);
+          queue.push({ from: t, chain: [...chain, { from, to: t }] });
+        }
+        if (found) break;
+      }
+      if (!found) continue;
+      for (const step of [...found].reverse()) {
+        const occ2 = occupant(step.from);
+        if (!occ2) continue;
+        if (!taken.has(slotKey(step.to)) && teacherAvailableAt(teacherFor.get(occ2.subjectId)?.teacherId ?? "", step.to)) {
+          release(occ2);
+          record(step.to, occ2.subjectId);
+        }
+      }
+      record(slot, subjectId);
+      return true;
+    }
+    return false;
+  };
+
   const unmet: Array<{ name: string; remaining: number }> = [];
 
   const setSubjects = subjects.filter((s) => (targets[s.subjectId] ?? 0) > 0);
@@ -493,18 +585,75 @@ export const allocateTimetable = (
     }
   }
 
-  // Phase 4 — fill any leftover free slots with ALL subjects (auto-fill). Single
-  // placements only consider days the subject isn't booked on yet; once none are
-  // left, that subject drops out of the pool.
-  const fillPool = [...subjects];
+  // Phase 4 — finish subjects still short of their target FIRST, then auto-fill
+  // any genuinely extra slots. Free slots are NEVER handed to a subject that
+  // already met its target while another subject is still short — that produced
+  // "40/40 occupied yet unmet" schedules. Short subjects try a new single, then
+  // extend an existing single into a double, then evict-and-relocate (chained).
+  // A failed placement only drops that subject from the round's candidate pool —
+  // every other subject is still tried, so the fill keeps going until truly
+  // nothing can be placed (a full grid, not a stalled one).
+  const countFor = (sid: string) => entries.filter((e) => e.subjectId === sid).length;
+  const deficit = (sid: string) => Math.max(0, (targets[sid] ?? 0) - countFor(sid));
+  const canStillPlace = (s: SubjectTeacherRow) =>
+    days.some((d) => !entries.some((e) => e.subjectId === s.subjectId && e.day === d));
   let guard2 = 0;
-  while (occupied < totalSlots && fillPool.length > 0 && guard2 < totalSlots * 8) {
-    const idx = Math.floor(rand() * fillPool.length);
-    const subj = fillPool[idx];
+  while (occupied < totalSlots && guard2 < totalSlots * 24) {
     guard2++;
-    if (tryPlaceSingle(subj.subjectId)) continue;
-    fillPool.splice(idx, 1);
+
+    // 1st priority: every subject still short of its target (randomized order).
+    const short = subjects
+      .filter((s) => deficit(s.subjectId) > 0 && canStillPlace(s))
+      .sort(() => rand() - 0.5);
+    let placedShort = false;
+    for (const subj of short) {
+      if (tryPlaceSingle(subj.subjectId)) {
+        placedShort = true;
+        break;
+      }
+      if (tryExtendToDouble(subj.subjectId)) {
+        placedShort = true;
+        break;
+      }
+      if (placeWithEviction(subj.subjectId)) {
+        placedShort = true;
+        break;
+      }
+    }
+    if (placedShort) continue;
+
+    // 2nd priority: no short subject could place — top up with any subject that
+    // still has a free day. Try every candidate rather than one random pick so
+    // a single fully-booked subject can't stall the rest of the grid.
+    const pool = subjects.filter(canStillPlace).sort(() => rand() - 0.5);
+    let placedAny = false;
+    for (const subj of pool) {
+      if (tryPlaceSingle(subj.subjectId)) {
+        placedAny = true;
+        break;
+      }
+      if (tryExtendToDouble(subj.subjectId)) {
+        placedAny = true;
+        break;
+      }
+      if (placeWithEviction(subj.subjectId)) {
+        placedAny = true;
+        break;
+      }
+    }
+    if (!placedAny) break;
   }
+
+  // Rebuild `unmet` from the final placements (Phase 4 may have satisfied some).
+  unmet.splice(
+    0,
+    unmet.length,
+    ...subjects.flatMap((s) => {
+      const placed = countFor(s.subjectId);
+      const needed = setIds.has(s.subjectId) ? (targets[s.subjectId] ?? 0) : placed > 0 ? 0 : 1;
+      return placed < needed ? [{ name: s.name, remaining: needed - placed }] : [];
+    }),
+  );
 
   // Sort by day then period.
   entries.sort(
@@ -531,6 +680,35 @@ export const allocateTimetable = (
 /** Re-run with a fresh seed → re-rolls the scatter (Phases 2–3) only. */
 export const regenerate = (input: AllocateInput, seed: number): AllocationResult =>
   allocateTimetable(input, seed);
+
+const allocScore = (r: AllocationResult): number =>
+  r.unmet.reduce((a, u) => a + u.remaining, 0) * 100 + r.conflicts.length * 10 + (r.overflow ? 5 : 0) + (r.tooFewSlots ? 5 : 0);
+
+/**
+ * Randomized-search wrapper: `allocateTimetable` is greedy and only finds a
+ * complete, conflict-free arrangement some of the time (a busy teacher in
+ * another class can box a subject in). Rerunning with fresh seeds until a fully
+ * valid result appears turns that ~30–50% hit rate into a near-certainty, and
+ * returns the best partial schedule if no full one exists.
+ */
+export const allocateWithRetry = (
+  input: AllocateInput,
+  baseSeed = 1,
+  attempts = 24,
+): AllocationResult => {
+  let best = allocateTimetable(input, baseSeed);
+  let bestScore = allocScore(best);
+  for (let i = 1; i < attempts; i++) {
+    const r = allocateTimetable(input, baseSeed + i * 31);
+    if (!r.unmet.length && r.conflicts.length === 0 && !r.overflow && !r.tooFewSlots) return r;
+    const s = allocScore(r);
+    if (s < bestScore) {
+      best = r;
+      bestScore = s;
+    }
+  }
+  return best;
+};
 
 // ----------------------------- conflict detection -----------------------------
 

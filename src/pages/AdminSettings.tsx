@@ -15,6 +15,7 @@ import { schoolUpdateSchema, type SchoolUpdateFormData } from "../features/princ
 import { uploadFile } from "../utils/upload";
 import { addToQueue } from "../sync/syncQueue";
 import { transformError } from "../utils/transformError";
+import { SCHOOL_TYPES, SCHOOL_TYPE_LABELS, type SchoolType } from "../utils/schoolType";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../components/ui/card";
 import { Input } from "../components/ui/input";
 import { SelectDropdown } from "../components/ui/select-dropdown";
@@ -293,7 +294,7 @@ const SchoolSection = () => {
           ? `ATH/${year}/001`
           : school.admissionPattern.replace("{year}", year).replace("{seq}", "001");
       const raw = school.schoolType;
-      const types = Array.isArray(raw) ? raw as ("secondary" | "creche" | "kg" | "primary")[] : [];
+      const types = Array.isArray(raw) ? (raw as SchoolType[]) : [];
       reset({
         name: school.name,
         admissionPattern: example,
@@ -445,12 +446,10 @@ const SchoolSection = () => {
   );
 };
 
-const SCHOOL_TYPE_OPTIONS: Array<{ value: string; label: string }> = [
-  { value: "creche", label: "Creche" },
-  { value: "kg", label: "Kindergarten" },
-  { value: "primary", label: "Primary" },
-  { value: "secondary", label: "Secondary" },
-];
+const SCHOOL_TYPE_OPTIONS: Array<{ value: string; label: string }> = SCHOOL_TYPES.map((value) => ({
+  value,
+  label: SCHOOL_TYPE_LABELS[value],
+}));
 
 const SchoolTypeSelect = ({
   control,
@@ -468,7 +467,7 @@ const SchoolTypeSelect = ({
         options={SCHOOL_TYPE_OPTIONS}
         selected={selected}
         onChange={(values) =>
-          setValue("schoolType", values as ("secondary" | "creche" | "kg" | "primary")[], { shouldDirty: true })
+          setValue("schoolType", values as SchoolType[], { shouldDirty: true })
         }
         placeholder="Select school type"
       />

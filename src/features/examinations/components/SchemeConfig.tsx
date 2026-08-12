@@ -14,6 +14,7 @@ import { useClasses } from "../../principal/api/useClasses";
 import { useSchoolSettings } from "../../settings/api/useSchoolSettings";
 import { useActiveTerm } from "../../calendar/api";
 import { termLabel } from "../../calendar/utils/term";
+import { schoolTypeLabel } from "../../../utils/schoolType";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "../../../components/ui/dialog";
 import { Button } from "../../../components/ui/button";
 import { Input } from "../../../components/ui/input";
@@ -39,14 +40,7 @@ const TYPE_OPTIONS: { value: ExamComponentType; label: string }[] = [
   { value: "OTHER", label: "Other" },
 ];
 
-const TYPE_LABEL: Record<string, string> = {
-  creche: "Creche",
-  kg: "Kindergarten",
-  primary: "Primary",
-  secondary: "Secondary",
-};
-
-const typeLabel = (t: string) => TYPE_LABEL[t] ?? t.charAt(0).toUpperCase() + t.slice(1);
+const typeLabel = (t: string) => schoolTypeLabel(t);
 
 const typePill = (type: ExamComponentType) => {
   switch (type) {

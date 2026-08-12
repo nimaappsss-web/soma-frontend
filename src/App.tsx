@@ -54,6 +54,8 @@ import { FinanceManagement } from "./features/finance/components/FinanceManageme
 import { AnnouncementsManagement } from "./features/announcements/components/AnnouncementsManagement";
 import { MomentsManagement } from "./features/moments/components/MomentsManagement";
 import { TimetableManagement } from "./features/timetable/components/TimetableManagement";
+import { TimetableConfigsPage } from "./features/timetable/components/TimetableConfigsPage";
+import { TimetableLayout } from "./features/timetable/components/TimetableLayout";
 import { TimetableView } from "./features/timetable/components/TimetableView";
 import { AttendanceOverview } from "./features/attendance/components/AttendanceOverview";
 import { AttendanceClasses } from "./features/attendance/components/AttendanceClasses";
@@ -130,8 +132,11 @@ function App() {
           <Route path="finance" element={<FinanceManagement />} />
           <Route path="announcements" element={<AnnouncementsManagement />} />
           <Route path="moments" element={<MomentsManagement />} />
-          <Route path="timetable" element={<TimetableManagement />} />
-          <Route path="timetable/:classId" element={<TimetableView />} />
+          <Route path="timetable" element={<TimetableLayout />}>
+            <Route index element={<TimetableManagement />} />
+            <Route path="configs" element={<TimetableConfigsPage />} />
+            <Route path=":classId" element={<TimetableView />} />
+          </Route>
           <Route path="attendance" element={<AttendanceOverview />} />
           <Route path="attendance/classes" element={<AttendanceClasses />} />
           <Route path="attendance/absentees" element={<AttendanceAbsentees />} />

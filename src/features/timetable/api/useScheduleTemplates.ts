@@ -6,7 +6,7 @@ import { fetchData } from "../../../utils/fetchData";
 import { useAuth } from "../../../contexts/AuthContext";
 import { db, type TimetableCache, type TimetableEntryCache } from "../../../db/db";
 import { scheduleConfigFromTimetable, timetableConfigFromEntries } from "../utils/scheduleConfig";
-import type { DayPeriodBlock, TimetableBreak, TimetableEntry, TimetableListResponse } from "../types";
+import type { DayOfWeek, DayPeriodBlock, TimetableBreak, TimetableEntry, TimetableListResponse } from "../types";
 
 const toEntryCache = (userId: string, e: TimetableEntry): TimetableEntryCache => ({
   id: e.id,
@@ -71,7 +71,7 @@ export const useScheduleTemplates = (excludeClassId?: string) => {
       next: ([entries, headers]) => {
         const breaksByClass = new Map<string, TimetableBreak[]>();
         for (const h of headers as TimetableCache[]) {
-          let parsed: TimetableBreak[] = [];
+          let parsed: TimetableBreak[];
           try {
             parsed = JSON.parse(h.breaksJson || "[]");
           } catch {
@@ -101,7 +101,7 @@ export const useScheduleTemplates = (excludeClassId?: string) => {
         // in that window applies a config without breaks.
         await db.transaction("rw", db.timetableEntries, db.timetables, async () => {
           if (res.entries?.length) {
-            await db.timetableEntries.bulkPut(res.entries.map((e) => toEntryCache(userId, e)));
+            await db.timetableEntries.bulkPut(res.entries.map((e: TimetableEntry) => toEntryCache(userId, e)));
           }
 
           const breaksByClass = res.breaksByClass ?? {};
@@ -176,7 +176,13 @@ export const useScheduleTemplates = (excludeClassId?: string) => {
     const out: SubjectTemplate[] = [];
     for (const [classId, row] of byClass) {
       if (classId === excludeClassId) continue;
-      const config = timetableConfigFromEntries(row.entries);
+      const config = timetableConfigFromEntries(
+        row.entries.map((e) => ({
+          subjectId: e.subjectId,
+          day: e.day as DayOfWeek,
+          period: e.period,
+        })),
+      );
       if (config.subjectIds.length === 0) continue;
       const targetSum = Object.values(config.targets).reduce((a, b) => a + b, 0);
       out.push({

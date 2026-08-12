@@ -1,12 +1,13 @@
-import { useMemo, useState } from "react";
-import { Link, useNavigate } from "react-router";
-import { ArrowRight, Calendar, CalendarTick, Element4, TickCircle } from "iconsax-react";
+import { useMemo } from "react";
+import { Link, useNavigate, useSearchParams } from "react-router";
+import { ArrowRight, Calendar, CalendarTick, Element4, Setting2, TickCircle } from "iconsax-react";
 
 import { cn } from "../../../lib/utils";
 import { SelectDropdown, type SelectOption } from "../../../components/ui/select-dropdown";
 import { SomaLoader } from "../../../components/ui/SomaLoader";
 import { useClasses } from "../../principal/api";
-import { useTimetableCache } from "../api";
+import { useTimetableCache, useTimetableConfigs } from "../api";
+import { effectiveSchoolType } from "../../../utils/schoolType";
 
 type StatusFilter = "all" | "configured" | "none";
 
@@ -18,11 +19,27 @@ const FILTER_OPTIONS: { key: StatusFilter; label: string }[] = [
 
 export const TimetableManagement = () => {
   const navigate = useNavigate();
-  const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
+  const [searchParams, setSearchParams] = useSearchParams();
+
+  const statusParam = searchParams.get("status");
+  const statusFilter: StatusFilter = FILTER_OPTIONS.some((o) => o.key === statusParam)
+    ? (statusParam as StatusFilter)
+    : "all";
+
+  const setStatusFilter = (key: StatusFilter) => {
+    const next = new URLSearchParams(searchParams);
+    if (key === "all") {
+      next.delete("status");
+    } else {
+      next.set("status", key);
+    }
+    setSearchParams(next, { replace: true });
+  };
 
   const { data: classesData, isLoading: classesLoading } = useClasses();
   const classes = classesData?.classes ?? [];
   const { entries: allEntries, isLoading: entriesLoading } = useTimetableCache();
+  const { data: configs } = useTimetableConfigs();
 
   const counts = useMemo(() => {
     const map = new Map<string, number>();
@@ -48,12 +65,8 @@ export const TimetableManagement = () => {
     .sort((a, b) => a.label.localeCompare(b.label));
 
   return (
-    <div className="mx-auto max-w-6xl px-4 py-6 md:px-8">
+    <div className="w-full p-4 md:p-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <div>
-          <h1 className="text-xl font-bold text-gray900 md:text-2xl">Timetable</h1>
-          <p className="text-sm text-placeholder">Open a class to view or build its schedule.</p>
-        </div>
         <div className="w-full sm:w-56 md:w-64">
           <SelectDropdown
             options={classOptions}
@@ -125,6 +138,8 @@ export const TimetableManagement = () => {
           {filtered.map((cls) => {
             const count = counts.get(cls.id) ?? 0;
             const scheduled = count > 0;
+            const configType = effectiveSchoolType(cls.schoolType);
+            const config = configType ? configs[configType] : undefined;
             return (
               <Link
                 key={cls.id}
@@ -145,7 +160,31 @@ export const TimetableManagement = () => {
                   />
                 </div>
 
-                <div className="mt-auto">
+                <div className="mt-auto space-y-1.5">
+                  {config ? (
+                    <span className="inline-flex items-center gap-1.5 rounded-full bg-azure500/10 px-3 py-1 text-xs font-medium text-azure500">
+                      <Setting2 size={13} color="#4285F4" />
+                      {config.name}
+                    </span>
+                  ) : configType ? (
+                    <span
+                      role="button"
+                      className="inline-flex cursor-pointer items-center gap-1.5 rounded-full bg-amber400/10 px-3 py-1 text-xs font-medium text-amber500 transition-colors hover:bg-amber400/20"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        navigate(`/admin/timetable/configs?type=${encodeURIComponent(configType)}&edit=1`);
+                      }}
+                    >
+                      <Setting2 size={13} color="#FBBC05" />
+                      No configuration set
+                    </span>
+                  ) : (
+                    <span className="inline-flex items-center gap-1.5 rounded-full bg-amber400/10 px-3 py-1 text-xs font-medium text-amber500">
+                      <Setting2 size={13} color="#FBBC05" />
+                      No configuration
+                    </span>
+                  )}
                   {entriesLoading ? (
                     <span className="inline-flex items-center gap-1.5 rounded-full bg-gray50 px-3 py-1 text-xs text-placeholder">
                       Checking…

@@ -371,6 +371,15 @@ export interface TimetableBuildCache {
   updatedAt: number;
 }
 
+export interface TimetableConfigCache {
+  id: string; // configType is the stable key within a school
+  userId: string;
+  configType: string;
+  name: string;
+  dataJson: string; // { schedule, subjectIds, targets, doublePeriods }
+  updatedAt: number;
+}
+
 export interface TimetableEntryCache {
   id: string;
   userId: string;
@@ -435,6 +444,7 @@ export const db = new Dexie("somaDB") as Dexie & {
   timetables: EntityTable<TimetableCache, "id">;
   timetableEntries: EntityTable<TimetableEntryCache, "id">;
   timetableBuilds: EntityTable<TimetableBuildCache, "id">;
+  timetableConfigs: EntityTable<TimetableConfigCache, "id">;
   classSubjects: EntityTable<ClassSubjectsCache, "id">;
 };
 
@@ -951,6 +961,46 @@ db.version(31).stores({
   timetables: "id, userId, classId",
   timetableEntries: "id, userId, timetableId, classId",
   timetableBuilds: "id, userId, classId",
+  classSubjects: "id, userId, schoolId",
+});
+
+db.version(32).stores({
+  students: "id, name, classId, status, schoolId, userId, [userId+classId]",
+  attendance: "id, studentId, className, schoolId, date, syncStatus, userId, [date+className], [userId+date+className]",
+  caScores: "id, studentId, className, schoolId, term, session, syncStatus, userId",
+  subjects: "id, schoolId, userId",
+  classes: "id, level, schoolId, userId, [userId+level]",
+  teacherFormClass: "id",
+  teacherAssignments: "id, userId",
+  teachers: "id, userId",
+  pendingInvites: "id, userId",
+  teacherDetails: "id, userId",
+  parents: "id, status, schoolId, userId",
+  syncQueue: "++id, status, createdAt, table, userId",
+  lessonNotes: "id, userId",
+  schoolSettings: "id, userId",
+  calendarEvents: "id, userId",
+  holidays: "id, userId",
+  academicTerms: "id, userId",
+  announcements: "id, userId",
+  attendanceSnapshots: "key",
+  attendanceNotes: "id, userId, [userId+date+className]",
+  examScores: "id, userId, examKey, studentId, syncStatus",
+  examScheme: "id, userId",
+  exams: "id, userId, term, classId, subjectId",
+  examRosters: "id, userId, examId",
+  examActiveSummaries: "id, userId, classId, examKey",
+  examTermResults: "id, userId, classId, term",
+  examStudentReports: "id, userId, studentId, term",
+  reportSettings: "id, userId",
+  studentTimeline: "id, userId, studentId",
+  studentAcademics: "id, userId, studentId, term, session",
+  studentMonthlyAttendance: "id, userId, studentId, month, year",
+  studentStats: "id, userId",
+  timetables: "id, userId, classId",
+  timetableEntries: "id, userId, timetableId, classId",
+  timetableBuilds: "id, userId, classId",
+  timetableConfigs: "id, userId, configType",
   classSubjects: "id, userId, schoolId",
 });
 

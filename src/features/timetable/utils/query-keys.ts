@@ -6,5 +6,6 @@ export const timetableKeys = {
   details: () => [...timetableKeys.all, "detail"] as const,
   detail: (id: string) => [...timetableKeys.all, "detail", id] as const,
   build: (classId: string) => [...timetableKeys.all, "build", classId] as const,
+  configs: () => [...timetableKeys.all, "configs"] as const,
   teacher: (teacherId: string) => [...timetableKeys.all, "teacher", teacherId] as const,
 };

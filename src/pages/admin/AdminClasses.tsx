@@ -14,14 +14,7 @@ import {
   ClassFormModal,
   type ClassEditTarget,
 } from "../../features/principal/components/ClassFormModal";
-
-const SCHOOL_TYPE_LABEL: Record<string, string> = {
-  creche: "Creche",
-  kg: "Kindergarten",
-  primary: "Primary",
-  secondary: "Secondary",
-};
-const schoolTypeLabel = (t: string) => SCHOOL_TYPE_LABEL[t] ?? t.charAt(0).toUpperCase() + t.slice(1);
+import { schoolTypeLabel } from "../../utils/schoolType";
 
 const classSortOptions = [
   { value: "", label: "Sort by" },

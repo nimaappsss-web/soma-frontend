@@ -128,7 +128,7 @@ Authorization: Bearer <accessToken>
   "schoolName": "Greenfield Secondary School",
   "state": "Lagos",
   "lga": "Ikeja",
-  "schoolType": "secondary",
+  "schoolType": ["junior-secondary", "senior-secondary"],
   "logoUrl": "https://res.cloudinary.com/..."  // optional
 }
 
@@ -141,7 +141,7 @@ Response:
     "logo": "https://res.cloudinary.com/...",
     "state": "Lagos",
     "lga": "Ikeja",
-    "schoolType": "secondary"
+    "schoolType": ["junior-secondary", "senior-secondary"]
   },
   "user": {
     "id": "user_abc123",

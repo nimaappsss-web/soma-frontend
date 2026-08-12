@@ -63,7 +63,7 @@ export const useTimetableCache = (classId?: string): UseTimetableCacheReturn => 
   useEffect(() => {
     if (!userId) return;
     const sub = liveQuery(() => {
-      let rows = db.timetableEntries.where("userId").equals(userId);
+      const rows = db.timetableEntries.where("userId").equals(userId);
       const ttRows = classId
         ? db.timetables.where("userId").equals(userId).filter((t) => t.classId === classId)
         : undefined;
@@ -126,7 +126,6 @@ export const useTimetableCache = (classId?: string): UseTimetableCacheReturn => 
               .delete();
           } else {
             await db.timetableEntries.where("userId").equals(userId).delete();
-            await db.timetables.where("userId").equals(userId).delete();
           }
         }
 
@@ -143,6 +142,23 @@ export const useTimetableCache = (classId?: string): UseTimetableCacheReturn => 
             breaksJson: JSON.stringify(res.breaks ?? []),
             updatedAt: Date.now(),
           });
+        } else if (!classId && res.breaksByClass && Object.keys(res.breaksByClass).length > 0) {
+          const existing = await db.timetables.where("userId").equals(userId).toArray();
+          const byClass = new Map(existing.map((t) => [t.classId, t]));
+          await db.timetables.bulkPut(
+            Object.entries(res.breaksByClass).map(([cid, brk]) => {
+              const prev = byClass.get(cid);
+              return {
+                id: cid,
+                userId,
+                classId: cid,
+                className: prev?.className ?? "",
+                title: prev?.title ?? "",
+                breaksJson: JSON.stringify(brk ?? []),
+                updatedAt: Date.now(),
+              };
+            }),
+          );
         }
       });
 

@@ -126,11 +126,29 @@ export interface PublishedTimetable {
 
 export interface TimetableBuildData {
   class: { id: string; name: string };
+  config: TimetableConfigDto | null;
   subjects: SubjectTeacherRow[];
   breaks: TimetableBreak[];
   title: string;
   entries: DraftEntry[];
   busyTeachers: BusyTeacher[];
+}
+
+export type SchoolTypeConfig = "primary" | "kg" | "creche" | "junior-secondary" | "senior-secondary" | "custom";
+
+export interface TimetableConfigDto {
+  id: string;
+  configType: SchoolTypeConfig;
+  name: string;
+  schedule: DayPeriodBlock[];
+  subjectIds: string[];
+  targets: Record<string, number>;
+  doublePeriods: DoublePeriodConfig[];
+  updatedAt?: string;
+}
+
+export interface TimetableConfigsResponse {
+  configs: TimetableConfigDto[];
 }
 
 export interface TimetableConflict {

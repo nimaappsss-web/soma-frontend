@@ -11,20 +11,19 @@ import { ErrorMessage } from "../../../components/others/ErrorMessage";
 import { useRegisterSchool } from "../../auth/api";
 import { useAuth } from "../../../contexts/AuthContext";
 import { transformError } from "../../../utils/transformError";
+import { SCHOOL_TYPES, SCHOOL_TYPE_LABELS, type SchoolType } from "../../../utils/schoolType";
 
-const SCHOOL_TYPE_OPTIONS: Array<{ value: string; label: string }> = [
-  { value: "creche", label: "Creche" },
-  { value: "kg", label: "Kindergarten" },
-  { value: "primary", label: "Primary" },
-  { value: "secondary", label: "Secondary" },
-];
+const SCHOOL_TYPE_OPTIONS: Array<{ value: string; label: string }> = SCHOOL_TYPES.map((value) => ({
+  value,
+  label: SCHOOL_TYPE_LABELS[value],
+}));
 
 const schoolSchema = z.object({
   schoolName: z.string().min(2, "School name is required"),
   state: z.string().min(2, "State is required"),
   lga: z.string().min(2, "LGA is required"),
   address: z.string().optional(),
-  schoolType: z.array(z.enum(["creche", "kg", "primary", "secondary"])).min(1, "Select at least one school type"),
+  schoolType: z.array(z.enum(SCHOOL_TYPES)).min(1, "Select at least one school type"),
 });
 
 type SchoolFormData = z.infer<typeof schoolSchema>;
@@ -115,7 +114,7 @@ export const SchoolSetupWizard = () => {
               options={SCHOOL_TYPE_OPTIONS}
               selected={schoolType}
               onChange={(values) =>
-                setValue("schoolType", values as ("secondary" | "creche" | "kg" | "primary")[], { shouldValidate: true })
+                setValue("schoolType", values as SchoolType[], { shouldValidate: true })
               }
               placeholder="Select school type"
               hasError={errors.schoolType as unknown as import("react-hook-form").FieldError}

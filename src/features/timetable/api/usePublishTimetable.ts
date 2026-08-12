@@ -2,6 +2,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import toast from "react-hot-toast";
 
 import { transformError } from "../../../utils/transformError";
+import { fetchData } from "../../../utils/fetchData";
 import { db, type TimetableEntryCache } from "../../../db/db";
 import { addToQueue } from "../../../sync/syncQueue";
 import { useAuth } from "../../../contexts/AuthContext";
@@ -119,7 +120,7 @@ export const usePublishTimetable = () => {
           const res = await fetchData<{ timetable: PublishedTimetable }>(
             "/timetable/publish",
             "POST",
-            apiPayload,
+            apiPayload as unknown as { timetable: PublishedTimetable },
           );
           const published = res.timetable;
           await writeDraftCache();

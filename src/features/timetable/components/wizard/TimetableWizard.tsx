@@ -5,17 +5,18 @@ import toast from "react-hot-toast";
 import { cn } from "../../../../lib/utils";
 import { Button } from "../../../../components/ui/button";
 import { SomaLoader } from "../../../../components/ui/SomaLoader";
-import { useTimetableBuild, usePublishTimetable, useTimetableCache, useScheduleTemplates } from "../../api";
-import { allocateTimetable } from "../../utils/allocate";
+import { useTimetableBuild, usePublishTimetable, useTimetableCache, useTimetableConfigs, useScheduleTemplates } from "../../api";
+import { allocateWithRetry } from "../../utils/allocate";
 import { breaksFromSchedule, defaultSchedule, normalizeSchedule } from "../../utils/draft";
 import { scheduleConfigFromTimetable, schedulesEqual, timetableConfigFromEntries, type TimetableConfigFromEntries } from "../../utils/scheduleConfig";
 import { useTimetableDraft } from "../../hooks/useTimetableDraft";
 import { useClassSubjects } from "../../../class-subjects/api";
-import { useSubjects } from "../../../principal/api";
+import { useClasses, useSubjects } from "../../../principal/api";
 import { ScheduleStep } from "./ScheduleStep";
 import { SubjectsStep } from "./SubjectsStep";
 import { PreviewStep } from "./PreviewStep";
-import { DAYS, type DayOfWeek, type DayPeriodBlock, type DoublePeriodConfig, type PublishPayload, type SubjectTeacherRow } from "../../types";
+import { DAYS, type DayOfWeek, type DayPeriodBlock, type DoublePeriodConfig, type PublishPayload, type SubjectTeacherRow, type TimetableConfigDto } from "../../types";
+import { effectiveSchoolType } from "../../../../utils/schoolType";
 
 interface TimetableWizardProps {
   classId: string;
@@ -52,6 +53,23 @@ export const TimetableWizard = ({ classId, className, onCancel, onPublished }: T
 
   const buildSubjects = build.data?.subjects ?? [];
   const busyTeachers = build.data?.busyTeachers ?? [];
+  const { data: configs } = useTimetableConfigs();
+  const { data: classesData } = useClasses();
+  // The class's school-type batch determines which shared config locks it.
+  // Resolved here (offline-first, keyed by schoolType) rather than the build
+  // payload so locking works before/without a fresh server build response.
+  const classSchoolType = useMemo(
+    () => effectiveSchoolType(classesData?.classes.find((c) => c.id === classId)?.schoolType),
+    [classesData, classId],
+  );
+  // Linked shared configuration (rigid): when the class's schoolType has one,
+  // the wizard is LOCKED to it — schedule, subjects and targets are read-only.
+  const lockedConfig = useMemo<TimetableConfigDto | null>(() => {
+    if (classSchoolType && configs[classSchoolType]) return configs[classSchoolType];
+    const fromBuild = build.data?.config;
+    if (fromBuild) return fromBuild;
+    return null;
+  }, [classSchoolType, configs, build.data]);
 
   const assignments = useClassSubjects();
   const allSubjects = useSubjects();
@@ -171,6 +189,20 @@ export const TimetableWizard = ({ classId, className, onCancel, onPublished }: T
     save({ step, title, schedule, selectedSubjects, targets, doublePeriods });
   }, [save, step, title, schedule, selectedSubjects, targets, doublePeriods]);
 
+  // Locked-mode: a shared batch configuration is the single source of truth.
+  // Whatever the user once drafted/edited for this class is OVERRIDDEN — the
+  // config dictates schedule, subject set, weekly targets and double periods.
+  useEffect(() => {
+    if (!lockedConfig) return;
+    setSchedule(normalizeSchedule(lockedConfig.schedule ?? []));
+    setSelectedSubjects(lockedConfig.subjectIds ?? []);
+    setTargets(lockedConfig.targets ?? {});
+    setDoublePeriods(lockedConfig.doublePeriods ?? []);
+    setTitle((cur) => cur || lockedConfig.name || "Weekly Timetable");
+    setStep(2); // jump straight to Preview — earlier steps are config-managed (see below).
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [lockedConfig?.id]);
+
   const breaks = useMemo(() => breaksFromSchedule(schedule), [schedule]);
 
   const weeklySlots = useMemo(() => {
@@ -196,7 +228,7 @@ export const TimetableWizard = ({ classId, className, onCancel, onPublished }: T
 
   const allocation = useMemo(() => {
     const picked = subjects.filter((s) => selectedSubjects.includes(s.subjectId));
-    return allocateTimetable(
+    return allocateWithRetry(
       { subjects: picked, targets, doublePeriods, schedule, busyTeachers },
       seed,
     );
@@ -242,7 +274,18 @@ export const TimetableWizard = ({ classId, className, onCancel, onPublished }: T
     });
   };
 
-  if (build.isLoading) {
+  // Offline-first: render the builder instantly whenever any offline source
+  // (local draft, Dexie timetable cache, Dexie subjects/assignments) already has
+  // content — the build endpoint only adds busy-teachers + extras in the
+  // background. Only a true cold start (nothing cached anywhere, server not yet
+  // answered) blocks behind the loader.
+  const hasAnyConfig =
+    !!draft ||
+    cacheEntries.length > 0 ||
+    subjects.length > 0 ||
+    !!build.data;
+
+  if (!hasAnyConfig && build.isLoading) {
     return (
       <div className="flex items-center justify-center py-20">
         <SomaLoader />
@@ -250,7 +293,7 @@ export const TimetableWizard = ({ classId, className, onCancel, onPublished }: T
     );
   }
 
-  if (!build.data && !build.isLoading) {
+  if (!hasAnyConfig && !build.isLoading && build.error) {
     return (
       <div className="py-16 text-center text-sm text-placeholder">
         {build.error

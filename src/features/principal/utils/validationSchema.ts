@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { SCHOOL_TYPES } from "../../../utils/schoolType";
 
 export const createClassSchema = z.object({
   name: z.string().optional(),
@@ -27,7 +28,7 @@ export const schoolUpdateSchema = z.object({
   admissionPattern: z.string().optional().or(z.literal("")),
   state: z.string().min(1, "State is required"),
   lga: z.string().min(1, "LGA is required"),
-  schoolType: z.array(z.enum(["creche", "kg", "primary", "secondary"])).min(1, "Select at least one school type"),
+  schoolType: z.array(z.enum(SCHOOL_TYPES)).min(1, "Select at least one school type"),
   address: z.string().optional().or(z.literal("")),
   arms: z.array(z.string()).optional(),
 });

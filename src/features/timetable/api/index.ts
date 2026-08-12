@@ -9,3 +9,8 @@ export { useTimetableCache } from "./useTimetableCache";
 export { useTeacherTimetableCache } from "./useTeacherTimetableCache";
 export { usePublishTimetable } from "./usePublishTimetable";
 export { useScheduleTemplates } from "./useScheduleTemplates";
+export {
+  useSaveTimetableConfig,
+  useDeleteTimetableConfig,
+  useTimetableConfigs,
+} from "./useTimetableConfigs";
