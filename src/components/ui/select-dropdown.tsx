@@ -209,7 +209,7 @@ export const SelectDropdown = ({
               value={filter}
               onChange={(e) => setFilter(e.target.value)}
               placeholder="Search..."
-              className="w-full h-9 rounded-full border border-input bg-background pl-9 pr-4 text-sm placeholder:text-placeholder focus-visible:outline-none"
+              className="w-full h-9 rounded-full border border-input bg-background pl-9 pr-4 text-base placeholder:text-placeholder focus-visible:outline-none md:text-sm"
             />
           </div>
         </div>

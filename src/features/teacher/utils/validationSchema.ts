@@ -6,8 +6,7 @@ export const editTeacherSchema = z.object({
     .string()
     .email("Enter a valid email address")
     .optional()
-    .or(z.literal(""))
-    .transform((v) => (v === "" ? undefined : v)),
+    .or(z.literal("")),
   formClassId: z.string().optional(),
 });
 

@@ -462,7 +462,7 @@ const SubjectBlock = ({
                             value={search}
                             onChange={(e) => setSearch(e.target.value)}
                             placeholder="Search student by name or admission no."
-                            className="h-[45px] w-full rounded-full border border-input bg-background pl-10 pr-10 text-sm placeholder:text-placeholder focus-visible:outline-none"
+                            className="h-[45px] w-full rounded-full border border-input bg-background pl-10 pr-10 text-base placeholder:text-placeholder focus-visible:outline-none md:text-sm"
                           />
                           {search && (
                             <button

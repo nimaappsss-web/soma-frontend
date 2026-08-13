@@ -3,6 +3,7 @@ import { Danger, Refresh2, TickCircle } from "iconsax-react";
 import { Button } from "../../../../components/ui/button";
 import { TimetableGrid } from "../TimetableGrid";
 import { type AllocationResult } from "../../utils/allocate";
+import type { TeacherCapacityRow } from "../../utils/teacherCapacity";
 import { type DayOfWeek, type SubjectTeacherRow, type TimetableBreak } from "../../types";
 
 interface PreviewStepProps {
@@ -13,6 +14,7 @@ interface PreviewStepProps {
   missingDays: DayOfWeek[];
   breaks: TimetableBreak[];
   noTeacherSubjects: SubjectTeacherRow[];
+  capacityIssues?: TeacherCapacityRow[];
   isPublishing: boolean;
   onRegenerate: () => void;
   onBack: () => void;
@@ -27,6 +29,7 @@ export const PreviewStep = ({
   missingDays,
   breaks,
   noTeacherSubjects,
+  capacityIssues = [],
   isPublishing,
   onRegenerate,
   onBack,
@@ -34,7 +37,7 @@ export const PreviewStep = ({
 }: PreviewStepProps) => {
   const { entries, conflicts, suggestions, unmet, occupiedSlots, totalSlots, overflow, tooFewSlots } = allocation;
 
-  const guardBlocked = overflow || tooFewSlots || conflicts.length > 0 || noTeacherSubjects.length > 0;
+  const guardBlocked = overflow || tooFewSlots || conflicts.length > 0 || noTeacherSubjects.length > 0 || capacityIssues.length > 0;
   const maxPeriods = Math.max(1, ...entries.map((e) => e.period));
   const periodsPerDay = Math.max(1, Math.ceil(weeklySlots / 5));
 
@@ -80,6 +83,28 @@ export const PreviewStep = ({
             {noTeacherSubjects.map((s) => s.name).join(", ")}
           </span>
           . Go to Teachers and assign a subject teacher for each of these.
+        </div>
+      )}
+
+      {capacityIssues.length > 0 && (
+        <div className="rounded-xl border border-red400/30 bg-red500/5 px-4 py-3 text-sm text-red500">
+          <p className="font-medium">
+            Blocked — {capacityIssues.map((c) => c.teacherName).join(", ")} can&apos;t fit this combination.
+          </p>
+          <ul className="mt-2 space-y-1.5">
+            {capacityIssues.map((c) => (
+              <li key={c.teacherId} className="flex items-start gap-2">
+                <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-red500" />
+                <span>
+                  <span className="font-medium">{c.teacherName}</span> is already booked{" "}
+                  <span className="tabular-nums">{c.committed}</span> of {c.capacity} weekly slots in other
+                  classes; this class requests <span className="tabular-nums">{c.pending}</span> more — that
+                  leaves them in two classes at once. Reduce this class&apos;s requests for that teacher or
+                  swap them for a teacher with free time.
+                </span>
+              </li>
+            ))}
+          </ul>
         </div>
       )}
 

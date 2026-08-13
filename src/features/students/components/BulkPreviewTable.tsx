@@ -1,7 +1,6 @@
 import { useState, useMemo, memo } from "react";
 
 import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
 import { SelectDropdown } from "@/components/ui/select-dropdown";
 import { DateInput } from "@/components/ui/date-input";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -238,10 +237,8 @@ const BulkPreviewRow = memo(({
   const update = (field: keyof BulkStudentRow, value: string) =>
     onUpdate(row._key, field, value);
 
-  const allIssues = [...errors, ...(warnings ?? [])];
-
   return (
-    <tr className={`border-b border-gray-100 ${errors.length > 0 ? "bg-red-50/30" : ""}`}>
+    <tr className={`border-b border-gray-100 ${errors.length > 0 ? "bg-red-50/30" : (warnings?.length ?? 0) > 0 ? "bg-amber-50/40" : ""}`}>
       <td className="py-2 px-3">
         <Checkbox />
       </td>

@@ -16,6 +16,16 @@ export const jsDayToDayOfWeek = (jsDay: number): DayOfWeek | null => JS_DAY_TO_D
 export const minutesUntil = (time: string, now: Date): number =>
   timeToMin(time) - (now.getHours() * 60 + now.getMinutes());
 
+/** Format "HH:MM" (24-hour) as "h:mm AM/PM". */
+export const to12Hour = (time: string): string => {
+  if (!time) return "";
+  const [h, m] = time.split(":").map(Number);
+  if (Number.isNaN(h) || Number.isNaN(m)) return time;
+  const period = h >= 12 ? "PM" : "AM";
+  const hour = h % 12 || 12;
+  return `${hour}:${String(m).padStart(2, "0")} ${period}`;
+};
+
 /** Today's lessons (from a teacher's full entry list), sorted by start time. */
 export const entriesForToday = (
   entries: TimetableEntry[],

@@ -1,7 +1,7 @@
 import type { DashboardStats } from "../types";
 
 interface AttendanceCardProps {
-  stats: DashboardStats | undefined;
+  stats: Pick<DashboardStats, "attendance"> | undefined;
   isLoading: boolean;
 }
 

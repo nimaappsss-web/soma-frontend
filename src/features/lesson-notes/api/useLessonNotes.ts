@@ -9,6 +9,7 @@ import type {
   GenerateRequest,
   GenerateResponse,
   CurriculumResponse,
+  CurriculumTopic,
 } from "../types";
 import { addToQueue } from "../../../sync/syncQueue";
 
@@ -127,7 +128,7 @@ export const useCurriculumSubjects = (className: string) => {
 };
 
 export const useCurriculumTopics = (className: string, subjectName: string) => {
-  return useQuery({
+  return useQuery<CurriculumTopic[]>({
     queryKey: ["curriculum", "topics", className, subjectName],
     queryFn: async () => {
       if (!className || !subjectName) return [];

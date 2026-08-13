@@ -3,6 +3,7 @@ import { cn } from "../../../lib/utils";
 import { DAYS, type TimetableBreak } from "../types";
 import { gridRowsFromTimes, overlaps } from "../utils/allocate";
 import { buildSubjectColorMap, solidSwatch } from "../utils/subjectColors";
+import { buildClassColorMap } from "../utils/classColors";
 import { type GridEntryData } from "./TimetableGrid";
 
 interface TimetableMobileProps {
@@ -12,6 +13,8 @@ interface TimetableMobileProps {
   busy?: Array<{ teacherId: string; day: string; startTime: string; endTime: string; className?: string }>;
   onCellClick?: (day: string, period: number) => void;
   showClass?: boolean;
+  /** Color entries by subject (default) or by class (teacher view). */
+  colorBy?: "subject" | "class";
 }
 
 export const TimetableMobile = ({
@@ -21,6 +24,7 @@ export const TimetableMobile = ({
   busy = [],
   onCellClick,
   showClass = false,
+  colorBy = "subject",
 }: TimetableMobileProps) => {
   const periodTimes = useMemo(
     () => gridRowsFromTimes(entries, breaks, periodsPerDay),
@@ -38,7 +42,14 @@ export const TimetableMobile = ({
     return map;
   }, [entries]);
 
-  const subjectColorMap = useMemo(() => buildSubjectColorMap(entries), [entries]);
+  const colorFor = useMemo(() => {
+    if (colorBy === "class") {
+      const classMap = buildClassColorMap(entries.map((e) => e.className ?? ""));
+      return (slot: GridEntryData) => classMap.get(slot.className ?? "") ?? "bg-gray200 text-gray500";
+    }
+    const subjectMap = buildSubjectColorMap(entries);
+    return (slot: GridEntryData) => subjectMap.get(slot.subjectId) ?? "bg-gray200 text-gray500";
+  }, [colorBy, entries]);
 
   return (
     <div className="space-y-4">
@@ -96,7 +107,7 @@ export const TimetableMobile = ({
                         <span
                           className={cn(
                             "h-2 w-2 shrink-0 rounded-full",
-                            solidSwatch(subjectColorMap.get(slot.subjectId) ?? "bg-gray200 text-gray500"),
+                            solidSwatch(colorFor(slot)),
                           )}
                         />
                         <div className="min-w-0">

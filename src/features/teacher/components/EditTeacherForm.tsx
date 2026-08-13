@@ -155,7 +155,7 @@ export const EditTeacherForm = ({ teacherId, onDone, onCancel }: EditTeacherForm
       if (baseDetail) {
         const subjectById = new Map((subjects ?? []).map((s) => [s.id, s]));
         const classById = new Map(classes.map((c) => [c.id, c]));
-        const nextAssignments: TeacherDetail["assignments"] = payload.assignments
+        const nextAssignments: TeacherDetail["assignments"] = (payload.assignments ?? [])
           .filter((a) => a.subjectId && subjectById.has(a.subjectId))
           .map((a) => {
             const subj = subjectById.get(a.subjectId)!;
@@ -221,9 +221,8 @@ export const EditTeacherForm = ({ teacherId, onDone, onCancel }: EditTeacherForm
             onChange={(v) => setValue("formClassId", v)}
           />
           {(() => {
-            const takenBy = watch("formClassId")
-              ? formClassOwner.get(watch("formClassId"))
-              : undefined;
+            const formClass = watch("formClassId");
+            const takenBy = formClass ? formClassOwner.get(formClass) : undefined;
             if (!takenBy) return null;
             return (
               <p className="mt-2 text-xs text-red-500">

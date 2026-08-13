@@ -7,6 +7,7 @@ import { Button } from "../../../../components/ui/button";
 import { SomaLoader } from "../../../../components/ui/SomaLoader";
 import { useTimetableBuild, usePublishTimetable, useTimetableCache, useTimetableConfigs, useScheduleTemplates } from "../../api";
 import { allocateWithRetry, type AllocationResult } from "../../utils/allocate";
+import { computeTeacherCapacity } from "../../utils/teacherCapacity";
 import { breaksFromSchedule, defaultSchedule, normalizeSchedule } from "../../utils/draft";
 import { scheduleConfigFromTimetable, schedulesEqual, timetableConfigFromEntries, type TimetableConfigFromEntries } from "../../utils/scheduleConfig";
 import { useTimetableDraft } from "../../hooks/useTimetableDraft";
@@ -65,8 +66,8 @@ export const TimetableWizard = ({ classId, className, onCancel, onPublished }: T
   const [targets, setTargets] = useState<Record<string, number>>(draft?.targets ?? {});
   const [doublePeriods, setDoublePeriods] = useState<DoublePeriodConfig[]>(draft?.doublePeriods ?? []);
 
-  const buildSubjects = build.data?.subjects ?? [];
-  const busyTeachers = build.data?.busyTeachers ?? [];
+  const buildSubjects = useMemo(() => build.data?.subjects ?? [], [build.data]);
+  const busyTeachers = useMemo(() => build.data?.busyTeachers ?? [], [build.data]);
   const { data: configs } = useTimetableConfigs();
   const { data: classesData } = useClasses();
   // The class's school-type batch determines which shared config locks it.
@@ -245,6 +246,23 @@ export const TimetableWizard = ({ classId, className, onCancel, onPublished }: T
     [subjects, selectedSubjects],
   );
 
+  // Structural pre-check, run BEFORE the allocator: if a teacher's committed
+  // windows in other classes plus this class's demand already exceed their free
+  // slots for the week, no allocation/re-roll can fix it. Blocked combos show a
+  // banner on the Subjects and Preview steps instead of failing late per-class.
+  const capacityCheck = useMemo(
+    () =>
+      computeTeacherCapacity({
+        subjects,
+        selectedSubjectIds: selectedSubjects,
+        targets,
+        doublePeriods,
+        busyTeachers,
+        schedule,
+      }),
+    [subjects, selectedSubjects, targets, doublePeriods, busyTeachers, schedule],
+  );
+
   const missingDays = useMemo(
     () =>
       DAYS.filter((d) => !schedule.some((b) => b.days.includes(d as DayOfWeek))),
@@ -276,6 +294,12 @@ export const TimetableWizard = ({ classId, className, onCancel, onPublished }: T
     if (noTeacherSubjects.length > 0) {
       toast.error(
         `Assign teachers first: ${noTeacherSubjects.map((s) => s.name).join(", ")}`,
+      );
+      return;
+    }
+    if (capacityCheck.over.length > 0) {
+      toast.error(
+        `Blocked — ${capacityCheck.over.map((c) => c.teacherName).join(", ")} has more class time requested than they can teach this week.`,
       );
       return;
     }
@@ -407,6 +431,7 @@ export const TimetableWizard = ({ classId, className, onCancel, onPublished }: T
           onDoublePeriodsChange={setDoublePeriods}
           weeklySlots={weeklySlots}
           availableDays={DAYS.length - missingDays.length}
+          capacityIssues={capacityCheck.over}
           isEditing={cacheEntries.length > 0}
           subjectTemplates={subjectTemplates}
           onCopySubjectConfig={handleCopySubjectConfig}
@@ -424,6 +449,7 @@ export const TimetableWizard = ({ classId, className, onCancel, onPublished }: T
           missingDays={missingDays}
           breaks={breaks}
           noTeacherSubjects={noTeacherSubjects}
+          capacityIssues={capacityCheck.over}
           isPublishing={publish.isPending}
           onRegenerate={() => setSeed((s) => s + 1)}
           onBack={() => setStep(1)}

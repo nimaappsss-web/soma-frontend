@@ -63,15 +63,17 @@ export const TeacherLayout = () => {
   const isFormTeacher = !!formClassInfo?.formClassId;
   const visibleNavItems: NavItem[] = useMemo(
     () =>
-      navItems.map((item) => {
-        if (!item.children) return item;
-        return {
-          ...item,
-          children: isFormTeacher
-            ? item.children
-            : item.children.filter((child) => child.to !== "/teach/ca-and-exams/my-class"),
-        };
-      }),
+      navItems
+        .filter((item) => isFormTeacher || item.to !== "/teach/attendance")
+        .map((item) => {
+          if (!item.children) return item;
+          return {
+            ...item,
+            children: isFormTeacher
+              ? item.children
+              : item.children.filter((child) => child.to !== "/teach/ca-and-exams/my-class"),
+          };
+        }),
     [isFormTeacher],
   );
   const closeMobile = () => setMobileOpen(false);

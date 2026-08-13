@@ -20,7 +20,7 @@ export const useSetTeacherActive = () => {
 
   return useMutation<ActiveResponse, AxiosErrorResponse, SetTeacherActivePayload>({
     mutationFn: ({ id, active }) =>
-      fetchData<ActiveResponse>(`/teachers/${id}/active`, "PATCH", { active }),
+      fetchData(`/teachers/${id}/active`, "PATCH", { active }),
     onSuccess: async (_data, { active }) => {
       toast.success(active ? "Teacher activated!" : "Teacher deactivated!");
       queryClient.invalidateQueries({ queryKey: teachers.all });

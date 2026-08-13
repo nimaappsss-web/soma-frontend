@@ -29,7 +29,7 @@ describe("scheduleConfigFromTimetable (D4: edit-mode reconstruction of published
     const cfg = scheduleConfigFromTimetable(entries);
     // 3 distinct day signatures -> 3 blocks (Mon/Tue/Thu, Wed, Fri)
     expect(cfg.length).toBe(3);
-    const blockOf = (d: string) => cfg.find((b) => b.days.includes(d as never));
+    const blockOf = (d: string) => cfg.find((b) => b.days.includes(d as never))!;
     expect(blockOf("MONDAY").days).toEqual(["MONDAY", "TUESDAY", "THURSDAY"]);
     expect(blockOf("WEDNESDAY").days).toEqual(["WEDNESDAY"]);
     expect(blockOf("FRIDAY").days).toEqual(["FRIDAY"]);

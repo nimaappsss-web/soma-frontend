@@ -3,6 +3,7 @@ import { cn } from "../../../lib/utils";
 import { DAYS, type DayOfWeek, type TimetableBreak } from "../types";
 import { gridRowsFromTimes, overlaps } from "../utils/allocate";
 import { SUBJECT_COLORS, buildSubjectColorMap } from "../utils/subjectColors";
+import { buildClassColorMap } from "../utils/classColors";
 
 export interface GridEntryData {
   subjectId: string;
@@ -32,6 +33,8 @@ interface TimetableGridProps {
   onCellClick?: (day: string, period: number) => void;
   showTeacher?: boolean;
   showClass?: boolean;
+  /** Color cells by subject (default) or by class (teacher view). */
+  colorBy?: "subject" | "class";
   emptyHint?: string;
 }
 
@@ -48,7 +51,7 @@ interface GridTableProps {
   breaks: TimetableBreak[];
   busy: BusyWindow[];
   periodsPerDay: number;
-  subjectColorMap: Map<string, string>;
+  colorFor: (slot: GridEntryData) => string;
   onCellClick?: (day: string, period: number) => void;
   showTeacher: boolean;
   showClass: boolean;
@@ -61,7 +64,7 @@ const GridTable = ({
   breaks,
   busy,
   periodsPerDay,
-  subjectColorMap,
+  colorFor,
   onCellClick,
   showTeacher,
   showClass,
@@ -169,7 +172,7 @@ const GridTable = ({
                         onClick={() => onCellClick?.(day, t.period)}
                         className={cn(
                           "flex h-full w-full min-h-[44px] cursor-default flex-col justify-center rounded-lg px-2 py-1 text-left transition-colors",
-                          subjectColorMap.get(slot.subjectId) ?? SUBJECT_COLORS[0],
+                          colorFor(slot),
                           onCellClick && "cursor-pointer hover:brightness-95",
                           busyCell && "ring-2 ring-red400",
                         )}
@@ -252,11 +255,19 @@ export const TimetableGrid = ({
   onCellClick,
   showTeacher = true,
   showClass = false,
+  colorBy = "subject",
   emptyHint,
 }: TimetableGridProps) => {
   const groups = useMemo(() => groupDaysBySignature(entries, breaks), [entries, breaks]);
 
-  const subjectColorMap = useMemo(() => buildSubjectColorMap(entries), [entries]);
+  const colorFor = useMemo(() => {
+    if (colorBy === "class") {
+      const classMap = buildClassColorMap(entries.map((e) => e.className ?? ""));
+      return (slot: GridEntryData) => classMap.get(slot.className ?? "") ?? SUBJECT_COLORS[0];
+    }
+    const subjectMap = buildSubjectColorMap(entries);
+    return (slot: GridEntryData) => subjectMap.get(slot.subjectId) ?? SUBJECT_COLORS[0];
+  }, [colorBy, entries]);
 
   if (groups.length === 0) {
     return (
@@ -287,7 +298,7 @@ export const TimetableGrid = ({
               breaks={groupBreaks}
               busy={busy}
               periodsPerDay={periodsPerDay}
-              subjectColorMap={subjectColorMap}
+              colorFor={colorFor}
               onCellClick={onCellClick}
               showTeacher={showTeacher}
               showClass={showClass}

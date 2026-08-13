@@ -7,6 +7,7 @@ import { Button } from "../../../../components/ui/button";
 import { SelectDropdown } from "../../../../components/ui/select-dropdown";
 import { DoublePeriodsSection } from "./DoublePeriodsSection";
 import { type DoublePeriodConfig, type SubjectTeacherRow } from "../../types";
+import type { TeacherCapacityRow } from "../../utils/teacherCapacity";
 import type { SubjectTemplate } from "../../api/useScheduleTemplates";
 import type { TimetableConfigFromEntries } from "../../utils/scheduleConfig";
 
@@ -20,6 +21,7 @@ interface SubjectsStepProps {
   onDoublePeriodsChange: (d: DoublePeriodConfig[]) => void;
   weeklySlots: number;
   availableDays: number;
+  capacityIssues?: TeacherCapacityRow[];
   isEditing?: boolean;
   subjectTemplates: SubjectTemplate[];
   onCopySubjectConfig: (config: TimetableConfigFromEntries) => void;
@@ -37,6 +39,7 @@ export const SubjectsStep = ({
   onDoublePeriodsChange,
   weeklySlots,
   availableDays,
+  capacityIssues = [],
   isEditing,
   subjectTemplates,
   onCopySubjectConfig,
@@ -77,7 +80,7 @@ export const SubjectsStep = ({
   const targetSum = selected.reduce((sum, s) => sum + (targets[s.subjectId] ?? 0), 0);
   const capIssues = selected.filter((s) => (targets[s.subjectId] ?? 0) > capFor(s.subjectId));
   const budgetOverflow = targetSum > weeklySlots;
-  const hasErrors = budgetOverflow || capIssues.length > 0;
+  const hasErrors = budgetOverflow || capIssues.length > 0 || capacityIssues.length > 0;
 
   const handleNext = () => {
     if (hasErrors) {
@@ -208,6 +211,15 @@ export const SubjectsStep = ({
                     {capIssues.map((s) => s.name).join(", ")}{" "}
                     {capIssues.length === 1 ? "exceeds" : "exceed"} the once-per-day cap — a subject can only
                     appear once per day (a double period counts as its one appearance).
+                  </p>
+                )}
+                {capacityIssues.length > 0 && (
+                  <p>
+                    {capacityIssues.map((c) => c.teacherName).join(", ")}{" "}
+                    {capacityIssues.length === 1 ? "has" : "have"} more class time requested than{" "}
+                    {capacityIssues.length === 1 ? "they can" : "they can each"} teach this week — a teacher{" "}
+                    can only be in one class at a time. Reduce their targets below, or re-assign a different
+                    teacher.
                   </p>
                 )}
               </motion.div>

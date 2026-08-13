@@ -285,7 +285,7 @@ export const AddStudentDialog = ({
                   <input
                     type="tel"
                     placeholder="Phone number"
-                    className="flex-1 bg-transparent px-3 text-sm placeholder:text-placeholder focus-visible:outline-none"
+                    className="flex-1 bg-transparent px-3 text-base placeholder:text-placeholder focus-visible:outline-none md:text-sm"
                     {...register("parentPhone")}
                   />
                 </div>

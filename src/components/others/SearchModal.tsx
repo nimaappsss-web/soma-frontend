@@ -254,7 +254,7 @@ export const SearchModal = ({ open, onOpenChange }: SearchModalProps) => {
             <Command.Input
               autoFocus
               placeholder="Search pages, actions, records..."
-              className="flex-1 bg-transparent text-sm text-gray900 placeholder:text-gray400 focus:outline-none"
+              className="flex-1 bg-transparent text-base text-gray900 placeholder:text-gray400 focus:outline-none"
             />
             <button
               onClick={() => onOpenChange(false)}

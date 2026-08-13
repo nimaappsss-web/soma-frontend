@@ -36,6 +36,12 @@ export interface ExamSchemeInfo {
   warning: string | null;
 }
 
+export interface ExamSchemesResponse {
+  term: string;
+  session: string;
+  schemes: ExamSchemeInfo[];
+}
+
 export interface ExamScheme {
   term: string;
   session: string;

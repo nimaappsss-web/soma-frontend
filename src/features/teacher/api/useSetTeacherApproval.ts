@@ -20,7 +20,7 @@ export const useSetTeacherApproval = () => {
 
   return useMutation<ApprovalResponse, AxiosErrorResponse, SetTeacherApprovalPayload>({
     mutationFn: ({ id, status }) =>
-      fetchData<ApprovalResponse>(`/teachers/${id}/approval`, "PATCH", { status }),
+      fetchData(`/teachers/${id}/approval`, "PATCH", { status }),
     onSuccess: async () => {
       toast.success("Teacher status updated!");
       queryClient.invalidateQueries({ queryKey: teachers.all });

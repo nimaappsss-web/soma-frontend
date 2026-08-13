@@ -62,7 +62,7 @@ export const PageHeader = ({
                 value={searchValue}
                 onChange={(e) => onSearchChange?.(e.target.value)}
                 placeholder={searchPlaceholder}
-                className="h-[45px] w-full rounded-full border border-input bg-background pl-10 pr-4 text-sm placeholder:text-placeholder focus-visible:outline-none"
+                className="h-[45px] w-full rounded-full border border-input bg-background pl-10 pr-4 text-base placeholder:text-placeholder focus-visible:outline-none md:text-sm"
               />
             </div>
           )}
@@ -132,7 +132,7 @@ export const PageHeader = ({
                   value={searchValue}
                   onChange={(e) => onSearchChange?.(e.target.value)}
                   placeholder={searchPlaceholder}
-                  className="h-10 w-full rounded-full border border-input bg-background pl-10 pr-4 text-sm placeholder:text-placeholder focus-visible:outline-none"
+                  className="h-10 w-full rounded-full border border-input bg-background pl-10 pr-4 text-base placeholder:text-placeholder focus-visible:outline-none md:text-sm"
                 />
               </div>
             )}

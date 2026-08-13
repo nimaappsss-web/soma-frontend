@@ -139,8 +139,10 @@ export const TeacherDashboard = () => {
 
         {/* Right */}
         <div className="flex flex-col gap-5">
-          <DashboardCalendar />
-          <TodayScheduleCard entries={teacherEntries} isLoading={ttLoading} />
+          <div className="rounded-2xl border border-gray100 bg-white p-5">
+            <DashboardCalendar entries={teacherEntries} />
+            <TodayScheduleCard entries={teacherEntries} isLoading={ttLoading} />
+          </div>
           <UpcomingCard
             title="My Subjects"
             sections={[

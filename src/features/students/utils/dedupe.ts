@@ -80,7 +80,7 @@ export const findRowDuplicates = (
 
   for (const other of otherRows) {
     if (other._key === row._key) continue;
-    if (excludeKeys.has(other._key)) continue;
+    if (excludeKeys.includes(other._key)) continue;
     if (!isValidBulkRow(other)) continue;
     if (other.classId !== row.classId) continue;
     if (!namesMatch(other.name, row.name)) continue;
@@ -88,7 +88,7 @@ export const findRowDuplicates = (
     break;
   }
 
-  const existing = existingByClass.get(row.classId) ?? [];
+    const existing = existingByClass.get(row.classId ?? "") ?? [];
   for (const e of existing) {
     if (!namesMatch(e.name, row.name)) continue;
     const genderSame = !row.gender || !e.gender || e.gender === row.gender;
@@ -125,7 +125,7 @@ export const collectDuplicateRows = (
   for (const row of rows) {
     if (!isValidBulkRow(row)) continue;
     if (dupKeys.has(row._key)) continue;
-    const existing = existingByClass.get(row.classId) ?? [];
+  const existing = existingByClass.get(row.classId ?? "") ?? [];
     if (existing.some((e) => namesMatch(e.name, row.name))) {
       dupKeys.add(row._key);
     }

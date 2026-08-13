@@ -72,11 +72,7 @@ export const BulkAddStudents = ({ classes, onClose }: BulkAddStudentsProps) => {
   }, []);
 
   useEffect(() => {
-    if (open) {
-      document.body.style.overflow = "hidden";
-    } else {
-      document.body.style.overflow = "";
-    }
+    document.body.style.overflow = "hidden";
     return () => {
       document.body.style.overflow = "";
     };
