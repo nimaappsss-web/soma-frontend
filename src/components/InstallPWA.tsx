@@ -19,10 +19,18 @@ const isStandalone = () =>
   (window.matchMedia("(display-mode: standalone)").matches ||
     (navigator as unknown as { standalone?: boolean }).standalone === true);
 
+const INSTALLED_KEY = "soma:pwa:installed";
+
 export function InstallPWA() {
   const [deferredPrompt, setDeferredPrompt] =
     useState<BeforeInstallPromptEvent | null>(null);
-  const [installed, setInstalled] = useState(false);
+  const [installed, setInstalled] = useState(() => {
+    try {
+      return localStorage.getItem(INSTALLED_KEY) === "1";
+    } catch {
+      return false;
+    }
+  });
   const [showIOSGuide, setShowIOSGuide] = useState(false);
 
   useEffect(() => {
@@ -35,11 +43,30 @@ export function InstallPWA() {
     return () => window.removeEventListener("beforeinstallprompt", handler);
   }, []);
 
+  useEffect(() => {
+    if (isStandalone()) {
+      try {
+        localStorage.setItem(INSTALLED_KEY, "1");
+      } catch {
+        // ignore storage errors
+      }
+    }
+  }, []);
+
+  const markInstalled = () => {
+    setInstalled(true);
+    try {
+      localStorage.setItem(INSTALLED_KEY, "1");
+    } catch {
+      // ignore storage errors
+    }
+  };
+
   const handleInstall = async () => {
     if (!deferredPrompt) return;
     deferredPrompt.prompt();
     const result = await deferredPrompt.userChoice;
-    if (result.outcome === "accepted") setInstalled(true);
+    if (result.outcome === "accepted") markInstalled();
     setDeferredPrompt(null);
   };
 

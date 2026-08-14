@@ -3,7 +3,7 @@ import { useForm, useWatch, Controller, type Control } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import toast from "react-hot-toast";
-import { User, Building, ArrowRight } from "iconsax-react";
+import { User, Building, ArrowRight, CalendarTick } from "iconsax-react";
 import { Link } from "react-router";
 
 import { useAuth } from "../contexts/AuthContext";
@@ -25,6 +25,7 @@ import { Avatar } from "../components/ui/Avatar";
 import { cn } from "../lib/utils";
 import { TagInput } from "../components/ui/tag-input";
 import { MultiSelect } from "../components/ui/multi-select";
+import { Switch } from "../components/ui/switch";
 import { DeleteConfirmDialog } from "../components/others/DeleteConfirmDialog";
 
 const NIGERIAN_STATES = ["Lagos", "Abuja", "Rivers", "Kano", "Oyo", "Kaduna"];
@@ -50,6 +51,7 @@ type PasswordForm = z.infer<typeof passwordSchema>;
 const tabs = [
   { id: "account", label: "Account", icon: User },
   { id: "school", label: "School", icon: Building },
+  { id: "terms", label: "Term Settings", icon: CalendarTick },
 ] as const;
 
 type Tab = (typeof tabs)[number]["id"];
@@ -58,7 +60,7 @@ export const AdminSettings = () => {
   const [activeTab, setActiveTab] = useState<Tab>("account");
 
   return (
-    <div className="p-6 max-w-4xl">
+    <div className="p-6">
       <h1 className="text-xl md:text-2xl font-bold text-gray900">Settings</h1>
 
       <div className="flex gap-3 mt-6 border-b border-gray-200">
@@ -85,6 +87,7 @@ export const AdminSettings = () => {
       <div className="mt-6">
         {activeTab === "account" && <AccountSection />}
         {activeTab === "school" && <SchoolSection />}
+        {activeTab === "terms" && <TermSettingsSection />}
       </div>
     </div>
   );
@@ -443,6 +446,57 @@ const SchoolSection = () => {
         onConfirm={() => pendingSave && doSave(pendingSave)}
       />
     </Card>
+  );
+};
+
+const TermSettingsSection = () => {
+  const updateSchool = useUpdateSchool();
+  const { data: school, isLoading } = useSchoolInfo();
+  const enabled = school?.assessmentMode !== "standard";
+
+  const onToggle = (next: boolean) => {
+    updateSchool.mutate({ assessmentMode: next ? "thirdTermAverage" : "standard" });
+  };
+
+  return (
+    <div className="space-y-6">
+      <Card>
+        <CardHeader>
+          <CardTitle>Term Settings</CardTitle>
+          <CardDescription>Configure how results are computed across the session.</CardDescription>
+        </CardHeader>
+        <CardContent>
+          {isLoading ? (
+            <p className="text-sm text-gray-400">Loading...</p>
+          ) : (
+            <div className="flex items-start justify-between gap-4">
+              <div>
+                <p className="text-sm font-medium text-gray-900">Third Term Average</p>
+                <p className="text-xs text-gray-500 mt-1 max-w-md">
+                  When on, the session result averages the First, Second and Third term scores — each
+                  subject's total is (First + Second + Third) &divide; 3, where every term is scored out of
+                  100 (First Term = CA/40 + Exam/60).
+                </p>
+                <p
+                  className={cn(
+                    "text-xs font-medium mt-2",
+                    enabled ? "text-green-600" : "text-gray-400",
+                  )}
+                >
+                  {enabled ? "Enabled — third term average mode" : "Standard — single term results"}
+                </p>
+              </div>
+              <Switch
+                checked={enabled}
+                onCheckedChange={onToggle}
+                disabled={updateSchool.isPending}
+                aria-label="Third Term Average"
+              />
+            </div>
+          )}
+        </CardContent>
+      </Card>
+    </div>
   );
 };
 

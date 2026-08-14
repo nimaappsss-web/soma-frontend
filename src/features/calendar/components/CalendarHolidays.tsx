@@ -1,9 +1,10 @@
 import { useState } from "react";
-import { Edit, Trash } from "iconsax-react";
+import { Add, CalendarRemove, Edit, Trash } from "iconsax-react";
 
 import { Input } from "../../../components/ui/input";
 import { Button } from "../../../components/ui/button";
 import { DateInput } from "../../../components/ui/date-input";
+import { EmptyState } from "../../../components/ui/EmptyState";
 import { useHolidays, useCreateHoliday, useUpdateHoliday, useDeleteHoliday } from "../api";
 import type { CreateHolidayPayload, UpdateHolidayPayload } from "../types";
 
@@ -139,7 +140,14 @@ export const CalendarHolidays = () => {
           ))}
         </div>
       ) : (
-        <p className="text-sm text-gray-400 text-center py-12">No holidays marked for this year.</p>
+        <EmptyState
+          icon={<CalendarRemove size={30} variant="Bold" color="#0D0D0D" />}
+          title="No holidays marked for this year"
+          description="Mark school holidays so the calendar reflects days off for the whole school."
+          actionLabel="Add Holiday"
+          actionIcon={<Add size={16} color="#FFFFFF" variant="Linear" />}
+          onAction={() => setShowForm(true)}
+        />
       )}
     </div>
   );

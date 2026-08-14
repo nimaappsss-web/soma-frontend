@@ -1,26 +1,23 @@
 import { useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { useLiveQuery } from "dexie-react-hooks";
 
 import { useAuth } from "../../../contexts/AuthContext";
-import { db } from "../../../db/db";
+import { db, type ParentCache } from "../../../db/db";
 import { fetchData } from "../../../utils/fetchData";
 import type { Parent } from "../../principal/types";
 
 export const useParentProfile = () => {
   const { user } = useAuth();
   const userId = user?.id ?? "";
-  const [data, setData] = useState<{ parent: Parent } | undefined>(undefined);
 
-  useEffect(() => {
-    if (!userId) return;
-    const load = async () => {
-      const parents = await db.parents.where("userId").equals(userId).toArray();
-      if (parents.length > 0) {
-        setData({ parent: parents[0] as unknown as Parent });
-      }
-    };
-    load();
-  }, [userId]);
+  const cached = useLiveQuery(
+    () => {
+      if (!userId) return Promise.resolve([] as ParentCache[]);
+      return db.parents.where("userId").equals(userId).toArray();
+    },
+    [userId],
+  );
 
   useQuery({
     queryKey: ["parentProfile", userId],
@@ -37,9 +34,11 @@ export const useParentProfile = () => {
     staleTime: 5 * 60 * 1000,
   });
 
+  const parent = cached?.length ? (cached[0] as unknown as Parent) : null;
+
   return {
-    parent: data?.parent ?? null,
-    isLoading: data === undefined,
+    parent,
+    isLoading: cached === undefined,
     error: undefined,
   };
 };

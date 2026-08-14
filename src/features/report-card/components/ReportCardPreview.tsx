@@ -36,7 +36,10 @@ export const ReportCardPreview = ({
   schoolName,
 }: ReportCardPreviewProps) => {
   const accent = THEMES[theme] ?? THEMES.slate;
-  const termLabel = report.term.charAt(0).toUpperCase() + report.term.slice(1);
+  const termTitle =
+    report.term === "session"
+      ? "Session Average"
+      : `${report.term.charAt(0).toUpperCase() + report.term.slice(1)} Term`;
   const sessionLabel = report.session ? ` · ${report.session}` : "";
 
   const rows = report.subjects.map((s) => ({
@@ -69,7 +72,7 @@ export const ReportCardPreview = ({
           <div className="mt-3 flex flex-wrap gap-x-6 gap-y-1 text-sm">
             <span><span className="opacity-70">Student:</span> <strong>{studentName || "—"}</strong></span>
             {className && <span><span className="opacity-70">Class:</span> <strong>{className}</strong></span>}
-            <span><span className="opacity-70">Term:</span> <strong>{termLabel}{sessionLabel}</strong></span>
+            <span><span className="opacity-70">Term:</span> <strong>{termTitle}{sessionLabel}</strong></span>
           </div>
         </div>
       ) : (
@@ -77,7 +80,7 @@ export const ReportCardPreview = ({
           <div className="flex items-start justify-between gap-4">
             <div>
               <p className="text-sm font-bold uppercase tracking-wide">{schoolName || "School Name"}</p>
-              <p className="text-xs text-gray-500 mt-0.5">Academic Report · {termLabel} Term</p>
+              <p className="text-xs text-gray-500 mt-0.5">Academic Report · {termTitle}</p>
             </div>
             {admissionNo && <p className="text-xs text-gray-400">Adm. No: {admissionNo}</p>}
           </div>

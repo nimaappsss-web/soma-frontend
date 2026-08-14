@@ -80,7 +80,7 @@ interface DialogContentProps
 const DialogContent = forwardRef<
   React.ComponentRef<typeof DialogPrimitive.Content>,
   DialogContentProps
->(({ className, variant = "center", showClose = true, children, ...props }, ref) => (
+>(({ className, variant = "center", showClose = true, children, onInteractOutside, ...props }, ref) => (
   <DialogPrimitive.Portal>
     <DialogOverlay />
     <DialogPrimitive.Content
@@ -91,6 +91,13 @@ const DialogContent = forwardRef<
         variant === "center" || variant === "middle" ? "pb-4 md:pb-6" : "",
         className,
       )}
+      onInteractOutside={(event) => {
+        const target = event.target as HTMLElement | null;
+        if (target && target.closest("[data-soma-floating]")) {
+          event.preventDefault();
+        }
+        onInteractOutside?.(event);
+      }}
       {...props}
     >
       {(variant === "center" || variant === "middle") && (

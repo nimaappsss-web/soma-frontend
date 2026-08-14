@@ -1,14 +1,16 @@
 import { useState, useMemo, useEffect, useCallback, useRef } from "react";
 import { Link, useSearchParams } from "react-router";
-import { Add, AddSquare, ArrowDown2, Trash } from "iconsax-react";
+import { Add, AddSquare, ArrowDown2, Profile2User, Trash } from "iconsax-react";
 import { Avatar } from "../../components/ui/Avatar";
 import { Checkbox } from "../../components/ui/checkbox";
+import { EmptyState } from "../../components/ui/EmptyState";
 import { useAuth } from "../../contexts/AuthContext";
 import { useAllStudents, useCreateStudent, useUpdateStudent, useDeleteStudent, useBulkDeleteStudents } from "../../features/students/api";
 import { BulkAddStudents } from "../../features/students/components/BulkAddStudents";
 import { AddStudentDialog } from "../../features/students/components/AddStudentDialog";
 import { StudentFormDialog } from "../../features/students/components/StudentFormDialog";
 import { StudentPageHeader, type StudentViewMode } from "../../features/students/components/StudentPageHeader";
+import { HelpHint } from "../../components/ui/HelpHint";
 import { useClasses } from "../../features/principal/api";
 import { findDuplicateStudents, type StudentDuplicate } from "../../features/students/utils/dedupe";
 import type { Student, CreateStudentPayload, UpdateStudentPayload } from "../../features/students/types";
@@ -162,6 +164,19 @@ export const AdminStudents = () => {
         onSearchChange={setSearchTerm}
         view={view}
         onViewChange={setViewMode}
+        hint={
+          <HelpHint
+            title="Students"
+            storageKey="students"
+            description="Manage every student in your school from one place."
+            sections={[
+              { title: "What you can do", text: "Add students individually or import them in bulk, edit profiles, transfer or withdraw, and generate admission numbers." },
+              { title: "Search & filter", text: "Use the search bar, class filter, and status dropdown to narrow the list. Switch between list and grid views." },
+              { title: "Bulk actions", text: "Select multiple students with the checkboxes to run bulk actions like import or delete." },
+              { title: "Admission numbers", text: "Generate admission numbers automatically for students who don't have one yet." },
+            ]}
+          />
+        }
         actions={
           <div ref={addMenuRef} className="relative">
             <button
@@ -233,9 +248,26 @@ export const AdminStudents = () => {
 {isLoading ? (
           <p className="text-sm text-gray-400 p-6 text-center rounded-xl border border-gray100 bg-white">Loading...</p>
         ) : filtered.length === 0 ? (
-          <p className="text-sm text-gray-400 p-6 text-center rounded-xl border border-gray100 bg-white">
-            {classFilter ? "No students in this class." : "No students yet."}
-          </p>
+          <EmptyState
+            icon={<Profile2User size={30} variant="Bold" color="#0D0D0D" />}
+            title={
+              searchTerm
+                ? "No students match your search"
+                : classFilter
+                  ? "No students in this class"
+                  : "Add your first student"
+            }
+            description={
+              searchTerm
+                ? "Try a different search term or clear your filters."
+                : classFilter
+                  ? "No students have been added to this class yet. Add one or change your class filter."
+                  : "Students keep their scores, attendance and reports in one place. Add your first student to get started."
+            }
+            actionLabel="Add Student"
+            actionIcon={<Add size={16} color="#FFFFFF" variant="Linear" />}
+            onAction={() => setShowAddDialog(true)}
+          />
         ) : view === "grid" ? (
           <>
             <div className="mb-3 flex items-center gap-2 text-xs font-medium text-gray-400">

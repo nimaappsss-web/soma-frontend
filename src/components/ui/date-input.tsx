@@ -54,8 +54,6 @@ const DateInput = ({
   const btnRef = useRef<HTMLButtonElement>(null);
   const menuRef = useRef<HTMLDivElement>(null);
 
-  const inDialog = typeof document !== "undefined" && !!document.querySelector('[role="dialog"]');
-
   useEffect(() => {
     if (!open) return;
     const update = () => {
@@ -101,6 +99,15 @@ const DateInput = ({
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
+  useEffect(() => {
+    if (!open) return;
+    const el = menuRef.current;
+    if (!el) return;
+    const onFocusIn = (e: FocusEvent) => e.stopPropagation();
+    el.addEventListener("focusin", onFocusIn, true);
+    return () => el.removeEventListener("focusin", onFocusIn, true);
+  }, [open]);
+
   const handleToggle = () => {
     if (disabled) return;
     if (!open) {
@@ -118,11 +125,19 @@ const DateInput = ({
     setOpen(false);
   };
 
+  const viewportWidth = typeof window !== "undefined" ? window.innerWidth : CALENDAR_WIDTH;
+  const clampLeft = (left: number) =>
+    Math.min(Math.max(8, left), Math.max(8, viewportWidth - CALENDAR_WIDTH - 8));
+
   const menuStyle: CSSProperties | undefined = pos
     ? {
         top: pos.flipped ? Math.max(4, pos.btnTop - pos.height - 8) : pos.btnBottom + 8,
-        left: dropdownAlign === "right" ? pos.left + pos.width - CALENDAR_WIDTH : pos.left,
+        left:
+          dropdownAlign === "right"
+            ? clampLeft(pos.left + pos.width - CALENDAR_WIDTH)
+            : clampLeft(pos.left),
         width: CALENDAR_WIDTH,
+        pointerEvents: "auto",
       }
     : undefined;
 
@@ -159,23 +174,19 @@ const DateInput = ({
       </button>
 
       {open &&
-        (inDialog ? (
-          <div className={cn("absolute z-50 top-full mt-2", dropdownAlign === "right" ? "right-0" : "left-0")}>
+        pos &&
+        createPortal(
+          <div
+            ref={menuRef}
+            style={menuStyle}
+            className="fixed z-[100]"
+            data-soma-floating
+            onPointerDownCapture={(e) => e.stopPropagation()}
+          >
             {calendar}
-          </div>
-        ) : (
-          pos &&
-          createPortal(
-            <div
-              ref={menuRef}
-              style={menuStyle}
-              className="fixed z-[100]"
-            >
-              {calendar}
-            </div>,
-            document.body,
-          )
-        ))}
+          </div>,
+          document.body,
+        )}
     </div>
   );
 };

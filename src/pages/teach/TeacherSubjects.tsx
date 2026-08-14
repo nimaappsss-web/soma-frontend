@@ -6,6 +6,7 @@ import { useAuth } from "../../contexts/AuthContext";
 import { useTeacherProfile } from "../../features/teacher/api";
 import { useAllStudents } from "../../features/students/api";
 import { SomaLoader } from "../../components/ui/SomaLoader";
+import { HelpHint } from "../../components/ui/HelpHint";
 
 export const TeacherSubjects = () => {
   const { user } = useAuth();
@@ -39,7 +40,19 @@ export const TeacherSubjects = () => {
     <div className="p-4 md:p-6 w-full">
       <div className="mb-1">
         <p className="text-sm text-gray500">{schoolName}</p>
-        <h1 className="text-xl md:text-2xl font-bold text-gray900 mt-0.5">My Subjects</h1>
+        <div className="group flex items-center gap-2.5 mt-0.5">
+          <h1 className="text-xl md:text-2xl font-bold text-gray900">My Subjects</h1>
+          <HelpHint
+            title="My Subjects"
+            storageKey="teacher-subjects"
+            description="The subjects you're assigned to teach."
+            sections={[
+              { title: "What's listed", text: "Each card is a subject you teach, with the classes and total students assigned to it." },
+              { title: "Open a subject", text: "Tap a subject card to see its details and related work." },
+              { title: "Where it comes from", text: "Your principal assigns subjects through the school's subject setup — check with them if something's missing." },
+            ]}
+          />
+        </div>
       </div>
 
       {assignments.length > 0 ? (

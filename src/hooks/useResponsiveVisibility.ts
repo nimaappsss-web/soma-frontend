@@ -6,7 +6,10 @@ export const useResponsiveVisibility = (
   breakpoint: number,
   mode: VisibilityMode = "max"
 ): boolean => {
-  const [isVisible, setIsVisible] = useState<boolean>(false);
+  const [isVisible, setIsVisible] = useState<boolean>(() => {
+    if (typeof window === "undefined") return false;
+    return mode === "max" ? window.innerWidth <= breakpoint : window.innerWidth >= breakpoint;
+  });
 
   useEffect(() => {
     if (typeof window === "undefined") return;

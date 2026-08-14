@@ -200,6 +200,7 @@ function App() {
           }
         />
         <Route path="/invite/:token" element={<VerifyTeacher />} />
+        <Route path="/accept-invite" element={<VerifyTeacher />} />
         <Route path="/verify-teacher" element={<VerifyTeacher />} />
         <Route path="/register" element={<VerifyTeacher />} />
         <Route path="/parent/setup" element={<ParentSetup />} />

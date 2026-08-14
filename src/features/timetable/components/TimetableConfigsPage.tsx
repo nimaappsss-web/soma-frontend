@@ -88,7 +88,7 @@ export const TimetableConfigsPage = () => {
   }));
 
   return (
-    <div className="w-full p-4 md:p-6">
+    <div className="w-full px-4 pb-4 md:px-6 md:pb-6">
       <div className="mt-2 space-y-4">
         {groups.map(({ type, classes: batch, config }) => (
           <div key={type} className="rounded-xl border border-input bg-card p-5">

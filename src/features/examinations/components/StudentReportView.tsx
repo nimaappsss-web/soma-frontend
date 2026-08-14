@@ -4,7 +4,7 @@ import { useTeacherProfile } from "../../teacher/api";
 import { useActiveTerm } from "../../calendar/api";
 import { termLabel } from "../../calendar/utils/term";
 import { useStudents } from "../../students/api";
-import { useStudentReport } from "../api/useStudentReport";
+import { useSessionAverageReport } from "../api/useSessionAverageReport";
 import { useReportSettings } from "../../report-card/api";
 import { ReportCardPreview } from "../../report-card/components/ReportCardPreview";
 import { cn } from "../../../lib/utils";
@@ -22,9 +22,13 @@ export const StudentReportView = () => {
   const { settings } = useReportSettings();
   const { data: students } = useStudents(formClassId ?? "", "ACTIVE");
   const student = students.find((s) => s.id === studentId);
-  const { data: report, isLoading, error } = useStudentReport(studentId);
+  const { report, isThirdTermAverage, termTotals, isLoading, error } = useSessionAverageReport(studentId);
   const term = activeTerm?.term ?? "";
-  const termLabelText = term ? termLabel(term).label : "Term";
+  const termLabelText = isThirdTermAverage
+    ? "Session Average"
+    : term
+      ? termLabel(term).label
+      : "Term";
   return (
     <div className="p-4 md:p-6 w-full">
       <button
@@ -41,6 +45,11 @@ export const StudentReportView = () => {
             {[student?.admissionNo, formClass, termLabelText].filter(Boolean).join(" · ") || "Loading..."}
           </p>
         </div>
+        {isThirdTermAverage && (
+          <span className="inline-flex w-fit items-center rounded-full bg-blue-50 px-3 py-1 text-xs font-semibold text-blue-600">
+            Third Term Average
+          </span>
+        )}
       </div>
       {isLoading ? (
         <div className="mt-4 bg-white rounded-xl border border-gray100 p-8 text-center">
@@ -57,7 +66,9 @@ export const StudentReportView = () => {
           <Profile2User size={32} className="mx-auto text-gray300 mb-3" variant="Bold" />
           <p className="text-sm font-medium text-gray900">No report yet</p>
           <p className="text-xs text-gray500 mt-1 max-w-xs mx-auto">
-            Scores for this student in {termLabelText} will appear here once CA and exam marks are recorded.
+            {isThirdTermAverage
+              ? "Scores across the three terms will appear here once CA and exam marks are recorded."
+              : `Scores for this student in ${termLabelText} will appear here once CA and exam marks are recorded.`}
           </p>
         </div>
       ) : report.subjects.length === 0 ? (
@@ -65,7 +76,9 @@ export const StudentReportView = () => {
           <DocumentText size={32} className="mx-auto text-gray300 mb-3" variant="Bold" />
           <p className="text-sm font-medium text-gray900">No scores recorded</p>
           <p className="text-xs text-gray500 mt-1 max-w-xs mx-auto">
-            No CA or exam scores have been recorded for this student in {termLabelText}.
+            {isThirdTermAverage
+              ? "No CA or exam scores have been recorded for this student in any term."
+              : `No CA or exam scores have been recorded for this student in ${termLabelText}.`}
           </p>
         </div>
       ) : (
@@ -73,8 +86,18 @@ export const StudentReportView = () => {
           {/* Summary cards */}
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
             {[
-              { label: "Position", value: report.position ? `${report.position} of ${report.classSize}` : "—" },
-              { label: "Average", value: `${report.average.toFixed(1)}%` },
+              {
+                label: "Position",
+                value: isThirdTermAverage
+                  ? "—"
+                  : report.position
+                    ? `${report.position} of ${report.classSize}`
+                    : "—",
+              },
+              {
+                label: isThirdTermAverage ? "Session Average" : "Average",
+                value: `${report.average.toFixed(1)}%`,
+              },
               { label: "Attendance", value: `${report.attendancePercentage}%` },
               { label: "Best Subject", value: report.bestSubject?.name ?? "—" },
             ].map((item) => (
@@ -94,25 +117,69 @@ export const StudentReportView = () => {
                 <thead>
                   <tr className="text-left text-xs uppercase tracking-wide text-gray500">
                     <th className="px-4 py-2.5 font-medium">Subject</th>
-                    <th className="px-4 py-2.5 font-medium text-right">CA</th>
-                    <th className="px-4 py-2.5 font-medium text-right">Exam</th>
-                    <th className="px-4 py-2.5 font-medium text-right">Total</th>
+                    {isThirdTermAverage ? (
+                      <>
+                        <th className="px-4 py-2.5 font-medium text-right">1st</th>
+                        <th className="px-4 py-2.5 font-medium text-right">2nd</th>
+                        <th className="px-4 py-2.5 font-medium text-right">3rd</th>
+                        <th className="px-4 py-2.5 font-medium text-right">Session</th>
+                      </>
+                    ) : (
+                      <>
+                        <th className="px-4 py-2.5 font-medium text-right">CA</th>
+                        <th className="px-4 py-2.5 font-medium text-right">Exam</th>
+                        <th className="px-4 py-2.5 font-medium text-right">Total</th>
+                      </>
+                    )}
                     <th className="px-4 py-2.5 font-medium text-right">Grade</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray100">
-                  {report.subjects.map((s) => (
-                    <tr key={s.subjectId}>
-                      <td className="px-4 py-2.5 font-medium text-gray900">
-                        {s.subjectName}
-                        {s.teacherName && <span className="ml-2 text-xs text-gray400 font-normal">{s.teacherName}</span>}
-                      </td>
-                      <td className="px-4 py-2.5 text-right tabular-nums text-gray600">{s.caTotal}</td>
-                      <td className="px-4 py-2.5 text-right tabular-nums text-gray600">{s.examScore}</td>
-                      <td className="px-4 py-2.5 text-right font-semibold tabular-nums text-gray900">{s.total}</td>
-                      <td className={cn("px-4 py-2.5 text-right font-bold tabular-nums", gradeTone(s.grade))}>{s.grade}</td>
-                    </tr>
-                  ))}
+                  {isThirdTermAverage
+                    ? report.subjects.map((s) => {
+                        const totals = termTotals[s.subjectId] ?? {};
+                        return (
+                          <tr key={s.subjectId}>
+                            <td className="px-4 py-2.5 font-medium text-gray900">
+                              {s.subjectName}
+                              {s.teacherName && (
+                                <span className="ml-2 text-xs text-gray400 font-normal">{s.teacherName}</span>
+                              )}
+                            </td>
+                            <td className="px-4 py-2.5 text-right tabular-nums text-gray600">
+                              {totals.first ?? "—"}
+                            </td>
+                            <td className="px-4 py-2.5 text-right tabular-nums text-gray600">
+                              {totals.second ?? "—"}
+                            </td>
+                            <td className="px-4 py-2.5 text-right tabular-nums text-gray600">
+                              {totals.third ?? "—"}
+                            </td>
+                            <td className="px-4 py-2.5 text-right font-semibold tabular-nums text-gray900">
+                              {s.total}
+                            </td>
+                            <td className={cn("px-4 py-2.5 text-right font-bold tabular-nums", gradeTone(s.grade))}>
+                              {s.grade}
+                            </td>
+                          </tr>
+                        );
+                      })
+                    : report.subjects.map((s) => (
+                        <tr key={s.subjectId}>
+                          <td className="px-4 py-2.5 font-medium text-gray900">
+                            {s.subjectName}
+                            {s.teacherName && (
+                              <span className="ml-2 text-xs text-gray400 font-normal">{s.teacherName}</span>
+                            )}
+                          </td>
+                          <td className="px-4 py-2.5 text-right tabular-nums text-gray600">{s.caTotal}</td>
+                          <td className="px-4 py-2.5 text-right tabular-nums text-gray600">{s.examScore}</td>
+                          <td className="px-4 py-2.5 text-right font-semibold tabular-nums text-gray900">{s.total}</td>
+                          <td className={cn("px-4 py-2.5 text-right font-bold tabular-nums", gradeTone(s.grade))}>
+                            {s.grade}
+                          </td>
+                        </tr>
+                      ))}
                 </tbody>
               </table>
             </div>

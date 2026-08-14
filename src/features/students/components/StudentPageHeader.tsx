@@ -37,6 +37,7 @@ interface StudentPageHeaderProps {
   view: StudentViewMode;
   onViewChange: (view: StudentViewMode) => void;
   actions?: ReactNode;
+  hint?: ReactNode;
 }
 
 export const StudentPageHeader = ({
@@ -54,6 +55,7 @@ export const StudentPageHeader = ({
   view,
   onViewChange,
   actions,
+  hint,
 }: StudentPageHeaderProps) => {
   const filters = (
     <>
@@ -129,6 +131,7 @@ export const StudentPageHeader = ({
       view={view}
       onViewChange={onViewChange}
       actions={actions}
+      hint={hint}
     />
   );
 };

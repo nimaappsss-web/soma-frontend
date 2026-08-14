@@ -5,6 +5,7 @@ import { ArrowRight, Calendar, CalendarTick, Element4, Setting2, TickCircle } fr
 import { cn } from "../../../lib/utils";
 import { SelectDropdown, type SelectOption } from "../../../components/ui/select-dropdown";
 import { SomaLoader } from "../../../components/ui/SomaLoader";
+import { EmptyState } from "../../../components/ui/EmptyState";
 import { useClasses } from "../../principal/api";
 import { useTimetableCache, useTimetableConfigs } from "../api";
 import { effectiveSchoolType } from "../../../utils/schoolType";
@@ -65,7 +66,7 @@ export const TimetableManagement = () => {
     .sort((a, b) => a.label.localeCompare(b.label));
 
   return (
-    <div className="w-full p-4 md:p-6">
+    <div className="w-full px-4 pb-4 md:px-6 md:pb-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="w-full sm:w-56 md:w-64">
           <SelectDropdown
@@ -120,18 +121,28 @@ export const TimetableManagement = () => {
           <SomaLoader />
         </div>
       ) : classes.length === 0 ? (
-        <div className="mt-10 rounded-xl border border-input bg-card p-10 text-center">
-          <Calendar size={28} color="#BBBBBB" className="mx-auto" />
-          <p className="mt-3 text-sm text-placeholder">No classes yet. Create a class to start a timetable.</p>
+        <div className="mt-10">
+          <EmptyState
+            icon={<Calendar size={30} variant="Bold" color="#0D0D0D" />}
+            title="No classes yet"
+            description="Create a class first, then configure its weekly timetable."
+            actionLabel="Create Class"
+            onAction={() => navigate("/admin/classes")}
+          />
         </div>
       ) : filtered.length === 0 ? (
-        <div className="mt-10 rounded-xl border border-input bg-card p-10 text-center">
-          <CalendarTick size={28} color="#BBBBBB" className="mx-auto" />
-          <p className="mt-3 text-sm text-placeholder">
-            {statusFilter === "configured"
-              ? "No classes have a configured timetable yet."
-              : "Every class already has a timetable."}
-          </p>
+        <div className="mt-10">
+          <EmptyState
+            icon={<CalendarTick size={30} variant="Bold" color="#0D0D0D" />}
+            title={statusFilter === "configured" ? "No configured timetables yet" : "All classes have a timetable"}
+            description={
+              statusFilter === "configured"
+                ? "Classes you configure will appear here once they have a timetable."
+                : "Every class already has a timetable. Use the filter above to browse them."
+            }
+            actionLabel={statusFilter === "configured" ? "Show all classes" : undefined}
+            onAction={statusFilter === "configured" ? () => setStatusFilter("all") : undefined}
+          />
         </div>
       ) : (
         <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">

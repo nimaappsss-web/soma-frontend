@@ -119,7 +119,8 @@ export interface Parent {
   emailVerified: boolean;
   hasAccount: boolean;
   status: "active" | "pending";
-  students: ParentStudent[];
+  /** Present when the parent has linked children; may be absent on pending invites */
+  students?: ParentStudent[];
   createdAt: string;
   updatedAt: string;
   /** Present on pending (invited) parents */
@@ -206,4 +207,5 @@ export interface SchoolInfo {
   admissionPattern?: string;
   schoolCode?: string;
   admissionCounter?: number;
+  assessmentMode?: "standard" | "thirdTermAverage";
 }

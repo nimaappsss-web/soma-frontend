@@ -1,10 +1,12 @@
 import { useState } from "react";
-import { Speaker } from "iconsax-react";
+import { Add, Speaker } from "iconsax-react";
 
 import { Input } from "../../../components/ui/input";
 import { Button } from "../../../components/ui/button";
 import { SelectDropdown } from "../../../components/ui/select-dropdown";
 import { Textarea } from "../../../components/ui/textarea";
+import { EmptyState } from "../../../components/ui/EmptyState";
+import { HelpHint } from "../../../components/ui/HelpHint";
 import { useAnnouncements, useCreateAnnouncement, useDeleteAnnouncement } from "../api";
 import type { CreateAnnouncementPayload, AnnouncementAudience, AnnouncementPriority } from "../types";
 
@@ -40,10 +42,23 @@ export const AnnouncementsManagement = () => {
   };
 
   return (
-    <div className="p-6 max-w-4xl">
+    <div className="p-6 w-full">
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-xl md:text-2xl font-bold text-gray900">Announcements</h1>
+          <div className="group flex items-center gap-2.5">
+            <h1 className="text-xl md:text-2xl font-bold text-gray900">Announcements</h1>
+            <HelpHint
+              title="Announcements"
+              storageKey="announcements-management"
+              description="Broadcast messages to staff, parents, and everyone at your school."
+              sections={[
+                { title: "Create one", text: "Tap “New Announcement”, add a title and message, choose the audience, then publish." },
+                { title: "Audiences", text: "Send to all staff, teaching staff only, non-teaching staff, all parents, or everyone." },
+                { title: "Priority", text: "Mark a message as normal, important, or urgent so readers know how to react." },
+                { title: "Manage", text: "Published announcements appear in the list below — delete any that are no longer needed." },
+              ]}
+            />
+          </div>
           <p className="text-sm text-gray-400 mt-1">Broadcast messages to staff, parents, and everyone at your school</p>
         </div>
         <Button onClick={() => setShowForm(!showForm)} variant="outline" size="sm">
@@ -109,13 +124,14 @@ export const AnnouncementsManagement = () => {
           ))}
         </div>
       ) : (
-        <div className="bg-white rounded-xl border border-gray-100">
-          <div className="p-6 text-center">
-            <Speaker size={32} className="mx-auto text-gray-200 mb-3" variant="Bold" />
-            <p className="text-sm text-gray-400">No announcements yet</p>
-            <p className="text-xs text-gray-300 mt-1">Create your first announcement to get started</p>
-          </div>
-        </div>
+        <EmptyState
+          icon={<Speaker size={30} variant="Bold" color="#0D0D0D" />}
+          title="No announcements yet"
+          description="Share updates with staff and parents. Create your first announcement to get started."
+          actionLabel="New Announcement"
+          actionIcon={<Add size={16} color="#FFFFFF" variant="Linear" />}
+          onAction={() => setShowForm(true)}
+        />
       )}
     </div>
   );

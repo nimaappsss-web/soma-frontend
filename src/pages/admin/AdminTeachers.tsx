@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router";
-import { ArrowRight2, CloseCircle, TickCircle } from "iconsax-react";
+import { Add, ArrowRight2, CloseCircle, Teacher as TeacherIcon, TickCircle } from "iconsax-react";
+import { EmptyState } from "../../components/ui/EmptyState";
 
 import { Avatar } from "../../components/ui/Avatar";
 import { CelebrationDecor } from "../../components/ui/CelebrationDecor";
@@ -13,6 +14,7 @@ import { EditTeacherForm } from "../../features/teacher/components/EditTeacherFo
 import type { Teacher } from "../../features/teacher/types";
 import { getCelebration, type Celebration } from "../../utils/celebrations";
 import { PageHeader } from "../../components/ui/PageHeader";
+import { HelpHint } from "../../components/ui/HelpHint";
 
 type ViewMode = "list" | "grid";
 
@@ -101,6 +103,19 @@ export const AdminTeachers = () => {
     <div className="p-4 md:p-6 w-full">
       <PageHeader
         title="Teachers"
+        hint={
+          <HelpHint
+            title="Teachers"
+            storageKey="teachers"
+            description="Invite and manage the teaching staff at your school."
+            sections={[
+              { title: "Invite teachers", text: "Tap “Add Teacher” to send an invite by email or link. They'll receive instructions to create an account and join your school." },
+              { title: "Approvals", text: "Track pending invites — teachers show a “Pending” badge until they complete sign-up. Resend invites or reject where needed." },
+              { title: "Search & filter", text: "Use the search bar and status filter to find teachers, and switch between list and grid views." },
+              { title: "Edit details", text: "Open any teacher to edit their profile or manage their account access." },
+            ]}
+          />
+        }
         searchValue={searchTerm}
         onSearchChange={setSearchTerm}
         searchPlaceholder="Search teacher"
@@ -171,7 +186,18 @@ export const AdminTeachers = () => {
         {isLoading ? (
           <p className="text-sm text-gray-500 p-8 text-center rounded-xl border border-gray100 bg-white">Loading...</p>
         ) : filteredTeachers.length === 0 && filteredInvites.length === 0 ? (
-          <p className="text-sm text-gray-500 p-8 text-center rounded-xl border border-gray100 bg-white">No teachers yet.</p>
+          <EmptyState
+            icon={<TeacherIcon size={30} variant="Bold" color="#0D0D0D" />}
+            title={searchTerm ? "No teachers match your search" : "Invite your first teacher"}
+            description={
+              searchTerm
+                ? "Try a different search term or clear your filters."
+                : "Teachers manage their classes, attendance and lesson notes. Invite your team to get started."
+            }
+            actionLabel="Invite Teacher"
+            actionIcon={<Add size={16} color="#FFFFFF" variant="Linear" />}
+            onAction={() => setShowInvite(true)}
+          />
         ) : view === "grid" ? (
           <>
             {filteredInvites.length > 0 && (

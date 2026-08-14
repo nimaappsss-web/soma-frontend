@@ -119,7 +119,7 @@ export interface ParentCache {
   hasAccount: boolean;
   status: "active" | "pending";
   schoolId?: string;
-  students: Array<{ id: string; name: string; admissionNo: string }>;
+  students?: Array<{ id: string; name: string; admissionNo: string }>;
   createdAt: string;
   updatedAt: string;
   invitedAt?: string;

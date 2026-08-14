@@ -1,8 +1,11 @@
 import { useState, useMemo } from "react";
 import { Link, useSearchParams } from "react-router";
+import { Add, Building } from "iconsax-react";
 import { SelectDropdown } from "../../components/ui/select-dropdown";
 import { Button } from "../../components/ui/button";
+import { EmptyState } from "../../components/ui/EmptyState";
 import { PageHeader } from "../../components/ui/PageHeader";
+import { HelpHint } from "../../components/ui/HelpHint";
 import { useSchoolSettings } from "../../features/settings/api/useSchoolSettings";
 import {
   useClasses,
@@ -104,6 +107,19 @@ export const AdminClasses = () => {
     <div className="p-4 md:p-6 w-full">
       <PageHeader
         title="Classes"
+        hint={
+          <HelpHint
+            title="Classes"
+            storageKey="classes"
+            description="Organise your school into classes and assign class teachers."
+            sections={[
+              { title: "Create a class", text: "Tap “Add Class”, pick the level/type, and give it a name. Classes drive student grouping, attendance, and timetables." },
+              { title: "Assign a class teacher", text: "Open a class to assign a teacher who'll manage attendance, lesson notes, and CA for that class." },
+              { title: "Search & filter", text: "Use the search bar and type filter to quickly find a class. Sort to arrange them by name or level." },
+              { title: "Manage or remove", text: "Open a class to edit its details, or delete it when it's no longer needed." },
+            ]}
+          />
+        }
         searchValue={searchTerm}
         onSearchChange={setSearchTerm}
         searchPlaceholder="Search class"
@@ -163,9 +179,18 @@ export const AdminClasses = () => {
         {isLoading ? (
           <p className="text-sm text-gray-400 p-6 text-center">Loading...</p>
         ) : filteredClasses.length === 0 ? (
-          <p className="text-sm text-gray-400 p-6 text-center">
-            {searchTerm ? "No classes match your search." : "No classes yet."}
-          </p>
+          <EmptyState
+            icon={<Building size={30} variant="Bold" color="#0D0D0D" />}
+            title={searchTerm ? "No classes match your search" : "Create your first class"}
+            description={
+              searchTerm
+                ? "Try a different search term or clear your filters."
+                : "Classes group students into levels and arms. Add a class to start building your school year."
+            }
+            actionLabel="Add Class"
+            actionIcon={<Add size={16} color="#FFFFFF" variant="Linear" />}
+            onAction={() => setModal({ mode: "create" })}
+          />
         ) : (
           <div className="divide-y divide-gray-100">
             {filteredClasses.map((c) => (

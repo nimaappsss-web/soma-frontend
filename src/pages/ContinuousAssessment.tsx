@@ -1,10 +1,11 @@
 import { useState } from "react";
 import { useLiveQuery } from "dexie-react-hooks";
 import toast from "react-hot-toast";
-import { ArrowLeft2 } from "iconsax-react";
+import { ArrowLeft2, Profile2User } from "iconsax-react";
 import { useAuth } from "../contexts/AuthContext";
 import { db } from "../db/db";
 import { StudentCACard } from "../components/ui/StudentCACard";
+import { EmptyState } from "../components/ui/EmptyState";
 import { Input } from "../components/ui/input";
 import { SelectDropdown } from "../components/ui/select-dropdown";
 import { useActiveTerm } from "../features/calendar/api";
@@ -128,11 +129,16 @@ export const ContinuousAssessment = () => {
       </div>
       <div className="flex-1 flex items-center justify-center px-4 py-8">
         {filtered.length === 0 ? (
-          <p className="text-gray-400 text-sm">
-            {students?.length === 0
-              ? "No students yet."
-              : "No students match this class."}
-          </p>
+          <EmptyState
+            className="min-h-[320px]"
+            icon={<Profile2User size={30} variant="Bold" color="#0D0D0D" />}
+            title={students?.length === 0 ? "No students yet" : "No students match this class"}
+            description={
+              students?.length === 0
+                ? "Students added to this class will appear here for scoring."
+                : "Try a different class filter."
+            }
+          />
         ) : isComplete ? (
           <div className="text-center">
             <p className="text-gray-400 text-lg mb-4">

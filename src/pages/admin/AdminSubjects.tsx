@@ -1,8 +1,11 @@
 import { useState, useMemo } from "react";
-import { useSearchParams } from "react-router";
+import { useNavigate, useSearchParams } from "react-router";
+import { Add, Book1, Building } from "iconsax-react";
 import { cn } from "../../lib/utils";
 import { Button } from "../../components/ui/button";
+import { EmptyState } from "../../components/ui/EmptyState";
 import { PageHeader } from "../../components/ui/PageHeader";
+import { HelpHint } from "../../components/ui/HelpHint";
 import { SelectDropdown, type SelectOption } from "../../components/ui/select-dropdown";
 import {
   useSubjects,
@@ -115,6 +118,19 @@ const SubjectsTab = () => {
     <>
       <PageHeader
         title="Subjects"
+        hint={
+          <HelpHint
+            title="Subjects"
+            storageKey="subjects"
+            description="Set up the subjects your school offers."
+            sections={[
+              { title: "Add a subject", text: "Tap “Add Subject” and give it a name. Subjects are used in timetables, lesson notes, and CA scoring." },
+              { title: "Assign to classes", text: "Use “Assign Subjects” to decide which classes take each subject." },
+              { title: "Search & sort", text: "Find a subject by name or sort the list to browse it your way." },
+              { title: "Edit or delete", text: "Open a subject to rename it, or remove it if it's no longer taught." },
+            ]}
+          />
+        }
         searchValue={searchTerm}
         onSearchChange={setSearchTerm}
         searchPlaceholder="Search subject"
@@ -144,9 +160,18 @@ const SubjectsTab = () => {
         {isLoading ? (
           <p className="text-sm text-gray-400 p-6 text-center">Loading...</p>
         ) : filtered.length === 0 ? (
-          <p className="text-sm text-gray-400 p-6 text-center">
-            {searchTerm ? "No subjects match your search." : "No subjects yet."}
-          </p>
+          <EmptyState
+            icon={<Book1 size={30} variant="Bold" color="#0D0D0D" />}
+            title={searchTerm ? "No subjects match your search" : "Add your first subject"}
+            description={
+              searchTerm
+                ? "Try a different search term or clear your filters."
+                : "Subjects are assigned to classes and teachers. Add your first subject to get started."
+            }
+            actionLabel="Add Subject"
+            actionIcon={<Add size={16} color="#FFFFFF" variant="Linear" />}
+            onAction={() => setModal({ mode: "create" })}
+          />
         ) : (
           <div className="divide-y divide-gray-100">
             {filtered.map((s) => (
@@ -204,6 +229,7 @@ const SubjectsTab = () => {
 };
 
 const ClassesTab = () => {
+  const navigate = useNavigate();
   const { data: classesData, isLoading: classesLoading } = useClasses();
   const { data: subjects } = useSubjects();
   const { data: assignments, isLoading: assignmentsLoading } = useClassSubjects();
@@ -253,6 +279,18 @@ const ClassesTab = () => {
     <>
       <PageHeader
         title="Classes & Assignments"
+        hint={
+          <HelpHint
+            title="Classes & Assignments"
+            storageKey="classes-assignments"
+            description="See which subjects are assigned to each class."
+            sections={[
+              { title: "Assignment overview", text: "The bar shows how many classes already have subjects assigned out of your total." },
+              { title: "Assign subjects", text: "Tap “Assign subjects” to bulk-assign subjects to classes, or open a class row to manage its subjects individually." },
+              { title: "Unassigned classes", text: "Classes still missing subjects are called out so you know what's left to set up." },
+            ]}
+          />
+        }
         actions={
           <Button onClick={openAssignAll} disabled={classes.length === 0}>
             Assign subjects
@@ -286,9 +324,14 @@ const ClassesTab = () => {
         {loading ? (
           <p className="text-sm text-gray-400 p-6 text-center">Loading...</p>
         ) : classes.length === 0 ? (
-          <p className="text-sm text-gray-400 p-6 text-center">
-            No classes yet. Create a class to assign subjects.
-          </p>
+          <EmptyState
+            className="min-h-[280px]"
+            icon={<Building size={30} variant="Bold" color="#0D0D0D" />}
+            title="No classes yet"
+            description="Create a class first, then assign subjects to it."
+            actionLabel="Create Class"
+            onAction={() => navigate("/admin/classes")}
+          />
         ) : (
           <div className="divide-y divide-gray-100">
             {sorted.map((c) => {

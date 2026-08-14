@@ -14,6 +14,8 @@ export { useSubmitExamScores } from "./useSubmitExamScores";
 export { useSaveExamStudentScore } from "./useSaveExamStudentScore";
 export { useTermResults } from "./useTermResults";
 export { useStudentReport } from "./useStudentReport";
+export { useAssessmentMode } from "./useAssessmentMode";
+export { useSessionAverageReport } from "./useSessionAverageReport";
 export { useExamComponents } from "./useExamComponents";
 export { useExamSchemes } from "./useExamSchemes";
 export { useCreateExamComponent } from "./useCreateExamComponent";

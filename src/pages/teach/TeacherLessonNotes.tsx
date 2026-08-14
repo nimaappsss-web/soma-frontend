@@ -13,6 +13,7 @@ import {
 import { useActiveTerm } from "../../features/calendar/api";
 import { termNumber } from "../../features/calendar/utils/term";
 import { Input } from "../../components/ui/input";
+import { HelpHint } from "../../components/ui/HelpHint";
 import { Textarea } from "../../components/ui/textarea";
 import { SelectDropdown } from "../../components/ui/select-dropdown";
 import type { LessonNote, GenerateResponse } from "../../features/lesson-notes/types";
@@ -224,7 +225,19 @@ export const TeacherLessonNotes = () => {
   };
   return (
     <div className="p-4 md:p-8">
-      <h2 className="text-xl md:text-2xl font-bold text-gray900 mb-6">Lesson Notes</h2>
+      <div className="group flex items-center gap-2.5 mb-6">
+        <h2 className="text-xl md:text-2xl font-bold text-gray900">Lesson Notes</h2>
+        <HelpHint
+          title="Lesson Notes"
+          storageKey="lesson-notes"
+          description="Plan and write lesson notes for your subjects."
+          sections={[
+            { title: "Create a note", text: "Tap “New Note”, pick a subject and topic, then fill in the lesson sections." },
+            { title: "AI assistance", text: "Generate a lesson note draft from a topic, then edit it to match your style." },
+            { title: "Save & organise", text: "Notes are saved to your device and synced when you're back online. Select one on the left to edit it anytime." },
+          ]}
+        />
+      </div>
       <div className="flex flex-col lg:flex-row gap-6">
         <div className="w-full lg:w-56 shrink-0">
           <button

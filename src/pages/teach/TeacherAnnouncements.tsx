@@ -1,6 +1,8 @@
 import { Speaker } from "iconsax-react";
 
 import { useAnnouncements } from "../../features/announcements/api";
+import { EmptyState } from "../../components/ui/EmptyState";
+import { HelpHint } from "../../components/ui/HelpHint";
 
 const audienceLabels: Record<string, string> = {
   ALL_STAFF: "All Staff",
@@ -21,9 +23,21 @@ export const TeacherAnnouncements = () => {
   const announcements = data?.announcements ?? [];
 
   return (
-    <div className="p-6 max-w-4xl">
+    <div className="p-6 w-full">
       <div className="mb-6">
-        <h1 className="text-xl md:text-2xl font-bold text-gray900">Announcements</h1>
+        <div className="group flex items-center gap-2.5">
+          <h1 className="text-xl md:text-2xl font-bold text-gray900">Announcements</h1>
+          <HelpHint
+            title="Announcements"
+            storageKey="teacher-announcements"
+            description="School-wide announcements from your administration."
+            sections={[
+              { title: "Reading announcements", text: "Each card shows the title, priority, and who the announcement is for." },
+              { title: "Priority badges", text: "URGENT (red), IMPORTANT (amber), and NORMAL (gray) help you spot what needs attention first." },
+              { title: "Keep up to date", text: "New announcements appear here as soon as the school publishes them." },
+            ]}
+          />
+        </div>
         <p className="text-sm text-gray-400 mt-1">School-wide announcements from your administration</p>
       </div>
 
@@ -49,12 +63,11 @@ export const TeacherAnnouncements = () => {
           ))}
         </div>
       ) : (
-        <div className="bg-white rounded-xl border border-gray-100">
-          <div className="p-6 text-center">
-            <Speaker size={32} className="mx-auto text-gray-200 mb-3" variant="Bold" />
-            <p className="text-sm text-gray-400">No announcements yet</p>
-          </div>
-        </div>
+        <EmptyState
+          icon={<Speaker size={30} variant="Bold" color="#0D0D0D" />}
+          title="No announcements yet"
+          description="Updates and notices from your school will show up here."
+        />
       )}
     </div>
   );

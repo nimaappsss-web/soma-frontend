@@ -56,10 +56,7 @@ const group1: NavItem[] = [
 const group2: NavItem[] = [
   { label: "Classes", to: "/admin/classes", Icon: Teacher },
   { label: "Subjects", to: "/admin/subjects", Icon: Book },
-  { label: "Timetable", to: "/admin/timetable", Icon: CalendarTick, hasCaret: true, children: [
-      { label: "Classes", to: "/admin/timetable" },
-      { label: "Configurations", to: "/admin/timetable/configs" },
-    ] },
+  { label: "Timetable", to: "/admin/timetable", Icon: CalendarTick },
   { label: "Attendance", to: "/admin/attendance", Icon: ClipboardTick },
   {
     label: "CA & Exams",

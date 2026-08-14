@@ -1,7 +1,11 @@
 import { useState } from "react";
+import toast from "react-hot-toast";
+import { Add, People } from "iconsax-react";
 import { Avatar } from "../../../components/ui/Avatar";
+import { EmptyState } from "../../../components/ui/EmptyState";
 import { useParents } from "../api/useParents";
 import { useResendParentInvite } from "../api/useResendParentInvite";
+import { useGenerateInviteLink } from "../api/useGenerateInviteLink";
 interface ParentsListSectionProps {
   limit?: number;
 }
@@ -9,6 +13,19 @@ export const ParentsListSection = ({ limit = 10 }: ParentsListSectionProps) => {
   const [page, setPage] = useState(1);
   const { data, isLoading, error } = useParents(page, limit);
   const resendMutation = useResendParentInvite();
+  const generateMutation = useGenerateInviteLink();
+
+  const handleInviteParent = () => {
+    generateMutation.mutate(
+      { role: "PARENT" },
+      {
+        onSuccess: async (res) => {
+          await navigator.clipboard.writeText(res.link);
+          toast.success("Parent invite link copied!");
+        },
+      },
+    );
+  };
   if (isLoading) {
     return (
       <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
@@ -45,7 +62,15 @@ export const ParentsListSection = ({ limit = 10 }: ParentsListSectionProps) => {
     return (
       <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
         <h3 className="font-semibold text-gray-800 mb-4">Parents</h3>
-        <p className="text-sm text-gray-400">No parents yet.</p>
+        <EmptyState
+          className="min-h-[260px]"
+          icon={<People size={30} variant="Bold" color="#0D0D0D" />}
+          title="Invite your first parent"
+          description="Parents follow their children's attendance, scores and reports. Invite one to get started."
+          actionLabel="Invite Parent"
+          actionIcon={<Add size={16} color="#FFFFFF" variant="Linear" />}
+          onAction={handleInviteParent}
+        />
       </div>
     );
   }
@@ -71,9 +96,9 @@ export const ParentsListSection = ({ limit = 10 }: ParentsListSectionProps) => {
                   <div className="min-w-0">
                     <p className="text-sm text-gray-800 truncate">{inv.name || "—"}</p>
                   <p className="text-xs text-gray-400 truncate">{inv.email}</p>
-                  {inv.students.length > 0 && (
+                  {(inv.students ?? []).length > 0 && (
                     <p className="text-xs text-gray-400 truncate">
-                      Linked: {inv.students.map((s) => s.name).join(", ")}
+                      Linked: {inv.students?.map((s) => s.name).join(", ")}
                     </p>
                   )}
                   </div>
@@ -109,9 +134,9 @@ export const ParentsListSection = ({ limit = 10 }: ParentsListSectionProps) => {
                   <div className="min-w-0">
                     <p className="text-sm text-gray-800 truncate">{p.name}</p>
                     <p className="text-xs text-gray-400 truncate">{p.email}{p.phone ? ` · ${p.phone}` : ""}</p>
-                    {p.students.length > 0 && (
+                    {(p.students ?? []).length > 0 && (
                       <p className="text-xs text-gray-400 truncate">
-                        Children: {p.students.map((s) => s.name).join(", ")}
+                        Children: {p.students?.map((s) => s.name).join(", ")}
                       </p>
                     )}
                   </div>

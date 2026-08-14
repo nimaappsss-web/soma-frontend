@@ -6,6 +6,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { Button } from "../../../components/ui/button";
 import { Input } from "../../../components/ui/input";
 import { Label } from "../../../components/ui/label";
+import { ErrorMessage } from "../../../components/others/ErrorMessage";
+import { transformError } from "../../../utils/transformError";
 import { useInviteTeacher, useGenerateInviteLink } from "../api";
 import { inviteTeacherSchema, type InviteTeacherFormData } from "../utils/validationSchema";
 import { cn } from "../../../lib/utils";
@@ -23,6 +25,7 @@ export const InviteTeacherModal = ({ open, onClose }: InviteTeacherModalProps) =
   const generateMutation = useGenerateInviteLink();
   const [generatedLink, setGeneratedLink] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
+  const [networkError, setNetworkError] = useState<string | null>(null);
 
   const {
     register,
@@ -47,6 +50,11 @@ export const InviteTeacherModal = ({ open, onClose }: InviteTeacherModalProps) =
   };
 
   const handleGenerate = () => {
+    if (typeof navigator !== "undefined" && !navigator.onLine) {
+      setNetworkError("You need a network connection to generate the link.");
+      return;
+    }
+    setNetworkError(null);
     generateMutation.mutate(
       { role: "TEACHER" },
       {
@@ -68,6 +76,7 @@ export const InviteTeacherModal = ({ open, onClose }: InviteTeacherModalProps) =
   const handleClose = () => {
     setGeneratedLink(null);
     setCopied(false);
+    setNetworkError(null);
     setTab("email");
     onClose();
   };
@@ -106,9 +115,7 @@ export const InviteTeacherModal = ({ open, onClose }: InviteTeacherModalProps) =
           {tab === "email" && (
             <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
               {inviteMutation.isError && (
-                <p className="text-sm text-destructive">
-                  {(inviteMutation.error as Error)?.message}
-                </p>
+                <ErrorMessage>{transformError(inviteMutation.error)}</ErrorMessage>
               )}
 
               <div className="space-y-2">
@@ -137,10 +144,8 @@ export const InviteTeacherModal = ({ open, onClose }: InviteTeacherModalProps) =
 
           {tab === "link" && (
             <div className="space-y-4">
-              {generateMutation.isError && (
-                <p className="text-sm text-destructive">
-                  {(generateMutation.error as Error)?.message}
-                </p>
+              {(generateMutation.isError || networkError) && (
+                <ErrorMessage>{networkError ?? transformError(generateMutation.error)}</ErrorMessage>
               )}
 
               {generatedLink ? (

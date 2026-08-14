@@ -6,6 +6,7 @@ import { useMyAssignments } from "../../teacher/api/useMyAssignments";
 import { useActiveExamScores } from "../api/useActiveExamScores";
 import { SelectDropdown } from "../../../components/ui/select-dropdown";
 import { cn } from "../../../lib/utils";
+import { HelpHint } from "../../../components/ui/HelpHint";
 export const ActiveAssessments = () => {
   const { user } = useAuth();
   const userId = user?.id ?? "";
@@ -54,7 +55,19 @@ export const ActiveAssessments = () => {
     <div className="p-4 md:p-6 w-full">
       <div className="mb-4 flex flex-wrap items-start justify-between gap-3">
         <div>
-          <h1 className="text-xl md:text-2xl font-bold text-gray900">Active Assessments</h1>
+          <div className="group flex items-center gap-2.5">
+            <h1 className="text-xl md:text-2xl font-bold text-gray900">Active Assessments</h1>
+            <HelpHint
+              title="Active Assessments"
+              storageKey="active-assessments"
+              description="Assessments you've started, ready to pick back up."
+              sections={[
+                { title: "Pick up where you left off", text: "Tap an assessment card to jump straight back into scoring." },
+                { title: "Filter by class", text: "Use the class dropdown to focus on a single class's assessments." },
+                { title: "Start fresh", text: "To begin something new, head to Mark Scores." },
+              ]}
+            />
+          </div>
           <p className="text-xs md:text-sm text-gray500 mt-0.5">
             Assessments you've started. Pick one up where you left off, or start a new one from Mark Scores.
           </p>

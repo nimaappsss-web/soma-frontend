@@ -6,6 +6,7 @@ import type { ReportTemplate, ReportTheme, ReportSettings } from "../../report-c
 import type { StudentAcademicsResponse } from "../../examinations/types";
 import { Button } from "../../../components/ui/button";
 import { cn } from "../../../lib/utils";
+import { HelpHint } from "../../../components/ui/HelpHint";
 
 const TEMPLATES: Array<{ id: ReportTemplate; label: string; description: string }> = [
   { id: "classic", label: "Classic", description: "Portrait table layout" },
@@ -55,7 +56,19 @@ export const ReportsManagement = () => {
     <div className="p-6 max-w-5xl">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div>
-          <h1 className="text-xl md:text-2xl font-bold text-gray900">Report Card</h1>
+          <div className="group flex items-center gap-2.5">
+            <h1 className="text-xl md:text-2xl font-bold text-gray900">Report Card</h1>
+            <HelpHint
+              title="Report Card"
+              storageKey="report-card"
+              description="Choose the template and theme used for every student report card across the school."
+              sections={[
+                { title: "Template", text: "Pick how the report card is laid out — the options are shown with a live preview." },
+                { title: "Theme", text: "Choose the colour style for the whole report card design." },
+                { title: "Save", text: "Tap “Save Design” to apply your choice to every report card generated for students." },
+              ]}
+            />
+          </div>
           <p className="text-sm text-gray-400 mt-1">
             Choose the template and theme used for every student report card across the school.
           </p>

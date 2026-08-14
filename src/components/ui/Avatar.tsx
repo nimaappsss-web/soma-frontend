@@ -10,13 +10,14 @@ interface AvatarProps {
 const DICEBEAR_BASE = "https://api.dicebear.com/9.x/adventurer-neutral/svg";
 
 export const Avatar = ({ name, imageUrl, size = 40, className = "" }: AvatarProps) => {
-  const seed = useMemo(() => encodeURIComponent(name.trim()), [name]);
+  const safeName = name ?? "";
+  const seed = useMemo(() => encodeURIComponent(safeName.trim()), [safeName]);
 
   if (imageUrl) {
     return (
       <img
         src={imageUrl}
-        alt={name}
+        alt={safeName}
         draggable={false}
         className={`rounded-full object-cover ${className}`}
         style={{ width: size, height: size, minWidth: size, minHeight: size }}
@@ -31,7 +32,7 @@ export const Avatar = ({ name, imageUrl, size = 40, className = "" }: AvatarProp
     >
       <img
         src={`${DICEBEAR_BASE}?seed=${seed}`}
-        alt={name}
+        alt={safeName}
         draggable={false}
         className="w-full h-full"
         style={{ objectFit: "cover" }}

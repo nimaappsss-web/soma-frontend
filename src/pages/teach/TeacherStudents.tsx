@@ -1,8 +1,11 @@
 import { useMemo, useState } from "react";
 import { Link } from "react-router";
+import { Profile2User } from "iconsax-react";
 import { Avatar } from "../../components/ui/Avatar";
 import { CelebrationDecor } from "../../components/ui/CelebrationDecor";
+import { EmptyState } from "../../components/ui/EmptyState";
 import { StudentPageHeader, type StudentViewMode } from "../../features/students/components/StudentPageHeader";
+import { HelpHint } from "../../components/ui/HelpHint";
 import { useTeacherProfile } from "../../features/teacher/api";
 import { useStudents } from "../../features/students/api";
 import { useAuth } from "../../contexts/AuthContext";
@@ -58,6 +61,18 @@ export const TeacherStudents = () => {
       <StudentPageHeader
         title="Students"
         subtitle={formClass ? <span className="inline-flex items-center rounded-full bg-green-50 px-2.5 py-0.5 text-xs font-medium text-green-700">{formClass}</span> : undefined}
+        hint={
+          <HelpHint
+            title="Students"
+            storageKey="teacher-students"
+            description="The students in your assigned class."
+            sections={[
+              { title: "Your class", text: "This list shows students for the class you teach, highlighted next to the title." },
+              { title: "Search & sort", text: "Use the search bar and filters to find a student by name or status." },
+              { title: "Open a student", text: "Tap any student to view their profile, attendance, and academics." },
+            ]}
+          />
+        }
         classOptions={[]}
         classValue={classFilter}
         onClassChange={setClassFilter}
@@ -73,9 +88,11 @@ export const TeacherStudents = () => {
       {loading ? (
         <p className="text-sm text-gray-500 p-8 text-center">Loading...</p>
       ) : students.length === 0 ? (
-        <p className="text-sm text-gray-500 p-8 text-center rounded-xl border border-gray100 bg-white">
-          No students in this class.
-        </p>
+        <EmptyState
+          icon={<Profile2User size={30} variant="Bold" color="#0D0D0D" />}
+          title="No students in this class"
+          description="Students added to your class by the school will show up here."
+        />
       ) : view === "grid" ? (
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-5 lg:grid-cols-4">
           {students.map((s) => {

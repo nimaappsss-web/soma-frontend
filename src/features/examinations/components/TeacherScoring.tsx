@@ -14,6 +14,8 @@ import {
   Element4,
   Fatrows,
 } from "iconsax-react";
+import { EmptyState } from "../../../components/ui/EmptyState";
+import { HelpHint } from "../../../components/ui/HelpHint";
 
 import { useAuth } from "../../../contexts/AuthContext";
 import { db } from "../../../db/db";
@@ -407,12 +409,13 @@ const SubjectBlock = ({
                       <p className="text-sm text-gray500">Loading students…</p>
                     </div>
                   ) : roster.length === 0 ? (
-                    <div className="w-full rounded-xl border border-gray100 p-8 text-center">
-                      <DocumentText size={24} className="mx-auto text-gray300 mb-2" variant="Bold" />
-                      <p className="text-sm font-medium text-gray900">No students in this class</p>
-                      <p className="text-xs text-gray500 mt-1 max-w-xs mx-auto">
-                        Once students are enrolled in this class, their scores will appear here.
-                      </p>
+                    <div className="w-full">
+                      <EmptyState
+                        className="min-h-[200px] border border-gray100 rounded-xl"
+                        icon={<DocumentText size={30} variant="Bold" color="#0D0D0D" />}
+                        title="No students in this class"
+                        description="Once students are enrolled in this class, their scores will appear here."
+                      />
                     </div>
                   ) : (
                     <>
@@ -765,7 +768,19 @@ export const TeacherScoring = () => {
   return (
     <div className="p-4 md:p-6 w-full">
       <div className="mb-4">
-        <h1 className="text-xl md:text-2xl font-bold text-gray900">Mark Scores</h1>
+        <div className="group flex items-center gap-2.5">
+          <h1 className="text-xl md:text-2xl font-bold text-gray900">Mark Scores</h1>
+          <HelpHint
+            title="Mark Scores"
+            storageKey="mark-scores"
+            description="Enter CA and exam scores for your subjects."
+            sections={[
+              { title: "Pick a subject", text: "Each subject block lets you choose a class and a mark type, then enter scores per student." },
+              { title: "Save & sync", text: "Scores are saved on this device and sync when you're back online, so nothing gets lost." },
+              { title: "Pick up later", text: "Partially saved work stays on this device — come back and finish it anytime." },
+            ]}
+          />
+        </div>
         <p className="text-xs md:text-sm text-gray500 mt-0.5">
           Pick a class and a mark type for each subject, enter scores, then save. Scores are saved on this device and
           sync when you're back online.

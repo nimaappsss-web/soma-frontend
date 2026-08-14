@@ -13,6 +13,7 @@ import { useUpdateExamScheme } from "../api/useUpdateExamScheme";
 import { useClasses } from "../../principal/api/useClasses";
 import { useSchoolSettings } from "../../settings/api/useSchoolSettings";
 import { useActiveTerm } from "../../calendar/api";
+import { HelpHint } from "../../../components/ui/HelpHint";
 import { termLabel } from "../../calendar/utils/term";
 import { schoolTypeLabel } from "../../../utils/schoolType";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "../../../components/ui/dialog";
@@ -246,7 +247,20 @@ export const SchemeConfig = () => {
     <div className="p-4 md:p-6 w-full">
       <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3">
         <div>
-          <h1 className="text-xl md:text-2xl font-bold text-gray900">Configure CA &amp; Scores</h1>
+          <div className="group flex items-center gap-2.5">
+            <h1 className="text-xl md:text-2xl font-bold text-gray900">Configure CA &amp; Scores</h1>
+            <HelpHint
+              title="Configure CA &amp; Scores"
+              storageKey="scheme-config"
+              description="Set the CA and exam scheme for each school type and term."
+              sections={[
+                { title: "Pick a term", text: "Choose which term you're configuring, then add a configuration for a school type." },
+                { title: "Add components", text: "Each configuration holds CA tests and exams — name them, set max scores, and weights." },
+                { title: "Auto-applied", text: "Every class of the chosen type automatically follows its configuration when marking." },
+                { title: "Manage", text: "Edit or delete components and configurations anytime. Changes apply going forward." },
+              ]}
+            />
+          </div>
           <p className="text-xs md:text-sm text-gray500 mt-0.5">
             Each configuration applies to a school type — every class of that type automatically follows it.
           </p>

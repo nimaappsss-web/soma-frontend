@@ -1,8 +1,8 @@
 import { useState, useRef, useMemo } from "react";
-import { Link, useSearchParams } from "react-router";
+import { Link, useNavigate, useSearchParams } from "react-router";
 import { useLiveQuery } from "dexie-react-hooks";
 import { useQuery } from "@tanstack/react-query";
-import { ArrowLeft2 } from "iconsax-react";
+import { ArrowLeft2, Profile2User } from "iconsax-react";
 
 import { useAuth } from "../../contexts/AuthContext";
 import { useTeacherProfile, useAttendanceAvailability } from "../../features/teacher/api";
@@ -11,6 +11,8 @@ import { useStudents } from "../../features/students/api";
 import { AttendanceListView } from "../../features/teacher/components/AttendanceListView";
 import { AttendanceHistoryView } from "../../features/teacher/components/AttendanceHistoryView";
 import { StudentSwipeCard } from "../../components/ui/StudentSwipeCard";
+import { EmptyState } from "../../components/ui/EmptyState";
+import { HelpHint } from "../../components/ui/HelpHint";
 import { Textarea } from "../../components/ui/textarea";
 import { addToQueue } from "../../sync/syncQueue";
 import { db } from "../../db/db";
@@ -25,6 +27,7 @@ type ViewMode = "list" | "card";
 
 export const TeacherAttendance = () => {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const { formClass, formClassId, isLoading: profileLoading } = useTeacherProfile();
 
   const [searchParams, setSearchParams] = useSearchParams();
@@ -280,9 +283,22 @@ export const TeacherAttendance = () => {
     <div className="p-4 md:p-6 w-full">
       <div className="mb-4 flex items-center justify-between">
         <div>
-          <h1 className="text-xl md:text-2xl font-bold text-gray900">
-            Attendance — {formClass}
-          </h1>
+          <div className="group flex items-center gap-2.5">
+            <h1 className="text-xl md:text-2xl font-bold text-gray900">
+              Attendance — {formClass}
+            </h1>
+            <HelpHint
+              title="Attendance"
+              storageKey="teacher-attendance"
+              description={`Take attendance for ${formClass}.`}
+              sections={[
+                { title: "Mark attendance", text: "Switch to the Mark tab, then swipe or tap each student as present or absent. Your progress is shown at the top." },
+                { title: "Mark all / clear", text: "Use the bulk buttons to mark everyone present, then correct the few exceptions." },
+                { title: "History", text: "The History tab shows past records so you and the school can track who's been present over time." },
+                { title: "Saving", text: "Attendance is saved as you go and synced to the school, even if you go offline." },
+              ]}
+            />
+          </div>
           <p className="text-xs text-gray-400 mt-0.5">
             {tab === "history" ? "View history" : isMarked && !modifyMode ? "Marked for today" : `${markedCount} / ${totalStudents} marked`}
           </p>
@@ -387,15 +403,13 @@ export const TeacherAttendance = () => {
           <p className="text-gray-400">Loading students...</p>
         </div>
       ) : !students || students.length === 0 ? (
-        <div className="flex flex-col items-center justify-center h-64 gap-4">
-          <p className="text-gray-400">No students in this class yet.</p>
-          <Link
-            to="/teach/students"
-            className="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700"
-          >
-            View Students
-          </Link>
-        </div>
+        <EmptyState
+          icon={<Profile2User size={30} variant="Bold" color="#0D0D0D" />}
+          title="No students in this class yet"
+          description="Once students are added to your class you can mark their attendance here."
+          actionLabel="View Students"
+          onAction={() => navigate("/teach/students")}
+        />
       ) : (
         <>
           {todayEvents.length > 0 && (

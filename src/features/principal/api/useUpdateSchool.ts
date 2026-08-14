@@ -18,6 +18,7 @@ interface UpdateSchoolPayload {
   logoUrl?: string;
   arms?: string[];
   admissionPattern?: string;
+  assessmentMode?: "standard" | "thirdTermAverage";
 }
 
 export const useUpdateSchool = () => {

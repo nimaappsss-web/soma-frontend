@@ -9,7 +9,9 @@ import { buildClassColorMap } from "../../features/timetable/utils/classColors";
 import { TimetableMobile } from "../../features/timetable/components/TimetableMobile";
 import { TeacherCalendar } from "../../features/timetable/components/TeacherCalendar";
 import { distinctClasses, lessonsForDate, lessonsPerClass } from "../../features/timetable/utils/timetableDates";
+import { EmptyState } from "../../components/ui/EmptyState";
 import { SomaLoader } from "../../components/ui/SomaLoader";
+import { HelpHint } from "../../components/ui/HelpHint";
 import { cn } from "../../lib/utils";
 
 type ViewMode = "week" | "month";
@@ -46,7 +48,19 @@ export const TeacherTimetable = () => {
   return (
     <div className="mx-auto max-w-5xl px-4 py-6 md:px-8">
       <div className="mb-6">
-        <h1 className="text-xl font-bold text-gray900 md:text-2xl">My timetable</h1>
+        <div className="group flex items-center gap-2.5">
+          <h1 className="text-xl font-bold text-gray900 md:text-2xl">My timetable</h1>
+          <HelpHint
+            title="My timetable"
+            storageKey="teacher-timetable"
+            description="Your lessons across all classes, week by week."
+            sections={[
+              { title: "What you'll see", text: "Every lesson you teach is shown in its class color, with subject, time, and room." },
+              { title: "Switch views", text: "Browse week by week with the calendar or grid, and pick a day to zoom in." },
+              { title: "Class colors", text: "Each class has its own color so you can tell them apart at a glance." },
+            ]}
+          />
+        </div>
         <p className="text-sm text-placeholder">Your lessons across all classes, week by week.</p>
       </div>
 
@@ -59,12 +73,11 @@ export const TeacherTimetable = () => {
           Could not load your timetable.
         </div>
       ) : entries.length === 0 ? (
-        <div className="rounded-xl border border-input bg-card p-10 text-center">
-          <CalendarTick size={28} color="#BBBBBB" className="mx-auto" />
-          <p className="mt-3 text-sm text-placeholder">
-            No lessons assigned yet. Your timetable will appear here once the school publishes it.
-          </p>
-        </div>
+        <EmptyState
+          icon={<CalendarTick size={30} variant="Bold" color="#0D0D0D" />}
+          title="No lessons assigned yet"
+          description="Your timetable will appear here once the school publishes your lessons."
+        />
       ) : (
         <div className="space-y-5">
           {/* Class filter + view toggle */}

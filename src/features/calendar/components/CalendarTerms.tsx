@@ -1,9 +1,17 @@
 import { useState, useMemo } from "react";
-import { motion, AnimatePresence } from "motion/react";
 
 import toast from "react-hot-toast";
+import { Add, CalendarTick } from "iconsax-react";
 import { DateInput } from "../../../components/ui/date-input";
 import { Button } from "../../../components/ui/button";
+import { EmptyState } from "../../../components/ui/EmptyState";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from "../../../components/ui/dialog";
 import { useAcademicTerms, useCreateAcademicTerm, useUpdateAcademicTerm, useDeleteAcademicTerm } from "../api";
 import { isDateInRange } from "../utils/term";
 import type { CreateAcademicTermPayload, UpdateAcademicTermPayload, AcademicTerm } from "../types";
@@ -230,65 +238,60 @@ export const CalendarTerms = () => {
 
   return (
     <div>
-      <div className="flex items-center justify-between mb-6">
+      <div className="mb-8 flex items-center justify-between">
+        <p className="text-sm font-medium text-gray-900">Term Schedule</p>
         {nextTerm && (
-          <Button onClick={openForm} variant="outline" size="sm">
+          <Button onClick={openForm}>
+            <Add size={14} color="#FFFFFF" />
             Set up {termLabel(nextTerm).label}
           </Button>
         )}
       </div>
 
-      <div className="mb-8">
-        <div className="flex items-center justify-between mb-5">
-          <p className="text-sm font-medium text-gray-900">Term Schedule</p>
-        </div>
-
-        <AnimatePresence>
-          {showForm && nextTerm && (
-            <motion.div
-              initial={{ height: 0, opacity: 0 }}
-              animate={{ height: "auto", opacity: 1 }}
-              exit={{ height: 0, opacity: 0 }}
-              className="overflow-hidden mb-5"
-            >
-              <div className="rounded-xl border border-gray-100 bg-white p-5 space-y-3">
-                <div className="flex items-center gap-2 mb-1">
-                  <span className="text-xs font-medium text-gray-400 uppercase tracking-wider">Term</span>
-                  <span className="text-sm font-semibold text-gray-900">{termLabel(nextTerm).label}</span>
-                </div>
-                <div className="flex gap-3">
-                  <div className="flex-1">
-                    <label className="block text-xs text-gray-500 mb-1">Start Date</label>
-                    <DateInput
-                      className="w-full"
-                      value={form.startDate}
-                      onChange={(v) => setForm({ ...form, startDate: v })}
-                      min={minStartDate}
-                    />
-                  </div>
-                  <div className="flex-1">
-                    <label className="block text-xs text-gray-500 mb-1">End Date</label>
-                    <DateInput
-                      className="w-full"
-                      value={form.endDate}
-                      onChange={(v) => setForm({ ...form, endDate: v })}
-                      min={form.startDate || minStartDate}
-                    />
-                  </div>
-                </div>
-                {prevTerm && (
-                  <p className="text-xs text-gray-400">
-                    Must start after {formatRange(prevTerm.startDate, prevTerm.endDate)}
-                  </p>
-                )}
-                <Button onClick={handleCreate} disabled={isPending} className="w-full">
-                  {createMutation.isPending ? "Adding..." : `Add ${termLabel(nextTerm).label}`}
-                </Button>
+      <Dialog open={showForm} onOpenChange={(open) => { if (!open) setForm({ term: "", startDate: "", endDate: "" }); setShowForm(open); }}>
+        <DialogContent variant="middle" className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Set up {nextTerm ? termLabel(nextTerm).label : ""}</DialogTitle>
+            <DialogDescription>
+              Choose the start and end dates for this term.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="px-6 pb-6 space-y-3">
+            <div className="flex items-center gap-2">
+              <span className="text-xs font-medium text-gray-400 uppercase tracking-wider">Term</span>
+              <span className="text-sm font-semibold text-gray-900">{nextTerm ? termLabel(nextTerm).label : ""}</span>
+            </div>
+            <div className="flex gap-3">
+              <div className="flex-1">
+                <label className="block text-xs text-gray-500 mb-1">Start Date</label>
+                <DateInput
+                  className="w-full"
+                  value={form.startDate}
+                  onChange={(v) => setForm({ ...form, startDate: v })}
+                  min={minStartDate}
+                />
               </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
-      </div>
+              <div className="flex-1">
+                <label className="block text-xs text-gray-500 mb-1">End Date</label>
+                <DateInput
+                  className="w-full"
+                  value={form.endDate}
+                  onChange={(v) => setForm({ ...form, endDate: v })}
+                  min={form.startDate || minStartDate}
+                />
+              </div>
+            </div>
+            {prevTerm && (
+              <p className="text-xs text-gray-400">
+                Must start after {formatRange(prevTerm.startDate, prevTerm.endDate)}
+              </p>
+            )}
+            <Button onClick={handleCreate} disabled={isPending} className="w-full">
+              {createMutation.isPending ? "Adding..." : `Add ${termLabel(nextTerm ?? "first").label}`}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       {isLoading ? (
         <div className="space-y-6">
@@ -324,12 +327,15 @@ export const CalendarTerms = () => {
           ))}
         </div>
       ) : (
-        <div className="rounded-xl border border-dashed border-gray-200 p-12 text-center">
-          <p className="text-sm text-gray-400">No terms yet</p>
-          <p className="text-xs text-gray-300 mt-1">
-            {nextTerm ? `Click "Set up ${termLabel(nextTerm).label}" to get started.` : "All terms are set up."}
-          </p>
-        </div>
+        <EmptyState
+          className="min-h-[calc(100dvh-240px)]"
+          icon={<CalendarTick size={30} variant="Bold" color="#0D0D0D" />}
+          title="Set up your school year"
+          description="Add the First, Second and Third term dates so attendance, scores and reports run smoothly across your session."
+          actionLabel={nextTerm ? `Set up ${termLabel(nextTerm).label}` : "Set up your school year"}
+          actionIcon={<Add size={16} color="#FFFFFF" variant="Linear" />}
+          onAction={openForm}
+        />
       )}
 
       {terms.length > 0 && !hasCurrent && (

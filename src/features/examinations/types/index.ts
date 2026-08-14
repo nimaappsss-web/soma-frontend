@@ -6,6 +6,8 @@ export type AxiosErrorResponse = {
   message?: string;
 };
 
+export type AssessmentMode = "standard" | "thirdTermAverage";
+
 export type ExamComponentType =
   | "TEST"
   | "ASSIGNMENT"

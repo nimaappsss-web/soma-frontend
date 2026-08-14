@@ -25,12 +25,8 @@ export const TimetableLayout = () => {
     <div className="flex flex-col min-h-full w-full">
       <div className="w-full p-4 md:p-6 pb-0">
         <div>
-          <div className="flex flex-wrap items-center justify-between gap-3">
-            <div>
-              <h1 className="text-xl md:text-2xl font-bold text-gray900">{title}</h1>
-              <p className="text-sm text-placeholder mt-1">{subtitle}</p>
-            </div>
-          </div>
+          <h1 className="text-xl md:text-2xl font-bold text-gray900">{title}</h1>
+          <p className="text-sm text-placeholder mt-1">{subtitle}</p>
 
           <div className="mt-4 inline-flex items-center gap-1 rounded-full border border-input bg-card p-1">
             {TABS.map(({ key, label, to, Icon }) => {
