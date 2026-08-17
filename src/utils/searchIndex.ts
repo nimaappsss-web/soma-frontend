@@ -35,7 +35,7 @@ export const searchIndex: SearchItem[] = [
   { id: "page-calendar-events", label: "Calendar Events", description: "View and create school events", path: "/admin/calendar/events", icon: "CalendarAdd", category: "page", roles: ["principal"], keywords: ["event", "activity", "function"] },
   { id: "page-calendar-holidays", label: "Holidays", description: "Manage school holidays", path: "/admin/calendar/holidays", icon: "Calendar", category: "page", roles: ["principal"], keywords: ["holiday", "break", "vacation"] },
   { id: "page-calendar-terms", label: "Academic Terms", description: "Manage terms and sessions", path: "/admin/calendar/terms", icon: "CalendarTick", category: "page", roles: ["principal"], keywords: ["term", "session", "semester"] },
-  { id: "page-finance", label: "Finance", description: "School finances and tuition tracking", path: "/admin/finance", icon: "Card", category: "page", roles: ["principal", "bursar"], keywords: ["fee", "tuition", "payment", "money"] },
+  { id: "page-finance", label: "Finance", description: "School finances and tuition tracking", path: "/admin/finance", icon: "Card", category: "page", roles: ["principal", "school_admin", "bursar"], keywords: ["fee", "tuition", "payment", "money"] },
   { id: "page-moments", label: "Moments", description: "Birthdays and celebrations", path: "/admin/moments", icon: "MagicStar", category: "page", roles: ["principal"], keywords: ["birthday", "celebration", "anniversary"] },
   { id: "page-reports", label: "Reports", description: "School reports and analytics", path: "/admin/reports", icon: "Chart", category: "page", roles: ["principal"], keywords: ["analytics", "data", "insight"] },
   { id: "page-announcements", label: "Announcements", description: "Create and manage announcements", path: "/admin/announcements", icon: "VolumeHigh", category: "page", roles: ["principal"], keywords: ["notice", "broadcast", "news"] },
@@ -68,12 +68,22 @@ export const searchIndex: SearchItem[] = [
 
   // Parent
   { id: "page-parent-home", label: "Parent Dashboard", description: "Your children's school overview", path: "/parent", icon: "Home2", category: "page", roles: ["parent"], keywords: ["home", "overview"] },
-  { id: "page-parent-children", label: "My Children", description: "View your children's records", path: "/parent/children", icon: "Teacher", category: "page", roles: ["parent"], keywords: ["child", "kid", "son", "daughter"] },
+  { id: "page-parent-children", label: "My Children", description: "View your children's records and attendance", path: "/parent/children", icon: "Teacher", category: "page", roles: ["parent"], keywords: ["child", "kid", "son", "daughter", "attendance", "present", "absent", "today"] },
+  { id: "page-parent-fees", label: "School Fees", description: "View and pay your children's school fees", path: "/parent/fees", icon: "Card", category: "page", roles: ["parent"], keywords: ["fee", "tuition", "payment", "pay", "invoice"] },
   { id: "page-parent-announcements", label: "Announcements", description: "Read school announcements", path: "/parent/announcements", icon: "VolumeHigh", category: "page", roles: ["parent"], keywords: ["notice", "news"] },
   { id: "page-parent-settings", label: "Parent Settings", description: "Manage your account", path: "/parent/settings", icon: "Setting", category: "page", roles: ["parent"], keywords: ["account", "config"] },
+  { id: "page-parent-today", label: "Today at School", description: "See today's attendance for your children", path: "/parent", icon: "ClipboardTick", category: "page", roles: ["parent"], keywords: ["attendance", "today", "present", "absent", "status"] },
+  { id: "page-parent-events", label: "Upcoming Events", description: "School calendar events set by the principal", path: "/parent", icon: "Calendar", category: "page", roles: ["parent"], keywords: ["event", "calendar", "upcoming", "schedule"] },
 
   // Staff (non-teaching)
   { id: "page-staff-home", label: "Staff Dashboard", description: "Your overview as non-teaching staff", path: "/staff", icon: "Home2", category: "page", roles: ["staff"], keywords: ["home", "overview", "non-teaching"] },
+
+  // Bursar (finance)
+  { id: "page-bursar-overview", label: "Finance Overview", description: "School finances and revenue tracking", path: "/admin/finance", icon: "Card", category: "page", roles: ["bursar"], keywords: ["finance", "overview", "revenue", "money"] },
+  { id: "page-bursar-fee-structures", label: "Fee Structures", description: "Create and manage fee structures", path: "/admin/finance/fee-structures", icon: "Card", category: "page", roles: ["bursar"], keywords: ["fee", "structure", "tuition", "items"] },
+  { id: "page-bursar-invoices", label: "Invoices", description: "Generate and track student invoices", path: "/admin/finance/invoices", icon: "Document", category: "page", roles: ["bursar"], keywords: ["invoice", "bill", "charge", "fee"] },
+  { id: "page-bursar-payments", label: "Payments", description: "View recorded payments and receipts", path: "/admin/finance/payments", icon: "Card", category: "page", roles: ["bursar"], keywords: ["payment", "receipt", "paid", "record"] },
+  { id: "page-bursar-pending", label: "Pending Verification", description: "Confirm parent transfers and payments", path: "/admin/finance/pending", icon: "Clock", category: "page", roles: ["bursar"], keywords: ["pending", "verify", "confirm", "transfer", "review"] },
 
   // ──────────────────────── ACTIONS ────────────────────────
 
@@ -106,9 +116,9 @@ export const searchIndex: SearchItem[] = [
   { id: "action-setup-timetable-config", label: "Set Up Timetable Configuration", description: "Configure how class timetables are built", path: "/admin/timetable/configs", icon: "Setting2", category: "action", roles: ["principal"], keywords: ["configure", "batch", "setup", "build", "generate"] },
 
   // Settings actions (shared)
-  { id: "action-change-password", label: "Change Password", description: "Update your login password", path: "/admin/settings", icon: "Lock", category: "action", roles: ["principal", "teacher", "parent"], keywords: ["security", "login", "credentials"] },
-  { id: "action-update-profile", label: "Update Profile", description: "Edit your personal information", path: "/admin/settings", icon: "UserEdit", category: "action", roles: ["principal", "teacher", "parent"], keywords: ["name", "phone", "avatar", "picture"] },
-  { id: "action-update-school", label: "Update School Details", description: "Edit school name, type, and address", path: "/admin/settings", icon: "Setting2", category: "action", roles: ["principal"], keywords: ["name", "type", "address", "config"] },
+  { id: "action-change-password", label: "Change Password", description: "Update your login password", path: "/admin/settings", icon: "Lock", category: "action", roles: ["principal", "school_admin", "teacher", "parent", "staff", "bursar"], keywords: ["security", "login", "credentials"] },
+  { id: "action-update-profile", label: "Update Profile", description: "Edit your personal information", path: "/admin/settings", icon: "UserEdit", category: "action", roles: ["principal", "school_admin", "teacher", "parent", "staff", "bursar"], keywords: ["name", "phone", "avatar", "picture"] },
+  { id: "action-update-school", label: "Update School Details", description: "Edit school name, type, and address", path: "/admin/settings", icon: "Setting2", category: "action", roles: ["principal", "school_admin"], keywords: ["name", "type", "address", "config"] },
 
   // Teacher-specific actions
   { id: "action-mark-attendance", label: "Mark Attendance", description: "Record present/absent for your class", path: "/teach/attendance", icon: "ClipboardTick", category: "action", roles: ["teacher"], keywords: ["record", "present", "absent"] },
@@ -122,5 +132,16 @@ export const searchIndex: SearchItem[] = [
   { id: "action-view-teacher-timetable", label: "View My Timetable", description: "See your schedule of classes and periods", path: "/teach/timetable", icon: "CalendarTick", category: "action", roles: ["teacher"], keywords: ["schedule", "today", "period", "classes"] },
 
   // Sign out (all roles)
-  { id: "action-sign-out", label: "Sign Out", description: "Log out of the application", path: "/login", icon: "Logout", category: "action", roles: ["principal", "teacher", "parent", "staff"], keywords: ["logout", "exit", "leave"] },
+  { id: "action-sign-out", label: "Sign Out", description: "Log out of the application", path: "/login", icon: "Logout", category: "action", roles: ["principal", "school_admin", "teacher", "parent", "staff", "bursar"], keywords: ["logout", "exit", "leave"] },
+
+  // Bursar actions
+  { id: "action-generate-invoices", label: "Generate Invoices", description: "Generate invoices for a class or all students", path: "/admin/finance/invoices", icon: "DocumentUpload", category: "action", roles: ["principal", "school_admin", "bursar"], keywords: ["generate", "create", "invoice", "bulk"] },
+  { id: "action-record-payment", label: "Record Payment", description: "Record a payment received from a parent", path: "/admin/finance/payments", icon: "Card", category: "action", roles: ["principal", "school_admin", "bursar"], keywords: ["payment", "record", "received", "money", "cash"] },
+  { id: "action-verify-payment", label: "Verify Payment", description: "Confirm a parent's transfer or pending payment", path: "/admin/finance/pending", icon: "TickCircle", category: "action", roles: ["principal", "school_admin", "bursar"], keywords: ["verify", "confirm", "pending", "approve", "transfer"] },
+  { id: "action-send-reminder", label: "Send Payment Reminder", description: "Remind parents about outstanding fees", path: "/admin/finance/invoices", icon: "VolumeHigh", category: "action", roles: ["principal", "school_admin", "bursar"], keywords: ["reminder", "outstanding", "due", "notify"] },
+
+  // Parent actions
+  { id: "action-parent-pay-fees", label: "Pay School Fees", description: "Make a payment for your child's fees", path: "/parent/fees", icon: "Card", category: "action", roles: ["parent"], keywords: ["pay", "fee", "transfer", "card", "payment"] },
+  { id: "action-parent-attendance", label: "Check Today's Attendance", description: "See if your child was present today", path: "/parent/children", icon: "ClipboardTick", category: "action", roles: ["parent"], keywords: ["attendance", "today", "present", "absent", "check"] },
+  { id: "action-parent-events", label: "View School Events", description: "See upcoming events from the school calendar", path: "/parent", icon: "CalendarAdd", category: "action", roles: ["parent"], keywords: ["events", "calendar", "upcoming", "schedule"] },
 ];
