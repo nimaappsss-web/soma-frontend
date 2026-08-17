@@ -1,5 +1,5 @@
 import { Link } from "react-router";
-import { User, Book, Check, CloseCircle, Timer1 } from "iconsax-react";
+import { User, Book, Check, CloseCircle, Timer1, Cake } from "iconsax-react";
 
 import { useTeacherProfile, useAttendanceClassSummary } from "../../features/teacher/api";
 import { useStudents } from "../../features/students/api";
@@ -9,6 +9,8 @@ import { TodayScheduleCard } from "../../features/timetable/components/TodaySche
 import { greetingFor, nextClass } from "../../features/timetable/utils/todaySchedule";
 import { localDateKey } from "../../utils/date";
 import { givenName } from "../../utils/name";
+import { getCelebration } from "../../utils/celebrations";
+import { CelebrationDecor } from "../../components/ui/CelebrationDecor";
 import { TintedStatCard } from "../../features/dashboard/components/TintedStatCard";
 import { AttendanceCard } from "../../features/dashboard/components/AttendanceCard";
 import { DashboardCalendar } from "../../features/dashboard/components/DashboardCalendar";
@@ -40,6 +42,15 @@ export const TeacherDashboard = () => {
 
   const firstName = givenName(name);
   const loading = isLoading || studentsLoading;
+
+  const birthdayStudent = (students ?? []).find((s) => {
+    const celeb = getCelebration(s.dateOfBirth, "birthday");
+    return !!celeb;
+  });
+  const birthdayCeleb = birthdayStudent
+    ? getCelebration(birthdayStudent.dateOfBirth, "birthday")
+    : null;
+  const birthdayFirst = birthdayStudent?.name?.split(" ")[0] ?? "";
 
   const attendanceStats = classSummary
     ? {
@@ -88,17 +99,38 @@ export const TeacherDashboard = () => {
       )}
 
       {formClass && (
-        <div className="mt-4 flex flex-wrap items-center justify-between gap-3 rounded-xl bg-gray900 px-5 py-4">
-          <div>
-            <p className="text-xs font-medium text-white/50">Class Teacher</p>
-            <p className="mt-0.5 text-lg font-semibold text-white">{formClass}</p>
+        <div className="mt-4 rounded-xl bg-gray900 px-5 py-4">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div>
+              <p className="text-xs font-medium text-white/50">Class Teacher</p>
+              <p className="mt-0.5 text-lg font-semibold text-white">{formClass}</p>
+            </div>
+            <Link
+              to="/teach/students"
+              className="inline-flex items-center gap-1.5 rounded-full bg-white/10 px-3 py-1.5 text-xs font-medium text-white transition-colors hover:bg-white/20"
+            >
+              View class →
+            </Link>
           </div>
-          <Link
-            to="/teach/students"
-            className="inline-flex items-center gap-1.5 rounded-full bg-white/10 px-3 py-1.5 text-xs font-medium text-white transition-colors hover:bg-white/20"
-          >
-            View class →
-          </Link>
+
+          {birthdayStudent && birthdayCeleb && (
+            <div className="relative mt-4 overflow-hidden rounded-2xl bg-white">
+              <CelebrationDecor type="birthday" years={birthdayCeleb.years} />
+              <div className="relative flex flex-col items-center px-5 pt-12 pb-5 text-center">
+                <div className="flex h-12 w-12 items-center justify-center rounded-full bg-[#FFF0ED] shadow-sm ring-1 ring-amber-500/20">
+                  <Cake size={22} color="#D97706" variant="Bold" />
+                </div>
+                <p className="mt-3 text-base font-bold text-gray900">
+                  Today is {birthdayFirst}'s birthday! 🎂
+                </p>
+                <p className="mt-1 text-xs text-gray600">
+                  {birthdayCeleb.years >= 1
+                    ? `Turning ${birthdayCeleb.years}. Don't forget to celebrate ${birthdayStudent.gender === "F" ? "her" : "him"} today.`
+                    : `Don't forget to celebrate ${birthdayStudent.gender === "F" ? "her" : "him"} today.`}
+                </p>
+              </div>
+            </div>
+          )}
         </div>
       )}
 

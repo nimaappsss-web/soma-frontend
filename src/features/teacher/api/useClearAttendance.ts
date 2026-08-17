@@ -13,8 +13,7 @@ export const useClearAttendance = () => {
     mutationFn: (payload) => fetchData("/attendance/bulk", "DELETE", payload),
     onSuccess: async (data) => {
       toast.success(`Attendance cleared: ${data.count} record(s)`);
-      queryClient.invalidateQueries({ queryKey: attendanceKeys.lists() });
-      queryClient.invalidateQueries({ queryKey: attendanceKeys.details() });
+      queryClient.invalidateQueries({ queryKey: attendanceKeys.all });
     },
     onError: async (error) => {
       toast.error(transformError(error));

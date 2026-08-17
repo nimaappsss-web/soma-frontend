@@ -42,7 +42,7 @@ export const SyncIndicator = () => {
             disabled={isSyncing}
             className={`${
               allSynced
-                ? "w-9 h-9 items-center justify-center rounded-full bg-green-500 text-white"
+                ? "flex w-9 h-9 items-center justify-center rounded-full bg-green-500 text-white"
                 : "flex items-center gap-2 px-3 py-2 rounded-full text-xs font-medium text-white shadow-lg transition-all"
             } ${
               failedCount > 0

@@ -13,8 +13,7 @@ export const useMarkAttendance = () => {
     mutationFn: (payload) => fetchData("/attendance/bulk", "POST", payload),
     onSuccess: (data, _variables) => {
       toast.success(`Attendance saved: ${data.count} student(s)`);
-      queryClient.invalidateQueries({ queryKey: attendanceKeys.lists() });
-      queryClient.invalidateQueries({ queryKey: attendanceKeys.details() });
+      queryClient.invalidateQueries({ queryKey: attendanceKeys.all });
     },
     onError: (error) => {
       toast.error(transformError(error));

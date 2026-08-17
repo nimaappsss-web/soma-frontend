@@ -29,6 +29,7 @@ import { AdminTeacherDetails } from "./pages/admin/AdminTeacherDetails";
 import { AdminSubjects } from "./pages/admin/AdminSubjects";
 import { ParentDashboard } from "./pages/ParentDashboard";
 import { ParentChildren } from "./pages/ParentChildren";
+import { ParentExams } from "./pages/ParentExams";
 import { ParentAnnouncements } from "./pages/ParentAnnouncements";
 import { ParentFees } from "./pages/ParentFees";
 import { ParentSettings } from "./pages/ParentSettings";
@@ -195,6 +196,7 @@ function App() {
         <Route path="/parent" element={<ProtectedRoute><ParentLayout /></ProtectedRoute>}>
           <Route index element={<ParentDashboard />} />
           <Route path="children" element={<ParentChildren />} />
+          <Route path="exams" element={<ParentExams />} />
           <Route path="fees" element={<ParentFees />} />
           <Route path="announcements" element={<ParentAnnouncements />} />
           <Route path="settings" element={<ParentSettings />} />

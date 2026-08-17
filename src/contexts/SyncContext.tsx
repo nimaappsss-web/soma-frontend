@@ -13,6 +13,8 @@ import type { SyncQueueItem } from "../db/db";
 import { fetchData } from "../utils/fetchData";
 import { transformError } from "../utils/transformError";
 import { useAuth } from "./AuthContext";
+import { useQueryClient } from "@tanstack/react-query";
+import { attendanceKeys } from "../features/teacher/utils/query-keys";
 
 interface SyncContextType {
   pendingCount: number;
@@ -51,6 +53,7 @@ const nextBackoff = (attempt: number): number => {
 
 export const SyncProvider = ({ children }: { children: ReactNode }) => {
   const { user } = useAuth();
+  const queryClient = useQueryClient();
   const [pendingCount, setPendingCount] = useState(0);
   const [failedCount, setFailedCount] = useState(0);
   const [failedItems, setFailedItems] = useState<SyncQueueItem[]>([]);
@@ -132,6 +135,10 @@ export const SyncProvider = ({ children }: { children: ReactNode }) => {
 
           await db.syncQueue.delete(item.id!);
           setPendingCount((c) => Math.max(0, c - 1));
+
+          if (item.table === "attendance") {
+            queryClient.invalidateQueries({ queryKey: attendanceKeys.all });
+          }
         } catch (error) {
           // A DELETE that 404s is already done on the server — treat as success.
           const status = (error as { response?: { status?: number } })?.response?.status;

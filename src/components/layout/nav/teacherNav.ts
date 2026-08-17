@@ -4,7 +4,7 @@ import {
   ClipboardTick,
   Profile2User,
   Book1,
-  Speaker,
+  VolumeHigh,
   Setting,
   StatusUp,
   CalendarTick,
@@ -28,7 +28,7 @@ export const teacherNavItems: NavItem[] = [
   },
   { label: "Lesson Notes", to: "/teach/lesson-notes", Icon: Book1 },
   { label: "Timetable", to: "/teach/timetable", Icon: CalendarTick },
-  { label: "Announcements", to: "/teach/announcements", Icon: Speaker },
+  { label: "Announcements", to: "/teach/announcements", Icon: VolumeHigh },
 ];
 
 export const teacherSettingsItem: NavItem = { label: "Settings", to: "/teach/settings", Icon: Setting };
