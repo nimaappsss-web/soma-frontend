@@ -1,5 +1,5 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import toast from "react-hot-toast";
+import { toast } from "@/utils/toast";
 
 import { transformError } from "../../../utils/transformError";
 import { useAuth } from "../../../contexts/AuthContext";

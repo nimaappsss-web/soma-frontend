@@ -1,4 +1,5 @@
 import { useMemo } from "react";
+import { Link } from "react-router";
 import { useLiveQuery } from "dexie-react-hooks";
 
 import { useAuth } from "../contexts/AuthContext";
@@ -38,10 +39,10 @@ export const ParentDashboard = () => {
 
   return (
     <div className="w-full px-6 py-8">
-      <div className="mb-6">
+      <div className="mb-5">
         <h2 className="text-xl md:text-2xl font-bold text-gray900">Parent Portal</h2>
         <p className="text-sm text-gray500 mt-1">
-          {parent?.email} &middot; {parent?.phone ?? "No phone"}
+          {parent?.email}
         </p>
       </div>
 
@@ -101,6 +102,14 @@ export const ParentDashboard = () => {
                     </span>
                   </div>
                 )}
+
+                <Link
+                  to="/parent/fees"
+                  className="flex items-center justify-between px-6 py-4 border-t border-gray100 bg-pureWhite text-sm font-medium text-gray900 hover:bg-gray50 transition-colors"
+                >
+                  School fees
+                  <span className="text-gray400">View &rarr;</span>
+                </Link>
               </div>
             );
           })}

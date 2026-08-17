@@ -1,10 +1,10 @@
 import { axiosInstance } from "../lib/axios";
 import { METHOD } from "./constants";
 
-export const fetchData = async <T>(
+export const fetchData = async <T, P = T>(
   url: string,
   method: "POST" | "PUT" | "PATCH" | "GET" | "DELETE" = "GET",
-  payload?: T,
+  payload?: P,
   accept: string = "application/json",
   contentType: string = "application/json"
 ) => {

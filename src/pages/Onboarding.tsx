@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useNavigate, useSearchParams } from "react-router";
 import { GoogleLogin } from "@react-oauth/google";
-import toast from "react-hot-toast";
+import { toast } from "@/utils/toast";
 import { Step1Email } from "../features/auth/components/Step1Email";
 import { Step2OTP } from "../features/auth/components/Step2OTP";
 import { Step3Profile } from "../features/auth/components/Step3Profile";

@@ -1,5 +1,5 @@
 "use client";
-import toast from "react-hot-toast";
+import { toast } from "@/utils/toast";
 import { useState } from "react";
 
 export const useClipboard = ({ timeout = 2000 } = {}) => {

@@ -28,7 +28,12 @@ import { AdminTeachers } from "./pages/admin/AdminTeachers";
 import { AdminTeacherDetails } from "./pages/admin/AdminTeacherDetails";
 import { AdminSubjects } from "./pages/admin/AdminSubjects";
 import { ParentDashboard } from "./pages/ParentDashboard";
+import { ParentChildren } from "./pages/ParentChildren";
+import { ParentAnnouncements } from "./pages/ParentAnnouncements";
+import { ParentFees } from "./pages/ParentFees";
+import { ParentSettings } from "./pages/ParentSettings";
 import { ParentSetup } from "./pages/ParentSetup";
+import { AcceptParentInvite } from "./pages/AcceptParentInvite";
 import { GuestRoute } from "./features/auth/components/GuestRoute";
 import { AdminClasses } from "./pages/admin/AdminClasses";
 import { ClassDetails } from "./pages/admin/ClassDetails";
@@ -38,6 +43,7 @@ import { VerifyTeacher } from "./pages/VerifyTeacher";
 import { AuthProvider } from "./contexts/AuthContext";
 import { SyncProvider } from "./contexts/SyncContext";
 import { SyncIndicator } from "./components/SyncIndicator";
+import { Toaster } from "./components/ui/Toaster";
 import { InstallPWA } from "./components/InstallPWA";
 import { InitialSyncProvider } from "./sync/InitialSyncProvider";
 import { AdminSettings } from "./pages/AdminSettings";
@@ -50,7 +56,9 @@ import { ResetPassword } from "./pages/ResetPassword";
 import { Settings } from "./pages/Settings";
 import { DashboardHome } from "./features/dashboard";
 import { StaffManagement } from "./features/staff/components/StaffManagement";
-import { FinanceManagement } from "./features/finance/components/FinanceManagement";
+import { FinanceLayout, FeeStructuresTab, InvoicesTab, PaymentsTab, PendingVerificationTab } from "./features/finance/components/FinanceManagement";
+import { FinanceOverview } from "./features/finance/components/FinanceOverview";
+import { FeeStructureDetails } from "./features/finance/components/FeeStructureDetails";
 import { AnnouncementsManagement } from "./features/announcements/components/AnnouncementsManagement";
 import { MomentsManagement } from "./features/moments/components/MomentsManagement";
 import { TimetableManagement } from "./features/timetable/components/TimetableManagement";
@@ -129,7 +137,14 @@ function App() {
           <Route path="teachers/:id" element={<AdminTeacherDetails />} />
           <Route path="staff" element={<StaffManagement />} />
           <Route path="parents" element={<AdminParents />} />
-          <Route path="finance" element={<FinanceManagement />} />
+          <Route path="finance" element={<FinanceLayout />}>
+            <Route index element={<FinanceOverview />} />
+            <Route path="fee-structures" element={<FeeStructuresTab />} />
+            <Route path="invoices" element={<InvoicesTab />} />
+            <Route path="payments" element={<PaymentsTab />} />
+            <Route path="pending" element={<PendingVerificationTab />} />
+          </Route>
+          <Route path="finance/fee-structures/:groupId" element={<FeeStructureDetails />} />
           <Route path="announcements" element={<AnnouncementsManagement />} />
           <Route path="moments" element={<MomentsManagement />} />
           <Route path="timetable" element={<TimetableLayout />}>
@@ -179,9 +194,10 @@ function App() {
         </Route>
         <Route path="/parent" element={<ProtectedRoute><ParentLayout /></ProtectedRoute>}>
           <Route index element={<ParentDashboard />} />
-          <Route path="children" element={<ParentDashboard />} />
-          <Route path="announcements" element={<ParentDashboard />} />
-          <Route path="settings" element={<ParentDashboard />} />
+          <Route path="children" element={<ParentChildren />} />
+          <Route path="fees" element={<ParentFees />} />
+          <Route path="announcements" element={<ParentAnnouncements />} />
+          <Route path="settings" element={<ParentSettings />} />
         </Route>
         <Route
           path="/staff"
@@ -204,6 +220,7 @@ function App() {
         <Route path="/verify-teacher" element={<VerifyTeacher />} />
         <Route path="/register" element={<VerifyTeacher />} />
         <Route path="/parent/setup" element={<ParentSetup />} />
+        <Route path="/accept-parent-invite" element={<AcceptParentInvite />} />
         <Route path="/settings" element={<Navigate to="/settings/account" replace />} />
         <Route
           path="/settings/:tab"
@@ -216,6 +233,7 @@ function App() {
         <Route path="*" element={<Navigate to="/login" replace />} />
       </Routes>
       <SyncIndicator />
+      <Toaster />
       <InstallPWA />
       </InitialSyncProvider>
       </SyncProvider>

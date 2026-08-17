@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useNavigate, useParams } from "react-router";
 import { ArrowLeft, CalendarTick, Edit2 } from "iconsax-react";
-import toast from "react-hot-toast";
+import { toast } from "@/utils/toast";
 
 import { Button } from "../../../components/ui/button";
 import { SelectDropdown, type SelectOption } from "../../../components/ui/select-dropdown";

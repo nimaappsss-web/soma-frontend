@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import toast from "react-hot-toast";
+import { toast } from "@/utils/toast";
 import { liveQuery } from "dexie";
 
 import { fetchData } from "../../../utils/fetchData";

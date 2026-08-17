@@ -22,12 +22,11 @@ export const useParentProfile = () => {
   useQuery({
     queryKey: ["parentProfile", userId],
     queryFn: async () => {
-      const res = await fetchData<Parent[]>("/parents", "GET");
-      if (res.length > 0) {
-        await db.parents.bulkPut(
-          (res as Array<Record<string, unknown>>).map((p) => ({ ...p, userId }) as any),
-        );
-      }
+      const res = await fetchData<Parent>("/parents/me", "GET");
+      await db.parents.put({
+        ...(res as unknown as Record<string, unknown>),
+        userId,
+      } as ParentCache);
       return res;
     },
     enabled: !!userId,
@@ -43,9 +42,12 @@ export const useParentProfile = () => {
   };
 };
 
-export const useChildrenWithDetails = (students: Parent["students"] = []) => {
+const EMPTY_STUDENTS: Parent["students"] = [];
+
+export const useChildrenWithDetails = (students: Parent["students"] = EMPTY_STUDENTS) => {
   const { user } = useAuth();
   const userId = user?.id ?? "";
+  const studentsRef = students ?? EMPTY_STUDENTS;
   const [children, setChildren] = useState<
     Array<{
       id: string;
@@ -58,33 +60,37 @@ export const useChildrenWithDetails = (students: Parent["students"] = []) => {
   >([]);
 
   useEffect(() => {
-    if (!students.length || !userId) {
+    if (!studentsRef.length || !userId) {
       setChildren([]);
       return;
     }
 
     const load = async () => {
       const result = await Promise.all(
-        students.map(async (s) => {
-          const student = await db.students.where({ id: s.id, userId }).first();
-          let className: string | undefined;
-          let teacherName: string | undefined;
+        studentsRef.map(async (s) => {
+          let className = s.className;
+          let teacherName = s.teacherName;
 
-          if (student?.classId) {
-            const cls = await db.classes.where({ id: student.classId, userId }).first();
-            className = cls?.name;
-            const teachers = await db.teachers
-              .where("userId").equals(userId)
-              .filter((t) => t.formClassId === student.classId)
-              .toArray();
-            teacherName = teachers.map((t) => t.name).join(", ") || undefined;
+          if (!className || !teacherName) {
+            const student = await db.students.get(s.id);
+            const classId = student?.classId ?? s.classId;
+            if (classId) {
+              if (!className) className = (await db.classes.get(classId))?.name;
+              if (!teacherName) {
+                const teachers = await db.teachers
+                  .where("userId").equals(userId)
+                  .filter((t) => t.formClassId === classId)
+                  .toArray();
+                teacherName = teachers.map((t) => t.name).join(", ") || undefined;
+              }
+            }
           }
 
           return {
             id: s.id,
             name: s.name,
             admissionNo: s.admissionNo,
-            classId: student?.classId,
+            classId: s.classId,
             className,
             teacherName,
           };
@@ -94,7 +100,7 @@ export const useChildrenWithDetails = (students: Parent["students"] = []) => {
     };
 
     load();
-  }, [students, userId]);
+  }, [studentsRef, userId]);
 
   return children;
 };

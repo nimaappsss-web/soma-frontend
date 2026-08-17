@@ -69,7 +69,7 @@ export const CalendarHolidays = () => {
 
   return (
     <div className="max-w-2xl">
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex items-center justify-between mb-5">
         <Button onClick={() => setShowForm(!showForm)} variant="outline" size="sm">
           {showForm ? "Cancel" : "Add Holiday"}
         </Button>

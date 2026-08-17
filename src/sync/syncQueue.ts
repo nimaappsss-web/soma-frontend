@@ -22,6 +22,9 @@ export const addToQueue = async (item: AddToQueueInput) => {
       status: "pending",
       retryCount: 0,
       createdAt: Date.now(),
+      lastError: undefined,
+      nextAttemptAt: undefined,
+      lastAttemptAt: undefined,
     });
   } else {
     await db.syncQueue.add({

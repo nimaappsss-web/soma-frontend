@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from "react";
-import toast from "react-hot-toast";
+import { toast } from "@/utils/toast";
 import { useSchoolSettings } from "../api";
 import { useUpdateSchool } from "../../../features/principal/api";
 import { uploadFile } from "../../../utils/upload";
@@ -7,7 +7,7 @@ import { transformError } from "../../../utils/transformError";
 import { ArrayInput } from "./ArrayInput";
 import { Input } from "../../../components/ui/input";
 import { Textarea } from "../../../components/ui/textarea";
-import type { SchoolSetting } from "../types";
+import type { SchoolSetting, ManualBankDetails } from "../types";
 export const SchoolSettingsContent = () => {
   const { data: settings, isLoading } = useSchoolSettings();
   const updateSchool = useUpdateSchool();
@@ -49,7 +49,13 @@ export const SchoolSettingsContent = () => {
           payload.logo = logoUrl;
         } else if (s.editable) {
           const current = values[s.key];
-          if (current !== s.value) {
+          if (s.key === "manualBankDetails") {
+            const next = (current as { bankName?: string; accountName?: string; accountNumber?: string }) ?? {};
+            const prev = (s.value as { bankName?: string; accountName?: string; accountNumber?: string }) ?? {};
+            if (JSON.stringify(next) !== JSON.stringify(prev)) {
+              payload[s.key] = next;
+            }
+          } else if (current !== s.value) {
             payload[s.key] = current;
           }
         }
@@ -224,6 +230,13 @@ const SettingField = ({
           </div>
         </div>
       )}
+      {setting.type === "bank" && (
+        <BankDetailsField
+          value={(value as ManualBankDetails) ?? {}}
+          disabled={disabled}
+          onChange={(next) => onChange(next)}
+        />
+      )}
       {setting.type === "array" && (
         <ArrayInput
           value={(Array.isArray(value) ? value : []) as string[]}
@@ -234,6 +247,61 @@ const SettingField = ({
       {!setting.editable && setting.editableReason && (
         <p className="text-xs text-amber-600 mt-1">{setting.editableReason}</p>
       )}
+    </div>
+  );
+};
+
+const BankDetailsField = ({
+  value,
+  disabled,
+  onChange,
+}: {
+  value: ManualBankDetails;
+  disabled: boolean;
+  onChange: (next: ManualBankDetails) => void;
+}) => {
+  const set = (key: keyof ManualBankDetails, val: string) =>
+    onChange({ ...value, [key]: val });
+  const inputClass = "disabled:bg-gray-50 disabled:text-gray-400";
+  return (
+    <div className="space-y-3">
+      <div>
+        <label className="block text-xs text-gray-400 mb-1">Bank name</label>
+        <Input
+          type="text"
+          placeholder="e.g. First Bank"
+          value={value.bankName ?? ""}
+          onChange={(e) => set("bankName", e.target.value)}
+          disabled={disabled}
+          className={inputClass}
+        />
+      </div>
+      <div>
+        <label className="block text-xs text-gray-400 mb-1">Account name</label>
+        <Input
+          type="text"
+          placeholder="e.g. Jerimiah College"
+          value={value.accountName ?? ""}
+          onChange={(e) => set("accountName", e.target.value)}
+          disabled={disabled}
+          className={inputClass}
+        />
+      </div>
+      <div>
+        <label className="block text-xs text-gray-400 mb-1">Account number</label>
+        <Input
+          type="text"
+          inputMode="numeric"
+          placeholder="e.g. 0123456789"
+          value={value.accountNumber ?? ""}
+          onChange={(e) => set("accountNumber", e.target.value)}
+          disabled={disabled}
+          className={inputClass}
+        />
+      </div>
+      <p className="text-xs text-gray-400">
+        Parents see these details when they choose to pay by bank transfer.
+      </p>
     </div>
   );
 };

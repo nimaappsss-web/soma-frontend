@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { ArrowLeft, InfoCircle } from "iconsax-react";
-import toast from "react-hot-toast";
+import { toast } from "@/utils/toast";
 
 import { cn } from "../../../../lib/utils";
 import { Button } from "../../../../components/ui/button";

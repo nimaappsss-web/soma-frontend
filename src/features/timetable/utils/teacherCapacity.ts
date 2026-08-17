@@ -111,3 +111,5 @@ export const computeTeacherCapacity = (input: {
 
   return { rows, over: rows.filter((r) => r.pending > r.available), weeklySlots };
 };
+
+

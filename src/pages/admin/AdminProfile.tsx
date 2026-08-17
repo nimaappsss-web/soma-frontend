@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import { Link } from "react-router";
-import toast from "react-hot-toast";
+import { toast } from "@/utils/toast";
 import { useQuery } from "@tanstack/react-query";
 import { ArrowLeft2 } from "iconsax-react";
 import { useAuth } from "../../contexts/AuthContext";
@@ -97,7 +97,7 @@ export const AdminProfile = () => {
         </div>
       </header>
       <main className="max-w-2xl mx-auto px-4 md:px-6 py-6 md:py-8">
-        <div className="flex items-center justify-between mb-6">
+        <div className="flex items-center justify-between mb-5">
           <div>
             <Link
               to="/admin"

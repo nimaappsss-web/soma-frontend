@@ -35,7 +35,7 @@ export const searchIndex: SearchItem[] = [
   { id: "page-calendar-events", label: "Calendar Events", description: "View and create school events", path: "/admin/calendar/events", icon: "CalendarAdd", category: "page", roles: ["principal"], keywords: ["event", "activity", "function"] },
   { id: "page-calendar-holidays", label: "Holidays", description: "Manage school holidays", path: "/admin/calendar/holidays", icon: "Calendar", category: "page", roles: ["principal"], keywords: ["holiday", "break", "vacation"] },
   { id: "page-calendar-terms", label: "Academic Terms", description: "Manage terms and sessions", path: "/admin/calendar/terms", icon: "CalendarTick", category: "page", roles: ["principal"], keywords: ["term", "session", "semester"] },
-  { id: "page-finance", label: "Finance", description: "School finances and tuition tracking", path: "/admin/finance", icon: "Card", category: "page", roles: ["principal"], keywords: ["fee", "tuition", "payment", "money"] },
+  { id: "page-finance", label: "Finance", description: "School finances and tuition tracking", path: "/admin/finance", icon: "Card", category: "page", roles: ["principal", "bursar"], keywords: ["fee", "tuition", "payment", "money"] },
   { id: "page-moments", label: "Moments", description: "Birthdays and celebrations", path: "/admin/moments", icon: "MagicStar", category: "page", roles: ["principal"], keywords: ["birthday", "celebration", "anniversary"] },
   { id: "page-reports", label: "Reports", description: "School reports and analytics", path: "/admin/reports", icon: "Chart", category: "page", roles: ["principal"], keywords: ["analytics", "data", "insight"] },
   { id: "page-announcements", label: "Announcements", description: "Create and manage announcements", path: "/admin/announcements", icon: "VolumeHigh", category: "page", roles: ["principal"], keywords: ["notice", "broadcast", "news"] },
@@ -45,6 +45,10 @@ export const searchIndex: SearchItem[] = [
   { id: "page-attendance-classes", label: "Attendance by Class", description: "View attendance grouped by class", path: "/admin/attendance/classes", icon: "ClipboardTick", category: "page", roles: ["principal"], keywords: ["class", "per class", "roll", "record"] },
   { id: "page-attendance-absentees", label: "Absentees", description: "See students marked absent", path: "/admin/attendance/absentees", icon: "ClipboardTick", category: "page", roles: ["principal"], keywords: ["absent", "missing", "truant", "away"] },
   { id: "page-exam-configure", label: "Exam Configuration", description: "Configure assessment schemes and scoring", path: "/admin/examinations/configure", icon: "Setting2", category: "page", roles: ["principal"], keywords: ["scheme", "setup", "config", "assessment"] },
+  { id: "page-timetable-configs", label: "Timetable Configurations", description: "Set up batch timetable configurations", path: "/admin/timetable/configs", icon: "Setting2", category: "page", roles: ["principal"], keywords: ["config", "batch", "setup", "schedule", "build"] },
+  { id: "page-student-details", label: "Student Details", description: "View an individual student's full record", path: "/admin/students", icon: "User", category: "page", roles: ["principal", "teacher"], keywords: ["individual", "profile", "record", "pupil"] },
+  { id: "page-teacher-details", label: "Teacher Details", description: "View an individual teacher's profile", path: "/admin/teachers", icon: "Briefcase", category: "page", roles: ["principal"], keywords: ["individual", "profile", "staff record", "faculty"] },
+  { id: "page-class-details", label: "Class Details", description: "View a class roster and its information", path: "/admin/classes", icon: "Teacher", category: "page", roles: ["principal"], keywords: ["roster", "arm", "students in class", "section"] },
 
   // Teacher
   { id: "page-teach-home", label: "Teacher Dashboard", description: "Your class overview and assignments", path: "/teach", icon: "Home2", category: "page", roles: ["teacher"], keywords: ["home", "overview"] },
@@ -57,12 +61,19 @@ export const searchIndex: SearchItem[] = [
   { id: "page-teach-active", label: "Active Assessments", description: "View assessments currently in progress", path: "/teach/ca-and-exams/active", icon: "Clock", category: "page", roles: ["teacher"], keywords: ["active", "ongoing", "test", "live"] },
   { id: "page-teach-my-class", label: "My Class Results", description: "View results for your form class", path: "/teach/ca-and-exams/my-class", icon: "Chart", category: "page", roles: ["teacher"], keywords: ["results", "report", "scores"] },
   { id: "page-continuous-assessment", label: "Continuous Assessment", description: "Record student CA scores", path: "/continuous-assessment", icon: "StatusUp", category: "page", roles: ["teacher", "principal"], keywords: ["ca", "assessment", "score", "record"] },
+  { id: "page-teach-subjects", label: "My Subjects", description: "View the subjects assigned to you", path: "/teach/subjects", icon: "Book1", category: "page", roles: ["teacher"], keywords: ["subject", "course", "assigned", "classes"] },
+  { id: "page-teach-timetable", label: "My Timetable", description: "View your personal class timetable", path: "/teach/timetable", icon: "CalendarTick", category: "page", roles: ["teacher"], keywords: ["schedule", "period", "lesson", "classes", "today"] },
+  { id: "page-teach-assessments", label: "Assessments", description: "Overview of CA and exam assessments", path: "/teach/ca-and-exams", icon: "StatusUp", category: "page", roles: ["teacher"], keywords: ["ca", "exam", "assessment", "overview", "test"] },
+  { id: "page-teach-report", label: "Student Report", description: "View a student's full term report", path: "/teach/ca-and-exams/my-class", icon: "Document", category: "page", roles: ["teacher"], keywords: ["report card", "performance", "term results", "grades"] },
 
   // Parent
   { id: "page-parent-home", label: "Parent Dashboard", description: "Your children's school overview", path: "/parent", icon: "Home2", category: "page", roles: ["parent"], keywords: ["home", "overview"] },
   { id: "page-parent-children", label: "My Children", description: "View your children's records", path: "/parent/children", icon: "Teacher", category: "page", roles: ["parent"], keywords: ["child", "kid", "son", "daughter"] },
   { id: "page-parent-announcements", label: "Announcements", description: "Read school announcements", path: "/parent/announcements", icon: "VolumeHigh", category: "page", roles: ["parent"], keywords: ["notice", "news"] },
   { id: "page-parent-settings", label: "Parent Settings", description: "Manage your account", path: "/parent/settings", icon: "Setting", category: "page", roles: ["parent"], keywords: ["account", "config"] },
+
+  // Staff (non-teaching)
+  { id: "page-staff-home", label: "Staff Dashboard", description: "Your overview as non-teaching staff", path: "/staff", icon: "Home2", category: "page", roles: ["staff"], keywords: ["home", "overview", "non-teaching"] },
 
   // ──────────────────────── ACTIONS ────────────────────────
 
@@ -92,6 +103,7 @@ export const searchIndex: SearchItem[] = [
   { id: "action-add-holiday", label: "Add Holiday", description: "Mark a non-school day", path: "/admin/calendar/holidays", icon: "CalendarAdd", category: "action", roles: ["principal"], keywords: ["create", "new", "break", "vacation"] },
   { id: "action-add-term", label: "Add Academic Term", description: "Define a new school term", path: "/admin/calendar/terms", icon: "CalendarAdd", category: "action", roles: ["principal"], keywords: ["create", "new", "session", "semester"] },
   { id: "action-set-active-term", label: "Set Active Term", description: "Mark a term as currently active", path: "/admin/calendar/terms", icon: "TickCircle", category: "action", roles: ["principal"], keywords: ["activate", "current", "switch"] },
+  { id: "action-setup-timetable-config", label: "Set Up Timetable Configuration", description: "Configure how class timetables are built", path: "/admin/timetable/configs", icon: "Setting2", category: "action", roles: ["principal"], keywords: ["configure", "batch", "setup", "build", "generate"] },
 
   // Settings actions (shared)
   { id: "action-change-password", label: "Change Password", description: "Update your login password", path: "/admin/settings", icon: "Lock", category: "action", roles: ["principal", "teacher", "parent"], keywords: ["security", "login", "credentials"] },
@@ -106,6 +118,8 @@ export const searchIndex: SearchItem[] = [
   { id: "action-view-form-class", label: "View My Form Class", description: "See students in your assigned form class", path: "/teach", icon: "ProfileTick", category: "action", roles: ["teacher"], keywords: ["class", "students", "assigned"] },
   { id: "action-record-scores", label: "Record CA & Exam Scores", description: "Enter scores for your class assessments", path: "/teach/ca-and-exams/mark-scores", icon: "ClipboardTick", category: "action", roles: ["teacher"], keywords: ["score", "grade", "marks", "record"] },
   { id: "action-view-class-results", label: "View My Class Results", description: "Open results for your form class", path: "/teach/ca-and-exams/my-class", icon: "Chart", category: "action", roles: ["teacher"], keywords: ["results", "report", "grade", "scores"] },
+  { id: "action-view-student-report", label: "View Student Report", description: "Open a student's term report card", path: "/teach/ca-and-exams/my-class", icon: "Document", category: "action", roles: ["teacher"], keywords: ["report", "performance", "result card", "term"] },
+  { id: "action-view-teacher-timetable", label: "View My Timetable", description: "See your schedule of classes and periods", path: "/teach/timetable", icon: "CalendarTick", category: "action", roles: ["teacher"], keywords: ["schedule", "today", "period", "classes"] },
 
   // Sign out (all roles)
   { id: "action-sign-out", label: "Sign Out", description: "Log out of the application", path: "/login", icon: "Logout", category: "action", roles: ["principal", "teacher", "parent", "staff"], keywords: ["logout", "exit", "leave"] },

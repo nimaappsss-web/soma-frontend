@@ -118,7 +118,7 @@ export const CalendarEvents = () => {
 
   return (
     <div>
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex items-center justify-between mb-5">
         <Button onClick={() => setShowForm(!showForm)} variant="outline" size="sm">
           {showForm ? "Cancel" : "Add Event"}
         </Button>

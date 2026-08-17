@@ -140,6 +140,9 @@ export interface SyncQueueItem {
   status: "pending" | "syncing" | "synced" | "failed";
   createdAt: number;
   retryCount: number;
+  lastError?: string;
+  nextAttemptAt?: number;
+  lastAttemptAt?: number;
 }
 
 export interface LessonNoteCache {
@@ -171,6 +174,20 @@ export interface AnnouncementCache {
   audience: string;
   priority: string;
   createdBy: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface NotificationCache {
+  id: string;
+  userId: string;
+  schoolId: string;
+  title: string;
+  message: string;
+  type: string;
+  route: string | null;
+  data: Record<string, unknown> | null;
+  read: boolean;
   createdAt: string;
   updatedAt: string;
 }
@@ -408,6 +425,47 @@ export interface ClassSubjectsCache {
   updatedAt: number;
 }
 
+export interface FeeStructureItem {
+  id: string;
+  label: string;
+  amount: number;
+}
+
+export interface FeeStructureCache {
+  id: string;
+  userId: string;
+  classIdsJson: string;
+  classNamesJson: string;
+  term: string;
+  session: string;
+  name: string;
+  amount: number;
+  itemsJson: string;
+  isCompulsory: boolean;
+  createdAt: number;
+  updatedAt?: number;
+}
+
+export interface InvoiceCache {
+  id: string;
+  userId: string;
+  studentId: string;
+  studentName?: string;
+  admissionNo?: string;
+  feeStructureId: string;
+  feeName?: string;
+  groupId?: string;
+  amount: number;
+  itemsJson: string;
+  issuedByName?: string | null;
+  status: string;
+  term?: string;
+  session?: string;
+  dueDate: string | null;
+  createdAt: string;
+  updatedAt?: number;
+}
+
 export const db = new Dexie("somaDB") as Dexie & {
   students: EntityTable<Student, "id">;
   attendance: EntityTable<AttendanceRecord, "id">;
@@ -427,6 +485,7 @@ export const db = new Dexie("somaDB") as Dexie & {
   holidays: EntityTable<HolidayCache, "id">;
   academicTerms: EntityTable<AcademicTermCache, "id">;
   announcements: EntityTable<AnnouncementCache, "id">;
+  notifications: EntityTable<NotificationCache, "id">;
   attendanceSnapshots: EntityTable<AttendanceSnapshot, "key">;
   attendanceNotes: EntityTable<AttendanceNote, "id">;
   examScores: EntityTable<ExamScoreCache, "id">;
@@ -446,6 +505,8 @@ export const db = new Dexie("somaDB") as Dexie & {
   timetableBuilds: EntityTable<TimetableBuildCache, "id">;
   timetableConfigs: EntityTable<TimetableConfigCache, "id">;
   classSubjects: EntityTable<ClassSubjectsCache, "id">;
+  feeStructures: EntityTable<FeeStructureCache, "id">;
+  invoices: EntityTable<InvoiceCache, "id">;
 };
 
 db.version(11).stores({
@@ -1002,6 +1063,68 @@ db.version(32).stores({
   timetableBuilds: "id, userId, classId",
   timetableConfigs: "id, userId, configType",
   classSubjects: "id, userId, schoolId",
+});
+
+db.version(33).stores({
+  notifications: "id, userId, read, createdAt",
+});
+
+db.version(34).stores({
+  students: "id, name, classId, status, schoolId, userId, [userId+classId]",
+  attendance: "id, studentId, className, schoolId, date, syncStatus, userId, [date+className], [userId+date+className]",
+  caScores: "id, studentId, className, schoolId, term, session, syncStatus, userId",
+  subjects: "id, schoolId, userId",
+  classes: "id, level, schoolId, userId, [userId+level]",
+  teacherFormClass: "id",
+  teacherAssignments: "id, userId",
+  teachers: "id, userId",
+  pendingInvites: "id, userId",
+  teacherDetails: "id, userId",
+  parents: "id, status, schoolId, userId",
+  syncQueue: "++id, status, createdAt, table, userId",
+  lessonNotes: "id, userId",
+  schoolSettings: "id, userId",
+  calendarEvents: "id, userId",
+  holidays: "id, userId",
+  academicTerms: "id, userId",
+  announcements: "id, userId",
+  attendanceSnapshots: "key",
+  attendanceNotes: "id, userId, [userId+date+className]",
+  examScores: "id, userId, examKey, studentId, syncStatus",
+  examScheme: "id, userId",
+  exams: "id, userId, term, classId, subjectId",
+  examRosters: "id, userId, examId",
+  examActiveSummaries: "id, userId, classId, examKey",
+  examTermResults: "id, userId, classId, term",
+  examStudentReports: "id, userId, studentId, term",
+  reportSettings: "id, userId",
+  studentTimeline: "id, userId, studentId",
+  studentAcademics: "id, userId, studentId, term, session",
+  studentMonthlyAttendance: "id, userId, studentId, month, year",
+  studentStats: "id, userId",
+  timetables: "id, userId, classId",
+  timetableEntries: "id, userId, timetableId, classId",
+  timetableBuilds: "id, userId, classId",
+  timetableConfigs: "id, userId, configType",
+  classSubjects: "id, userId, schoolId",
+  feeStructures: "id, userId, term",
+  invoices: "id, userId, studentId, term, status",
+});
+
+db.version(35).stores({});
+
+// v34 -> v35: FeeStructure now stores one row per structure with a classIds
+// array (was one row per class sharing a groupId). Drop stale per-class rows;
+// the network fetch will repopulate from the consolidated server data.
+db.version(35).upgrade((tx) =>
+  tx.table("feeStructures").clear().then(() => undefined),
+);
+
+// v36: syncQueue gains lastError/nextAttemptAt/lastAttemptAt for
+// failure classification + exponential backoff. nextAttemptAt is indexed
+// so the flush loop can cheaply find only items that are due for a retry.
+db.version(36).stores({
+  syncQueue: "++id, status, createdAt, table, userId, nextAttemptAt",
 });
 
 

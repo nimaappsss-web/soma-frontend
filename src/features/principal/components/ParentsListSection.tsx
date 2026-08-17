@@ -1,30 +1,21 @@
 import { useState } from "react";
-import toast from "react-hot-toast";
 import { Add, People } from "iconsax-react";
 import { Avatar } from "../../../components/ui/Avatar";
 import { EmptyState } from "../../../components/ui/EmptyState";
 import { useParents } from "../api/useParents";
 import { useResendParentInvite } from "../api/useResendParentInvite";
-import { useGenerateInviteLink } from "../api/useGenerateInviteLink";
+import { InviteParentModal } from "./InviteParentModal";
 interface ParentsListSectionProps {
   limit?: number;
 }
 export const ParentsListSection = ({ limit = 10 }: ParentsListSectionProps) => {
   const [page, setPage] = useState(1);
+  const [inviteOpen, setInviteOpen] = useState(false);
   const { data, isLoading, error } = useParents(page, limit);
   const resendMutation = useResendParentInvite();
-  const generateMutation = useGenerateInviteLink();
 
   const handleInviteParent = () => {
-    generateMutation.mutate(
-      { role: "PARENT" },
-      {
-        onSuccess: async (res) => {
-          await navigator.clipboard.writeText(res.link);
-          toast.success("Parent invite link copied!");
-        },
-      },
-    );
+    setInviteOpen(true);
   };
   if (isLoading) {
     return (
@@ -43,17 +34,20 @@ export const ParentsListSection = ({ limit = 10 }: ParentsListSectionProps) => {
     );
   }
   const allParents = data?.parents ?? [];
-  // Deduplicate: if same email has both "active" and "pending", prefer the "pending" entry
-  const byEmail = new Map<string, typeof allParents[0]>();
-  const pendingEmails = new Set(allParents.filter((p) => p.status === "pending").map((p) => p.email));
+  // Deduplicate by contact: if same email/phone has both "active" and "pending",
+  // prefer the "pending" entry (it carries the expiry/retry state).
+  const dedupeKey = (p: typeof allParents[0]) => p.email || p.phone || p.id;
+  const byKey = new Map<string, typeof allParents[0]>();
+  const pendingKeys = new Set(allParents.filter((p) => p.status === "pending").map(dedupeKey));
   for (const p of allParents) {
+    const key = dedupeKey(p);
     if (p.status === "pending") {
-      byEmail.set(p.email, p);
-    } else if (p.status === "active" && !pendingEmails.has(p.email)) {
-      byEmail.set(p.email, p);
+      byKey.set(key, p);
+    } else if (p.status === "active" && !pendingKeys.has(key)) {
+      byKey.set(key, p);
     }
   }
-  const merged = Array.from(byEmail.values());
+  const merged = Array.from(byKey.values());
   const pendingInvites = merged.filter((p) => p.status === "pending");
   const registered = merged.filter((p) => p.status === "active");
   const total = data?.total ?? 0;
@@ -95,7 +89,7 @@ export const ParentsListSection = ({ limit = 10 }: ParentsListSectionProps) => {
                   <Avatar name={inv.name || inv.email} size={32} />
                   <div className="min-w-0">
                     <p className="text-sm text-gray-800 truncate">{inv.name || "—"}</p>
-                  <p className="text-xs text-gray-400 truncate">{inv.email}</p>
+                  <p className="text-xs text-gray-400 truncate">{inv.email || inv.phone || "—"}</p>
                   {(inv.students ?? []).length > 0 && (
                     <p className="text-xs text-gray-400 truncate">
                       Linked: {inv.students?.map((s) => s.name).join(", ")}
@@ -147,9 +141,18 @@ export const ParentsListSection = ({ limit = 10 }: ParentsListSectionProps) => {
                       Active
                     </span>
                   ) : (
-                    <span className="inline-block px-2 py-0.5 rounded text-xs font-medium bg-gray-100 text-gray-500">
-                      No account
-                    </span>
+                    <>
+                      <button
+                        onClick={() => p.inviteId && resendMutation.mutate(p.inviteId)}
+                        disabled={resendMutation.isPending || !p.inviteId}
+                        className="text-xs underline text-blue-600 hover:text-blue-700 disabled:opacity-50"
+                      >
+                        {resendMutation.isPending ? "..." : "Resend"}
+                      </button>
+                      <span className="inline-block px-2 py-0.5 rounded text-xs font-medium bg-gray-100 text-gray-500">
+                        No password
+                      </span>
+                    </>
                   )}
                 </div>
               </div>
@@ -178,6 +181,7 @@ export const ParentsListSection = ({ limit = 10 }: ParentsListSectionProps) => {
           </button>
         </div>
       )}
+      <InviteParentModal open={inviteOpen} onClose={() => setInviteOpen(false)} />
     </div>
   );
 };

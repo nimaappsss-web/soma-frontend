@@ -64,8 +64,21 @@ export const StudentFormDialog = ({
 
   const strip = (data: EditStudentFormData): Record<string, unknown> => {
     const payload: Record<string, unknown> = {};
+    const original: Record<string, unknown> = {
+      name: student?.name ?? "",
+      classId: student?.classId ?? "",
+      gender: student?.gender ?? "",
+      dateOfBirth: student?.dateOfBirth?.split("T")[0] ?? "",
+      address: student?.address ?? "",
+      parentName: student?.parentName ?? "",
+      parentPhone: student?.parentPhone ?? "",
+      parentEmail: student?.parentEmail ?? "",
+      status: student?.status ?? "ACTIVE",
+    };
     for (const [key, value] of Object.entries(data)) {
-      if (value !== "" && value !== undefined && value !== null) payload[key] = value;
+      if ((value ?? "") !== (original[key] ?? "")) {
+        payload[key] = value === "" ? null : value;
+      }
     }
     return payload;
   };

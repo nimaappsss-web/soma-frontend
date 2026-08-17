@@ -9,6 +9,7 @@ import type { FieldError } from "react-hook-form";
 export interface SelectOption {
   value: string;
   label: string;
+  disabled?: boolean;
 }
 
 interface MultiSelectProps {
@@ -173,6 +174,8 @@ export const MultiSelect = ({
   }, [open, usePortal]);
 
   const toggle = (value: string) => {
+    const option = options.find((o) => o.value === value);
+    if (option?.disabled) return;
     onChange(
       selected.includes(value)
         ? selected.filter((v) => v !== value)
@@ -181,6 +184,8 @@ export const MultiSelect = ({
   };
 
   const remove = (value: string, e: React.MouseEvent) => {
+    const option = options.find((o) => o.value === value);
+    if (option?.disabled) return;
     e.stopPropagation();
     onChange(selected.filter((v) => v !== value));
   };
@@ -239,14 +244,23 @@ export const MultiSelect = ({
           filteredOptions.map((option) => (
             <label
               key={option.value}
-              className="flex cursor-pointer items-center gap-2 px-4 py-2.5 text-sm transition-colors hover:bg-accent"
+              className={cn(
+                "flex cursor-pointer items-center gap-2 px-4 py-2.5 text-sm transition-colors hover:bg-accent",
+                option.disabled && "cursor-not-allowed opacity-50 hover:bg-transparent",
+              )}
             >
               <Checkbox
                 checked={selected.includes(option.value)}
                 onCheckedChange={() => toggle(option.value)}
                 className="shrink-0"
+                disabled={option.disabled}
               />
-              {option.label}
+              <span className="flex-1 truncate">{option.label}</span>
+              {option.disabled && (
+                <span className="shrink-0 rounded-full bg-gray50 px-2 py-0.5 text-[11px] font-medium text-gray500">
+                  Added
+                </span>
+              )}
             </label>
           ))
         )}

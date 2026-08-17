@@ -24,7 +24,7 @@ export const TeacherAnnouncements = () => {
 
   return (
     <div className="p-6 w-full">
-      <div className="mb-6">
+      <div className="mb-5">
         <div className="group flex items-center gap-2.5">
           <h1 className="text-xl md:text-2xl font-bold text-gray900">Announcements</h1>
           <HelpHint

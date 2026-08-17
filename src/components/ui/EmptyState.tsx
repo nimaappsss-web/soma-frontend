@@ -29,15 +29,30 @@ export const EmptyState = ({
 }: EmptyStateProps) => {
   const renderedIcon = isValidElement(icon)
     ? cloneElement(
-        icon as ReactElement<{ size?: number; variant?: string }>,
+        icon as ReactElement<{ size?: number; variant?: string; color?: string }>,
         {
           size: 30,
           ...((icon.props as { variant?: unknown }).variant !== undefined
             ? { variant: "Bold" }
             : {}),
+          ...((icon.props as { color?: string }).color === undefined
+            ? { color: "#0D0D0D" }
+            : {}),
         },
       )
     : icon;
+
+  const renderedActionIcon =
+    isValidElement(actionIcon) && actionIcon
+      ? cloneElement(
+          actionIcon as ReactElement<{ size?: number; variant?: string; color?: string }>,
+          {
+            ...((actionIcon.props as { color?: string }).color === undefined
+              ? { color: "#FFFFFF" }
+              : {}),
+          },
+        )
+      : actionIcon;
 
   return (
     <div
@@ -55,7 +70,7 @@ export const EmptyState = ({
       )}
       {actionLabel && onAction && (
         <Button onClick={onAction} className="mt-6">
-          {actionIcon}
+          {renderedActionIcon}
           {actionLabel}
         </Button>
       )}

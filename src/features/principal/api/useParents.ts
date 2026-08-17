@@ -37,6 +37,8 @@ export const useParents = (page = 1, limit = 50) => {
     },
     enabled: !!userId,
     staleTime: 5 * 60 * 1000,
+    refetchOnMount: "always",
+    refetchOnWindowFocus: true,
   });
 
   const data = useLiveQuery(

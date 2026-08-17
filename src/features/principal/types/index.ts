@@ -19,7 +19,7 @@ export interface AcceptInviteRequest {
   token: string;
   name: string;
   password: string;
-  assignments: Array<{
+  assignments?: Array<{
     subjectId: string;
     classIds: string[];
   }>;
@@ -109,6 +109,9 @@ export interface ParentStudent {
   id: string;
   name: string;
   admissionNo: string;
+  classId?: string;
+  className?: string;
+  teacherName?: string;
 }
 
 export interface Parent {
@@ -118,6 +121,8 @@ export interface Parent {
   phone: string | null;
   emailVerified: boolean;
   hasAccount: boolean;
+  /** Present on active parents who haven't set a password yet — lets admin resend the invite link */
+  inviteId?: string;
   status: "active" | "pending";
   /** Present when the parent has linked children; may be absent on pending invites */
   students?: ParentStudent[];
@@ -148,6 +153,7 @@ export interface InviteParentRequest {
   name: string;
   email: string;
   studentId: string;
+  phone?: string;
 }
 
 export interface InviteParentResponse {

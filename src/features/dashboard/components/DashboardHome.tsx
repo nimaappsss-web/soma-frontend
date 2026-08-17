@@ -14,6 +14,7 @@ import { useSetupProgress } from "../api/useSetupProgress";
 import { useAuth } from "../../../contexts/AuthContext";
 import { useCelebrations } from "../../moments/api/useCelebrations";
 import { useCalendarEvents } from "../../calendar/api";
+import { givenName } from "../../../utils/name";
 import { ProgressSection } from "./ProgressSection";
 import { SetupChecklist } from "./SetupChecklist";
 import { ClassSubjectsOverview } from "./ClassSubjectsOverview";
@@ -47,7 +48,7 @@ export const DashboardHome = () => {
   }, [markSeen]);
 
   const isSetupComplete = percentage >= 100;
-  const firstName = user?.name?.split(" ")[0];
+  const firstName = givenName(user?.name);
 
   const birthdays =
     celebrations?.celebrations.filter((c) => c.type === "BIRTHDAY") ?? [];

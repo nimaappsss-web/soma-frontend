@@ -34,7 +34,7 @@ export const CalendarLayout = () => {
 
   return (
     <div className="p-4 md:p-6 w-full">
-      <div className="mb-6">
+      <div className="mb-5">
         <div className="group flex items-center gap-2.5">
           <h1 className="text-[18px] sm:text-2xl font-semibold text-gray-900">{title}</h1>
           <HelpHint

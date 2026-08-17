@@ -1,7 +1,7 @@
 import { useState, useRef } from "react";
 import { useNavigate, Link } from "react-router";
 import { GoogleLogin } from "@react-oauth/google";
-import toast from "react-hot-toast";
+import { toast } from "@/utils/toast";
 
 import { useAuth } from "../contexts/AuthContext";
 import {
@@ -13,6 +13,7 @@ import {
 } from "../features/auth/api";
 import { getPostAuthPath } from "../features/auth/utils/routing";
 import { transformError } from "../utils/transformError";
+import { givenName } from "../utils/name";
 import { AuthLayout } from "../layouts/AuthLayout";
 import { Button } from "../components/ui/button";
 import { ErrorMessage } from "../components/others/ErrorMessage";
@@ -39,6 +40,8 @@ export const Login = () => {
   const sendOTPMutation = useSendOTPByEmail();
   const verifyOTPMutation = useVerifyOTP();
   const googleAuthMutation = useGoogleAuth();
+
+  const firstGivenName = givenName(identifierInfo?.name);
 
   const isPasswordStep = step === "password";
   const isOTPStep = step === "otp";
@@ -228,7 +231,7 @@ export const Login = () => {
           ) : (
             <>
               <h1 className="text-[32px] font-medium text-gray-900">
-                Welcome back{identifierInfo?.name ? `, ${identifierInfo.name.split(" ")[0]}` : ""}
+                Welcome back{firstGivenName ? `, ${firstGivenName}` : ""}
               </h1>
               {!isOTPStep && (
                 <p className="text-sm mt-2" style={{ color: "#9098AC" }}>

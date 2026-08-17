@@ -38,7 +38,6 @@
     "react-dom": "^19.2.6",
     "react-focus-lock": "^2.13.7",
     "react-hook-form": "^7.81.0",
-    "react-hot-toast": "^2.6.0",
     "react-otp-input": "^3.1.1",
     "react-phone-number-input": "^3.4.17",
     "react-remove-scroll": "^2.7.2",

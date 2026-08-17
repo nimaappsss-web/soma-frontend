@@ -21,7 +21,7 @@ export const ProgressSection = ({ percentage, storedPercentage, onSeen, userName
   }, [percentage, storedPercentage, displayed, onSeen]);
 
   return (
-    <div className="flex flex-col md:flex-row items-start md:items-center gap-4 md:gap-6 mb-2">
+    <div className="flex flex-col md:flex-row items-start md:items-center gap-4 md:gap-6 ">
       <div className="shrink-0">
         <h1 className="text-2xl font-bold text-gray900">
           Hello{complete && userName ? `, ${userName}` : ""}

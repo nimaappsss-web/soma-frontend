@@ -5,6 +5,7 @@ import { Input } from "../../../components/ui/input";
 import { Button } from "../../../components/ui/button";
 import { SelectDropdown } from "../../../components/ui/select-dropdown";
 import { Textarea } from "../../../components/ui/textarea";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "../../../components/ui/dialog";
 import { EmptyState } from "../../../components/ui/EmptyState";
 import { HelpHint } from "../../../components/ui/HelpHint";
 import { useAnnouncements, useCreateAnnouncement, useDeleteAnnouncement } from "../api";
@@ -31,19 +32,24 @@ export const AnnouncementsManagement = () => {
   const createMutation = useCreateAnnouncement();
   const deleteMutation = useDeleteAnnouncement();
 
-  const [showForm, setShowForm] = useState(false);
+  const [dialogOpen, setDialogOpen] = useState(false);
   const [form, setForm] = useState<CreateAnnouncementPayload>(emptyPayload);
 
   const announcements = data?.announcements ?? [];
 
   const handleCreate = () => {
     if (!form.title || !form.message || !form.audience) return;
-    createMutation.mutate(form, { onSuccess: () => { setShowForm(false); setForm(emptyPayload); } });
+    createMutation.mutate(form, {
+      onSuccess: () => {
+        setDialogOpen(false);
+        setForm(emptyPayload);
+      },
+    });
   };
 
   return (
     <div className="p-6 w-full">
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex items-center justify-between mb-5">
         <div>
           <div className="group flex items-center gap-2.5">
             <h1 className="text-xl md:text-2xl font-bold text-gray900">Announcements</h1>
@@ -61,43 +67,68 @@ export const AnnouncementsManagement = () => {
           </div>
           <p className="text-sm text-gray-400 mt-1">Broadcast messages to staff, parents, and everyone at your school</p>
         </div>
-        <Button onClick={() => setShowForm(!showForm)} variant="outline" size="sm">
-          {showForm ? "Cancel" : "New Announcement"}
+        <Button onClick={() => setDialogOpen(true)} variant="outline" size="sm">
+          New Announcement
         </Button>
       </div>
 
-      {showForm && (
-        <div className="bg-white rounded-xl border border-gray-100 p-6 mb-6 space-y-4">
-          <Input
-            value={form.title}
-            onChange={(e) => setForm({ ...form, title: e.target.value })}
-            placeholder="e.g. End of Term Exams Schedule"
-          />
-          <Textarea
-            value={form.message}
-            onChange={(e) => setForm({ ...form, message: e.target.value })}
-            placeholder="Write your announcement..."
-            rows={4}
-          />
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <SelectDropdown
-              options={audienceOptions.map((o) => ({ value: o.value, label: o.label }))}
-              value={form.audience}
-              onChange={(v) => setForm({ ...form, audience: v as AnnouncementAudience })}
-              placeholder="Audience"
+      <Dialog
+        open={dialogOpen}
+        onOpenChange={(open) => {
+          setDialogOpen(open);
+          if (!open) setForm(emptyPayload);
+        }}
+      >
+        <DialogContent variant="center" className="md:max-w-xl">
+          <DialogHeader>
+            <DialogTitle>New Announcement</DialogTitle>
+            <DialogDescription>
+              Share an update with staff and parents.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="px-6 pb-6 space-y-4">
+            <Input
+              value={form.title}
+              onChange={(e) => setForm({ ...form, title: e.target.value })}
+              placeholder="e.g. End of Term Exams Schedule"
             />
-            <SelectDropdown
-              options={priorityOptions.map((o) => ({ value: o.value, label: o.label }))}
-              value={form.priority}
-              onChange={(v) => setForm({ ...form, priority: v as AnnouncementPriority })}
-              placeholder="Priority"
+            <Textarea
+              value={form.message}
+              onChange={(e) => setForm({ ...form, message: e.target.value })}
+              placeholder="Write your announcement..."
+              rows={5}
             />
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <SelectDropdown
+                options={audienceOptions.map((o) => ({ value: o.value, label: o.label }))}
+                value={form.audience}
+                onChange={(v) => setForm({ ...form, audience: v as AnnouncementAudience })}
+                placeholder="Audience"
+              />
+              <SelectDropdown
+                options={priorityOptions.map((o) => ({ value: o.value, label: o.label }))}
+                value={form.priority}
+                onChange={(v) => setForm({ ...form, priority: v as AnnouncementPriority })}
+                placeholder="Priority"
+              />
+            </div>
+            <div className="flex items-center justify-end gap-3 pt-1">
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => setDialogOpen(false)}
+              >
+                Cancel
+              </Button>
+              <Button onClick={handleCreate} disabled={createMutation.isPending}>
+                {createMutation.isPending ? "Publishing..." : "Publish"}
+              </Button>
+            </div>
           </div>
-          <Button onClick={handleCreate} disabled={createMutation.isPending} className="w-full">
-            {createMutation.isPending ? "Publishing..." : "Publish"}
-          </Button>
-        </div>
-      )}
+        </DialogContent>
+      </Dialog>
 
       {isLoading ? (
         <p className="text-sm text-gray-400 text-center py-12">Loading...</p>
@@ -130,7 +161,7 @@ export const AnnouncementsManagement = () => {
           description="Share updates with staff and parents. Create your first announcement to get started."
           actionLabel="New Announcement"
           actionIcon={<Add size={16} color="#FFFFFF" variant="Linear" />}
-          onAction={() => setShowForm(true)}
+          onAction={() => setDialogOpen(true)}
         />
       )}
     </div>

@@ -1,5 +1,5 @@
 import { useMutation } from "@tanstack/react-query";
-import toast from "react-hot-toast";
+import { toast } from "@/utils/toast";
 
 import { transformError } from "../../../utils/transformError";
 import type { Student as StudentCache } from "../../../db/db";
@@ -30,7 +30,7 @@ export const useUpdateStudent = () => {
             ...existing,
             ...data,
             userId: user!.id,
-            createdAt: Date.now(),
+            createdAt: existing?.createdAt ?? Date.now(),
           } as StudentCache;
           await db.students.put(merged, id);
           await addToQueue({

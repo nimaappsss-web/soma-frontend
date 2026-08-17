@@ -2,7 +2,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import toast from "react-hot-toast";
+import { toast } from "@/utils/toast";
 
 import { Button } from "../../../components/ui/button";
 import { PhoneInputField } from "../../../components/ui/phone-input";

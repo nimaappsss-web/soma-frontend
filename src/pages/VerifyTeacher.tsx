@@ -130,6 +130,8 @@ export const VerifyTeacher = () => {
   const classSubjectList: ClassSubjectAssignment[] = classSubjectsData?.classes ?? [];
 
   const isOpenInvite = inviteInfo?.email === null;
+  const inviteRole = (inviteInfo?.role ?? "").toUpperCase();
+  const isNonTeaching = inviteRole === "BURSAR" || inviteRole === "STAFF";
 
   const subjectOptions: SelectOption[] =
     subjectList.map((s) => ({ value: s.id, label: s.name }));
@@ -262,10 +264,12 @@ export const VerifyTeacher = () => {
         name: data.name,
         password: data.password,
         email: isOpenInvite ? email.trim() : undefined,
-        assignments: assignments
-          .filter((a) => a.subjectId && a.classIds.length > 0)
-          .map((a) => ({ subjectId: a.subjectId, classIds: a.classIds })),
-        formClassId: formClassId || undefined,
+        assignments: isNonTeaching
+          ? undefined
+          : assignments
+              .filter((a) => a.subjectId && a.classIds.length > 0)
+              .map((a) => ({ subjectId: a.subjectId, classIds: a.classIds })),
+        formClassId: isNonTeaching ? undefined : formClassId || undefined,
         registrationToken: isOpenInvite ? registrationTokenRef.current : undefined,
       },
       {
@@ -414,11 +418,11 @@ export const VerifyTeacher = () => {
           </h1>
           <p className="text-sm text-black/50 mt-2">
             {isOpenInvite ? (
-              <>Set up your account to start teaching.</>
+              <>Set up your account to get started.</>
             ) : inviteInfo ? (
               <>You've been invited as <strong>{inviteInfo.role.toLowerCase()}</strong> — <span className="text-blue-600">{inviteInfo.email}</span></>
             ) : (
-              "Set your name, password, and teaching subjects to get started."
+              "Set your name and password to get started."
             )}
           </p>
         </div>
@@ -457,13 +461,14 @@ export const VerifyTeacher = () => {
             className="mt-5.25"
           />
 
-          <div className="mt-5.25 space-y-3">
-            <div className="flex items-center justify-between">
-              <p className="text-sm">Subject Assignments</p>
-              <Button type="button" variant="outline" size="sm" className="rounded-full" onClick={handleAddSubject}>
-                + Add Subject
-              </Button>
-            </div>
+          {!isNonTeaching && (
+            <div className="mt-5.25 space-y-3">
+              <div className="flex items-center justify-between">
+                <p className="text-sm">Subject Assignments</p>
+                <Button type="button" variant="outline" size="sm" className="rounded-full" onClick={handleAddSubject}>
+                  + Add Subject
+                </Button>
+              </div>
             {assignments.map((a, i) => (
               <div key={i} className="space-y-3">
                 <SelectDropdown
@@ -502,7 +507,9 @@ export const VerifyTeacher = () => {
               </div>
             ))}
           </div>
+        )}
 
+        {!isNonTeaching && (
           <div className="mt-5.25">
             <SelectDropdown
               options={formClassOptions}
@@ -511,8 +518,9 @@ export const VerifyTeacher = () => {
               searchable
             />
           </div>
+        )}
 
-          {formConflict && (
+          {!isNonTeaching && formConflict && (
             <motion.div
               key={alertFlash}
               initial={{ x: 0 }}

@@ -14,6 +14,7 @@ export function getPostAuthPath(user: User): string {
     case "teacher": return "/teach";
     case "parent": return "/parent";
     case "staff": return "/staff";
+    case "bursar": return "/admin/finance";
     default: return "/admin";
   }
 }
@@ -28,6 +29,7 @@ export function getRoleDashboard(role: string): string {
     case "teacher": return "/teach";
     case "parent": return "/parent";
     case "staff": return "/staff";
+    case "bursar": return "/admin/finance";
     default: return "/admin";
   }
 }

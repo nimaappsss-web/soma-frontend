@@ -47,7 +47,7 @@ export const AdminSubjects = () => {
 
   return (
     <div className="p-4 md:p-6 w-full">
-      <div className="mb-6 flex items-center gap-2">
+      <div className="mb-5 flex items-center gap-2">
         {(["subjects", "classes"] as Tab[]).map((t) => (
           <button
             key={t}

@@ -47,7 +47,7 @@ export const TeacherTimetable = () => {
 
   return (
     <div className="mx-auto max-w-5xl px-4 py-6 md:px-8">
-      <div className="mb-6">
+      <div className="mb-5">
         <div className="group flex items-center gap-2.5">
           <h1 className="text-xl font-bold text-gray900 md:text-2xl">My timetable</h1>
           <HelpHint

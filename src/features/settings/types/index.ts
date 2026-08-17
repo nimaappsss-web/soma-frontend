@@ -3,11 +3,17 @@ export interface SettingOption {
   value: string;
 }
 
+export interface ManualBankDetails {
+  bankName?: string;
+  accountName?: string;
+  accountNumber?: string;
+}
+
 export interface SchoolSetting {
   key: string;
   label: string;
-  type: "text" | "textarea" | "image" | "pattern" | "multi-select" | "array";
-  value: string | string[] | null;
+  type: "text" | "textarea" | "image" | "pattern" | "multi-select" | "array" | "bank";
+  value: string | string[] | ManualBankDetails | null;
   options?: SettingOption[];
   category: string;
   editable: boolean;

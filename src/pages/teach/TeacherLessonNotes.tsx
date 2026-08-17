@@ -1,5 +1,5 @@
 import { useState, useMemo } from "react";
-import toast from "react-hot-toast";
+import { toast } from "@/utils/toast";
 import { useAuth } from "../../contexts/AuthContext";
 import { useTeacherProfile } from "../../features/teacher/api";
 import {
@@ -225,7 +225,7 @@ export const TeacherLessonNotes = () => {
   };
   return (
     <div className="p-4 md:p-8">
-      <div className="group flex items-center gap-2.5 mb-6">
+      <div className="group flex items-center gap-2.5 mb-5">
         <h2 className="text-xl md:text-2xl font-bold text-gray900">Lesson Notes</h2>
         <HelpHint
           title="Lesson Notes"

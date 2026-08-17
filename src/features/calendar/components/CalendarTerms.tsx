@@ -1,6 +1,6 @@
 import { useState, useMemo } from "react";
 
-import toast from "react-hot-toast";
+import { toast } from "@/utils/toast";
 import { Add, CalendarTick } from "iconsax-react";
 import { DateInput } from "../../../components/ui/date-input";
 import { Button } from "../../../components/ui/button";

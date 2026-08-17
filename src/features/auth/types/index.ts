@@ -57,6 +57,7 @@ export interface RegisterSchoolRequest {
   logoUrl?: string;
   schoolCode?: string;
   arms?: string[];
+  manualBankDetails?: import("../../settings/types").ManualBankDetails;
 }
 
 export interface RegisterSchoolResponse {

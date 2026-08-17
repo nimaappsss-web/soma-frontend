@@ -334,6 +334,69 @@ fetchData<T>(url, method, payload?, accept?, contentType?)
 - Default content type: `"application/json"`
 - Throws raw Axios error (use `transformError` to convert)
 
+### 16. Shared AppShell Layout (`src/components/layout/`)
+
+All app frames (admin, teacher, parent) are rendered by ONE shared `AppShell`. Layouts are thin configs — they only compute nav data and role/condition filters, then render `<AppShell />`. NEVER hand-roll sidebar/header/drawer markup inside a layout.
+
+Structure:
+
+```
+src/components/layout/
+  types.ts           — NavItem, NavChild, NavSection types
+  SidebarNav.tsx     — renders nav groups (collapsed/expanded, caret children, active detection)
+  AppShell.tsx       — desktop sidebar + collapse trigger, mobile drawer, headers, SearchModal
+  nav/
+    adminNav.ts      — admin nav groups (with dividers)
+    teacherNav.ts    — teacher items + settings
+    parentNav.ts     — parent items + settings
+  index.ts           — barrel export
+```
+
+`AppShell` props:
+
+```ts
+type AppShellProps = {
+  nav: NavSection[];              // groups; use { divider: true } between groups
+  settings?: NavItem;             // optional Settings link (teacher/parent)
+  children?: ReactNode;           // page content (or <Outlet />)
+  disabled?: boolean;             // teacher "locked" nav (pointer-events-none + opacity)
+  autoExpandActive?: boolean;     // auto-open a parent when a child is active
+  isChildActive?: (children: NavChild[]) => boolean; // override active detection
+};
+```
+
+Layout examples:
+
+```tsx
+// Admin: filter groups by role, pass along
+const nav = adminNavSections.map((s) => ({ ...s, items: s.items.filter(byRole) }));
+return <AppShell nav={nav} />;
+
+// Teacher: filter by form-teacher, settings link, locked state
+return <AppShell nav={[{ items: navItems }]} settings={teacherSettingsItem} disabled={isLocked} autoExpandActive isChildActive={...} />;
+
+// Parent: trivial
+return <AppShell nav={[{ items: parentNavItems }]} settings={parentSettingsItem} />;
+```
+
+Rules:
+- Nav data (`NavItem[]`) lives in `nav/*.ts` constant files — NOT inside layout JSX.
+- Use the existing `MobileDrawer` + `MobileHeader` from `src/components/mobile/` — never copy their markup.
+- Collapse state persists via `useSidebarCollapse`; desktop widths are `w-[72px]` / `w-[264px]`.
+
+### 17. Keep Constants in Separate Files — No Pile-Ups
+
+Separate concerns and keep files short:
+
+- **Nav/route data** → `src/components/layout/nav/*.ts`
+- **Query keys** → feature `utils/query-keys.ts`
+- **Zod schemas** → feature `utils/validationSchema.ts`
+- **Types** → feature `types/index.ts`
+- **API hooks** → one file per hook in feature `api/`
+- **UI variants** → `class-variance-authority` `variants` objects inside the component (or its own file when large)
+
+Do NOT define large constant arrays, icon lists, tab configs, or option lists inline in page components. Extract them to a co-located constants file (`constants.ts` or `nav/<x>.ts`). A component/layout should read top-to-bottom as a single responsibility, not a wall of data + markup mixed together.
+
 ---
 
 ## Design & Style Reference

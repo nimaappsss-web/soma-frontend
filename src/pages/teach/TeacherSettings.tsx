@@ -1,5 +1,5 @@
 import { useState, useRef } from "react";
-import toast from "react-hot-toast";
+import { toast } from "@/utils/toast";
 import { useAuth } from "../../contexts/AuthContext";
 import { useTeacherDetail } from "../../features/teacher/api";
 import { Avatar } from "../../components/ui/Avatar";
@@ -93,7 +93,7 @@ export const TeacherSettings = () => {
   }
   return (
     <div className="p-8 max-w-2xl">
-      <h2 className="text-xl md:text-2xl font-bold text-gray900 mb-6">Settings</h2>
+      <h2 className="text-xl md:text-2xl font-bold text-gray900 mb-5">Settings</h2>
       <div className="space-y-6">
         <section className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
           <h3 className="font-semibold text-gray-800 mb-4">Profile Picture</h3>

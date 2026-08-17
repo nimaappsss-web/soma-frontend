@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useLiveQuery } from "dexie-react-hooks";
-import toast from "react-hot-toast";
+import { toast } from "@/utils/toast";
 import { ArrowLeft2, Profile2User } from "iconsax-react";
 import { useAuth } from "../contexts/AuthContext";
 import { db } from "../db/db";

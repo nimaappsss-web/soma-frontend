@@ -1,11 +1,12 @@
 import { useMutation } from "@tanstack/react-query";
-import toast from "react-hot-toast";
+import { toast } from "@/utils/toast";
 
 import { transformError } from "../../../utils/transformError";
 import { useAuth } from "../../../contexts/AuthContext";
 import { addToQueue } from "../../../sync/syncQueue";
 import { db } from "../../../db/db";
 import type { AxiosErrorResponse, SchoolInfo } from "../types";
+import type { ManualBankDetails } from "../../settings/types";
 
 const TIMEOUT = 3000;
 
@@ -19,6 +20,7 @@ interface UpdateSchoolPayload {
   arms?: string[];
   admissionPattern?: string;
   assessmentMode?: "standard" | "thirdTermAverage";
+  manualBankDetails?: ManualBankDetails;
 }
 
 export const useUpdateSchool = () => {

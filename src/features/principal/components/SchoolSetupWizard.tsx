@@ -24,6 +24,9 @@ const schoolSchema = z.object({
   lga: z.string().min(2, "LGA is required"),
   address: z.string().optional(),
   schoolType: z.array(z.enum(SCHOOL_TYPES)).min(1, "Select at least one school type"),
+  bankName: z.string().optional(),
+  accountName: z.string().optional(),
+  accountNumber: z.string().optional(),
 });
 
 type SchoolFormData = z.infer<typeof schoolSchema>;
@@ -41,12 +44,13 @@ export const SchoolSetupWizard = () => {
     formState: { errors },
   } = useForm<SchoolFormData>({
     resolver: zodResolver(schoolSchema),
-    defaultValues: { schoolName: "", state: "", lga: "", address: "", schoolType: [] },
+    defaultValues: { schoolName: "", state: "", lga: "", address: "", schoolType: [], bankName: "", accountName: "", accountNumber: "" },
   });
 
   const schoolType = watch("schoolType");
 
   const onSubmit = (data: SchoolFormData) => {
+    const hasBank = data.bankName?.trim() || data.accountName?.trim() || data.accountNumber?.trim();
     registerSchool.mutate(
       {
         schoolName: data.schoolName,
@@ -55,6 +59,13 @@ export const SchoolSetupWizard = () => {
         schoolType: data.schoolType,
         address: data.address || undefined,
         arms: arms,
+        manualBankDetails: hasBank
+          ? {
+              bankName: data.bankName?.trim() || undefined,
+              accountName: data.accountName?.trim() || undefined,
+              accountNumber: data.accountNumber?.trim() || undefined,
+            }
+          : undefined,
       },
       {
         onSuccess: (res) => {
@@ -126,6 +137,34 @@ export const SchoolSetupWizard = () => {
               onChange={setArms}
               placeholder="Type arm and press Enter (e.g. A, B, C)"
             />
+          </div>
+
+          <div className="pt-2 border-t border-gray-100">
+            <p className="text-sm font-medium text-gray-900 mb-1">Bank account (optional)</p>
+            <p className="text-xs text-gray-500 mb-3">
+              Where parents send fees by transfer. You can add this later in Settings.
+            </p>
+            <div className="space-y-3">
+              <Input
+                type="text"
+                placeholder="Bank name (e.g. First Bank)"
+                registration={register("bankName")}
+                hasError={errors.bankName}
+              />
+              <Input
+                type="text"
+                placeholder="Account name (e.g. Jerimiah College)"
+                registration={register("accountName")}
+                hasError={errors.accountName}
+              />
+              <Input
+                type="text"
+                inputMode="numeric"
+                placeholder="Account number"
+                registration={register("accountNumber")}
+                hasError={errors.accountNumber}
+              />
+            </div>
           </div>
 
           <Button type="submit" disabled={registerSchool.isPending} className="w-full">

@@ -8,6 +8,7 @@ import { useTeacherTimetableCache } from "../../features/timetable/api";
 import { TodayScheduleCard } from "../../features/timetable/components/TodayScheduleCard";
 import { greetingFor, nextClass } from "../../features/timetable/utils/todaySchedule";
 import { localDateKey } from "../../utils/date";
+import { givenName } from "../../utils/name";
 import { TintedStatCard } from "../../features/dashboard/components/TintedStatCard";
 import { AttendanceCard } from "../../features/dashboard/components/AttendanceCard";
 import { DashboardCalendar } from "../../features/dashboard/components/DashboardCalendar";
@@ -37,7 +38,7 @@ export const TeacherDashboard = () => {
   const { entries: teacherEntries, isLoading: ttLoading } = useTeacherTimetableCache(user?.id ?? "");
   const greeting = greetingFor(nextClass(teacherEntries));
 
-  const firstName = name?.split(" ")[0];
+  const firstName = givenName(name);
   const loading = isLoading || studentsLoading;
 
   const attendanceStats = classSummary

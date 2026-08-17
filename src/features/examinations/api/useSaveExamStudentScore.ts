@@ -1,5 +1,5 @@
 import { useMutation } from "@tanstack/react-query";
-import toast from "react-hot-toast";
+import { toast } from "@/utils/toast";
 
 import { db } from "../../../db/db";
 import { addToQueue } from "../../../sync/syncQueue";

@@ -123,6 +123,17 @@ const parentsTask: SyncTask = {
   },
 };
 
+const parentMeTask: SyncTask = {
+  name: "parents",
+  run: async (user) => {
+    const res = await fetchData<Record<string, unknown>>("/parents/me", "GET");
+    if (res?.id) {
+      await db.parents.where("userId").equals(user.id).delete();
+      await db.parents.put({ ...(res as any), userId: user.id });
+    }
+  },
+};
+
 const schoolSettingsTask: SyncTask = {
   name: "schoolSettings",
   run: async (user) => {
@@ -254,7 +265,7 @@ const teacherTasks: SyncTask[] = [
 ];
 
 const parentTasks: SyncTask[] = [
-  parentsTask,
+  parentMeTask,
 ];
 
 function getTasksForRole(role: string): SyncTask[] {

@@ -2,13 +2,14 @@ import { useState, useRef, useEffect } from "react";
 import { useForm, useWatch, Controller, type Control } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import toast from "react-hot-toast";
-import { User, Building, ArrowRight, CalendarTick } from "iconsax-react";
+import { toast } from "@/utils/toast";
+import { User, Building, ArrowRight, CalendarTick, Card as CardIcon } from "iconsax-react";
 import { Link } from "react-router";
 
 import { useAuth } from "../contexts/AuthContext";
 import { useUpdateSchool, useSchoolInfo } from "../features/principal/api";
 import { useSchoolSettings } from "../features/settings/api/useSchoolSettings";
+import type { ManualBankDetails } from "../features/settings/types";
 import { useGenerateAdmission } from "../features/students/api";
 import { useChangePassword } from "../features/auth/api";
 import { schoolUpdateSchema, type SchoolUpdateFormData } from "../features/principal/utils/validationSchema";
@@ -51,6 +52,7 @@ type PasswordForm = z.infer<typeof passwordSchema>;
 const tabs = [
   { id: "account", label: "Account", icon: User },
   { id: "school", label: "School", icon: Building },
+  { id: "payments", label: "Payments", icon: CardIcon },
   { id: "terms", label: "Term Settings", icon: CalendarTick },
 ] as const;
 
@@ -87,6 +89,7 @@ export const AdminSettings = () => {
       <div className="mt-6">
         {activeTab === "account" && <AccountSection />}
         {activeTab === "school" && <SchoolSection />}
+        {activeTab === "payments" && <PaymentsSection />}
         {activeTab === "terms" && <TermSettingsSection />}
       </div>
     </div>
@@ -446,6 +449,79 @@ const SchoolSection = () => {
         onConfirm={() => pendingSave && doSave(pendingSave)}
       />
     </Card>
+  );
+};
+
+const PaymentsSection = () => {
+  const updateSchool = useUpdateSchool();
+  const { data: settings, isLoading } = useSchoolSettings();
+  const bankSetting = settings?.find((s) => s.key === "manualBankDetails");
+  const bank = (bankSetting?.value as ManualBankDetails | null) ?? {};
+  const editable = bankSetting?.editable !== false;
+
+  const [bankName, setBankName] = useState<string>(bank.bankName ?? "");
+  const [accountName, setAccountName] = useState<string>(bank.accountName ?? "");
+  const [accountNumber, setAccountNumber] = useState<string>(bank.accountNumber ?? "");
+
+  useEffect(() => {
+    setBankName(bank.bankName ?? "");
+    setAccountName(bank.accountName ?? "");
+    setAccountNumber(bank.accountNumber ?? "");
+  }, [bank.bankName, bank.accountName, bank.accountNumber]);
+
+  const dirty =
+    bankName !== (bank.bankName ?? "") ||
+    accountName !== (bank.accountName ?? "") ||
+    accountNumber !== (bank.accountNumber ?? "");
+
+  const onSave = () => {
+    updateSchool.mutate(
+      {
+        manualBankDetails: {
+          bankName: bankName.trim() || undefined,
+          accountName: accountName.trim() || undefined,
+          accountNumber: accountNumber.trim() || undefined,
+        },
+      },
+      { onSuccess: () => toast.success("Bank details saved!") },
+    );
+  };
+
+  return (
+    <div className="space-y-6">
+      <Card>
+        <CardHeader>
+          <CardTitle>Bank Transfer Details</CardTitle>
+          <CardDescription>
+            The account parents send fees to when they pay by bank transfer. These details appear in
+            their payment flow.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          {isLoading ? (
+            <p className="text-sm text-gray-400">Loading...</p>
+          ) : (
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="bankName">Bank name</Label>
+                <Input id="bankName" value={bankName} onChange={(e) => setBankName(e.target.value)} disabled={!editable} placeholder="e.g. First Bank" />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="accountName">Account name</Label>
+                <Input id="accountName" value={accountName} onChange={(e) => setAccountName(e.target.value)} disabled={!editable} placeholder="e.g. Jerimiah College" />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="accountNumber">Account number</Label>
+                <Input id="accountNumber" inputMode="numeric" value={accountNumber} onChange={(e) => setAccountNumber(e.target.value)} disabled={!editable} placeholder="e.g. 0123456789" />
+              </div>
+              <Button type="button" onClick={onSave} disabled={!dirty || updateSchool.isPending} className="w-full">
+                {updateSchool.isPending ? "Saving..." : "Save Bank Details"}
+              </Button>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+    </div>
   );
 };
 

@@ -40,6 +40,11 @@ export const useAllStudents = (userId: string) => {
         }
       }
 
+      const pendingNonDeleteIds = new Set<string>();
+      for (const item of pendingItems) {
+        if (item.method !== "DELETE") pendingNonDeleteIds.add(item.recordId);
+      }
+
       await db.transaction("rw", db.students, async () => {
         const existing = await db.students.where("userId").equals(userId).toArray();
         const existingById = new Map(existing.map((e) => [e.id, e]));
@@ -49,15 +54,18 @@ export const useAllStudents = (userId: string) => {
         const studentsToWrite = (res.students ?? []).filter((s: Student) => !pendingDeleteIds.has(s.id));
         if (studentsToWrite.length) {
           await db.students.bulkPut(
-            studentsToWrite.map(
-              (s: Record<string, unknown>) =>
-                ({
-                  ...existingById.get(s.id as string),
-                  ...s,
-                  userId,
-                  createdAt: existingById.get(s.id as string)?.createdAt ?? Date.now(),
-                }) as any,
-            ),
+            studentsToWrite.map((s: Record<string, unknown>) => {
+              const local = existingById.get(s.id as string);
+              if (local && pendingNonDeleteIds.has(local.id)) {
+                return local;
+              }
+              return {
+                ...local,
+                ...s,
+                userId,
+                createdAt: local?.createdAt ?? Date.now(),
+              } as any;
+            }),
           );
         }
       });

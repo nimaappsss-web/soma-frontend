@@ -1,4 +1,4 @@
-import { CalendarTick, Book, RulerPen, Briefcase, Teacher } from "iconsax-react";
+import { CalendarTick, Book, RulerPen, Briefcase, Teacher, Card } from "iconsax-react";
 import { SetupCard } from "./SetupCard";
 
 export interface SetupCompleted {
@@ -7,6 +7,7 @@ export interface SetupCompleted {
   classes: boolean;
   teachers: boolean;
   studentsParents: boolean;
+  bankDetails: boolean;
 }
 
 const setupItems = [
@@ -54,6 +55,15 @@ const setupItems = [
     bgColor: "bg-gray-100",
     iconColor: "text-black",
     to: "/admin/students",
+  },
+  {
+    key: "bankDetails" as const,
+    title: "Add Bank Account Details",
+    subtitle: "The account parents pay fees into.",
+    icon: Card,
+    bgColor: "bg-indigo-100",
+    iconColor: "text-indigo-600",
+    to: "/admin/settings",
   },
 ];
 

@@ -31,7 +31,7 @@ export const TeacherDashboard = () => {
         </div>
       </header>
       <main className="max-w-5xl mx-auto px-4 md:px-6 py-6 md:py-8">
-        <h2 className="text-2xl font-bold text-gray-800 mb-6">Dashboard</h2>
+        <h2 className="text-2xl font-bold text-gray-800 mb-5">Dashboard</h2>
         {isLoading && (
           <p className="text-sm text-gray-400 mb-4">Refreshing data...</p>
         )}

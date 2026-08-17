@@ -1,5 +1,6 @@
-import { ArrowLeft2, NotificationBing } from "iconsax-react";
+import { ArrowLeft2 } from "iconsax-react";
 import { ProfileDropdown } from "../ui/ProfileDropdown";
+import { NotificationBell } from "../../features/notifications/components/NotificationBell";
 export const MobileHeader = ({ onMenuClick }: { onMenuClick: () => void }) => {
   return (
     <header
@@ -19,9 +20,7 @@ export const MobileHeader = ({ onMenuClick }: { onMenuClick: () => void }) => {
       />
       <div className="flex-1" />
       <div className="flex items-center gap-3">
-        <button className="flex items-center justify-center w-[34px] h-[34px] rounded-full border border-gray100 text-gray700 hover:text-gray900 hover:border-gray200 transition-colors">
-          <NotificationBing variant="Linear" size={20} color="currentColor" />
-        </button>
+        <NotificationBell />
         <ProfileDropdown />
       </div>
     </header>

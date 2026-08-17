@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from "react";
 import { Link } from "react-router";
-import toast from "react-hot-toast";
+import { toast } from "@/utils/toast";
 import { CalendarTick, Add, Trash, Edit, Setting2, Warning2 } from "iconsax-react";
 
 import { useExamSchemes } from "../api/useExamSchemes";

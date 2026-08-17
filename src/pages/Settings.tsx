@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import { Link, useParams, Navigate } from "react-router";
-import toast from "react-hot-toast";
+import { toast } from "@/utils/toast";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -149,7 +149,7 @@ export const Settings = () => {
         </div>
       </header>
       <main className="max-w-5xl mx-auto px-4 md:px-6 py-6 md:py-8">
-        <div className="flex items-center justify-between mb-6">
+        <div className="flex items-center justify-between mb-5">
           <div>
             <Link
               to="/"

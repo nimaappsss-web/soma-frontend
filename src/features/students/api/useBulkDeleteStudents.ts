@@ -1,5 +1,5 @@
 import { useMutation } from "@tanstack/react-query";
-import toast from "react-hot-toast";
+import { toast } from "@/utils/toast";
 
 import { transformError } from "../../../utils/transformError";
 import { addToQueue } from "../../../sync/syncQueue";
