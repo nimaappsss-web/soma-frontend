@@ -34,8 +34,25 @@ const classesTask: SyncTask = {
   run: async (user) => {
     const res = await fetchData<{ classes: ClassCache[] } | ClassCache[]>("/classes", "GET");
     const classes: ClassCache[] = Array.isArray(res) ? res : res.classes ?? [];
-    await db.classes.clear();
-    await db.classes.bulkAdd(classes.map((c) => ({ ...c, userId: user.id, schoolId: user.schoolId ?? "" })));
+
+    const pendingForClass = new Set(
+      (await db.syncQueue
+        .where("userId")
+        .equals(user.id)
+        .toArray())
+        .filter((i) => i.table === "classes" && i.status === "pending")
+        .map((q) => q.recordId),
+    );
+    const local = await db.classes.where("userId").equals(user.id).toArray();
+    const localPending = local.filter((l) => pendingForClass.has(l.id));
+
+    await db.classes.where("userId").equals(user.id).delete();
+    if (classes.length || localPending.length) {
+      await db.classes.bulkAdd([
+        ...classes.map((c) => ({ ...c, userId: user.id, schoolId: user.schoolId ?? "" })),
+        ...localPending,
+      ]);
+    }
   },
 };
 
@@ -47,8 +64,25 @@ const subjectsTask: SyncTask = {
       "GET",
     );
     const subjects: SubjectCache[] = Array.isArray(res) ? res : res.subjects ?? [];
-    await db.subjects.clear();
-    await db.subjects.bulkAdd(subjects.map((s) => ({ ...s, userId: user.id, schoolId: user.schoolId ?? "" })));
+
+    const pendingForSubject = new Set(
+      (await db.syncQueue
+        .where("userId")
+        .equals(user.id)
+        .toArray())
+        .filter((i) => i.table === "subjects" && i.status === "pending")
+        .map((q) => q.recordId),
+    );
+    const local = await db.subjects.where("userId").equals(user.id).toArray();
+    const localPending = local.filter((l) => pendingForSubject.has(l.id));
+
+    await db.subjects.where("userId").equals(user.id).delete();
+    if (subjects.length || localPending.length) {
+      await db.subjects.bulkAdd([
+        ...subjects.map((s) => ({ ...s, userId: user.id, schoolId: user.schoolId ?? "" })),
+        ...localPending,
+      ]);
+    }
   },
 };
 

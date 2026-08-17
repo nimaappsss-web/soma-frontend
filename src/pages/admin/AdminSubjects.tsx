@@ -1,6 +1,6 @@
 import { useState, useMemo } from "react";
 import { useNavigate, useSearchParams } from "react-router";
-import { Add, Book1, Building } from "iconsax-react";
+import { Add, ArrowRight, Book1, Building, Teacher } from "iconsax-react";
 import { cn } from "../../lib/utils";
 import { Button } from "../../components/ui/button";
 import { EmptyState } from "../../components/ui/EmptyState";
@@ -18,8 +18,18 @@ import {
   SubjectFormModal,
   type SubjectEditTarget,
 } from "../../features/principal/components/SubjectFormModal";
+import {
+  SubjectDetailModal,
+  type SubjectDetailTarget,
+} from "../../features/principal/components/SubjectDetailModal";
+import {
+  ClassDetailModal,
+  type ClassDetailTarget,
+} from "../../features/principal/components/ClassDetailModal";
 import { AssignSubjectsModal } from "../../features/principal/components/AssignSubjectsModal";
 import { useClassSubjects, useSaveClassSubjects } from "../../features/class-subjects/api";
+import type { Subject } from "../../features/principal/api/useSubjects";
+import type { Class } from "../../features/principal/api/useClasses";
 
 const subjectSortOptions: SelectOption[] = [
   { value: "", label: "Sort by" },
@@ -47,15 +57,15 @@ export const AdminSubjects = () => {
 
   return (
     <div className="p-4 md:p-6 w-full">
-      <div className="mb-5 flex items-center gap-2">
+      <div className="flex w-fit gap-1 rounded-full bg-gray100 p-1 mb-5">
         {(["subjects", "classes"] as Tab[]).map((t) => (
           <button
             key={t}
             type="button"
             onClick={() => setTab(t)}
             className={cn(
-              "rounded-full px-4 py-2 text-sm font-medium transition-colors",
-              tab === t ? "bg-gray900 text-white" : "bg-gray50 text-gray500 hover:bg-accent",
+              "rounded-full px-4 py-1.5 text-sm font-medium text-center transition-colors whitespace-nowrap",
+              tab === t ? "bg-gray900 text-white" : "text-gray500 hover:text-gray700",
             )}
           >
             {t === "subjects" ? "Subjects" : "Classes & Assignments"}
@@ -74,6 +84,7 @@ const SubjectsTab = () => {
   const deleteMutation = useDeleteSubject();
   const updateMutation = useUpdateSubject();
   const [modal, setModal] = useState<SubjectModalState>(null);
+  const [detailSubject, setDetailSubject] = useState<SubjectDetailTarget | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [sortOrder, setSortOrder] = useState("");
 
@@ -110,6 +121,18 @@ const SubjectsTab = () => {
 
   const openEdit = (s: SubjectEditTarget) => setModal({ mode: "edit", editing: s });
 
+  const openDetail = (s: Subject) =>
+    setDetailSubject({ id: s.id, name: s.name, code: s.code, teachers: s.teachers });
+
+  const handleDetailEdit = (s: SubjectDetailTarget) => {
+    setDetailSubject(null);
+    openEdit({ id: s.id, name: s.name, code: s.code ?? "" });
+  };
+
+  const handleDetailDelete = (id: string) => {
+    deleteMutation.mutate(id, { onSuccess: () => setDetailSubject(null) });
+  };
+
   const modalOpen = modal !== null;
   const modalMode = modal?.mode ?? "create";
   const modalEditing = modal?.mode === "edit" ? modal.editing : null;
@@ -127,7 +150,7 @@ const SubjectsTab = () => {
               { title: "Add a subject", text: "Tap “Add Subject” and give it a name. Subjects are used in timetables, lesson notes, and CA scoring." },
               { title: "Assign to classes", text: "Use “Assign Subjects” to decide which classes take each subject." },
               { title: "Search & sort", text: "Find a subject by name or sort the list to browse it your way." },
-              { title: "Edit or delete", text: "Open a subject to rename it, or remove it if it's no longer taught." },
+              { title: "Open a subject", text: "Tap a subject card to see which teachers teach it and in which classes, then edit or delete it from there." },
             ]}
           />
         }
@@ -156,65 +179,59 @@ const SubjectsTab = () => {
         }
         actions={<Button onClick={() => setModal({ mode: "create" })}>+ Add Subject</Button>}
       />
-      <div className="bg-white rounded-xl shadow-sm border border-gray-100">
-        {isLoading ? (
-          <p className="text-sm text-gray-400 p-6 text-center">Loading...</p>
-        ) : filtered.length === 0 ? (
-          <EmptyState
-            icon={<Book1 size={30} variant="Bold" color="#0D0D0D" />}
-            title={searchTerm ? "No subjects match your search" : "Add your first subject"}
-            description={
-              searchTerm
-                ? "Try a different search term or clear your filters."
-                : "Subjects are assigned to classes and teachers. Add your first subject to get started."
-            }
-            actionLabel="Add Subject"
-            actionIcon={<Add size={16} color="#FFFFFF" variant="Linear" />}
-            onAction={() => setModal({ mode: "create" })}
-          />
-        ) : (
-          <div className="divide-y divide-gray-100">
-            {filtered.map((s) => (
-              <div key={s.id} className="px-6 py-3 flex items-center justify-between gap-3">
-                <div className="min-w-0">
-                  <p className="text-gray-800 font-medium">{s.name}</p>
-                  {s.teachers && s.teachers.length > 0 ? (
-                    <p className="mt-0.5 truncate text-xs text-gray-400">
-                      {s.teachers
-                        .map(
-                          (t) =>
-                            `${t.name}${
-                              t.classes && t.classes.length > 0
-                                ? ` (${t.classes.map((c) => c.name).join(", ")})`
-                                : ""
-                            }`,
-                        )
-                        .join("; ")}
-                    </p>
-                  ) : (
-                    <p className="mt-0.5 text-xs text-gray-400">No teacher assigned</p>
-                  )}
+      {isLoading ? (
+        <p className="text-sm text-gray-400 p-6 text-center">Loading...</p>
+      ) : filtered.length === 0 ? (
+        <EmptyState
+          icon={<Book1 size={30} variant="Bold" color="#0D0D0D" />}
+          title={searchTerm ? "No subjects match your search" : "Add your first subject"}
+          description={
+            searchTerm
+              ? "Try a different search term or clear your filters."
+              : "Subjects are assigned to classes and teachers. Add your first subject to get started."
+          }
+          actionLabel="Add Subject"
+          actionIcon={<Add size={16} color="#FFFFFF" variant="Linear" />}
+          onAction={() => setModal({ mode: "create" })}
+        />
+      ) : (
+        <div className="mt-5 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          {filtered.map((s) => {
+            const teacherCount = s.teachers?.length ?? 0;
+            return (
+              <button
+                key={s.id}
+                type="button"
+                onClick={() => openDetail(s)}
+                className="group flex flex-col bg-white border border-gray100 rounded-xl p-5 text-left transition-all hover:border-gray-200 hover:shadow-sm active:scale-[0.98]"
+              >
+                <div className="flex items-start justify-between gap-3">
+                  <div className="flex items-center gap-3 min-w-0">
+                    <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-offWhite text-gray500">
+                      <Book1 size={18} color="#8C8C8C" />
+                    </span>
+                    <div className="min-w-0">
+                      <p className="truncate font-semibold text-gray900">{s.name}</p>
+                      {s.code && <p className="text-xs text-gray500">{s.code}</p>}
+                    </div>
+                  </div>
+                  <ArrowRight
+                    size={18}
+                    color="#8C8C8C"
+                    className="shrink-0 text-gray400 transition-colors group-hover:text-gray700"
+                  />
                 </div>
-                <div className="flex shrink-0 items-center gap-3">
-                  {s.code && <span className="text-xs text-gray-400">{s.code}</span>}
-                  <button
-                    onClick={() => openEdit({ id: s.id, name: s.name, code: s.code ?? "" })}
-                    className="text-xs text-blue-500 hover:text-blue-600"
-                  >
-                    Edit
-                  </button>
-                  <button
-                    onClick={() => deleteMutation.mutate(s.id)}
-                    className="text-xs text-red-500 hover:text-red-600"
-                  >
-                    Delete
-                  </button>
+                <div className="mt-4 flex items-center gap-1.5 border-t border-gray100 pt-4 text-xs text-gray500">
+                  <Teacher size={14} color="#8C8C8C" />
+                  <span>
+                    {teacherCount} {teacherCount === 1 ? "teacher" : "teachers"}
+                  </span>
                 </div>
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
+              </button>
+            );
+          })}
+        </div>
+      )}
       <SubjectFormModal
         open={modalOpen}
         mode={modalMode}
@@ -223,6 +240,14 @@ const SubjectsTab = () => {
         saving={createMutation.isPending || updateMutation.isPending}
         onClose={() => setModal(null)}
         onSubmit={modalMode === "edit" ? handleEdit : handleCreate}
+      />
+      <SubjectDetailModal
+        open={detailSubject !== null}
+        subject={detailSubject}
+        deleting={deleteMutation.isPending}
+        onClose={() => setDetailSubject(null)}
+        onEdit={handleDetailEdit}
+        onDelete={handleDetailDelete}
       />
     </>
   );
@@ -236,6 +261,11 @@ const ClassesTab = () => {
   const saveMutation = useSaveClassSubjects();
   const [modalOpen, setModalOpen] = useState(false);
   const [initialClassIds, setInitialClassIds] = useState<string[]>([]);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [detailClass, setDetailClass] = useState<{
+    record: ClassDetailTarget;
+    ids: string[];
+  } | null>(null);
 
   const classes = classesData?.classes ?? [];
   const subjectName = (id: string) => subjects?.find((s) => s.id === id)?.name ?? id;
@@ -244,17 +274,22 @@ const ClassesTab = () => {
   const assignedCount = classes.length - unassignedCount;
   const pct = classes.length ? Math.round((assignedCount / classes.length) * 100) : 0;
 
-  const sorted = useMemo(
-    () =>
-      [...classes].sort((a, b) => {
-        const aHas = (assignmentFor(a.id)?.subjectIds.length ?? 0) > 0;
-        const bHas = (assignmentFor(b.id)?.subjectIds.length ?? 0) > 0;
-        if (aHas !== bHas) return aHas ? 1 : -1;
-        return a.name.localeCompare(b.name);
-      }),
+  const filtered = useMemo(() => {
+    const term = searchTerm.trim().toLowerCase();
+    let list = [...classes];
+    if (term) {
+      list = list.filter(
+        (c) => c.name.toLowerCase().includes(term) || c.level.toLowerCase().includes(term),
+      );
+    }
+    return list.sort((a, b) => {
+      const aHas = (assignmentFor(a.id)?.subjectIds.length ?? 0) > 0;
+      const bHas = (assignmentFor(b.id)?.subjectIds.length ?? 0) > 0;
+      if (aHas !== bHas) return aHas ? 1 : -1;
+      return a.name.localeCompare(b.name);
+    });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [classes, assignments],
-  );
+  }, [classes, assignments, searchTerm]);
 
   const openAssignAll = () => {
     setInitialClassIds([]);
@@ -264,6 +299,26 @@ const ClassesTab = () => {
   const openAssignFor = (classId: string) => {
     setInitialClassIds([classId]);
     setModalOpen(true);
+  };
+
+  const openDetail = (c: Class) => {
+    setDetailClass({
+      record: {
+        id: c.id,
+        name: c.name,
+        level: c.level,
+        arm: c.arm,
+        schoolType: c.schoolType,
+        studentCount: c.studentCount,
+        formTeacher: c.formTeacher,
+      },
+      ids: assignmentFor(c.id)?.subjectIds ?? [],
+    });
+  };
+
+  const handleAssignFromDetail = (classId: string) => {
+    setDetailClass(null);
+    openAssignFor(classId);
   };
 
   const handleSave = (classIds: string[], subjectIds: string[]) => {
@@ -286,11 +341,14 @@ const ClassesTab = () => {
             description="See which subjects are assigned to each class."
             sections={[
               { title: "Assignment overview", text: "The bar shows how many classes already have subjects assigned out of your total." },
-              { title: "Assign subjects", text: "Tap “Assign subjects” to bulk-assign subjects to classes, or open a class row to manage its subjects individually." },
+              { title: "Assign subjects", text: "Tap “Assign subjects” to bulk-assign subjects to classes, or open a class card to manage its subjects individually." },
               { title: "Unassigned classes", text: "Classes still missing subjects are called out so you know what's left to set up." },
             ]}
           />
         }
+        searchValue={searchTerm}
+        onSearchChange={setSearchTerm}
+        searchPlaceholder="Search class"
         actions={
           <Button onClick={openAssignAll} disabled={classes.length === 0}>
             Assign subjects
@@ -320,54 +378,89 @@ const ClassesTab = () => {
         </div>
       </div>
 
-      <div className="mt-4 bg-white rounded-xl shadow-sm border border-gray-100">
-        {loading ? (
-          <p className="text-sm text-gray-400 p-6 text-center">Loading...</p>
-        ) : classes.length === 0 ? (
-          <EmptyState
-            className="min-h-[280px]"
-            icon={<Building size={30} variant="Bold" color="#0D0D0D" />}
-            title="No classes yet"
-            description="Create a class first, then assign subjects to it."
-            actionLabel="Create Class"
-            onAction={() => navigate("/admin/classes")}
-          />
-        ) : (
-          <div className="divide-y divide-gray-100">
-            {sorted.map((c) => {
-              const ids = assignmentFor(c.id)?.subjectIds ?? [];
-              return (
-                <div key={c.id} className="px-6 py-3 flex items-center justify-between gap-3">
-                  <div className="min-w-0">
-                    <p className="text-gray-800 font-medium">
-                      {c.name}
-                      {ids.length === 0 && (
-                        <span className="ml-2 rounded-full bg-red-50 px-2 py-0.5 text-[10px] font-medium text-red-500">
-                          No subjects
-                        </span>
-                      )}
-                    </p>
-                    <p className="mt-0.5 truncate text-xs text-gray-400">
-                      {ids.length > 0 ? ids.map(subjectName).join(", ") : "Not assigned yet"}
-                    </p>
-                  </div>
-                  <div className="flex shrink-0 items-center gap-3">
-                    <span className="text-xs text-gray-400 tabular-nums">
-                      {ids.length} {ids.length === 1 ? "subject" : "subjects"}
+      {loading ? (
+        <p className="text-sm text-gray-400 p-6 text-center">Loading...</p>
+      ) : classes.length === 0 ? (
+        <EmptyState
+          className="min-h-[280px]"
+          icon={<Building size={30} variant="Bold" color="#0D0D0D" />}
+          title="No classes yet"
+          description="Create a class first, then assign subjects to it."
+          actionLabel="Create Class"
+          onAction={() => navigate("/admin/classes")}
+        />
+      ) : filtered.length === 0 ? (
+        <div className="mt-5 rounded-xl border border-gray100 bg-white p-10 text-center">
+          <p className="text-sm font-medium text-gray900">No classes match your search</p>
+          <p className="mt-1 text-xs text-gray400">Try a different search term.</p>
+        </div>
+      ) : (
+        <div className="mt-5 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          {filtered.map((c) => {
+            const ids = assignmentFor(c.id)?.subjectIds ?? [];
+            return (
+              <button
+                key={c.id}
+                type="button"
+                onClick={() => openDetail(c)}
+                className="group flex flex-col bg-white border border-gray100 rounded-xl p-5 text-left transition-all hover:border-gray-200 hover:shadow-sm active:scale-[0.98]"
+              >
+                <div className="flex items-start justify-between gap-3">
+                  <div className="flex items-center gap-3 min-w-0">
+                    <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-offWhite text-gray500">
+                      <Building size={18} color="#8C8C8C" />
                     </span>
-                    <button
-                      onClick={() => openAssignFor(c.id)}
-                      className="text-xs font-medium text-blue-500 hover:text-blue-600"
-                    >
-                      Assign/Edit
-                    </button>
+                    <div className="min-w-0">
+                      <p className="truncate font-semibold text-gray900">
+                        {c.name}
+                        {ids.length === 0 && (
+                          <span className="ml-2 rounded-full bg-red-50 px-2 py-0.5 text-[10px] font-medium text-red-500">
+                            No subjects
+                          </span>
+                        )}
+                      </p>
+                      <p className="text-xs text-gray500">
+                        {c.level}
+                        {c.arm ? ` · Arm ${c.arm}` : ""}
+                      </p>
+                    </div>
                   </div>
+                  <ArrowRight
+                    size={18}
+                    color="#8C8C8C"
+                    className="shrink-0 text-gray400 transition-colors group-hover:text-gray700"
+                  />
                 </div>
-              );
-            })}
-          </div>
-        )}
-      </div>
+
+                {ids.length > 0 && (
+                  <div className="mt-4 flex flex-wrap gap-1.5">
+                    {ids.slice(0, 3).map((id) => (
+                      <span
+                        key={id}
+                        className="whitespace-nowrap rounded-full bg-blue-50 px-2.5 py-1 text-xs font-medium text-blue-600"
+                      >
+                        {subjectName(id)}
+                      </span>
+                    ))}
+                    {ids.length > 3 && (
+                      <span className="whitespace-nowrap rounded-full bg-blue-50 px-2.5 py-1 text-xs font-medium text-blue-600">
+                        +{ids.length - 3} more
+                      </span>
+                    )}
+                  </div>
+                )}
+
+                <div className="mt-4 flex items-center gap-1.5 border-t border-gray100 pt-4 text-xs text-gray500">
+                  <Book1 size={14} color="#8C8C8C" />
+                  <span>
+                    {ids.length} {ids.length === 1 ? "subject" : "subjects"}
+                  </span>
+                </div>
+              </button>
+            );
+          })}
+        </div>
+      )}
 
       <AssignSubjectsModal
         open={modalOpen}
@@ -378,6 +471,14 @@ const ClassesTab = () => {
         initialClassIds={initialClassIds}
         onClose={() => setModalOpen(false)}
         onSubmit={handleSave}
+      />
+      <ClassDetailModal
+        open={detailClass !== null}
+        classRecord={detailClass?.record ?? null}
+        assignedSubjectIds={detailClass?.ids}
+        subjectName={subjectName}
+        onAssign={handleAssignFromDetail}
+        onClose={() => setDetailClass(null)}
       />
     </>
   );

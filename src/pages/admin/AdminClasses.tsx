@@ -1,6 +1,6 @@
 import { useState, useMemo } from "react";
-import { Link, useSearchParams } from "react-router";
-import { Add, Building } from "iconsax-react";
+import { useSearchParams } from "react-router";
+import { Add, ArrowRight, Building, Teacher } from "iconsax-react";
 import { SelectDropdown } from "../../components/ui/select-dropdown";
 import { Button } from "../../components/ui/button";
 import { EmptyState } from "../../components/ui/EmptyState";
@@ -17,7 +17,12 @@ import {
   ClassFormModal,
   type ClassEditTarget,
 } from "../../features/principal/components/ClassFormModal";
+import {
+  ClassDetailModal,
+  type ClassDetailTarget,
+} from "../../features/principal/components/ClassDetailModal";
 import { schoolTypeLabel } from "../../utils/schoolType";
+import type { Class } from "../../features/principal/api/useClasses";
 
 const classSortOptions = [
   { value: "", label: "Sort by" },
@@ -40,6 +45,7 @@ export const AdminClasses = () => {
   const [modal, setModal] = useState<ClassModalState>(() =>
     searchParams.get("add") === "1" ? { mode: "create" } : null,
   );
+  const [detailClass, setDetailClass] = useState<ClassDetailTarget | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [typeFilter, setTypeFilter] = useState("");
   const [sortOrder, setSortOrder] = useState("");
@@ -98,6 +104,27 @@ export const AdminClasses = () => {
 
   const openEdit = (c: { id: string; name: string; level: string; arm?: string; schoolType?: string }) =>
     setModal({ mode: "edit", editing: c });
+
+  const toDetailTarget = (c: Class): ClassDetailTarget => ({
+    id: c.id,
+    name: c.name,
+    level: c.level,
+    arm: c.arm,
+    schoolType: c.schoolType,
+    studentCount: c.studentCount,
+    formTeacher: c.formTeacher,
+  });
+
+  const openDetail = (c: Class) => setDetailClass(toDetailTarget(c));
+
+  const handleDetailEdit = (c: ClassDetailTarget) => {
+    setDetailClass(null);
+    openEdit({ id: c.id, name: c.name, level: c.level, arm: c.arm ?? "", schoolType: c.schoolType ?? "" });
+  };
+
+  const handleDetailDelete = (id: string) => {
+    deleteMutation.mutate(id, { onSuccess: () => setDetailClass(null) });
+  };
 
   const modalOpen = modal !== null;
   const modalMode = modal?.mode ?? "create";
@@ -175,79 +202,73 @@ export const AdminClasses = () => {
           </Button>
         }
       />
-      <div className="bg-white rounded-xl shadow-sm border border-gray-100">
-        {isLoading ? (
-          <p className="text-sm text-gray-400 p-6 text-center">Loading...</p>
-        ) : filteredClasses.length === 0 ? (
-          <EmptyState
-            icon={<Building size={30} variant="Bold" color="#0D0D0D" />}
-            title={searchTerm ? "No classes match your search" : "Create your first class"}
-            description={
-              searchTerm
-                ? "Try a different search term or clear your filters."
-                : "Classes group students into levels and arms. Add a class to start building your school year."
-            }
-            actionLabel="Add Class"
-            actionIcon={<Add size={16} color="#FFFFFF" variant="Linear" />}
-            onAction={() => setModal({ mode: "create" })}
-          />
-        ) : (
-          <div className="divide-y divide-gray-100">
-            {filteredClasses.map((c) => (
-              <div
-                key={c.id}
-                className="px-6 py-3 flex items-center justify-between"
-              >
-                <div className="min-w-0">
-                  <Link
-                    to={`/admin/classes/${c.id}`}
-                    className="text-gray-800 font-medium hover:text-blue-600"
-                  >
-                    {c.name}
-                  </Link>
-                  {c.formTeacher ? (
-                    <Link
-                      to={`/admin/teachers/${c.formTeacher.id}`}
-                      className="block text-xs text-gray-400 mt-0.5 hover:text-blue-600"
-                    >
-                      Class Teacher: {c.formTeacher.name}
-                    </Link>
-                  ) : (
-                    <span className="block text-xs text-gray-400 mt-0.5">
-                      No class teacher
-                    </span>
-                  )}
+      {isLoading ? (
+        <p className="text-sm text-gray-400 p-6 text-center">Loading...</p>
+      ) : filteredClasses.length === 0 ? (
+        <EmptyState
+          icon={<Building size={30} variant="Bold" color="#0D0D0D" />}
+          title={searchTerm ? "No classes match your search" : "Create your first class"}
+          description={
+            searchTerm
+              ? "Try a different search term or clear your filters."
+              : "Classes group students into levels and arms. Add a class to start building your school year."
+          }
+          actionLabel="Add Class"
+          actionIcon={<Add size={16} color="#FFFFFF" variant="Linear" />}
+          onAction={() => setModal({ mode: "create" })}
+        />
+      ) : (
+        <div className="mt-5 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          {filteredClasses.map((c) => (
+            <button
+              key={c.id}
+              type="button"
+              onClick={() => openDetail(c)}
+              className="group flex flex-col bg-white border border-gray100 rounded-xl p-5 text-left transition-all hover:border-gray-200 hover:shadow-sm active:scale-[0.98]"
+            >
+              <div className="flex items-start justify-between gap-3">
+                <div className="flex items-center gap-3 min-w-0">
+                  <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-offWhite text-gray500">
+                    <Building size={18} color="#8C8C8C" />
+                  </span>
+                  <div className="min-w-0">
+                    <p className="truncate font-semibold text-gray900">{c.name}</p>
+                    <p className="text-xs text-gray500">
+                      {c.level}
+                      {c.arm ? ` · Arm ${c.arm}` : ""}
+                    </p>
+                  </div>
                 </div>
-                <div className="flex items-center gap-3">
-                  {c.schoolType && (
-                    <span className="text-[10px] font-medium capitalize bg-gray-100 text-gray-600 px-2 py-0.5 rounded-full">
-                      {schoolTypeLabel(c.schoolType)}
-                    </span>
-                  )}
-                  <span className="text-xs text-gray-400">{c.level}</span>
-                  {typeof c.studentCount === "number" && (
-                    <span className="text-xs text-gray-400">
-                      {c.studentCount} {c.studentCount === 1 ? "student" : "students"}
-                    </span>
-                  )}
-                  <button
-                    onClick={() => openEdit({ id: c.id, name: c.name, level: c.level, arm: c.arm ?? "", schoolType: c.schoolType ?? "" })}
-                    className="text-xs text-blue-500 hover:text-blue-600"
-                  >
-                    Edit
-                  </button>
-                  <button
-                    onClick={() => deleteMutation.mutate(c.id)}
-                    className="text-xs text-red-500 hover:text-red-600"
-                  >
-                    Delete
-                  </button>
-                </div>
+                <ArrowRight
+                  size={18}
+                  color="#8C8C8C"
+                  className="shrink-0 text-gray400 transition-colors group-hover:text-gray700"
+                />
               </div>
-            ))}
-          </div>
-        )}
-      </div>
+
+              <div className="mt-4 flex flex-wrap items-center gap-1.5">
+                {c.schoolType && (
+                  <span className="rounded-full bg-gray100 px-2.5 py-1 text-[10px] font-medium capitalize text-gray600">
+                    {schoolTypeLabel(c.schoolType)}
+                  </span>
+                )}
+                {typeof c.studentCount === "number" && (
+                  <span className="rounded-full bg-offWhite px-2.5 py-1 text-xs text-gray500">
+                    {c.studentCount} {c.studentCount === 1 ? "student" : "students"}
+                  </span>
+                )}
+              </div>
+
+              <div className="mt-4 flex items-center gap-1.5 border-t border-gray100 pt-4 text-xs text-gray500">
+                <Teacher size={14} color="#8C8C8C" />
+                <span className="min-w-0 truncate">
+                  {c.formTeacher ? `Class Teacher: ${c.formTeacher.name}` : "No class teacher"}
+                </span>
+              </div>
+            </button>
+          ))}
+        </div>
+      )}
       <ClassFormModal
         open={modalOpen}
         mode={modalMode}
@@ -257,6 +278,15 @@ export const AdminClasses = () => {
         saving={createMutation.isPending || updateMutation.isPending}
         onClose={() => setModal(null)}
         onSubmit={modalMode === "edit" ? handleEdit : handleCreate}
+      />
+      <ClassDetailModal
+        open={detailClass !== null}
+        classRecord={detailClass}
+        deleting={deleteMutation.isPending}
+        detailHref={detailClass ? `/admin/classes/${detailClass.id}` : undefined}
+        onClose={() => setDetailClass(null)}
+        onEdit={handleDetailEdit}
+        onDelete={handleDetailDelete}
       />
     </div>
   );

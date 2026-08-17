@@ -5,6 +5,7 @@ import { transformError } from "../../../utils/transformError";
 import { useAuth } from "../../../contexts/AuthContext";
 import { addToQueue } from "../../../sync/syncQueue";
 import { db, type SubjectCache } from "../../../db/db";
+import { uuid } from "../../../utils/uuid";
 import type { AxiosErrorResponse } from "../types";
 
 interface CreateSubjectPayload {
@@ -17,7 +18,7 @@ export const useCreateSubject = () => {
 
   return useMutation<SubjectCache, AxiosErrorResponse, CreateSubjectPayload>({
     mutationFn: async (payload) => {
-      const id = crypto.randomUUID();
+      const id = uuid();
       const cache: SubjectCache = {
         id,
         userId: user!.id,

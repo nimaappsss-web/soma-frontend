@@ -368,9 +368,7 @@ export const AdminStudents = () => {
                       </Link>
                       {s.admissionNo && <span className="ml-2 text-xs text-gray-400">{s.admissionNo}</span>}
                       {className && <span className="ml-2 text-xs text-blue-500">{className}</span>}
-                      {s.parentPhone && (
-                        <span className="ml-3 text-xs text-gray-400">{s.parentName ?? "—"} · {s.parentPhone}</span>
-                      )}
+                      {s.parentName && <span className="ml-3 text-xs text-gray-400">{s.parentName}</span>}
                     </div>
                   </div>
                   <div className="flex items-center gap-2">
