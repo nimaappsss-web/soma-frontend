@@ -8,6 +8,7 @@ import { DateInput } from "../../../components/ui/date-input";
 import { SelectDropdown, type SelectOption } from "../../../components/ui/select-dropdown";
 import { Button } from "../../../components/ui/button";
 import type { CreateStudentPayload } from "../types";
+import { buildGuardianName } from "../../../utils/guardianName";
 
 const addStudentSchema = z.object({
   firstName: z.string().min(1, "First name is required"),
@@ -89,6 +90,7 @@ export const AddStudentDialog = ({
 
   useEffect(() => {
     if (open) {
+      reset();
       document.body.style.overflow = "hidden";
     } else {
       document.body.style.overflow = "";
@@ -96,7 +98,7 @@ export const AddStudentDialog = ({
     return () => {
       document.body.style.overflow = "";
     };
-  }, [open]);
+  }, [open, reset]);
 
   const handleClose = () => {
     reset();
@@ -110,9 +112,7 @@ export const AddStudentDialog = ({
       gender: data.gender || undefined,
       dateOfBirth: data.dateOfBirth || undefined,
       address: data.address || undefined,
-      parentName: data.parentName
-        ? `${data.parentTitle ? data.parentTitle + " " : ""}${data.parentName}`.trim()
-        : undefined,
+      parentName: buildGuardianName(data.parentTitle ?? "", data.parentName ?? ""),
       parentPhone: data.parentPhone || undefined,
       parentEmail: data.parentEmail || undefined,
     };
