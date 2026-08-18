@@ -2,6 +2,7 @@ import { useState, useRef, useEffect, useLayoutEffect, useMemo } from "react";
 import { createPortal } from "react-dom";
 import { cn } from "../../lib/utils";
 import { SearchNormal, CloseCircle } from "iconsax-react";
+import { compactSearch } from "../../utils/search";
 import { Checkbox } from "./checkbox";
 import type { CSSProperties } from "react";
 import type { FieldError } from "react-hook-form";
@@ -109,7 +110,7 @@ export const MultiSelect = ({
   const filteredOptions = useMemo(
     () =>
       searchable && filter
-        ? options.filter((o) => o.label.toLowerCase().includes(filter.toLowerCase()))
+        ? options.filter((o) => compactSearch(o.label).includes(compactSearch(filter)))
         : options,
     [options, filter, searchable],
   );

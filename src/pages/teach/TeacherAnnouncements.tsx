@@ -3,6 +3,7 @@ import { Speaker } from "iconsax-react";
 import { useAnnouncements } from "../../features/announcements/api";
 import { AnnouncementCard } from "../../features/announcements/components/AnnouncementCard";
 import { EmptyState } from "../../components/ui/EmptyState";
+import { SomaLoader } from "../../components/ui/SomaLoader";
 import { HelpHint } from "../../components/ui/HelpHint";
 
 export const TeacherAnnouncements = () => {
@@ -29,7 +30,9 @@ export const TeacherAnnouncements = () => {
       </div>
 
       {isLoading ? (
-        <p className="text-sm text-gray400 text-center py-12">Loading...</p>
+        <div className="py-12">
+          <SomaLoader label="Loading announcements" className="h-8 w-8" />
+        </div>
       ) : announcements.length > 0 ? (
         <div className="max-w-2xl space-y-4">
           {announcements.map((a) => (

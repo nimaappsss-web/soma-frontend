@@ -6,6 +6,7 @@ import { Button } from "../../../components/ui/button";
 import { Input } from "../../../components/ui/input";
 import { SelectDropdown, type SelectOption } from "../../../components/ui/select-dropdown";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "../../../components/ui/dialog";
+import { SomaLoader } from "../../../components/ui/SomaLoader";
 import { MoneyInput } from "./MoneyInput";
 import { useAllStudents } from "../../students/api";
 import { useInvoices } from "../api/useInvoices";
@@ -181,7 +182,9 @@ export const CollectPaymentDialog = ({ open, onOpenChange }: Props) => {
               </div>
 
               {studentsLoading ? (
-                <p className="text-sm text-gray-400 py-6 text-center">Loading students…</p>
+                <div className="py-6">
+                  <SomaLoader label="Loading students" className="h-8 w-8" descriptions={["Finding your students…", "Almost there…"]} />
+                </div>
               ) : filteredStudents.length === 0 ? (
                 <p className="text-sm text-gray-400 py-6 text-center">
                   {search ? "No student matches your search." : "No active students yet."}
@@ -214,7 +217,9 @@ export const CollectPaymentDialog = ({ open, onOpenChange }: Props) => {
           {step === "invoice" && (
             <div className="space-y-3">
               {invoicesLoading ? (
-                <p className="text-sm text-gray-400 py-6 text-center">Loading fees…</p>
+                <div className="py-6">
+                  <SomaLoader label="Loading fees" className="h-8 w-8" descriptions={["Pulling your child's fee breakdown…", "Almost there…"]} />
+                </div>
               ) : outstandingInvoices.length === 0 ? (
                 <div className="py-6 text-center">
                   <p className="text-sm font-medium text-gray900">No outstanding fees</p>

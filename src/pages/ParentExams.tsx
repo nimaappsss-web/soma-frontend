@@ -1,6 +1,7 @@
 import { useMemo } from "react";
 import { DocumentText, Calendar, ClipboardTick } from "iconsax-react";
 import { cn } from "@/lib/utils";
+import { SomaLoader, parentLoadingDescriptions } from "../components/ui/SomaLoader";
 import { useCalendarEvents } from "../features/calendar/api";
 import { localDateKey } from "../utils/date";
 
@@ -50,7 +51,9 @@ export const ParentExams = () => {
       </div>
 
       {isLoading ? (
-        <p className="text-sm text-gray500 text-center py-12">Loading...</p>
+        <div className="py-12">
+          <SomaLoader descriptions={parentLoadingDescriptions} />
+        </div>
       ) : exams.length === 0 ? (
         <div className="bg-white rounded-2xl p-10 border border-gray100 text-center">
           <div className="w-12 h-12 rounded-full bg-[#F3EDFF] flex items-center justify-center mx-auto mb-3">

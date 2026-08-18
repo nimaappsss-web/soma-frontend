@@ -19,9 +19,9 @@ const statusIcons: Record<AttendanceStatus, { icon: string; active: string; inac
     inactive: "text-gray-300 hover:text-red-500 hover:bg-red-50",
   },
   late: {
-    icon: "⏱",
-    active: "bg-amber-100 text-amber-600 ring-2 ring-amber-500",
-    inactive: "text-gray-300 hover:text-amber-500 hover:bg-amber-50",
+    icon: "",
+    active: "",
+    inactive: "",
   },
 };
 export const AttendanceListView = ({ students, attendance, onMark, readOnly }: AttendanceListViewProps) => {
@@ -39,13 +39,10 @@ export const AttendanceListView = ({ students, attendance, onMark, readOnly }: A
               <Avatar name={s.name} size={28} />
               <div className="min-w-0">
                 <span className="text-gray-800 font-medium text-sm">{s.name}</span>
-                {s.admissionNo && (
-                  <span className="ml-2 text-xs text-gray-400">{s.admissionNo}</span>
-                )}
               </div>
             </div>
             <div className="flex items-center gap-2">
-              {(Object.keys(statusIcons) as AttendanceStatus[]).map((status) => (
+              {(["present", "absent"] as AttendanceStatus[]).map((status) => (
                 <button
                   key={status}
                   disabled={readOnly}

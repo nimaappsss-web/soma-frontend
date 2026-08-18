@@ -1,5 +1,6 @@
 import { useState, useRef } from "react";
 import { toast } from "@/utils/toast";
+import { SomaLoader, parentLoadingDescriptions } from "../components/ui/SomaLoader";
 
 import { useAuth } from "../contexts/AuthContext";
 import { useParentProfile } from "../features/parent/api";
@@ -61,7 +62,11 @@ export const ParentSettings = () => {
   };
 
   if (isLoading) {
-    return <p className="text-sm text-gray400 p-8">Loading...</p>;
+    return (
+      <div className="p-8">
+        <SomaLoader descriptions={parentLoadingDescriptions} />
+      </div>
+    );
   }
 
   return (

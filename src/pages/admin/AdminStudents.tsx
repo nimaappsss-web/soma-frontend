@@ -4,6 +4,7 @@ import { Add, AddSquare, ArrowDown2, Profile2User, Trash } from "iconsax-react";
 import { Avatar } from "../../components/ui/Avatar";
 import { Checkbox } from "../../components/ui/checkbox";
 import { EmptyState } from "../../components/ui/EmptyState";
+import { SomaLoader } from "../../components/ui/SomaLoader";
 import { useAuth } from "../../contexts/AuthContext";
 import { useAllStudents, useCreateStudent, useUpdateStudent, useDeleteStudent, useBulkDeleteStudents } from "../../features/students/api";
 import { BulkAddStudents } from "../../features/students/components/BulkAddStudents";
@@ -246,7 +247,9 @@ export const AdminStudents = () => {
           </div>
         )}
 {isLoading ? (
-          <p className="text-sm text-gray-400 p-6 text-center rounded-xl border border-gray100 bg-white">Loading...</p>
+          <div className="rounded-xl border border-gray100 bg-white p-6 text-center">
+            <SomaLoader label="Loading students" className="h-8 w-8" />
+          </div>
         ) : filtered.length === 0 ? (
           <EmptyState
             icon={<Profile2User size={30} variant="Bold" color="#0D0D0D" />}

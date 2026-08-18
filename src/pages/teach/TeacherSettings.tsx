@@ -2,6 +2,7 @@ import { useState, useRef } from "react";
 import { toast } from "@/utils/toast";
 import { useAuth } from "../../contexts/AuthContext";
 import { useTeacherDetail } from "../../features/teacher/api";
+import { SomaLoader } from "../../components/ui/SomaLoader";
 import { Avatar } from "../../components/ui/Avatar";
 import { Input } from "../../components/ui/input";
 import { DateInput } from "../../components/ui/date-input";
@@ -89,7 +90,11 @@ export const TeacherSettings = () => {
       : teacher.formClass
     : "None";
   if (isLoading) {
-    return <p className="text-sm text-gray-400 p-8">Loading...</p>;
+    return (
+      <div className="p-8">
+        <SomaLoader label="Loading settings" className="h-8 w-8" />
+      </div>
+    );
   }
   return (
     <div className="p-8 max-w-2xl">

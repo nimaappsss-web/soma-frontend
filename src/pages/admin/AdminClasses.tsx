@@ -4,7 +4,9 @@ import { Add, ArrowRight, Building, Teacher } from "iconsax-react";
 import { SelectDropdown } from "../../components/ui/select-dropdown";
 import { Button } from "../../components/ui/button";
 import { EmptyState } from "../../components/ui/EmptyState";
+import { SomaLoader } from "../../components/ui/SomaLoader";
 import { PageHeader } from "../../components/ui/PageHeader";
+import { compactSearch } from "../../utils/search";
 import { HelpHint } from "../../components/ui/HelpHint";
 import { useSchoolSettings } from "../../features/settings/api/useSchoolSettings";
 import {
@@ -51,12 +53,12 @@ export const AdminClasses = () => {
   const [sortOrder, setSortOrder] = useState("");
 
   const filteredClasses = useMemo(() => {
-    const term = searchTerm.trim().toLowerCase();
+    const term = compactSearch(searchTerm);
     let list = classesData?.classes ?? [];
     if (term) {
       list = list.filter(
         (c) =>
-          c.name.toLowerCase().includes(term) || c.level.toLowerCase().includes(term),
+          compactSearch(c.name).includes(term) || compactSearch(c.level).includes(term),
       );
     }
     if (typeFilter) {
@@ -203,7 +205,9 @@ export const AdminClasses = () => {
         }
       />
       {isLoading ? (
-        <p className="text-sm text-gray-400 p-6 text-center">Loading...</p>
+        <div className="py-6 text-center">
+          <SomaLoader label="Loading classes" className="h-8 w-8" />
+        </div>
       ) : filteredClasses.length === 0 ? (
         <EmptyState
           icon={<Building size={30} variant="Bold" color="#0D0D0D" />}

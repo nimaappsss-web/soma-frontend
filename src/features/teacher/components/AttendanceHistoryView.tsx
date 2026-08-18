@@ -3,6 +3,7 @@ import { useLiveQuery } from "dexie-react-hooks";
 import { useQuery } from "@tanstack/react-query";
 
 import { Avatar } from "../../../components/ui/Avatar";
+import { SomaLoader } from "../../../components/ui/SomaLoader";
 import { DateInput } from "../../../components/ui/date-input";
 import { useAuth } from "../../../contexts/AuthContext";
 import { db } from "../../../db/db";
@@ -19,7 +20,6 @@ interface AttendanceHistoryViewProps {
 const statusColors: Record<string, string> = {
   present: "text-green-600 bg-green-50",
   absent: "text-red-600 bg-red-50",
-  late: "text-amber-600 bg-amber-50",
 };
 
 export const AttendanceHistoryView = ({ classId, formClass }: AttendanceHistoryViewProps) => {
@@ -151,7 +151,7 @@ export const AttendanceHistoryView = ({ classId, formClass }: AttendanceHistoryV
   if (records === undefined && historyQuery.isLoading) {
     return (
       <div className="flex items-center justify-center py-8">
-        <p className="text-sm text-gray-400">Loading...</p>
+        <SomaLoader label="Loading attendance" className="h-8 w-8" />
       </div>
     );
   }
@@ -212,9 +212,6 @@ export const AttendanceHistoryView = ({ classId, formClass }: AttendanceHistoryV
                     <span className="text-gray-800 font-medium text-sm">
                       {s?.name ?? "Unknown student"}
                     </span>
-                    {s?.admissionNo && (
-                      <span className="ml-2 text-xs text-gray-400">{s.admissionNo}</span>
-                    )}
                   </div>
                 </div>
                 <div className="flex items-center gap-2">

@@ -8,6 +8,7 @@ import { SelectDropdown } from "../../../components/ui/select-dropdown";
 import { BottomSheet } from "../../../components/mobile/BottomSheet";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "../../../components/ui/dialog";
 import { EmptyState } from "../../../components/ui/EmptyState";
+import { SomaLoader } from "../../../components/ui/SomaLoader";
 import { useInvoices, useBulkGenerateInvoices, useSendPaymentReminder, useInvoiceDetail } from "../api";
 import { useClasses } from "../../principal/api";
 import { useActiveTerm } from "../../calendar/api";
@@ -259,7 +260,9 @@ export const InvoicesTab = () => {
       <Dialog open={!!viewId} onOpenChange={(o) => !o && setViewId(null)}>
         <DialogContent variant="center" className="md:max-w-2xl">
           {detailLoading ? (
-            <div className="py-10 text-center text-sm text-gray-400">Loading invoice…</div>
+            <div className="py-10">
+              <SomaLoader label="Loading invoice" className="h-8 w-8" />
+            </div>
           ) : detailData?.invoice ? (
             <InvoiceView invoice={detailData.invoice} onClose={() => setViewId(null)} />
           ) : (

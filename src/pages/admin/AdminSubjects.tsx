@@ -2,8 +2,10 @@ import { useState, useMemo } from "react";
 import { useNavigate, useSearchParams } from "react-router";
 import { Add, ArrowRight, Book1, Building, Teacher } from "iconsax-react";
 import { cn } from "../../lib/utils";
+import { compactSearch } from "../../utils/search";
 import { Button } from "../../components/ui/button";
 import { EmptyState } from "../../components/ui/EmptyState";
+import { SomaLoader } from "../../components/ui/SomaLoader";
 import { PageHeader } from "../../components/ui/PageHeader";
 import { HelpHint } from "../../components/ui/HelpHint";
 import { SelectDropdown, type SelectOption } from "../../components/ui/select-dropdown";
@@ -180,7 +182,9 @@ const SubjectsTab = () => {
         actions={<Button onClick={() => setModal({ mode: "create" })}>+ Add Subject</Button>}
       />
       {isLoading ? (
-        <p className="text-sm text-gray-400 p-6 text-center">Loading...</p>
+        <div className="py-6 text-center">
+          <SomaLoader label="Loading subjects" className="h-8 w-8" />
+        </div>
       ) : filtered.length === 0 ? (
         <EmptyState
           icon={<Book1 size={30} variant="Bold" color="#0D0D0D" />}
@@ -275,11 +279,11 @@ const ClassesTab = () => {
   const pct = classes.length ? Math.round((assignedCount / classes.length) * 100) : 0;
 
   const filtered = useMemo(() => {
-    const term = searchTerm.trim().toLowerCase();
+    const term = compactSearch(searchTerm);
     let list = [...classes];
     if (term) {
       list = list.filter(
-        (c) => c.name.toLowerCase().includes(term) || c.level.toLowerCase().includes(term),
+        (c) => compactSearch(c.name).includes(term) || compactSearch(c.level).includes(term),
       );
     }
     return list.sort((a, b) => {
@@ -379,7 +383,9 @@ const ClassesTab = () => {
       </div>
 
       {loading ? (
-        <p className="text-sm text-gray-400 p-6 text-center">Loading...</p>
+        <div className="py-6 text-center">
+          <SomaLoader label="Loading classes" className="h-8 w-8" />
+        </div>
       ) : classes.length === 0 ? (
         <EmptyState
           className="min-h-[280px]"

@@ -1,5 +1,7 @@
 import { useState } from "react";
+import { ArrowDown2 } from "iconsax-react";
 import { cn } from "@/lib/utils";
+import { SomaLoader, parentLoadingDescriptions } from "../components/ui/SomaLoader";
 import { useParentProfile, useChildrenWithDetails } from "../features/parent/api";
 import { ParentFeesCard } from "../features/parent/components/ParentFeesCard";
 import { useAllParentFees } from "../features/parent/api/useAllParentFees";
@@ -15,6 +17,7 @@ export const ParentFees = () => {
   const { parent, isLoading } = useParentProfile();
   const children = useChildrenWithDetails(parent?.students);
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [showBank, setShowBank] = useState(false);
 
   const allFees = useAllParentFees();
   const selected = children.find((c) => c.id === selectedId) ?? children[0];
@@ -37,7 +40,9 @@ export const ParentFees = () => {
         </div>
 
         {isLoading ? (
-          <p className="text-sm text-gray500 text-center py-12">Loading...</p>
+          <div className="py-12">
+            <SomaLoader descriptions={parentLoadingDescriptions} />
+          </div>
         ) : !children.length ? (
           <div className="bg-white rounded-xl p-8 border border-gray100 text-center">
             <p className="text-gray500">No children linked to your account.</p>
@@ -45,13 +50,25 @@ export const ParentFees = () => {
         ) : (
           <div className="space-y-5">
             {/* Summary hero */}
-            <section className="rounded-2xl bg-black text-white p-5 md:p-6">
-              <p className="text-xs text-white/60">
-                Total left to pay for {children.length === 1 ? "your child" : `all ${children.length} children`}
-              </p>
-              <p className="text-4xl md:text-5xl font-bold mt-1 tracking-tight">
-                {formatNaira(totalOutstanding)}
-              </p>
+                        <section className="rounded-2xl bg-indigo500 text-white p-5 md:p-6">
+              <div className="flex items-start justify-between gap-3">
+                <div className="min-w-0">
+                  <p className="text-xs text-white/60">
+                    Total left to pay for {children.length === 1 ? "your child" : `all ${children.length} children`}
+                  </p>
+                  <p className="text-4xl md:text-5xl font-bold mt-1 tracking-tight">
+                    {formatNaira(totalOutstanding)}
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setShowBank((v) => !v)}
+                  className="flex items-center gap-1.5 rounded-lg bg-white px-3.5 py-2 text-[11px] font-semibold text-gray900 hover:bg-gray100 shrink-0"
+                >
+                  View school acc
+                  <ArrowDown2 size={12} color="#0D0D0D" className={cn("transition-transform", showBank && "rotate-180")} />
+                </button>
+              </div>
 
               <div className="h-1.5 bg-white/15 rounded-full overflow-hidden mt-5">
                 <div
@@ -114,6 +131,8 @@ export const ParentFees = () => {
                   admissionNo: selected.admissionNo,
                   className: selected.className,
                 }}
+                showDetails={showBank}
+                onToggleDetails={() => setShowBank((v) => !v)}
               />
             )}
           </div>

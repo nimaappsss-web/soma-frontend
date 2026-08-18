@@ -31,6 +31,7 @@ export const useParentProfile = () => {
     },
     enabled: !!userId,
     staleTime: 5 * 60 * 1000,
+    refetchOnMount: "always",
   });
 
   const parent = cached?.length ? (cached[0] as unknown as Parent) : null;
@@ -78,7 +79,6 @@ export const useChildrenWithDetails = (students: Parent["students"] = EMPTY_STUD
               if (!className) className = (await db.classes.get(classId))?.name;
               if (!teacherName) {
                 const teachers = await db.teachers
-                  .where("userId").equals(userId)
                   .filter((t) => t.formClassId === classId)
                   .toArray();
                 teacherName = teachers.map((t) => t.name).join(", ") || undefined;

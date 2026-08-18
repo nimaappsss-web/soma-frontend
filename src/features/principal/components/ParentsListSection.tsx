@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Add, People } from "iconsax-react";
 import { Avatar } from "../../../components/ui/Avatar";
 import { EmptyState } from "../../../components/ui/EmptyState";
+import { SomaLoader } from "../../../components/ui/SomaLoader";
 import { useParents } from "../api/useParents";
 import { useResendParentInvite } from "../api/useResendParentInvite";
 import { InviteParentModal } from "./InviteParentModal";
@@ -21,7 +22,7 @@ export const ParentsListSection = ({ limit = 10 }: ParentsListSectionProps) => {
     return (
       <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
         <h3 className="font-semibold text-gray-800 mb-4">Parents</h3>
-        <p className="text-sm text-gray-400">Loading...</p>
+        <SomaLoader label="Loading parents" className="h-8 w-8" />
       </div>
     );
   }

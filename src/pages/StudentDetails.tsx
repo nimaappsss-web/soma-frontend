@@ -17,6 +17,7 @@ import {
 
 import { Avatar } from "../components/ui/Avatar";
 import { Button } from "../components/ui/button";
+import { SomaLoader } from "../components/ui/SomaLoader";
 import { useStudentDetail, useStudentAcademics, useStudentMonthlyAttendance, useStudentTimeline, useUpdateStudent } from "../features/students/api";
 import { StudentFormDialog } from "../features/students/components/StudentFormDialog";
 import type { TimelineEvent } from "../features/students/types";
@@ -101,7 +102,9 @@ export const StudentDetails = () => {
   if (isLoading) {
     return (
       <div className="p-6">
-        <div className="flex items-center justify-center py-24 text-sm text-gray500">Loading...</div>
+        <div className="py-24">
+          <SomaLoader label="Loading student" className="h-8 w-8" />
+        </div>
       </div>
     );
   }

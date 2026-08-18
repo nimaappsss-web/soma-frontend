@@ -2,6 +2,7 @@ import { useState, useRef, useEffect, useLayoutEffect, useMemo } from "react";
 import { createPortal } from "react-dom";
 import { cn } from "@/lib/utils";
 import { SearchNormal } from "iconsax-react";
+import { compactSearch } from "@/utils/search";
 import type { CSSProperties } from "react";
 import type { FieldError } from "react-hook-form";
 
@@ -110,7 +111,7 @@ export const SelectDropdown = ({
   const filteredOptions = useMemo(
     () =>
       searchable && filter
-        ? options.filter((o) => o.label.toLowerCase().includes(filter.toLowerCase()))
+        ? options.filter((o) => compactSearch(o.label).includes(compactSearch(filter)))
         : options,
     [options, filter, searchable],
   );

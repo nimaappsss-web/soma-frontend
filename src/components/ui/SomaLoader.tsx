@@ -1,6 +1,18 @@
 import { useEffect, useState } from "react";
 import { cn } from "@/lib/utils";
 
+export const parentLoadingDescriptions = [
+  "Loading the latest for you…",
+  "Just a moment…",
+  "Almost there…",
+];
+
+export const feesLoadingDescriptions = [
+  "Fetching your child's fees…",
+  "Checking what's been paid…",
+  "Almost there…",
+];
+
 interface SomaLoaderProps {
   className?: string;
   label?: string;

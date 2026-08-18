@@ -15,6 +15,7 @@ import {
   Fatrows,
 } from "iconsax-react";
 import { EmptyState } from "../../../components/ui/EmptyState";
+import { SomaLoader } from "../../../components/ui/SomaLoader";
 import { HelpHint } from "../../../components/ui/HelpHint";
 
 import { useAuth } from "../../../contexts/AuthContext";
@@ -405,8 +406,7 @@ const SubjectBlock = ({
                 <div className="mt-2">
                   {rosterLoading ? (
                     <div className="flex items-center justify-center gap-3 rounded-xl bg-gray50 py-8">
-                      <div className="h-5 w-5 animate-spin rounded-full border-2 border-gray200 border-t-gray900" />
-                      <p className="text-sm text-gray500">Loading students…</p>
+                      <SomaLoader label="Loading students" className="h-8 w-8" />
                     </div>
                   ) : roster.length === 0 ? (
                     <div className="w-full">

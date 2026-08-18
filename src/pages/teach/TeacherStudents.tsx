@@ -4,6 +4,7 @@ import { Profile2User } from "iconsax-react";
 import { Avatar } from "../../components/ui/Avatar";
 import { CelebrationDecor } from "../../components/ui/CelebrationDecor";
 import { EmptyState } from "../../components/ui/EmptyState";
+import { SomaLoader } from "../../components/ui/SomaLoader";
 import { StudentPageHeader, type StudentViewMode } from "../../features/students/components/StudentPageHeader";
 import { HelpHint } from "../../components/ui/HelpHint";
 import { useTeacherProfile } from "../../features/teacher/api";
@@ -46,7 +47,11 @@ export const TeacherStudents = () => {
   }, [allStudents, statusFilter, searchTerm, sortOrder]);
 
   if (profileLoading) {
-    return <p className="text-sm text-gray-500 p-4 md:p-6">Loading...</p>;
+    return (
+      <div className="p-4 md:p-6">
+        <SomaLoader label="Loading students" className="h-8 w-8" />
+      </div>
+    );
   }
   if (!formClassId) {
     return (
@@ -86,7 +91,9 @@ export const TeacherStudents = () => {
         onViewChange={setViewMode}
       />
       {loading ? (
-        <p className="text-sm text-gray-500 p-8 text-center">Loading...</p>
+        <div className="py-8 text-center">
+          <SomaLoader label="Loading students" className="h-8 w-8" />
+        </div>
       ) : students.length === 0 ? (
         <EmptyState
           icon={<Profile2User size={30} variant="Bold" color="#0D0D0D" />}

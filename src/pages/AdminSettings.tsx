@@ -23,6 +23,7 @@ import { SelectDropdown } from "../components/ui/select-dropdown";
 import { Label } from "../components/ui/label";
 import { Button } from "../components/ui/button";
 import { Avatar } from "../components/ui/Avatar";
+import { SomaLoader } from "../components/ui/SomaLoader";
 import { cn } from "../lib/utils";
 import { TagInput } from "../components/ui/tag-input";
 import { MultiSelect } from "../components/ui/multi-select";
@@ -362,7 +363,7 @@ const SchoolSection = () => {
       </CardHeader>
       <CardContent>
         {isLoading ? (
-          <p className="text-sm text-gray-400">Loading...</p>
+          <SomaLoader label="Loading…" className="h-8 w-8" />
         ) : !school ? (
           <p className="text-sm text-gray-400">Could not load school data.</p>
         ) : (
@@ -508,7 +509,7 @@ const PaymentsSection = () => {
         </CardHeader>
         <CardContent>
           {isLoading ? (
-            <p className="text-sm text-gray-400">Loading...</p>
+            <SomaLoader label="Loading…" className="h-8 w-8" />
           ) : (
             <div className="space-y-4">
               <div className="space-y-2">
@@ -552,7 +553,7 @@ const TermSettingsSection = () => {
         </CardHeader>
         <CardContent>
           {isLoading ? (
-            <p className="text-sm text-gray-400">Loading...</p>
+            <SomaLoader label="Loading…" className="h-8 w-8" />
           ) : (
             <div className="flex items-start justify-between gap-4">
               <div>

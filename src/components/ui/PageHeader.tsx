@@ -40,12 +40,12 @@ export const PageHeader = ({
   return (
     <div className="flex flex-col xl:flex-row items-stretch xl:items-center justify-between gap-3 mb-5">
       {/* Group 1: Title + Subtitle paired */}
-      <div className="group flex items-center gap-2.5 shrink-0">
+      <div className="group flex items-center gap-3 shrink-0">
         <h1 className="text-[18px] sm:text-2xl font-semibold text-gray-900">
           {title}
         </h1>
-        {hint}
         {subtitle}
+        {hint}
       </div>
 
       {/* Group 2: Filters + View toggle + Actions paired */}

@@ -1,7 +1,8 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { ArrowDown2, Copy, Card } from "iconsax-react";
 
 import { cn } from "@/lib/utils";
+import { SomaLoader, feesLoadingDescriptions } from "../../../components/ui/SomaLoader";
 import { Button } from "../../../components/ui/button";
 import { Dialog, DialogContent } from "../../../components/ui/dialog";
 import { useActiveTerm } from "../../calendar/api";
@@ -16,6 +17,8 @@ import { PaystackModal } from "./PaystackModal";
 import { InvoiceView } from "../../finance/components/InvoiceView";
 import { useInvoiceDetail } from "../../finance/api";
 import type { Payment } from "../../finance/types";
+import { useSchoolSettings } from "../../settings/api";
+import type { ManualBankDetails } from "../../settings/types";
 
 const statusStyles: Record<ParentTermFees["status"], string> = {
   PAID: "bg-green-50 text-green-600",
@@ -37,14 +40,28 @@ const payStatusLabel: Record<string, { label: string; className: string }> = {
 
 interface Props {
   child: { id: string; name: string; admissionNo: string; className?: string };
+  showDetails?: boolean;
+  onToggleDetails?: () => void;
 }
 
-export const ParentFeesCard = ({ child }: Props) => {
+export const ParentFeesCard = ({ child, showDetails: showDetailsProp, onToggleDetails }: Props) => {
+  const [showDetails, setShowDetails] = useState(false);
+  const detailsOpen = showDetailsProp ?? showDetails;
+  const toggleDetails = () => {
+    if (onToggleDetails) onToggleDetails();
+    else setShowDetails((v) => !v);
+  };
+  const detailsRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    if (detailsOpen) {
+      detailsRef.current?.scrollIntoView({ behavior: "smooth", block: "nearest" });
+    }
+  }, [detailsOpen]);
   const { terms, isLoading } = useParentFees(child.id);
   const { activeTerm } = useActiveTerm();
   const [term, setTerm] = useState<string>(activeTerm?.term ?? "first");
   const [submitOpen, setSubmitOpen] = useState(false);
-  const [showDetails, setShowDetails] = useState(false);
   const [showBreakdown, setShowBreakdown] = useState(false);
   const [receipt, setReceipt] = useState<Payment | null>(null);
   const [paystackOpen, setPaystackOpen] = useState(false);
@@ -52,6 +69,9 @@ export const ParentFeesCard = ({ child }: Props) => {
   const { data: invoiceDetail, isLoading: invoiceLoading } = useInvoiceDetail(viewInvoiceId ?? "");
   const { copy, copied } = useClipboard();
   const paystackEnabled = usePaystackEnabled();
+  const { data: settings } = useSchoolSettings();
+  const bankSetting = settings?.find((s) => s.key === "manualBankDetails");
+  const bank = (bankSetting?.value as ManualBankDetails | null) ?? null;
 
   const active = terms.find((t) => t.term === term) ?? terms[0];
   const progress = active && active.totalFee > 0 ? (active.paid / active.totalFee) * 100 : 0;
@@ -98,7 +118,7 @@ export const ParentFeesCard = ({ child }: Props) => {
         </div>
 
       {isLoading ? (
-        <p className="text-sm text-gray-400 py-3">Loading fees…</p>
+        <SomaLoader label="Loading fees" descriptions={feesLoadingDescriptions} className="h-8 w-8" />
       ) : !active || active.totalFee <= 0 ? (
         <p className="text-sm text-gray-400 py-3">
           No fee set up for {termLabel(term).label.toLowerCase()} yet.
@@ -111,9 +131,20 @@ export const ParentFeesCard = ({ child }: Props) => {
                 <p className="text-xs text-gray-400">Fee for {termLabel(term).label.toLowerCase()}</p>
                 <p className="text-lg font-bold text-gray900 mt-0.5">{formatNaira(active.totalFee)}</p>
               </div>
-              <span className={cn("text-xs font-medium px-2.5 py-1 rounded-full shrink-0", statusStyles[active.status])}>
-                {statusLabel[active.status]}
-              </span>
+              <div className="flex flex-col items-end gap-2 shrink-0">
+                <span className={cn("text-xs font-medium px-2.5 py-1 rounded-full", statusStyles[active.status])}>
+                  {statusLabel[active.status]}
+                </span>
+                <button
+                  type="button"
+                  onClick={toggleDetails}
+                  className="flex items-center gap-1 rounded-full border border-gray-200 bg-white px-3 py-1.5 text-[11px] font-medium text-gray700 hover:bg-gray50 hover:text-gray900"
+                >
+                  <Card size={13} color="#8C8C8C" />
+                  View school acc
+                  <ArrowDown2 size={11} color="#8C8C8C" className={cn("transition-transform", detailsOpen && "rotate-180")} />
+                </button>
+              </div>
             </div>
 
             <div className="grid grid-cols-2 gap-4 mt-4">
@@ -234,21 +265,58 @@ export const ParentFeesCard = ({ child }: Props) => {
             </div>
           )}
 
-          <button
-            type="button"
-            onClick={() => setShowDetails((v) => !v)}
-            className="flex items-center gap-1 text-xs text-gray-400 hover:text-gray900 mt-3"
-          >
-            <ArrowDown2 size={12} color="#8C8C8C" className={cn("transition-transform", showDetails && "rotate-180")} />
-            Transfer details & reference code
-          </button>
-          {showDetails && (
-            <div className="rounded-xl border border-gray-100 bg-pureWhite p-4 mt-2">
-              <p className="text-xs text-gray-400">Child's reference code</p>
-              <p className="text-2xl font-bold text-gray900 tracking-wide mt-1">{child.admissionNo || "—"}</p>
-              <p className="text-xs text-gray-400 mt-3">
-                If you prefer, transfer the fee to the school's account and tell the school your child's name and reference code. They will confirm it for you.
-              </p>
+<button
+              type="button"
+              onClick={toggleDetails}
+              className="flex items-center gap-1 text-xs text-gray-400 hover:text-gray900 mt-3"
+            >
+              <ArrowDown2 size={12} color="#8C8C8C" className={cn("transition-transform", detailsOpen && "rotate-180")} />
+              Transfer details & reference code
+            </button>
+          {detailsOpen && (
+            <div ref={detailsRef} className="rounded-xl border border-gray-100 bg-pureWhite p-4 mt-2">
+              {bank?.accountNumber && (
+                <>
+                  <p className="text-base font-semibold text-indigo500">School account</p>
+                  <div className="mt-2.5 space-y-2.5">
+                    {bank.accountName && (
+                      <div>
+                        <p className="text-[11px] text-gray-400 uppercase tracking-wide">Account name</p>
+                        <p className="text-sm font-semibold text-gray900 mt-0.5">{bank.accountName}</p>
+                      </div>
+                    )}
+                    {bank.bankName && (
+                      <div>
+                        <p className="text-[11px] text-gray-400 uppercase tracking-wide">Bank</p>
+                        <p className="text-sm font-semibold text-gray900 mt-0.5">{bank.bankName}</p>
+                      </div>
+                    )}
+                    <div>
+                      <p className="text-[11px] text-gray-400 uppercase tracking-wide">Account number</p>
+                      <div className="flex items-center gap-2 mt-0.5">
+                        <p className="text-base font-bold text-gray900 tracking-widest">{bank.accountNumber}</p>
+                        <button
+                          type="button"
+                          onClick={() => copy(bank.accountNumber!)}
+                          className="flex items-center gap-1 text-xs text-gray-400 hover:text-gray900 shrink-0"
+                        >
+                          <Copy size={12} color={copied ? "#34A853" : "#8C8C8C"} />
+                          {copied ? "Copied" : "Copy"}
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </>
+              )}
+              <div className={cn("mt-3 pt-3", bank?.accountNumber && "border-t border-gray-50")}>
+                <p className="text-xs text-gray-400">Child's reference code</p>
+                <p className="text-2xl font-bold text-gray900 tracking-wide mt-1">{child.admissionNo || "—"}</p>
+                <p className="text-xs text-gray-400 mt-3">
+                  {bank?.accountNumber
+                    ? "Transfer the amount to the account above, then tell the school your child's name and reference code. They will confirm it for you."
+                    : "If you prefer, transfer the fee to the school's account and tell the school your child's name and reference code. They will confirm it for you."}
+                </p>
+              </div>
             </div>
           )}
         </div>
@@ -301,7 +369,9 @@ export const ParentFeesCard = ({ child }: Props) => {
       <Dialog open={!!viewInvoiceId} onOpenChange={(o) => !o && setViewInvoiceId(null)}>
         <DialogContent variant="center" className="md:max-w-2xl">
           {invoiceLoading ? (
-            <div className="py-10 text-center text-sm text-gray-400">Loading invoice…</div>
+            <div className="py-10">
+              <SomaLoader label="Loading invoice" descriptions={feesLoadingDescriptions} className="h-8 w-8" />
+            </div>
           ) : invoiceDetail?.invoice ? (
             <InvoiceView invoice={invoiceDetail.invoice} onClose={() => setViewInvoiceId(null)} />
           ) : (

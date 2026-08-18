@@ -3,6 +3,7 @@ import { Link, useParams } from "react-router";
 import { ArrowLeft2, Wallet3, Edit2, ExportSquare, Trash, Building, Medal } from "iconsax-react";
 
 import { Button } from "../../../components/ui/button";
+import { SomaLoader } from "../../../components/ui/SomaLoader";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "../../../components/ui/dialog";
 import { useFeeStructures, useDeleteFeeStructure, useBulkGenerateInvoices } from "../api";
 import { useClasses } from "../../principal/api";
@@ -53,7 +54,9 @@ export const FeeStructureDetails = () => {
   if (isLoading && !group) {
     return (
       <div className="p-4 md:p-6 w-full">
-        <div className="flex items-center justify-center py-24 text-sm text-gray400">Loading...</div>
+        <div className="py-24">
+          <SomaLoader label="Loading fee structure" className="h-8 w-8" />
+        </div>
       </div>
     );
   }

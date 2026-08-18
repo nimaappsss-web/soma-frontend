@@ -8,6 +8,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { MoneyInput } from "../../finance/components/MoneyInput";
 import { formatNaira } from "../../finance/utils/currency";
 import { useSubmitParentPayment } from "../api/useSubmitParentPayment";
+import { useSchoolSettings } from "../../settings/api";
+import type { ManualBankDetails } from "../../settings/types";
 
 interface InvoiceTarget {
   id: string;
@@ -69,6 +71,20 @@ export const PaymentSubmitModal = ({ open, onOpenChange, childName, invoice }: P
   const [reference, setReference] = useState("");
   const [amount, setAmount] = useState(0);
   const submitMutation = useSubmitParentPayment();
+  const { data: settings } = useSchoolSettings();
+  const bankSetting = settings?.find((s) => s.key === "manualBankDetails");
+  const bank = (bankSetting?.value as ManualBankDetails | null) ?? null;
+  const [copied, setCopied] = useState(false);
+
+  const copy = async (text: string) => {
+    try {
+      await navigator.clipboard.writeText(text);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1500);
+    } catch {
+      /* clipboard unavailable */
+    }
+  };
 
   const amountNum = amount || 0;
   const amountClamped = amountNum > invoice.outstanding;
@@ -118,9 +134,41 @@ export const PaymentSubmitModal = ({ open, onOpenChange, childName, invoice }: P
           {step === "guide" && (
             <div className="space-y-4">
               <div className="rounded-xl bg-gray-50 p-4">
+                {bank?.accountNumber && (
+                  <div className="rounded-xl border border-gray-100 bg-white p-4 mb-4">
+                    <p className="text-xs font-medium text-gray900">Pay to</p>
+                    <div className="mt-2 space-y-2">
+                      {bank.accountName && (
+                        <div className="flex items-center justify-between gap-3">
+                          <span className="text-xs text-gray-400">Account name</span>
+                          <span className="text-xs font-medium text-gray900 text-right">{bank.accountName}</span>
+                        </div>
+                      )}
+                      {bank.bankName && (
+                        <div className="flex items-center justify-between gap-3">
+                          <span className="text-xs text-gray-400">Bank</span>
+                          <span className="text-xs font-medium text-gray900 text-right">{bank.bankName}</span>
+                        </div>
+                      )}
+                      <div className="flex items-center justify-between gap-3">
+                        <span className="text-xs text-gray-400">Account number</span>
+                        <span className="flex items-center gap-1.5">
+                          <span className="text-sm font-bold text-gray900 tracking-widest">{bank.accountNumber}</span>
+                          <button
+                            type="button"
+                            onClick={() => copy(bank.accountNumber!)}
+                            className="text-[11px] font-medium text-gray-400 hover:text-gray900"
+                          >
+                            {copied ? "Copied" : "Copy"}
+                          </button>
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                )}
                 <p className="text-sm font-medium text-gray900 mb-2">How to pay</p>
                 <ol className="space-y-2 text-sm text-gray500">
-                  <li className="flex gap-2"><span className="text-gray900 font-medium shrink-0">1.</span> Send the money to the school's account from any bank or wallet app.</li>
+                  <li className="flex gap-2"><span className="text-gray900 font-medium shrink-0">1.</span> Send the money to the school's account{bank?.accountNumber ? " below" : ""} from any bank or wallet app.</li>
                   <li className="flex gap-2"><span className="text-gray900 font-medium shrink-0">2.</span> Copy the transaction ID from your app.</li>
                   <li className="flex gap-2"><span className="text-gray900 font-medium shrink-0">3.</span> Come back here and type it in below.</li>
                 </ol>

@@ -18,6 +18,7 @@ import { TintedStatCard } from "../features/dashboard/components/TintedStatCard"
 import { ParentUpcomingCard } from "../features/parent/components/ParentUpcomingCard";
 import { AnnouncementCard } from "../features/announcements/components/AnnouncementCard";
 import { AttendanceStatusPill, type ChildAttendanceStatus } from "../features/parent/components/AttendanceStatus";
+import { SomaLoader, parentLoadingDescriptions, feesLoadingDescriptions } from "../components/ui/SomaLoader";
 import { useAuth } from "../contexts/AuthContext";
 
 const formatN = (n: number) => String(n).replace(/\B(?=(\d{3})+(?!\d))/g, ",");
@@ -61,7 +62,9 @@ export const ParentDashboard = () => {
       </div>
 
       {isLoading ? (
-        <p className="text-sm text-gray500 text-center py-12">Loading...</p>
+        <div className="py-12">
+          <SomaLoader descriptions={parentLoadingDescriptions} />
+        </div>
       ) : !children.length ? (
         <div className="bg-white rounded-2xl p-10 border border-gray100 text-center">
           <div className="w-12 h-12 rounded-full bg-gray50 flex items-center justify-center mx-auto mb-3">
@@ -117,6 +120,11 @@ export const ParentDashboard = () => {
                           <p className="text-xs text-gray500 mt-0.5 truncate">
                             {child.className ?? child.classId ?? "No class"}
                           </p>
+                          {child.teacherName && (
+                            <p className="text-xs text-gray400 mt-0.5 truncate">
+                              Class teacher: <span className="text-gray600 font-medium">{child.teacherName}</span>
+                            </p>
+                          )}
                         </div>
                       </div>
                       <div className="sm:ml-auto shrink-0">
@@ -144,7 +152,7 @@ export const ParentDashboard = () => {
                 <h3 className="text-base font-semibold text-gray900">School Fees</h3>
               </div>
               {allFees.isLoading ? (
-                <p className="text-sm text-gray400 py-2">Loading fees…</p>
+                <SomaLoader label="Loading fees" descriptions={feesLoadingDescriptions} className="h-8 w-8" />
               ) : allFees.totalFee <= 0 ? (
                 <p className="text-sm text-gray400 py-2">No fees have been set up yet.</p>
               ) : (
@@ -231,7 +239,7 @@ const AnnouncementsSection = () => {
     <div className="mt-8">
       <h2 className="text-lg font-bold text-gray900 mb-3">Announcements</h2>
       {isLoading ? (
-        <p className="text-sm text-gray500">Loading...</p>
+        <SomaLoader className="h-8 w-8" descriptions={parentLoadingDescriptions} />
       ) : (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
           {announcements.map((a) => (

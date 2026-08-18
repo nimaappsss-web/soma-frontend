@@ -5,6 +5,7 @@ import { DateInput } from "../../../components/ui/date-input";
 import { Button } from "../../../components/ui/button";
 import { SelectDropdown } from "../../../components/ui/select-dropdown";
 import { Textarea } from "../../../components/ui/textarea";
+import { SomaLoader } from "../../../components/ui/SomaLoader";
 import { useCalendarEvents, useCreateCalendarEvent, useDeleteCalendarEvent, useAcademicTerms } from "../api";
 import { CalendarGrid } from "./CalendarGrid";
 import { DayDetail } from "./DayDetail";
@@ -177,7 +178,7 @@ export const CalendarEvents = () => {
 
       {eventsLoading ? (
         <div className="flex items-center justify-center py-20">
-          <p className="text-sm text-gray-400">Loading...</p>
+          <SomaLoader label="Loading events" className="h-8 w-8" />
         </div>
       ) : (
         <div className="flex gap-0">

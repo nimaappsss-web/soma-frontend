@@ -1,4 +1,5 @@
 import { Avatar } from "../../../components/ui/Avatar";
+import { SomaLoader } from "../../../components/ui/SomaLoader";
 import { useTeachers, useResendInvite } from "../../teacher/api";
 export const TeacherListSection = () => {
   const { data, isLoading, error } = useTeachers();
@@ -7,7 +8,7 @@ export const TeacherListSection = () => {
     return (
       <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
         <h3 className="font-semibold text-gray-800 mb-4">Teachers</h3>
-        <p className="text-sm text-gray-400">Loading...</p>
+        <SomaLoader label="Loading teachers" className="h-8 w-8" />
       </div>
     );
   }

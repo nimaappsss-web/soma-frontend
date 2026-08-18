@@ -8,6 +8,7 @@ import { Textarea } from "../../../components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "../../../components/ui/dialog";
 import { EmptyState } from "../../../components/ui/EmptyState";
 import { HelpHint } from "../../../components/ui/HelpHint";
+import { SomaLoader } from "../../../components/ui/SomaLoader";
 import { useAnnouncements, useCreateAnnouncement, useDeleteAnnouncement } from "../api";
 import type { CreateAnnouncementPayload, AnnouncementAudience, AnnouncementPriority } from "../types";
 
@@ -131,7 +132,9 @@ export const AnnouncementsManagement = () => {
       </Dialog>
 
       {isLoading ? (
-        <p className="text-sm text-gray-400 text-center py-12">Loading...</p>
+        <div className="py-12">
+          <SomaLoader label="Loading announcements" className="h-8 w-8" />
+        </div>
       ) : announcements.length > 0 ? (
         <div className="space-y-3">
           {announcements.map((a) => (

@@ -4,6 +4,7 @@ import { ArrowLeft2, Book1, Building, Calendar, Call, Edit2, Message, Profile2Us
 
 import { Avatar } from "../../components/ui/Avatar";
 import { Button } from "../../components/ui/button";
+import { SomaLoader } from "../../components/ui/SomaLoader";
 import { WarningBanner } from "../../components/others/WarningBanner";
 import { useTeacherDetail, useSetTeacherApproval, useSetTeacherActive } from "../../features/teacher/api";
 import { EditTeacherForm } from "../../features/teacher/components/EditTeacherForm";
@@ -51,7 +52,9 @@ export const AdminTeacherDetails = () => {
   if (isLoading) {
     return (
       <div className="p-4 md:p-6 w-full">
-        <div className="flex items-center justify-center py-24 text-sm text-gray400">Loading...</div>
+        <div className="py-24">
+          <SomaLoader label="Loading teacher" className="h-8 w-8" />
+        </div>
       </div>
     );
   }

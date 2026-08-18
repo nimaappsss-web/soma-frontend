@@ -1,4 +1,5 @@
 import { Gift, MagicStar } from "iconsax-react";
+import { SomaLoader } from "../../../components/ui/SomaLoader";
 import { useCelebrations } from "../api/useCelebrations";
 
 export const MomentsManagement = () => {
@@ -15,7 +16,9 @@ export const MomentsManagement = () => {
       </div>
 
       {isLoading ? (
-        <div className="text-sm text-gray-400">Loading...</div>
+        <div className="py-6">
+          <SomaLoader label="Loading celebrations" className="h-8 w-8" />
+        </div>
       ) : (
         <div className="grid gap-6">
           <div className="bg-white rounded-xl border border-gray-100 p-6">

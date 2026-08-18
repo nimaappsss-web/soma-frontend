@@ -2,6 +2,7 @@ import { Link, useParams } from "react-router";
 import { ArrowLeft2, ArrowRight, Building, Profile2User, Teacher } from "iconsax-react";
 
 import { useClassDetail } from "../../features/principal/api";
+import { SomaLoader } from "../../components/ui/SomaLoader";
 
 const InfoItem = ({ icon, label, value }: { icon: React.ReactNode; label: string; value: string }) => (
   <div className="flex items-start gap-3">
@@ -23,8 +24,8 @@ export const ClassDetails = () => {
   if (isLoading) {
     return (
       <div className="p-6 max-w-3xl">
-        <div className="flex items-center justify-center py-24 text-sm text-gray400">
-          Loading...
+        <div className="py-24">
+          <SomaLoader label="Loading class" className="h-8 w-8" />
         </div>
       </div>
     );

@@ -5,6 +5,7 @@ import { Input } from "../../../components/ui/input";
 import { Button } from "../../../components/ui/button";
 import { DateInput } from "../../../components/ui/date-input";
 import { EmptyState } from "../../../components/ui/EmptyState";
+import { SomaLoader } from "../../../components/ui/SomaLoader";
 import { useHolidays, useCreateHoliday, useUpdateHoliday, useDeleteHoliday } from "../api";
 import type { CreateHolidayPayload, UpdateHolidayPayload } from "../types";
 
@@ -93,7 +94,9 @@ export const CalendarHolidays = () => {
       )}
 
       {isLoading ? (
-        <p className="text-sm text-gray-400">Loading...</p>
+        <div className="py-6">
+          <SomaLoader label="Loading holidays" className="h-8 w-8" />
+        </div>
       ) : sorted.length > 0 ? (
         <div className="space-y-2">
           {sorted.map((h) => (

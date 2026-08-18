@@ -2,6 +2,7 @@ import { useMemo, useState } from "react";
 import { ArrowDown2, TickCircle, CloseCircle, Clock, Teacher } from "iconsax-react";
 
 import { cn } from "@/lib/utils";
+import { SomaLoader, parentLoadingDescriptions } from "../components/ui/SomaLoader";
 import { useParentProfile, useChildrenWithDetails, useParentAttendance } from "../features/parent/api";
 import {
   AttendanceStatusPill,
@@ -13,6 +14,79 @@ const STATUS_DOT: Record<Exclude<ChildAttendanceStatus, null>, { bg: string; ico
   present: { bg: "bg-[#E9F7EE]", icon: TickCircle, color: "#34A853", label: "Present" },
   late: { bg: "bg-amber-300/20", icon: Clock, color: "#FBBC05", label: "Late" },
   absent: { bg: "bg-[#FFF0ED]", icon: CloseCircle, color: "#CD432F", label: "Absent" },
+};
+
+const WEEKDAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"] as const;
+
+type MonthRecord = { id: string; date: string; status: ChildAttendanceStatus };
+
+const BRICK_STYLES: Record<Exclude<ChildAttendanceStatus, null>, string> = {
+  present: "bg-[#E9F7EE] border-springgreen600/30 text-springgreen600",
+  late: "bg-amber-300/20 border-amber-300/40 text-amber600",
+  absent: "bg-[#FFF0ED] border-red500/30 text-red500",
+};
+
+const AttendanceMonthGrid = ({ records }: { records: MonthRecord[] }) => {
+  const [selected, setSelected] = useState<string | null>(null);
+
+  const cells = useMemo(() => {
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = now.getMonth();
+    const daysInMonth = new Date(year, month + 1, 0).getDate();
+    const statusMap = new Map(records.map((r) => [r.date, r.status]));
+    const lead = (new Date(year, month, 1).getDay() + 6) % 7;
+
+    const out: Array<{ blank: true } | { date: string; day: number; weekday: string; status: ChildAttendanceStatus }> = [];
+    for (let i = 0; i < lead; i++) out.push({ blank: true });
+    for (let d = 1; d <= daysInMonth; d++) {
+      const dow = new Date(year, month, d).getDay();
+      const date = `${year}-${String(month + 1).padStart(2, "0")}-${String(d).padStart(2, "0")}`;
+      out.push({ date, day: d, weekday: WEEKDAYS[(dow + 6) % 7], status: statusMap.get(date) ?? null });
+    }
+    return out;
+  }, [records]);
+
+  const selectedRec = selected ? records.find((r) => r.date === selected) : null;
+
+  return (
+    <div>
+      <div className="grid grid-cols-7 gap-1.5 sm:gap-2">
+        {cells.map((cell, i) =>
+          "blank" in cell ? (
+            <span key={`b${i}`} aria-hidden />
+          ) : (
+            <button
+              key={cell.date}
+              type="button"
+              aria-label={`${cell.weekday} ${cell.day}, status ${cell.status ?? "no record"}`}
+              onClick={() => setSelected(selected === cell.date ? null : cell.date)}
+              className={cn(
+                "flex min-h-11 flex-col items-center justify-center rounded-xl border py-1.5 touch-manipulation select-none transition-all hover:ring-2 hover:ring-gray200 active:scale-95",
+                cell.status ? BRICK_STYLES[cell.status] : "bg-gray50 border-gray100 text-gray400",
+                selected === cell.date && "ring-2 ring-gray900 ring-offset-1 hover:ring-gray900",
+              )}
+            >
+              <span className="text-[10px] font-semibold uppercase tracking-wide leading-none">{cell.weekday}</span>
+              <span className="mt-1.5 text-sm font-bold leading-none">{cell.day}</span>
+            </button>
+          ),
+        )}
+      </div>
+
+      {selectedRec && (
+        <div className="mt-3 flex items-center justify-between gap-3 rounded-xl border border-gray100 bg-pureWhite px-4 py-3">
+          <div className="min-w-0">
+            <p className="text-xs text-gray400">Tap a day to change</p>
+            <p className="mt-0.5 text-sm font-semibold text-gray900 capitalize">
+              {new Date(selectedRec.date).toLocaleDateString("en-NG", { weekday: "long", day: "numeric", month: "long" })}
+            </p>
+          </div>
+          <AttendanceStatusPill status={selectedRec.status} />
+        </div>
+      )}
+    </div>
+  );
 };
 
 export const ParentChildren = () => {
@@ -58,7 +132,9 @@ export const ParentChildren = () => {
       </div>
 
       {isLoading ? (
-        <p className="text-sm text-gray500 text-center py-12">Loading...</p>
+        <div className="py-12">
+          <SomaLoader descriptions={parentLoadingDescriptions} />
+        </div>
       ) : !children.length ? (
         <div className="bg-white rounded-2xl p-10 border border-gray100 text-center">
           <p className="text-gray500">No children linked to your account.</p>
@@ -166,30 +242,7 @@ export const ParentChildren = () => {
                     {monthRecords.length === 0 ? (
                       <p className="text-sm text-gray400">No attendance records this month.</p>
                     ) : (
-                      <div className="divide-y divide-gray50">
-                        {monthRecords.slice(0, 15).map((r) => {
-                          const st = r.status as Exclude<ChildAttendanceStatus, null>;
-                          const meta = STATUS_DOT[st];
-                          const Icon = meta.icon;
-                          return (
-                            <div key={r.id} className="flex items-center justify-between py-2 text-sm">
-                              <span className="text-gray700">
-                                {new Date(r.date).toLocaleDateString("en-NG", {
-                                  weekday: "short",
-                                  day: "numeric",
-                                  month: "short",
-                                })}
-                              </span>
-                              <span className="inline-flex items-center gap-1.5 text-xs font-medium text-gray600">
-                                <span className={cn("w-7 h-7 rounded-lg flex items-center justify-center", meta.bg)}>
-                                  <Icon size={13} color={meta.color} variant="Bold" />
-                                </span>
-                                {meta.label}
-                              </span>
-                            </div>
-                          );
-                        })}
-                      </div>
+                      <AttendanceMonthGrid records={monthRecords} />
                     )}
                   </div>
                 )}

@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router";
 import { Add, ArrowRight2, CloseCircle, Teacher as TeacherIcon, TickCircle } from "iconsax-react";
 import { EmptyState } from "../../components/ui/EmptyState";
+import { SomaLoader } from "../../components/ui/SomaLoader";
 
 import { Avatar } from "../../components/ui/Avatar";
 import { CelebrationDecor } from "../../components/ui/CelebrationDecor";
@@ -184,7 +185,9 @@ export const AdminTeachers = () => {
 
       <div className="mt-6">
         {isLoading ? (
-          <p className="text-sm text-gray-500 p-8 text-center rounded-xl border border-gray100 bg-white">Loading...</p>
+          <div className="rounded-xl border border-gray100 bg-white p-8 text-center">
+            <SomaLoader label="Loading teachers" className="h-8 w-8" />
+          </div>
         ) : filteredTeachers.length === 0 && filteredInvites.length === 0 ? (
           <EmptyState
             icon={<TeacherIcon size={30} variant="Bold" color="#0D0D0D" />}

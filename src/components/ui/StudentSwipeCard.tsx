@@ -1,5 +1,6 @@
 import { useSwipeable } from "react-swipeable";
 import { useState, useCallback, useEffect } from "react";
+import { CloseCircle, RotateLeft, TickCircle } from "iconsax-react";
 
 import { StudentCard } from "./StudentCard";
 import { Button } from "./button";
@@ -17,6 +18,8 @@ interface StudentSwipeCardProps {
   onSave: () => void;
   markedCount: number;
   totalStudents: number;
+  note?: string;
+  onNoteChange?: (note: string) => void;
 }
 
 export const StudentSwipeCard = ({
@@ -26,6 +29,8 @@ export const StudentSwipeCard = ({
   onSave,
   markedCount,
   totalStudents,
+  note = "",
+  onNoteChange,
 }: StudentSwipeCardProps) => {
   const [dragX, setDragX] = useState(0);
   const [index, setIndex] = useState(0);
@@ -167,77 +172,121 @@ export const StudentSwipeCard = ({
 
   if (showSummary) {
     return (
-      <div className="bg-white rounded-3xl shadow-lg border border-gray-100 p-8 max-w-sm mx-auto text-center">
-        <div className="w-14 h-14 rounded-full bg-green-100 flex items-center justify-center mx-auto mb-4">
-          <svg className="w-7 h-7 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
-          </svg>
+      <div className="bg-white rounded-3xl border border-gray-100 p-6 sm:p-8 max-w-sm mx-auto text-center">
+        <div className="w-14 h-14 rounded-full bg-[#E9F7EE] flex items-center justify-center mx-auto mb-4">
+          <TickCircle size={32} color="#34A853" variant="Bold" />
         </div>
-        <h3 className="text-lg font-semibold text-gray-800">All done!</h3>
+        <h3 className="text-lg font-semibold text-gray-900">All done!</h3>
         <p className="text-sm text-gray-400 mt-1 mb-6">
           {markedCount} of {totalStudents} students marked
         </p>
 
         <div className="flex gap-3 mb-6">
-          <div className="flex-1 bg-gradient-to-br from-green-50 to-green-100 rounded-xl py-3 px-4">
-            <p className="text-2xl font-bold text-green-700">{presentCount}</p>
-            <p className="text-xs text-green-600 font-medium">Present</p>
+          <div className="flex-1 bg-[#E9F7EE] rounded-2xl py-3 px-4">
+            <div className="flex items-center justify-center gap-1.5">
+              <TickCircle size={14} color="#34A853" variant="Bold" />
+              <p className="text-2xl font-bold text-gray-900">{presentCount}</p>
+            </div>
+            <p className="text-xs font-medium text-gray-500 mt-0.5">Present</p>
           </div>
-          <div className="flex-1 bg-gradient-to-br from-red-50 to-red-100 rounded-xl py-3 px-4">
-            <p className="text-2xl font-bold text-red-700">{absentCount}</p>
-            <p className="text-xs text-red-600 font-medium">Absent</p>
+          <div className="flex-1 bg-[#FFF0ED] rounded-2xl py-3 px-4">
+            <div className="flex items-center justify-center gap-1.5">
+              <CloseCircle size={14} color="#CD432F" variant="Bold" />
+              <p className="text-2xl font-bold text-gray-900">{absentCount}</p>
+            </div>
+            <p className="text-xs font-medium text-gray-500 mt-0.5">Absent</p>
           </div>
         </div>
 
         <div className="space-y-1.5 mb-6 max-h-48 overflow-y-auto">
           {history.map((h, i) => {
             const student = students.find((s) => s.id === h.studentId);
+            const isPresent = h.status === "present";
             return (
               <div
                 key={i}
                 className="flex items-center gap-3 px-3 py-2 bg-gray-50 rounded-xl text-sm"
               >
-                <div
-                  className={`w-2 h-2 rounded-full shrink-0 ${
-                    h.status === "present" ? "bg-green-500" : "bg-red-400"
-                  }`}
-                />
+                <span className="flex h-7 w-7 items-center justify-center rounded-full bg-white border border-gray-100 text-xs font-semibold text-gray-500 shrink-0">
+                  {student?.name?.charAt(0).toUpperCase() ?? "?"}
+                </span>
                 <span className="text-gray-700 flex-1 text-left truncate">
                   {student?.name ?? "Unknown"}
                 </span>
-                <span
-                  className={`text-xs font-semibold px-2 py-0.5 rounded-full ${
-                    h.status === "present"
-                      ? "bg-green-100 text-green-700"
-                      : "bg-red-100 text-red-700"
-                  }`}
-                >
-                  {h.status === "present" ? "P" : "A"}
-                </span>
+                {isPresent ? (
+                  <TickCircle size={18} color="#34A853" variant="Bold" />
+                ) : (
+                  <CloseCircle size={18} color="#CD432F" variant="Bold" />
+                )}
               </div>
             );
           })}
         </div>
 
+        {onNoteChange && (
+          <div className="mb-4">
+            <input
+              type="text"
+              value={note}
+              onChange={(e) => onNoteChange(e.target.value)}
+              placeholder="Add a note (optional)"
+              className="w-full h-[38px] rounded-lg border border-gray-200 bg-gray-50 px-3 text-sm text-gray-700 placeholder:text-gray-400 focus:outline-none focus:ring-1 focus:ring-gray-300"
+            />
+          </div>
+        )}
+
         <div className="flex gap-2">
           {history.length > 0 && (
-            <Button variant="outline" onClick={handleUndo} className="flex-1 text-sm">
-              ↩ Undo Last
+            <Button variant="outline" onClick={handleUndo} className="flex-1 text-sm gap-1.5">
+              <RotateLeft size={14} color="#0D0D0D" />
+              Undo Last
             </Button>
           )}
-          <button
-            onClick={onSave}
-            className="flex-1 text-sm bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white shadow-lg shadow-blue-200"
-          >
+          <Button onClick={onSave} className="flex-1 text-sm gap-1.5">
             Confirm & Save
-          </button>
+          </Button>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="relative w-full h-[560px] flex items-center justify-center select-none">
+    <div className="flex w-full flex-col items-center select-none">
+      {/* Progress bar at the top */}
+      <div className="flex w-full flex-col items-center gap-2 px-4 pb-4 pt-1">
+        <div className="flex w-[340px] items-center gap-1.5">
+          {students.map((s, i) => (
+            <div
+              key={s.id}
+              className={`h-1.5 flex-1 rounded-full transition-all duration-300 ${
+                i < index
+                  ? history[i]?.status === "present"
+                    ? "bg-springgreen600"
+                    : "bg-red500"
+                  : i === index
+                    ? "bg-gray-900"
+                    : "bg-gray-200"
+              }`}
+            />
+          ))}
+        </div>
+        <div className="flex w-[340px] items-center justify-between">
+          <span className="text-xs text-gray-400 tabular-nums">
+            {index + 1} / {students.length}
+          </span>
+          {showUndo && history.length > 0 && (
+            <button
+              onClick={handleUndo}
+              className="inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-medium text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-900"
+            >
+              <RotateLeft size={13} color="#8C8C8C" />
+              Undo {history[history.length - 1]?.status === "present" ? "Present" : "Absent"}
+            </button>
+          )}
+        </div>
+      </div>
+
+      {/* Card stack */}
       <div className="relative w-[340px] h-[460px]">
         {nextNextStudent && (
           <div
@@ -289,9 +338,7 @@ export const StudentSwipeCard = ({
           >
             <div className="flex flex-col items-center gap-1">
               <div className="w-10 h-10 rounded-full bg-white/95 flex items-center justify-center shadow-lg">
-                <svg className="w-5 h-5 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-                </svg>
+                <CloseCircle size={20} color="#CD432F" variant="Bold" />
               </div>
               <span className="text-xs font-bold text-white drop-shadow-md">ABSENT</span>
             </div>
@@ -306,9 +353,7 @@ export const StudentSwipeCard = ({
           >
             <div className="flex flex-col items-center gap-1">
               <div className="w-10 h-10 rounded-full bg-white/95 flex items-center justify-center shadow-lg">
-                <svg className="w-5 h-5 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
-                </svg>
+                <TickCircle size={20} color="#34A853" variant="Bold" />
               </div>
               <span className="text-xs font-bold text-white drop-shadow-md">PRESENT</span>
             </div>
@@ -316,53 +361,25 @@ export const StudentSwipeCard = ({
 
           <StudentCard student={currentStudent!} />
         </div>
-
-        <div className="absolute bottom-16 left-0 right-0 flex flex-col items-center gap-2 px-4">
-          <div className="flex w-[340px] items-center gap-1.5">
-            {students.map((s, i) => (
-              <div
-                key={s.id}
-                className={`h-1.5 flex-1 rounded-full transition-all duration-300 ${
-                  i < index
-                    ? history[i]?.status === "present"
-                      ? "bg-green-400"
-                      : "bg-red-400"
-                    : i === index
-                      ? "bg-blue-500 scale-y-150"
-                      : "bg-gray-200"
-                }`}
-              />
-            ))}
-          </div>
-          <span className="text-xs text-gray-400 tabular-nums">
-            {index + 1} / {students.length}
-          </span>
-        </div>
-
-        <div className="absolute -top-8 left-0 right-0 flex justify-center gap-8 text-xs text-gray-400 pointer-events-none">
-          <span className="flex items-center gap-1">
-            <svg className="w-3.5 h-3.5 text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-            </svg>
-            Swipe left
-          </span>
-          <span className="flex items-center gap-1">
-            <svg className="w-3.5 h-3.5 text-green-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
-            </svg>
-            Swipe right
-          </span>
-        </div>
       </div>
 
-      {showUndo && history.length > 0 && (
+      {/* Circular action buttons at the bottom */}
+      <div className="flex items-center justify-center gap-4 pt-5">
         <button
-          onClick={handleUndo}
-          className="absolute bottom-1 left-1/2 -translate-x-1/2 px-5 py-2.5 bg-white border border-gray-200 rounded-full shadow-lg text-sm text-gray-600 hover:text-gray-800 hover:border-gray-300 hover:shadow-xl transition-all animate-in fade-in slide-in-from-bottom-2"
+          type="button"
+          onClick={() => advance(currentStudent!.id, "absent")}
+          className="flex h-14 w-14 items-center justify-center rounded-full border-2 border-[#FFF0ED] bg-[#FFF0ED] text-red500 shadow-sm transition-transform active:scale-95"
         >
-          ↩ Undo {history[history.length - 1]?.status ?? ""}
+          <CloseCircle size={26} color="#CD432F" variant="Bold" />
         </button>
-      )}
+        <button
+          type="button"
+          onClick={() => advance(currentStudent!.id, "present")}
+          className="flex h-14 w-14 items-center justify-center rounded-full border-2 border-[#E9F7EE] bg-[#E9F7EE] text-springgreen600 shadow-sm transition-transform active:scale-95"
+        >
+          <TickCircle size={26} color="#34A853" variant="Bold" />
+        </button>
+      </div>
     </div>
   );
 };

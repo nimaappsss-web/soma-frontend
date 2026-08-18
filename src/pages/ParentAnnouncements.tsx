@@ -3,6 +3,7 @@ import { VolumeHigh } from "iconsax-react";
 import { useAnnouncements } from "../features/announcements/api";
 import { AnnouncementCard } from "../features/announcements/components/AnnouncementCard";
 import { EmptyState } from "../components/ui/EmptyState";
+import { SomaLoader, parentLoadingDescriptions } from "../components/ui/SomaLoader";
 
 export const ParentAnnouncements = () => {
   const { data, isLoading } = useAnnouncements({ limit: 50 });
@@ -16,7 +17,9 @@ export const ParentAnnouncements = () => {
       </div>
 
       {isLoading ? (
-        <p className="text-sm text-gray400 text-center py-12">Loading...</p>
+        <div className="py-12">
+          <SomaLoader descriptions={parentLoadingDescriptions} />
+        </div>
       ) : announcements.length > 0 ? (
         <div className="max-w-2xl space-y-4">
           {announcements.map((a) => (

@@ -13,12 +13,13 @@ import { AttendanceHistoryView } from "../../features/teacher/components/Attenda
 import { StudentSwipeCard } from "../../components/ui/StudentSwipeCard";
 import { EmptyState } from "../../components/ui/EmptyState";
 import { HelpHint } from "../../components/ui/HelpHint";
-import { Textarea } from "../../components/ui/textarea";
 import { addToQueue } from "../../sync/syncQueue";
 import { db } from "../../db/db";
 import { fetchData } from "../../utils/fetchData";
 import { localDateKey } from "../../utils/date";
 import { Button } from "../../components/ui/button";
+import { SomaLoader } from "../../components/ui/SomaLoader";
+import { PageHeader } from "../../components/ui/PageHeader";
 import type { AttendanceStatus, AttendanceRecord as ApiAttendanceRecord } from "../../features/teacher/types";
 import type { AttendanceQueryResponse } from "../../features/teacher/types";
 
@@ -34,7 +35,10 @@ export const TeacherAttendance = () => {
   const tabParam = searchParams.get("tab");
   const tab: Tab = tabParam === "history" ? "history" : "mark";
   const today = localDateKey();
-  const [view, setView] = useState<ViewMode>("list");
+  const [searchTerm, setSearchTerm] = useState("");
+  const [view, setView] = useState<ViewMode>(() =>
+    typeof window !== "undefined" && window.innerWidth < 768 ? "card" : "list",
+  );
 
   const handleTabChange = (newTab: Tab) => {
     if (newTab === "mark") {
@@ -49,7 +53,6 @@ export const TeacherAttendance = () => {
   const [modifyMode, setModifyMode] = useState(false);
   const [userMarked, setUserMarked] = useState(false);
   const [dayNote, setDayNote] = useState("");
-  const [noteOpen, setNoteOpen] = useState(false);
 
   const initialized = useRef(false);
 
@@ -249,16 +252,25 @@ export const TeacherAttendance = () => {
   };
 
   const sortedStudents = useMemo(
-    () => [...(students ?? [])].sort((a, b) => {
-      const na = a.name?.toLowerCase() ?? "";
-      const nb = b.name?.toLowerCase() ?? "";
-      return na < nb ? -1 : na > nb ? 1 : 0;
-    }),
-    [students],
+    () => {
+      const term = searchTerm.trim().toLowerCase();
+      return [...(students ?? [])]
+        .filter((s) => !term || (s.name?.toLowerCase() ?? "").includes(term))
+        .sort((a, b) => {
+          const na = a.name?.toLowerCase() ?? "";
+          const nb = b.name?.toLowerCase() ?? "";
+          return na < nb ? -1 : na > nb ? 1 : 0;
+        });
+    },
+    [students, searchTerm],
   );
 
   if (profileLoading) {
-    return <p className="text-sm text-gray-400 p-8">Loading...</p>;
+    return (
+      <div className="p-8">
+        <SomaLoader label="Loading attendance" className="h-8 w-8" />
+      </div>
+    );
   }
 
   if (!formClass) {
@@ -281,49 +293,59 @@ export const TeacherAttendance = () => {
 
   return (
     <div className="p-4 md:p-6 w-full">
-      <div className="mb-4 flex items-center justify-between">
-        <div>
-          <div className="group flex items-center gap-2.5">
-            <h1 className="text-xl md:text-2xl font-bold text-gray900">
-              Attendance — {formClass}
-            </h1>
-            <HelpHint
-              title="Attendance"
-              storageKey="teacher-attendance"
-              description={`Take attendance for ${formClass}.`}
-              sections={[
-                { title: "Mark attendance", text: "Switch to the Mark tab, then swipe or tap each student as present or absent. Your progress is shown at the top." },
-                { title: "Mark all / clear", text: "Use the bulk buttons to mark everyone present, then correct the few exceptions." },
-                { title: "History", text: "The History tab shows past records so you and the school can track who's been present over time." },
-                { title: "Saving", text: "Attendance is saved as you go and synced to the school, even if you go offline." },
-              ]}
-            />
-          </div>
-          <p className="text-xs text-gray-400 mt-0.5">
-            {tab === "history" ? "View history" : isMarked && !modifyMode ? "Marked for today" : `${markedCount} / ${totalStudents} marked`}
-          </p>
-        </div>
-        <div className="flex items-center gap-3">
-          <div className="flex bg-gray-100 rounded-lg p-0.5">
+      <PageHeader
+        title="Attendance"
+        subtitle={
+          <>
+            <span className="text-gray-300 text-sm">·</span>
+            <span className="inline-flex items-center rounded-full bg-gray900 px-2.5 py-0.5 text-xs font-medium text-white">
+              {formClass}
+            </span>
+          </>
+        }
+        hint={
+          <HelpHint
+            title="Attendance"
+            storageKey="teacher-attendance"
+            description={`Take attendance for ${formClass}.`}
+            sections={[
+              { title: "Mark attendance", text: "Switch to the Mark tab, then swipe or tap each student as present or absent. Your progress is shown at the top." },
+              { title: "Mark all / clear", text: "Use the bulk buttons to mark everyone present, then correct the few exceptions." },
+              { title: "History", text: "The History tab shows past records so you and the school can track who's been present over time." },
+              { title: "Saving", text: "Attendance is saved as you go and synced to the school, even if you go offline." },
+            ]}
+          />
+        }
+        searchValue={searchTerm}
+        onSearchChange={setSearchTerm}
+        searchPlaceholder="Search student"
+        view={tab === "mark" && !isMarked && typeof window !== "undefined" && window.innerWidth >= 768 ? (view === "card" ? "grid" : "list") : undefined}
+        onViewChange={
+          tab === "mark" && !isMarked && typeof window !== "undefined" && window.innerWidth >= 768
+            ? (v) => setView(v === "grid" ? "card" : "list")
+            : undefined
+        }
+        actions={
+          <div className="flex h-[44px] items-center gap-1 rounded-[15px] border border-input bg-background p-1 shrink-0">
             <button
               onClick={() => handleTabChange("mark")}
-              className={`px-3 py-1.5 rounded-md text-xs font-medium transition-colors ${
-                tab === "mark" ? "bg-white shadow-sm text-gray-800" : "text-gray-500"
+              className={`flex h-[30px] items-center justify-center rounded-[10px] px-3 text-xs font-medium transition-colors ${
+                tab === "mark" ? "bg-gray900 text-white" : "text-gray500 hover:text-gray900"
               }`}
             >
               Mark
             </button>
             <button
               onClick={() => handleTabChange("history")}
-              className={`px-3 py-1.5 rounded-md text-xs font-medium transition-colors ${
-                tab === "history" ? "bg-white shadow-sm text-gray-800" : "text-gray-500"
+              className={`flex h-[30px] items-center justify-center rounded-[10px] px-3 text-xs font-medium transition-colors ${
+                tab === "history" ? "bg-gray900 text-white" : "text-gray500 hover:text-gray900"
               }`}
             >
               History
             </button>
           </div>
-        </div>
-      </div>
+        }
+      />
 
       {tab === "history" ? (
         formClassId ? (
@@ -358,16 +380,23 @@ export const TeacherAttendance = () => {
         </div>
       ) : isMarked && !modifyMode ? (
         <div>
-          <div className="flex items-center justify-between mb-4">
-            <p className="text-sm text-green-600 font-medium">
-              {markedCount} students marked for today
-            </p>
+          <div className="rounded-2xl border border-springgreen600/20 bg-[#E9F7EE] p-4 mb-4">
+            <div className="flex items-center gap-2.5 mb-3">
+              <div className="flex h-8 w-8 items-center justify-center rounded-full bg-springgreen600">
+                <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M20 6L9 17l-5-5" />
+                </svg>
+              </div>
+              <p className="text-sm font-medium text-gray-900">
+                {markedCount} students marked for today
+              </p>
+            </div>
             <div className="flex items-center gap-2">
-              <Button onClick={handleModify} variant="outline" size="sm">
+              <Button onClick={handleModify} className="bg-gray900 text-white hover:bg-gray-800" size="sm">
                 Modify
               </Button>
               {clearConfirm ? (
-                <div className="flex gap-2">
+                <div className="flex gap-2 flex-1">
                   <Button onClick={handleClearAll} variant="destructive" size="sm" className="flex-1">
                     Yes, clear all
                   </Button>
@@ -380,7 +409,7 @@ export const TeacherAttendance = () => {
                   onClick={() => setClearConfirm(true)}
                   className="text-xs text-red-400 hover:text-red-600 py-2 transition-colors"
                 >
-                  Clear all attendance for today
+                  Clear all
                 </button>
               )}
             </div>
@@ -422,74 +451,6 @@ export const TeacherAttendance = () => {
               ))}
             </div>
           )}
-          <div className="mb-4">
-            {!noteOpen ? (
-              <button
-                onClick={() => setNoteOpen(true)}
-                className="text-xs font-medium text-gray-500 hover:text-gray-700 py-2 transition-colors flex items-center gap-1.5"
-              >
-                <span className="text-sm leading-none">+</span> Add a note for today
-              </button>
-            ) : (
-              <div className="bg-white rounded-xl border border-gray-100 p-3">
-                <Textarea
-                  value={dayNote}
-                  onChange={(e) => setDayNote(e.target.value)}
-                  placeholder="Optional note for today (e.g. exam day, low turnout…)"
-                  rows={2}
-                  className="rounded-xl bg-gray-50 border-gray-100"
-                />
-                <div className="flex items-center justify-end mt-2 gap-3">
-                  {dayNote && (
-                    <button
-                      onClick={() => { setDayNote(""); setNoteOpen(false); }}
-                      className="text-xs text-gray-400 hover:text-red-500 py-1 transition-colors"
-                    >
-                      Remove
-                    </button>
-                  )}
-                  <button
-                    onClick={() => setNoteOpen(false)}
-                    className="text-xs font-medium text-gray-500 hover:text-gray-700 py-1 transition-colors"
-                  >
-                    Done
-                  </button>
-                </div>
-              </div>
-            )}
-          </div>
-          {view === "list" && (
-            <div className="flex justify-end mb-4">
-              <button
-                onClick={handleSave}
-                disabled={markedCount === 0}
-              >
-                Save ({markedCount})
-              </button>
-            </div>
-          )}
-
-          <div className="flex justify-center gap-2 mb-4">
-            <button
-              onClick={() => setView("list")}
-              className={`px-3 py-1.5 rounded-md text-xs font-medium transition-colors ${
-                view === "list" ? "bg-blue-600 text-white" : "bg-gray-100 text-gray-500 hover:text-gray-700"
-              }`}
-            >
-              List View
-            </button>
-            {!isMarked && (
-              <button
-                onClick={() => setView("card")}
-                className={`px-3 py-1.5 rounded-md text-xs font-medium transition-colors ${
-                  view === "card" ? "bg-blue-600 text-white" : "bg-gray-100 text-gray-500 hover:text-gray-700"
-                }`}
-              >
-                Card View
-              </button>
-            )}
-          </div>
-
           {view === "card" ? (
             <StudentSwipeCard
               students={sortedStudents}
@@ -498,6 +459,8 @@ export const TeacherAttendance = () => {
               onSave={handleSave}
               markedCount={markedCount}
               totalStudents={totalStudents}
+              note={dayNote}
+              onNoteChange={setDayNote}
             />
           ) : (
             <AttendanceListView
