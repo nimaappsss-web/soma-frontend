@@ -1,22 +1,22 @@
-import { ArrowRight } from "iconsax-react";
+import type { ReactNode } from "react";
+import { Profile2User, Link2, ClipboardTick, Wallet3, Notification } from "iconsax-react";
 import type { DashboardStats } from "../types";
 
-interface RowProps {
-  label: string;
+const Tile = ({
+  icon,
+  bg,
+  value,
+  label,
+}: {
+  icon: ReactNode;
+  bg: string;
   value: string | number;
-  badge?: string;
-}
-
-const OperationsRow = ({ label, value, badge }: RowProps) => (
-  <div className="flex items-center justify-between py-1.5">
-    <span className="text-sm text-gray700">{label}</span>
-    <div className="flex items-center gap-2">
-      <span className="text-sm font-medium text-gray900">{value}</span>
-      {badge && (
-        <span className="text-[10px] bg-azure100 text-azure500 px-1.5 py-0.5 rounded font-medium">{badge}</span>
-      )}
-      <ArrowRight variant="Bold" size={14} className="text-gray300" />
-    </div>
+  label: string;
+}) => (
+  <div className="rounded-xl p-3">
+    <div className={`w-8 h-8 rounded-lg ${bg} flex items-center justify-center mb-2`}>{icon}</div>
+    <p className="text-lg font-bold text-gray900 leading-none">{value}</p>
+    <p className="text-[11px] text-gray500 mt-1 leading-tight">{label}</p>
   </div>
 );
 
@@ -27,13 +27,51 @@ interface OperationsSectionProps {
 
 export const OperationsSection = ({ stats, isLoading }: OperationsSectionProps) => (
   <div className="bg-white rounded-3xl border border-gray100 p-5">
-    <h3 className="text-sm font-semibold text-gray900 mb-4">Parent & Student Operations</h3>
-    <div className="space-y-3">
-      <OperationsRow label="Active Parent App Users" value={1062} />
-      <OperationsRow label="Unlinked Parent Accounts" value={88} />
-      <OperationsRow label="Today's Student Attendance" value={isLoading ? "—" : `${stats?.attendance.today.percentage ?? 0}%`} />
-      <OperationsRow label="Tuition Defaulters" value={142} badge="Current term" />
-      <OperationsRow label="Broadcast Open Rate" value="98.2%" />
+    <h3 className="text-sm font-semibold text-gray900">Parent & Student Operations</h3>
+
+    <div className="grid grid-cols-2 gap-2 mt-4">
+      <Tile
+        icon={<Profile2User size={16} color="#4285F4" variant="Bold" />}
+        bg="bg-[#EBF0FF]"
+        value={1062}
+        label="Active parent app users"
+      />
+      <Tile
+        icon={<Link2 size={16} color="#FBBC05" variant="Bold" />}
+        bg="bg-[#FEF6E0]"
+        value={88}
+        label="Unlinked parent accounts"
+      />
+      <Tile
+        icon={<ClipboardTick size={16} color="#34A853" variant="Bold" />}
+        bg="bg-[#E9F7EE]"
+        value={isLoading ? "—" : `${stats?.attendance.today.percentage ?? 0}%`}
+        label="Today's attendance"
+      />
+      <Tile
+        icon={<Wallet3 size={16} color="#CD432F" variant="Bold" />}
+        bg="bg-[#FFF0ED]"
+        value={142}
+        label="Tuition defaulters"
+      />
+    </div>
+
+    <div className="mt-3 pt-4 border-t border-gray100">
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2.5">
+          <div className="w-8 h-8 rounded-lg bg-[#F3EDFF] flex items-center justify-center">
+            <Notification size={16} color="#8C37C3" variant="Bold" />
+          </div>
+          <div>
+            <p className="text-sm text-gray700">Broadcast open rate</p>
+            <p className="text-[11px] text-gray400">Current term</p>
+          </div>
+        </div>
+        <span className="text-lg font-bold text-gray900 leading-none">98.2%</span>
+      </div>
+      <div className="mt-3 h-1.5 rounded-full bg-gray100 overflow-hidden">
+        <div className="h-full rounded-full bg-indigo500" style={{ width: "98.2%" }} />
+      </div>
     </div>
   </div>
 );

@@ -76,8 +76,8 @@ export const SchoolSetupWizard = () => {
   };
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4">
-      <div className="bg-white rounded-2xl p-8 w-full max-w-md shadow-xl">
+    <div className="fixed inset-0 z-50 bg-white overflow-y-auto">
+      <div className="min-h-full w-full max-w-md mx-auto p-6 pb-10">
         <h2 className="text-xl font-semibold text-gray-900">Set Up Your School</h2>
         <p className="text-sm text-gray-500 mt-1">
           Complete these details to get started.
