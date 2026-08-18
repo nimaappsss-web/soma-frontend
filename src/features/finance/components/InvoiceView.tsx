@@ -13,7 +13,7 @@ interface InvoiceViewProps {
 
 const formatDate = (iso: string) => {
   if (!iso) return "—";
-  return new Date(iso).toLocaleDateString("en-NG", { day: "numeric", month: "long", year: "numeric" });
+  return new Date(iso).toLocaleDateString("en-NG", { weekday: "long", day: "numeric", month: "long", year: "numeric" });
 };
 
 export const InvoiceView = forwardRef<HTMLDivElement, InvoiceViewProps>(({ invoice, onClose }, ref) => {
@@ -47,6 +47,14 @@ export const InvoiceView = forwardRef<HTMLDivElement, InvoiceViewProps>(({ invoi
             opacity: 0.1,
           }}
         />
+
+        {invoice.status === "PAID" && (
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 rotate-[-15deg] pointer-events-none z-10">
+            <div className="border-4 border-springgreen600 rounded-xl px-6 py-3 bg-springgreen600/10">
+              <p className="text-3xl font-black text-springgreen600 uppercase tracking-wider">Paid</p>
+            </div>
+          </div>
+        )}
 
         <div className="relative">
           {/* Letterhead */}

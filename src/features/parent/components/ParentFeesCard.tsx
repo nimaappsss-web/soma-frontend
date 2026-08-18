@@ -135,15 +135,6 @@ export const ParentFeesCard = ({ child, showDetails: showDetailsProp, onToggleDe
                 <span className={cn("text-xs font-medium px-2.5 py-1 rounded-full", statusStyles[active.status])}>
                   {statusLabel[active.status]}
                 </span>
-                <button
-                  type="button"
-                  onClick={toggleDetails}
-                  className="flex items-center gap-1 rounded-full border border-gray-200 bg-white px-3 py-1.5 text-[11px] font-medium text-gray700 hover:bg-gray50 hover:text-gray900"
-                >
-                  <Card size={13} color="#8C8C8C" />
-                  View school acc
-                  <ArrowDown2 size={11} color="#8C8C8C" className={cn("transition-transform", detailsOpen && "rotate-180")} />
-                </button>
               </div>
             </div>
 
@@ -180,6 +171,13 @@ export const ParentFeesCard = ({ child, showDetails: showDetailsProp, onToggleDe
                 Pay now with card
               </Button>
             )}
+            <Button
+              variant="outline"
+              className="w-full rounded-full mt-2 border-black text-black hover:bg-black hover:text-white"
+              onClick={() => setViewInvoiceId(active.invoices[0].id)}
+            >
+              View invoice
+            </Button>
             {breakdownItems.length > 0 && (
               <button
                 type="button"
@@ -204,14 +202,6 @@ export const ParentFeesCard = ({ child, showDetails: showDetailsProp, onToggleDe
                   <p className="font-semibold text-gray900">Total</p>
                   <p className="font-bold text-gray900">{formatNaira(active.totalFee)}</p>
                 </div>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="w-full rounded-full mt-2 border-black text-black hover:bg-black hover:text-white"
-                  onClick={() => setViewInvoiceId(active.invoices[0].id)}
-                >
-                  View invoice
-                </Button>
               </div>
             )}
           </div>

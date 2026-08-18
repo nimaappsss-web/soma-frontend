@@ -10,6 +10,7 @@ import {
   UserAdd, DocumentUpload, Send, Link2, AddCircle, Trash,
   Refresh, CalendarAdd, TickCircle, Lock, User, UserEdit,
   Logout, Clock, Filter, ProfileTick, Document,
+  Note, Award, Star1,
 } from "iconsax-react";
 import { Dialog, DialogContent } from "../ui/dialog";
 import { useAuth } from "../../contexts/AuthContext";
@@ -23,6 +24,7 @@ const iconMap: Record<IconName, React.FC<IconProps>> = {
   UserAdd, DocumentUpload, Send, Link2, AddCircle, Trash,
   Refresh, CalendarAdd, TickCircle, Lock, User, UserEdit,
   Logout, Clock, Filter, ProfileTick, Document,
+  Note, Award, Star1,
 };
 /* -------------------------------------------------------------------------- */
 /*                           Recent searches storage                           */

@@ -4,7 +4,7 @@ import { Link } from "react-router";
 
 import { cn } from "@/lib/utils";
 import { Button } from "../../../components/ui/button";
-import { SelectDropdown } from "../../../components/ui/select-dropdown";
+import { MultiSelect } from "../../../components/ui/multi-select";
 import { EmptyState } from "../../../components/ui/EmptyState";
 import { usePayments } from "../api";
 import { formatNaira } from "../utils/currency";
@@ -37,8 +37,8 @@ const statusLabel: Record<PaymentStatus, string> = {
 };
 
 export const PaymentsTab = () => {
-  const [status, setStatus] = useState("");
-  const { data, isLoading } = usePayments({ limit: 50, status: (status || undefined) as PaymentStatus | undefined });
+  const [status, setStatus] = useState<string[]>([]);
+  const { data, isLoading } = usePayments({ limit: 50, status: status.length > 0 ? status as PaymentStatus[] : undefined });
   const [collectOpen, setCollectOpen] = useState(false);
 
   const payments = data?.payments ?? [];
@@ -47,12 +47,12 @@ export const PaymentsTab = () => {
     <div>
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 mb-5">
         <div className="flex flex-col sm:flex-row sm:items-center gap-3">
-          <SelectDropdown
+          <MultiSelect
             options={statusOptions}
-            value={status}
+            selected={status}
             onChange={setStatus}
             placeholder="Filter by status"
-            buttonClassName="min-w-[180px]"
+            className="min-w-[180px]"
           />
           <Link
             to="/admin/settings?tab=payments"
@@ -70,14 +70,14 @@ export const PaymentsTab = () => {
       {!isLoading && payments.length === 0 ? (
         <EmptyState
           icon={<Card color="#0D0D0D" />}
-          title={status ? "No payments with this status" : "No payments yet"}
+          title={status.length > 0 ? "No payments with this status" : "No payments yet"}
           description={
-            status
+            status.length > 0
               ? "Try a different status filter."
               : "Record a payment when a parent pays a fee."
           }
-          actionLabel={status ? undefined : "Collect Payment"}
-          onAction={status ? undefined : () => setCollectOpen(true)}
+          actionLabel={status.length > 0 ? undefined : "Collect Payment"}
+          onAction={status.length > 0 ? undefined : () => setCollectOpen(true)}
           actionIcon={<Add size={15} />}
         />
       ) : (

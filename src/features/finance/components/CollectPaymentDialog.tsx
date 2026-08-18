@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { ArrowLeft2, SearchNormal1, TickCircle } from "iconsax-react";
+import { ArrowLeft2, SearchNormal, TickCircle } from "iconsax-react";
 
 import { useAuth } from "../../../contexts/AuthContext";
 import { Button } from "../../../components/ui/button";
@@ -166,9 +166,10 @@ export const CollectPaymentDialog = ({ open, onOpenChange }: Props) => {
           {step === "student" && (
             <div className="space-y-3">
               <div className="relative">
-                <SearchNormal1
+                <SearchNormal
                   size={16}
-                  color="#8C8C8C"
+                  color="#B3B3B3"
+                  variant="Linear"
                   className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2"
                 />
                 <Input

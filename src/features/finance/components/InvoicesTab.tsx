@@ -5,6 +5,7 @@ import { useOutletContext } from "react-router";
 import { cn } from "@/lib/utils";
 import { Button } from "../../../components/ui/button";
 import { SelectDropdown } from "../../../components/ui/select-dropdown";
+import { MultiSelect } from "../../../components/ui/multi-select";
 import { BottomSheet } from "../../../components/mobile/BottomSheet";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "../../../components/ui/dialog";
 import { EmptyState } from "../../../components/ui/EmptyState";
@@ -18,7 +19,6 @@ import { InvoiceView } from "./InvoiceView";
 import type { InvoiceStatus } from "../types";
 
 const statusOptions = [
-  { value: "", label: "All statuses" },
   { value: "UNPAID", label: "Unpaid" },
   { value: "PARTIAL", label: "Partially Paid" },
   { value: "PAID", label: "Paid" },
@@ -44,7 +44,7 @@ export const InvoicesTab = () => {
   const reminderMutation = useSendPaymentReminder();
 
   const [classId, setClassId] = useState("");
-  const [status, setStatus] = useState("");
+  const [status, setStatus] = useState<string[]>([]);
   const [filterOpen, setFilterOpen] = useState(false);
   const [bulkOpen, setBulkOpen] = useState(false);
   const [bulkClassId, setBulkClassId] = useState("");
@@ -54,9 +54,9 @@ export const InvoicesTab = () => {
   const classes = classesData?.classes ?? [];
   const classOptions = [{ value: "", label: "All classes" }, ...classes.map((c) => ({ value: c.id, label: c.name }))];
 
-  const { data, isLoading } = useInvoices({ classId: classId || undefined, status: (status || undefined) as InvoiceStatus | undefined });
+  const { data, isLoading } = useInvoices({ classId: classId || undefined, status: status.length > 0 ? status as InvoiceStatus[] : undefined });
   const invoices = data?.invoices ?? [];
-  const hasFilters = !!classId || !!status;
+  const hasFilters = !!classId || status.length > 0;
 
   useEffect(() => {
     setHeaderAction(
@@ -71,18 +71,17 @@ export const InvoicesTab = () => {
             buttonClassName="h-10 text-sm"
             menuClassName="min-w-[180px]"
           />
-          <SelectDropdown
+          <MultiSelect
             options={statusOptions}
-            value={status}
+            selected={status}
             onChange={setStatus}
             placeholder="Filter by status"
-            buttonClassName="h-10 text-sm"
-            menuClassName="min-w-[160px]"
+            className="min-w-[180px]"
           />
           {hasFilters && (
             <button
               type="button"
-              onClick={() => { setClassId(""); setStatus(""); }}
+              onClick={() => { setClassId(""); setStatus([]); }}
               className="text-sm font-medium text-gray-500 hover:text-gray900 underline underline-offset-4 shrink-0"
             >
               Clear
@@ -139,18 +138,17 @@ export const InvoicesTab = () => {
             buttonClassName="h-10 text-sm"
             menuClassName="min-w-[200px]"
           />
-          <SelectDropdown
+          <MultiSelect
             options={statusOptions}
-            value={status}
+            selected={status}
             onChange={setStatus}
             placeholder="Filter by status"
-            buttonClassName="h-10 text-sm"
-            menuClassName="min-w-[200px]"
+            className="min-w-full"
           />
           {hasFilters && (
             <button
               type="button"
-              onClick={() => { setClassId(""); setStatus(""); }}
+              onClick={() => { setClassId(""); setStatus([]); }}
               className="w-full rounded-full border border-input py-3 text-sm font-medium text-gray900"
             >
               Clear filters

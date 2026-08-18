@@ -9,7 +9,7 @@ import type { Invoice, InvoiceListResponse, FeeItem, AxiosErrorResponse, Invoice
 
 interface UseInvoicesParams {
   classId?: string;
-  status?: InvoiceStatus;
+  status?: InvoiceStatus[];
   studentId?: string;
   page?: number;
   limit?: number;
@@ -50,7 +50,7 @@ export const useInvoices = ({ classId, status, studentId, page = 1, limit = 20 }
     queryFn: async () => {
       const params = new URLSearchParams({ page: String(page), limit: String(limit) });
       if (classId) params.set("classId", classId);
-      if (status) params.set("status", status);
+      if (status && status.length === 1) params.set("status", status[0]);
       if (studentId) params.set("studentId", studentId);
       const res = await fetchData<InvoiceListResponse>(`/finance/invoices?${params.toString()}`, "GET");
 
@@ -61,7 +61,7 @@ export const useInvoices = ({ classId, status, studentId, page = 1, limit = 20 }
         .count();
 
       await db.transaction("rw", db.invoices, async () => {
-        if (hasPending === 0 && page === 1 && !classId && !status && !studentId) {
+        if (hasPending === 0 && page === 1 && !classId && (!status || status.length === 0) && !studentId) {
           await db.invoices.where("userId").equals(userId).delete();
         }
         if (res.invoices?.length) {
@@ -107,7 +107,7 @@ export const useInvoices = ({ classId, status, studentId, page = 1, limit = 20 }
   const cachedList = cached?.map(fromCache) ?? [];
   let filtered = cachedList;
   if (classId) filtered = filtered.filter((i) => studentClassMap.get(i.studentId) === classId);
-  if (status) filtered = filtered.filter((i) => i.status === status);
+  if (status && status.length > 0) filtered = filtered.filter((i) => status.includes(i.status));
   if (studentId) filtered = filtered.filter((i) => i.studentId === studentId);
 
   return {

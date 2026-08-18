@@ -4,7 +4,8 @@ export type IconName =
   | "MagicStar" | "Chart" | "VolumeHigh" | "Setting2" | "Setting"
   | "UserAdd" | "DocumentUpload" | "Send" | "Link2" | "AddCircle" | "Trash"
   | "Refresh" | "CalendarAdd" | "TickCircle" | "Lock" | "User" | "UserEdit"
-  | "Logout" | "Clock" | "Filter" | "ProfileTick" | "Document";
+  | "Logout" | "Clock" | "Filter" | "ProfileTick" | "Document"
+  | "Note" | "Award" | "Star1";
 
 export interface SearchItem {
   id: string;
@@ -144,4 +145,21 @@ export const searchIndex: SearchItem[] = [
   { id: "action-parent-pay-fees", label: "Pay School Fees", description: "Make a payment for your child's fees", path: "/parent/fees", icon: "Card", category: "action", roles: ["parent"], keywords: ["pay", "fee", "transfer", "card", "payment"] },
   { id: "action-parent-attendance", label: "Check Today's Attendance", description: "See if your child was present today", path: "/parent/children", icon: "ClipboardTick", category: "action", roles: ["parent"], keywords: ["attendance", "today", "present", "absent", "check"] },
   { id: "action-parent-events", label: "View School Events", description: "See upcoming events from the school calendar", path: "/parent", icon: "CalendarAdd", category: "action", roles: ["parent"], keywords: ["events", "calendar", "upcoming", "schedule"] },
+
+  // ─── Missing pages ───
+
+  // Parent
+  { id: "page-parent-exams", label: "Exams & Tests", description: "View your children's exam results and test scores", path: "/parent/exams", icon: "Document", category: "page", roles: ["parent"], keywords: ["exam", "test", "result", "score", "assessment", "grade"] },
+
+  // Teacher detail pages
+  { id: "page-teach-subject-detail", label: "Subject Detail", description: "View details for a specific subject and its assigned classes", path: "/teach/subjects", icon: "Book1", category: "page", roles: ["teacher"], keywords: ["subject", "class", "detail", "assigned", "classes"] },
+  { id: "page-teach-student-report-view", label: "Student Report Card", description: "View a single student's full term report card", path: "/teach/ca-and-exams/my-class", icon: "Document", category: "page", roles: ["teacher"], keywords: ["report card", "student report", "term result", "performance", "grades"] },
+  { id: "page-teach-student-details", label: "Student Details", description: "View an individual student's full record", path: "/teach/students", icon: "User", category: "page", roles: ["teacher"], keywords: ["individual", "profile", "record", "pupil"] },
+
+  // Principal detail pages
+  { id: "page-fee-structure-details", label: "Fee Structure Details", description: "View the breakdown of fees for a specific class", path: "/admin/finance/fee-structures", icon: "Card", category: "page", roles: ["principal", "bursar"], keywords: ["fee", "structure", "breakdown", "class fees", "tuition details"] },
+  { id: "page-timetable-class-view", label: "Class Timetable", description: "View the timetable for a specific class", path: "/admin/timetable", icon: "CalendarTick", category: "page", roles: ["principal"], keywords: ["class", "schedule", "period", "timetable view"] },
+
+  // Principal extra pages
+  { id: "page-admin-profile", label: "My Profile", description: "View and edit your principal profile", path: "/admin/profile", icon: "UserEdit", category: "page", roles: ["principal"], keywords: ["personal", "avatar", "name", "phone"] },
 ];

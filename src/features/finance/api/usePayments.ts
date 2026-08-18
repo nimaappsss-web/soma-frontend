@@ -7,7 +7,7 @@ import type { PaymentListResponse, AxiosErrorResponse, PaymentStatus } from "../
 interface UsePaymentsParams {
   studentId?: string;
   invoiceId?: string;
-  status?: PaymentStatus;
+  status?: PaymentStatus[];
   page?: number;
   limit?: number;
 }
@@ -16,7 +16,7 @@ export const usePayments = ({ studentId, invoiceId, status, page = 1, limit = 20
   const params = new URLSearchParams({ page: String(page), limit: String(limit) });
   if (studentId) params.set("studentId", studentId);
   if (invoiceId) params.set("invoiceId", invoiceId);
-  if (status) params.set("status", status);
+  if (status && status.length === 1) params.set("status", status[0]);
 
   return useQuery<PaymentListResponse, AxiosErrorResponse>({
     queryKey: [...financeKeys.payments(), page, studentId, invoiceId, status].filter(Boolean),
