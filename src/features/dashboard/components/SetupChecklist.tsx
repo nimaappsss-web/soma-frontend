@@ -63,7 +63,7 @@ const setupItems = [
     icon: Card,
     bgColor: "bg-indigo-100",
     iconColor: "text-indigo-600",
-    to: "/admin/settings",
+    to: "/admin/settings?tab=payments",
   },
 ];
 

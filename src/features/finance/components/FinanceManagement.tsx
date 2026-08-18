@@ -35,7 +35,8 @@ const VIEWS: Record<string, { title: string; subtitle: string; sections: HelpHin
     title: "Payments",
     subtitle: "All payments recorded against student invoices",
     sections: [
-      { title: "Payments", text: "Record payments parents send. Payments must reference a transaction." },
+      { title: "Collect payments", text: "Search a student, pick their fee, and confirm cash, POS, or transfer on the spot. The receipt is issued and the parent notified immediately." },
+      { title: "Payment history", text: "Every recorded payment, with status, method, and reference. Only confirmed payments count toward an invoice." },
     ],
   },
   "/admin/finance/pending": {

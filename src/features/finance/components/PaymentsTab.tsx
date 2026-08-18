@@ -1,23 +1,15 @@
 import { useState } from "react";
 import { CardAdd, Card, Add, Clock } from "iconsax-react";
+import { Link } from "react-router";
 
 import { cn } from "@/lib/utils";
 import { Button } from "../../../components/ui/button";
-import { Input } from "../../../components/ui/input";
 import { SelectDropdown } from "../../../components/ui/select-dropdown";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "../../../components/ui/dialog";
 import { EmptyState } from "../../../components/ui/EmptyState";
-import { MoneyInput } from "./MoneyInput";
-import { usePayments, useRecordPayment, useInvoices } from "../api";
+import { usePayments } from "../api";
 import { formatNaira } from "../utils/currency";
-import type { PaymentMethod, PaymentStatus, RecordPaymentPayload } from "../types";
-
-const methodOptions: { value: PaymentMethod; label: string }[] = [
-  { value: "TRANSFER", label: "Transfer" },
-  { value: "CASH", label: "Cash" },
-  { value: "POS", label: "POS" },
-  { value: "ONLINE", label: "Online" },
-];
+import { CollectPaymentDialog } from "./CollectPaymentDialog";
+import type { PaymentMethod, PaymentStatus } from "../types";
 
 const methodLabel: Record<PaymentMethod, string> = {
   TRANSFER: "Transfer",
@@ -44,60 +36,34 @@ const statusLabel: Record<PaymentStatus, string> = {
   REJECTED: "Not accepted",
 };
 
-const initialForm: RecordPaymentPayload = {
-  invoiceId: "",
-  studentId: "",
-  amount: 0,
-  method: "TRANSFER",
-  reference: "",
-};
-
 export const PaymentsTab = () => {
   const [status, setStatus] = useState("");
   const { data, isLoading } = usePayments({ limit: 50, status: (status || undefined) as PaymentStatus | undefined });
-  const { data: invoicesData } = useInvoices({ limit: 100 });
-  const recordMutation = useRecordPayment();
-
-  const [dialogOpen, setDialogOpen] = useState(false);
-  const [form, setForm] = useState<RecordPaymentPayload>(initialForm);
+  const [collectOpen, setCollectOpen] = useState(false);
 
   const payments = data?.payments ?? [];
-  const invoices = (invoicesData?.invoices ?? []).filter((i) => i.status !== "PAID");
-
-  const invoiceOptions = invoices.map((i) => ({
-    value: i.id,
-    label: `${i.studentName} — ${i.feeName ?? "Fee"}`,
-  }));
-
-  const set = (patch: Partial<RecordPaymentPayload>) => setForm((prev) => ({ ...prev, ...patch }));
-
-  const handleSubmit = () => {
-    if (!form.invoiceId || form.amount <= 0) return;
-    const invoice = invoices.find((i) => i.id === form.invoiceId);
-    recordMutation.mutate(
-      { ...form, studentId: invoice?.studentId ?? form.studentId, reference: form.reference || undefined },
-      {
-        onSuccess: () => {
-          setDialogOpen(false);
-          setForm(initialForm);
-        },
-      },
-    );
-  };
 
   return (
     <div>
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 mb-5">
-        <SelectDropdown
-          options={statusOptions}
-          value={status}
-          onChange={setStatus}
-          placeholder="Filter by status"
-          buttonClassName="min-w-[180px]"
-        />
-        <Button onClick={() => setDialogOpen(true)}>
+        <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+          <SelectDropdown
+            options={statusOptions}
+            value={status}
+            onChange={setStatus}
+            placeholder="Filter by status"
+            buttonClassName="min-w-[180px]"
+          />
+          <Link
+            to="/admin/settings?tab=payments"
+            className="text-xs font-medium text-gray-400 hover:text-gray-900"
+          >
+            Manage bank transfer details
+          </Link>
+        </div>
+        <Button onClick={() => setCollectOpen(true)}>
           <Add size={15} color="#FFFFFF" />
-          Record Payment
+          Collect Payment
         </Button>
       </div>
 
@@ -110,8 +76,8 @@ export const PaymentsTab = () => {
               ? "Try a different status filter."
               : "Record a payment when a parent pays a fee."
           }
-          actionLabel={status ? undefined : "Record Payment"}
-          onAction={status ? undefined : () => setDialogOpen(true)}
+          actionLabel={status ? undefined : "Collect Payment"}
+          onAction={status ? undefined : () => setCollectOpen(true)}
           actionIcon={<Add size={15} />}
         />
       ) : (
@@ -150,61 +116,7 @@ export const PaymentsTab = () => {
         </div>
       )}
 
-      <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent variant="center" className="md:max-w-lg">
-          <DialogHeader>
-            <DialogTitle>Record Payment</DialogTitle>
-            <DialogDescription>Record a payment a parent made toward an invoice.</DialogDescription>
-          </DialogHeader>
-
-          <div className="px-6 pb-6 space-y-4">
-            <div className="space-y-2">
-              <p className="text-sm text-gray900">Invoice</p>
-              <SelectDropdown
-                options={invoiceOptions}
-                value={form.invoiceId}
-                onChange={(val) => {
-                  const invoice = invoices.find((i) => i.id === val);
-                  set({ invoiceId: val, studentId: invoice?.studentId ?? "" });
-                }}
-                placeholder="Select student invoice"
-                searchable
-              />
-            </div>
-
-            <div className="space-y-2">
-              <p className="text-sm text-gray900">Amount (₦)</p>
-              <MoneyInput
-                value={form.amount}
-                onChange={(amount) => set({ amount })}
-              />
-            </div>
-
-            <div className="space-y-2">
-              <p className="text-sm text-gray900">Method</p>
-              <SelectDropdown
-                options={methodOptions}
-                value={form.method}
-                onChange={(val) => set({ method: val as PaymentMethod })}
-              />
-            </div>
-
-            <div className="space-y-2">
-              <p className="text-sm text-gray900">Reference (optional)</p>
-              <Input
-                type="text"
-                placeholder="e.g. transfer reference"
-                value={form.reference ?? ""}
-                onChange={(e) => set({ reference: e.target.value })}
-              />
-            </div>
-
-            <Button className="w-full rounded-full" onClick={handleSubmit} disabled={recordMutation.isPending}>
-              {recordMutation.isPending ? "Recording…" : "Record Payment"}
-            </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
+      <CollectPaymentDialog open={collectOpen} onOpenChange={setCollectOpen} />
     </div>
   );
 };

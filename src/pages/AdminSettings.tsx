@@ -4,7 +4,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { toast } from "@/utils/toast";
 import { User, Building, ArrowRight, CalendarTick, Card as CardIcon } from "iconsax-react";
-import { Link } from "react-router";
+import { Link, useSearchParams } from "react-router";
 
 import { useAuth } from "../contexts/AuthContext";
 import { useUpdateSchool, useSchoolInfo } from "../features/principal/api";
@@ -59,7 +59,16 @@ const tabs = [
 type Tab = (typeof tabs)[number]["id"];
 
 export const AdminSettings = () => {
-  const [activeTab, setActiveTab] = useState<Tab>("account");
+  const [searchParams, setSearchParams] = useSearchParams();
+  const tabParam = searchParams.get("tab");
+  const initialTab: Tab =
+    tabParam && tabs.some((t) => t.id === tabParam) ? (tabParam as Tab) : "account";
+  const [activeTab, setActiveTab] = useState<Tab>(initialTab);
+
+  const selectTab = (tab: Tab) => {
+    setActiveTab(tab);
+    setSearchParams(tab === "account" ? {} : { tab }, { replace: true });
+  };
 
   return (
     <div className="p-6">
@@ -71,7 +80,7 @@ export const AdminSettings = () => {
           return (
             <button
               key={tab.id}
-              onClick={() => setActiveTab(tab.id)}
+              onClick={() => selectTab(tab.id)}
               className={cn(
                 "flex items-center gap-2 px-4 py-2.5 text-sm font-medium border-b-2 transition-colors -mb-px",
                 activeTab === tab.id
