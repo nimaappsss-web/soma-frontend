@@ -7,17 +7,17 @@ export const PwaUpdateBanner = () => {
     offlineReady: [offlineReady, setOfflineReady],
     updateServiceWorker,
   } = useRegisterSW({
-    onRegisteredSW: (_, reg) => {
+    onRegisteredSW: (_url, reg) => {
       if (!navigator.serviceWorker) return;
       const check = () => {
         void reg?.update().catch(() => {});
       };
       const onFocus = () => {
         check();
-        window.addEventListener("focus", onFocus);
       };
       window.addEventListener("focus", onFocus);
-      const timer = window.setInterval(check, 60 * 60 * 1000);
+      const timer = window.setInterval(check, 30 * 60 * 1000);
+      check();
       return () => {
         window.removeEventListener("focus", onFocus);
         window.clearInterval(timer);

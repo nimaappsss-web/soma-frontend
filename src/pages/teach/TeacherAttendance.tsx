@@ -381,37 +381,39 @@ export const TeacherAttendance = () => {
       ) : isMarked && !modifyMode ? (
         <div>
           <div className="rounded-2xl border border-springgreen600/20 bg-[#E9F7EE] p-4 mb-4">
-            <div className="flex items-center gap-2.5 mb-3">
-              <div className="flex h-8 w-8 items-center justify-center rounded-full bg-springgreen600">
-                <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M20 6L9 17l-5-5" />
-                </svg>
-              </div>
-              <p className="text-sm font-medium text-gray-900">
-                {markedCount} students marked for today
-              </p>
-            </div>
-            <div className="flex items-center gap-2">
-              <Button onClick={handleModify} className="bg-gray900 text-white hover:bg-gray-800" size="sm">
-                Modify
-              </Button>
-              {clearConfirm ? (
-                <div className="flex gap-2 flex-1">
-                  <Button onClick={handleClearAll} variant="destructive" size="sm" className="flex-1">
-                    Yes, clear all
-                  </Button>
-                  <Button onClick={() => setClearConfirm(false)} variant="ghost" size="sm" className="flex-1">
-                    Cancel
-                  </Button>
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+              <div className="flex items-center gap-2.5">
+                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-springgreen600">
+                  <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M20 6L9 17l-5-5" />
+                  </svg>
                 </div>
-              ) : (
-                <button
-                  onClick={() => setClearConfirm(true)}
-                  className="text-xs text-red-400 hover:text-red-600 py-2 transition-colors"
-                >
-                  Clear all
-                </button>
-              )}
+                <p className="text-sm font-medium text-gray-900">
+                  {markedCount} students marked for today
+                </p>
+              </div>
+              <div className="flex items-center gap-2">
+                <Button onClick={handleModify} className="bg-gray900 text-white hover:bg-gray-800" size="sm">
+                  Modify
+                </Button>
+                {clearConfirm ? (
+                  <div className="flex gap-2">
+                    <Button onClick={handleClearAll} variant="destructive" size="sm">
+                      Yes, clear all
+                    </Button>
+                    <Button onClick={() => setClearConfirm(false)} variant="ghost" size="sm">
+                      Cancel
+                    </Button>
+                  </div>
+                ) : (
+                  <button
+                    onClick={() => setClearConfirm(true)}
+                    className="text-xs text-red-400 hover:text-red-600 py-2 transition-colors"
+                  >
+                    Clear all
+                  </button>
+                )}
+              </div>
             </div>
           </div>
           {dayNote && (
