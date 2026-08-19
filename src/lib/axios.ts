@@ -2,6 +2,7 @@ import type { AxiosInstance } from "axios";
 import Axios from "axios";
 
 import { tokenStorage, refreshTokenStorage, storage } from "../utils/storage";
+import { getDeviceId } from "../utils/device";
 
 const isServerRejection = (err: unknown): boolean =>
   !!(err as { response?: { status?: number } }).response?.status;
@@ -16,6 +17,13 @@ function getApiBaseUrl(): string {
     return import.meta.env.VITE_API_BASE_URL || `https://${hostname}/api`;
   }
   return import.meta.env.VITE_API_BASE_URL || `http://localhost:3000/api`;
+}
+
+function getFrontendOrigin(): string {
+  if (typeof window !== "undefined") {
+    return window.location.origin;
+  }
+  return "";
 }
 
 export const API_BASE_URL = getApiBaseUrl();
@@ -47,6 +55,11 @@ axiosInstance.interceptors.request.use(
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
+    const origin = getFrontendOrigin();
+    if (origin) {
+      config.headers["X-Frontend-Origin"] = origin;
+    }
+    config.headers["X-Device-Id"] = getDeviceId();
     return config;
   },
   (error) => Promise.reject(error),

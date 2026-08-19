@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 
 import { useAuth } from "../../../contexts/AuthContext";
@@ -10,15 +10,17 @@ import {
   subscribeToNotificationEvents,
   subscribeToDataChangedEvents,
 } from "./notificationStream";
-import {
-  getStoredDataVersion,
-  storeDataVersion,
-} from "../../../hooks/useReopenFreshnessCheck";
+import { storeDataVersion } from "../../../hooks/useReopenFreshnessCheck";
 
 export const useNotificationStream = () => {
   const { user, updateUser } = useAuth();
   const queryClient = useQueryClient();
   const userId = user?.id ?? "";
+  const userRef = useRef(user);
+
+  useEffect(() => {
+    userRef.current = user;
+  }, [user]);
 
   useEffect(() => {
     if (!userId) return;
@@ -43,7 +45,14 @@ export const useNotificationStream = () => {
       authApi
         .me()
         .then((fresh) => {
-          if (fresh?.sessions) updateUser({ sessions: fresh.sessions });
+          if (
+            fresh?.sessions &&
+            userRef.current &&
+            JSON.stringify(fresh.sessions) !==
+              JSON.stringify(userRef.current.sessions)
+          ) {
+            updateUser({ sessions: fresh.sessions });
+          }
         })
         .catch(() => {
           // ignore transient failures

@@ -1,5 +1,6 @@
 import { API_BASE_URL } from "../../../lib/axios";
 import { tokenStorage } from "../../../utils/storage";
+import { getDeviceId } from "../../../utils/device";
 
 // Module-level singleton: exactly one EventSource per tab regardless of how
 // many NotificationBell instances are mounted (desktop + mobile both render).
@@ -15,7 +16,9 @@ const subscribers = new Set<() => void>();
 const dataChangedSubscribers = new Set<(payload: unknown) => void>();
 
 const buildUrl = (token: string) =>
-  `${API_BASE_URL}/notifications/stream?token=${encodeURIComponent(token)}`;
+  `${API_BASE_URL}/notifications/stream?token=${encodeURIComponent(
+    token,
+  )}&deviceId=${encodeURIComponent(getDeviceId())}`;
 
 const create = (userId: string, token: string) => {
   activeUserId = userId;

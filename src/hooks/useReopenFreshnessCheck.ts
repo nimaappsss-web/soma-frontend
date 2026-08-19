@@ -68,5 +68,5 @@ export const useReopenFreshnessCheck = () => {
       document.removeEventListener("visibilitychange", onVisibility);
       window.removeEventListener("focus", onVisibility);
     };
-  }, [user, queryClient]);
+  }, [user?.id, queryClient]);
 };
