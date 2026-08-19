@@ -198,7 +198,7 @@ export const AppShell = ({
             </div>
           </div>
         </header>
-        <main className="flex-1 overflow-y-auto min-h-0 pb-[env(safe-area-inset-bottom)]">
+        <main className="flex-1 overflow-y-auto min-h-0 overscroll-contain pb-[env(safe-area-inset-bottom)]">
           {children ?? <Outlet />}
         </main>
       </div>
