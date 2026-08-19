@@ -458,7 +458,7 @@ export const AdminStudents = () => {
         onOpenChange={(open) => { if (!open) setBulkDeleteOpen(false); }}
         title={`Delete ${selectedIds.size} student${selectedIds.size > 1 ? "s" : ""}`}
         description={`Are you sure you want to delete ${selectedIds.size} student${selectedIds.size > 1 ? "s" : ""}? This action cannot be undone.`}
-        confirmInputLabel="Type your first name to confirm"
+        confirmInputLabel="Type (Principal) your first name to confirm"
         confirmInputPlaceholder={user?.name?.split(" ")[0] ?? ""}
         confirmInputValue={user?.name?.split(" ")[0] ?? ""}
         confirmLabel={bulkDeleteMutation.isPending ? "Deleting..." : "Delete"}

@@ -34,7 +34,9 @@ export const DeleteConfirmDialog = ({
     if (open) setInputValue("");
   }, [open]);
 
-  const canConfirm = inputValue.trim() === confirmInputValue;
+  const canConfirm =
+    inputValue.replace(/\s+/g, " ").trim().toLowerCase() ===
+    confirmInputValue.replace(/\s+/g, " ").trim().toLowerCase();
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
