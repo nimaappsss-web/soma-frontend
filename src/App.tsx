@@ -48,6 +48,7 @@ import { SyncIndicator } from "./components/SyncIndicator";
 import { Toaster } from "./components/ui/Toaster";
 import { PwaUpdateBanner } from "./components/ui/PwaUpdateBanner";
 import { InstallPWA } from "./components/InstallPWA";
+import { DeviceSyncBridge } from "./components/DeviceSyncBridge";
 import { InitialSyncProvider } from "./sync/InitialSyncProvider";
 import { AdminSettings } from "./pages/AdminSettings";
 import { AdminProfile } from "./pages/admin/AdminProfile";
@@ -241,6 +242,7 @@ function App() {
       <Toaster />
       <InstallPWA />
       <PwaUpdateBanner />
+      <DeviceSyncBridge />
       </InitialSyncProvider>
       </SyncProvider>
     </AuthProvider>

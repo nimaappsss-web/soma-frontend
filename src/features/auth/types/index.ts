@@ -100,6 +100,13 @@ export interface User {
   formClassId?: string;
   formClass?: string;
   logoUrl?: string;
+  sessions?: Array<{
+    deviceId: string;
+    deviceType: string;
+    deviceName: string | null;
+    lastActivityAt: string;
+    createdAt: string;
+  }>;
   school?: {
     id: string;
     name: string;

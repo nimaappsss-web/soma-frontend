@@ -14,6 +14,7 @@ import {
 import { getPostAuthPath } from "../features/auth/utils/routing";
 import { transformError } from "../utils/transformError";
 import { givenName } from "../utils/name";
+import { getDeviceId, getDeviceName } from "../utils/device";
 import { AuthLayout } from "../layouts/AuthLayout";
 import { Button } from "../components/ui/button";
 import { ErrorMessage } from "../components/others/ErrorMessage";
@@ -135,8 +136,8 @@ export const Login = () => {
       {
         identifier: data.email,
         password: data.password,
-        deviceId: "web-1",
-        deviceName: navigator.userAgent,
+        deviceId: getDeviceId(),
+        deviceName: getDeviceName(),
       },
       {
         onSuccess: (res) => {
@@ -183,7 +184,7 @@ export const Login = () => {
   const handleGoogleSuccess = (credentialResponse: { credential?: string }) => {
     if (!credentialResponse.credential) return;
     googleAuthMutation.mutate(
-      { idToken: credentialResponse.credential, deviceId: "web-1", deviceName: navigator.userAgent },
+      { idToken: credentialResponse.credential, deviceId: getDeviceId(), deviceName: getDeviceName() },
       {
         onSuccess: (res) => {
           login(res);

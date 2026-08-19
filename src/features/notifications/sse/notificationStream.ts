@@ -12,6 +12,7 @@ let tokenCheckTimer: number | null = null;
 let consumerCount = 0;
 
 const subscribers = new Set<() => void>();
+const dataChangedSubscribers = new Set<(payload: unknown) => void>();
 
 const buildUrl = (token: string) =>
   `${API_BASE_URL}/notifications/stream?token=${encodeURIComponent(token)}`;
@@ -22,6 +23,15 @@ const create = (userId: string, token: string) => {
   source = new EventSource(buildUrl(token));
   source.addEventListener("notification", () => {
     subscribers.forEach((cb) => cb());
+  });
+  source.addEventListener("data-changed", (event: MessageEvent) => {
+    let payload: unknown;
+    try {
+      payload = JSON.parse(event.data);
+    } catch {
+      payload = event.data;
+    }
+    dataChangedSubscribers.forEach((cb) => cb(payload));
   });
 };
 
@@ -77,5 +87,14 @@ export const subscribeToNotificationEvents = (cb: () => void) => {
   subscribers.add(cb);
   return () => {
     subscribers.delete(cb);
+  };
+};
+
+export const subscribeToDataChangedEvents = (
+  cb: (payload: unknown) => void,
+) => {
+  dataChangedSubscribers.add(cb);
+  return () => {
+    dataChangedSubscribers.delete(cb);
   };
 };

@@ -14,6 +14,7 @@ import {
 import { useAuth } from "../contexts/AuthContext";
 import { getPostAuthPath } from "../features/auth/utils/routing";
 import { transformError } from "../utils/transformError";
+import { getDeviceId, getDeviceName } from "../utils/device";
 const RESEND_COOLDOWN = 30;
 export const Onboarding = () => {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -122,7 +123,7 @@ export const Onboarding = () => {
   const handleGoogleSuccess = (credentialResponse: { credential?: string }) => {
     if (!credentialResponse.credential) return;
     googleAuthMutation.mutate(
-      { idToken: credentialResponse.credential, deviceId: "web-1", deviceName: navigator.userAgent },
+      { idToken: credentialResponse.credential, deviceId: getDeviceId(), deviceName: getDeviceName() },
       {
         onSuccess: (res) => {
           setTokens(res.accessToken, res.refreshToken, res.user);
