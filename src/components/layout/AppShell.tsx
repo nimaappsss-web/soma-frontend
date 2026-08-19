@@ -115,7 +115,10 @@ export const AppShell = ({
   );
 
   return (
-    <div className="flex h-dvh bg-offWhite overflow-hidden">
+    <div
+      className="flex h-screen overflow-hidden bg-offWhite"
+      style={{ height: "100dvh" }}
+    >
       {/* Mobile sidebar */}
       <MobileDrawer open={mobileOpen} onClose={closeMobile}>
         <div className="flex items-center justify-between h-[62px] shrink-0 border-b border-gray100 px-5">
@@ -179,7 +182,7 @@ export const AppShell = ({
       </aside>
 
       {/* Right side: header + content */}
-      <div className="flex-1 flex flex-col min-w-0">
+      <div className="flex-1 flex flex-col min-w-0 min-h-0 overflow-hidden">
         <MobileHeader onMenuClick={() => setMobileOpen(true)} />
         <header className="h-[62px] shrink-0 bg-pureWhite border-b border-gray100 items-center justify-end px-6 hidden md:flex">
           <div className="flex items-center gap-3">
@@ -195,7 +198,7 @@ export const AppShell = ({
             </div>
           </div>
         </header>
-        <main className="flex-1 overflow-y-auto">
+        <main className="flex-1 overflow-y-auto min-h-0">
           {children ?? <Outlet />}
         </main>
       </div>
