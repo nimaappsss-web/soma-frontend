@@ -49,7 +49,7 @@ export function InstallPWA() {
     useState<BeforeInstallPromptEvent | null>(null);
   const [installed, setInstalled] = useState(() => read(INSTALLED_KEY) === "1");
   const [open, setOpen] = useState(false);
-  const [showIOSGuide, setShowIOSGuide] = useState(false);
+  const [showGuide, setShowGuide] = useState(false);
 
   useEffect(() => {
     const handler = (e: Event) => {
@@ -91,12 +91,8 @@ export function InstallPWA() {
       setOpen(false);
       return;
     }
-    if (isIOS()) {
-      setOpen(false);
-      setShowIOSGuide(true);
-      return;
-    }
     setOpen(false);
+    setShowGuide(true);
   };
 
   const handleDismissForever = () => {
@@ -138,10 +134,10 @@ export function InstallPWA() {
         </DialogContent>
       </Dialog>
 
-      {showIOSGuide && (
+      {showGuide && (
         <div className="fixed bottom-0 left-0 right-0 z-50 bg-white border-t border-gray100 px-6 pb-8 pt-4 rounded-t-2xl shadow-lg">
           <Button
-            onClick={() => setShowIOSGuide(false)}
+            onClick={() => setShowGuide(false)}
             className="absolute right-4 top-4 text-gray400 hover:text-gray900"
             aria-label="Dismiss"
             variant="ghost"
@@ -151,26 +147,53 @@ export function InstallPWA() {
               <path d="M18 6 6 18M6 6l12 12" />
             </svg>
           </Button>
-          <p className="text-sm font-semibold text-gray900">Install Soma on your iPhone</p>
+          <p className="text-sm font-semibold text-gray900">
+            Install Soma on {isIOS() ? "your iPhone" : "your Android"}
+          </p>
           <ol className="mt-3 space-y-2 text-sm text-gray600">
             <li className="flex items-start gap-2">
               <span className="shrink-0 font-semibold text-gray900">1.</span>
-              Tap the <span className="inline-flex items-center gap-1 rounded-md bg-gray100 px-1.5 py-0.5 text-xs text-gray900">Share</span>{" "}
-              button in Safari.
+              {isIOS() ? (
+                <>
+                  Tap the{" "}
+                  <span className="inline-flex items-center gap-1 rounded-md bg-gray100 px-1.5 py-0.5 text-xs text-gray900">Share</span>{" "}
+                  button in Safari.
+                </>
+              ) : (
+                <>
+                  Tap the{" "}
+                  <span className="rounded-md bg-gray100 px-1.5 py-0.5 text-xs text-gray900">⋮</span>{" "}
+                  menu in Chrome and select{" "}
+                  <span className="rounded-md bg-gray100 px-1.5 py-0.5 text-xs text-gray900">Add to Home screen</span>.
+                </>
+              )}
             </li>
-            <li className="flex items-start gap-2">
-              <span className="shrink-0 font-semibold text-gray900">2.</span>
-              Scroll down and tap{" "}
-              <span className="rounded-md bg-gray100 px-1.5 py-0.5 text-xs text-gray900">
-                Add to Home Screen
-              </span>
-              .
-            </li>
-            <li className="flex items-start gap-2">
-              <span className="shrink-0 font-semibold text-gray900">3.</span>
-              Tap <span className="rounded-md bg-gray100 px-1.5 py-0.5 text-xs text-gray900">Add</span> in the
-              top-right corner.
-            </li>
+            {isIOS() ? (
+              <>
+                <li className="flex items-start gap-2">
+                  <span className="shrink-0 font-semibold text-gray900">2.</span>
+                  Scroll down and tap{" "}
+                  <span className="rounded-md bg-gray100 px-1.5 py-0.5 text-xs text-gray900">
+                    Add to Home Screen
+                  </span>
+                  .
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="shrink-0 font-semibold text-gray900">3.</span>
+                  Tap <span className="rounded-md bg-gray100 px-1.5 py-0.5 text-xs text-gray900">Add</span> in the
+                  top-right corner.
+                </li>
+              </>
+            ) : (
+              <li className="flex items-start gap-2">
+                <span className="shrink-0 font-semibold text-gray900">2.</span>
+                Tap{" "}
+                <span className="rounded-md bg-gray100 px-1.5 py-0.5 text-xs text-gray900">Install</span>{" "}
+                or{" "}
+                <span className="rounded-md bg-gray100 px-1.5 py-0.5 text-xs text-gray900">Add</span>{" "}
+                to confirm.
+              </li>
+            )}
           </ol>
         </div>
       )}
