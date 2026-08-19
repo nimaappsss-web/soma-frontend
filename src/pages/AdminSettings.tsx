@@ -30,6 +30,7 @@ import { TagInput } from "../components/ui/tag-input";
 import { MultiSelect } from "../components/ui/multi-select";
 import { Switch } from "../components/ui/switch";
 import { DeleteConfirmDialog } from "../components/others/DeleteConfirmDialog";
+import { InstallAppCard } from "../components/InstallAppCard";
 
 const NIGERIAN_STATES = ["Lagos", "Abuja", "Rivers", "Kano", "Oyo", "Kaduna"];
 
@@ -79,7 +80,7 @@ export const AdminSettings = () => {
         <p className="text-xs md:text-sm text-gray500 mt-1">Manage your account, school and billing</p>
       </div>
 
-      <div className="mt-5 inline-flex items-center gap-1 rounded-full border border-input bg-card p-1 overflow-x-auto max-w-full">
+      <div className="mt-5 inline-flex items-center gap-1 rounded-full border border-input bg-card p-1 overflow-x-auto no-scrollbar max-w-full">
         {tabs.map((tab) => {
           const Icon = tab.icon;
           const active = activeTab === tab.id;
@@ -357,6 +358,8 @@ const AccountSection = () => {
           </form>
         </CardContent>
       </Card>
+
+      <InstallAppCard />
     </div>
   );
 };

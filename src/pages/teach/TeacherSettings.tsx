@@ -11,6 +11,7 @@ import { Textarea } from "../../components/ui/textarea";
 import { Label } from "../../components/ui/label";
 import { Button } from "../../components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../../components/ui/card";
+import { InstallAppCard } from "../../components/InstallAppCard";
 import { db } from "../../db/db";
 import { addToQueue } from "../../sync/syncQueue";
 import { uploadFile } from "../../utils/upload";
@@ -247,6 +248,8 @@ export const TeacherSettings = () => {
         <Button onClick={handleSave} disabled={saving} className="w-full">
           {saving ? "Saving..." : "Save Changes"}
         </Button>
+
+        <InstallAppCard />
       </div>
     </div>
   );

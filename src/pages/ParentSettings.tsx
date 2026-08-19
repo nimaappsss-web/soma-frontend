@@ -10,6 +10,7 @@ import { Input } from "../components/ui/input";
 import { Label } from "../components/ui/label";
 import { Button } from "../components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
+import { InstallAppCard } from "../components/InstallAppCard";
 import { addToQueue } from "../sync/syncQueue";
 import { uploadFile } from "../utils/upload";
 import { transformError } from "../utils/transformError";
@@ -167,6 +168,8 @@ export const ParentSettings = () => {
         <Button onClick={handleSave} disabled={saving} className="w-full">
           {saving ? "Saving..." : "Save Changes"}
         </Button>
+
+        <InstallAppCard />
       </div>
     </div>
   );

@@ -151,7 +151,7 @@ export const AdminApprovals = () => {
           />
         </div>
 
-        <div className="inline-flex items-center gap-1 rounded-full border border-input bg-card p-1 overflow-x-auto max-w-full">
+        <div className="inline-flex items-center gap-1 rounded-full border border-input bg-card p-1 overflow-x-auto no-scrollbar max-w-full">
           {TABS.map(({ id, label, Icon }) => {
             const active = tab === id;
             return (

@@ -16,6 +16,7 @@ import { SchoolSettingsContent } from "../features/settings";
 import { uploadFile } from "../utils/upload";
 import { addToQueue } from "../sync/syncQueue";
 import { transformError } from "../utils/transformError";
+import { InstallAppCard } from "../components/InstallAppCard";
 const accountSchema = z.object({
   name: z.string().min(1, "Name is required"),
   phone: z.string().optional(),
@@ -163,7 +164,7 @@ export const Settings = () => {
         </div>
         <div className="flex flex-col lg:flex-row gap-4 lg:gap-8">
           <nav className="w-full lg:w-56 shrink-0">
-            <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-x-auto lg:overflow-visible">
+            <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-x-auto no-scrollbar lg:overflow-visible">
               <div className="flex lg:flex-col">
               {sidebarItems.map((item) => (
                 <Link
@@ -340,6 +341,7 @@ export const Settings = () => {
                     </button>
                   </form>
                 </section>
+                <InstallAppCard />
               </div>
             )}
             {tab === "school" && isAdmin && (
