@@ -1,63 +1,70 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRegisterSW } from "virtual:pwa-register/react";
 
 export const PwaUpdateBanner = () => {
+  const registrationRef = useRef<ServiceWorkerRegistration | null>(null);
+
   const {
     needRefresh: [needRefresh, setNeedRefresh],
     offlineReady: [offlineReady, setOfflineReady],
-    updateServiceWorker,
   } = useRegisterSW({
     onRegisteredSW: (_url, reg) => {
-      if (!navigator.serviceWorker) return;
-      const check = () => {
+      registrationRef.current = reg;
+      if (reg) {
+        reg.addEventListener("updatefound", () => {
+          const newSW = reg.installing;
+          if (!newSW) return;
+          newSW.addEventListener("statechange", () => {
+            if (newSW.state === "installed") {
+              setNeedRefresh(true);
+            }
+          });
+        });
+      }
+      if (navigator.serviceWorker) {
         void reg?.update().catch(() => {});
-      };
-      const onFocus = () => {
-        check();
-      };
-      window.addEventListener("focus", onFocus);
-      const timer = window.setInterval(check, 30 * 60 * 1000);
-      check();
-      return () => {
-        window.removeEventListener("focus", onFocus);
-        window.clearInterval(timer);
-      };
+      }
     },
   });
+
+  useEffect(() => {
+    const check = () => {
+      void registrationRef.current?.update().catch(() => {});
+    };
+
+    const onVisibility = () => {
+      if (document.visibilityState === "visible") check();
+    };
+
+    check();
+    document.addEventListener("visibilitychange", onVisibility);
+    const timer = window.setInterval(check, 15 * 60 * 1000);
+
+    return () => {
+      document.removeEventListener("visibilitychange", onVisibility);
+      window.clearInterval(timer);
+    };
+  }, []);
 
   const [show, setShow] = useState(false);
 
   useEffect(() => {
-    if (needRefresh || offlineReady) setShow(true);
-  }, [needRefresh, offlineReady]);
+    if (offlineReady) setShow(true);
+  }, [offlineReady]);
 
   if (!show) return null;
 
   const close = () => {
     setShow(false);
-    setNeedRefresh(false);
     setOfflineReady(false);
+    setNeedRefresh(false);
   };
 
   return (
     <div className="fixed right-4 top-4 z-[300] flex max-w-sm items-center gap-3 rounded-2xl bg-gray900 px-4 py-3 shadow-[0_8px_30px_-12px_rgba(0,0,0,0.5)]">
       <div className="min-w-0 flex-1">
-        <p className="text-sm font-medium text-white">
-          {needRefresh ? "A new version of Soma is available" : "Soma is ready to work offline"}
-        </p>
-        {needRefresh && (
-          <p className="mt-0.5 text-xs text-white/60">Refresh to get the latest update</p>
-        )}
+        <p className="text-sm font-medium text-white">Soma is ready to work offline</p>
       </div>
-      {needRefresh && (
-        <button
-          type="button"
-          onClick={() => void updateServiceWorker()}
-          className="shrink-0 rounded-full bg-white px-4 py-1.5 text-sm font-semibold text-gray900 transition-colors hover:bg-white/90"
-        >
-          Refresh
-        </button>
-      )}
       <button
         type="button"
         onClick={close}
