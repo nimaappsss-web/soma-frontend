@@ -46,11 +46,11 @@ export const ForgotPassword = () => {
             </p>
             <Button
               type="button"
-              variant="outline"
               className="w-full mt-2"
-              onClick={() => form.reset({ email: initialEmail })}
+              disabled={forgotMutation.isPending}
+              onClick={() => forgotMutation.mutate({ email: form.getValues("email") })}
             >
-              Send another link
+              {forgotMutation.isPending ? "Sending link..." : "Send another link"}
             </Button>
             <Link
               to="/login"

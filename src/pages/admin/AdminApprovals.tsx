@@ -1,9 +1,8 @@
 import { useState } from "react";
-import { ShieldTick, DocumentText, Clock, Check, Profile2User, Book } from "iconsax-react";
+import { ShieldTick, DocumentText, Clock, Check, Profile2User, Book, StatusUp, MessageText } from "iconsax-react";
 import { cn } from "@/lib/utils";
 import { SomaLoader } from "../../components/ui/SomaLoader";
 import { EmptyState } from "../../components/ui/EmptyState";
-import { PageHeader } from "../../components/ui/PageHeader";
 import { Button } from "../../components/ui/button";
 import { HelpHint } from "../../components/ui/HelpHint";
 import {
@@ -21,6 +20,17 @@ const STATUS_LABEL: Record<string, string> = {
   REJECTED: "Rejected",
 };
 
+const STATUS_STYLE: Record<string, { dot: string; text: string; bg: string; active: string }> = {
+  PENDING: { dot: "bg-amber500", text: "text-amber500", bg: "bg-amber500/10", active: "bg-amber500/10 border-amber500/40" },
+  APPROVED: { dot: "bg-springgreen600", text: "text-springgreen600", bg: "bg-springgreen600/10", active: "bg-springgreen600/10 border-springgreen600/40" },
+  REJECTED: { dot: "bg-red500", text: "text-red500", bg: "bg-red500/10", active: "bg-red500/10 border-red500/40" },
+};
+
+const TABS: { id: TabId; label: string; Icon: typeof DocumentText }[] = [
+  { id: "exam-results", label: "Exam results", Icon: StatusUp },
+  { id: "lesson-notes", label: "Lesson notes", Icon: MessageText },
+];
+
 const formatRelativeDate = (iso: string) => {
   const diff = Date.now() - new Date(iso).getTime();
   const mins = Math.round(diff / 60000);
@@ -36,6 +46,7 @@ const formatRelativeDate = (iso: string) => {
 const BroadcastCard = ({ item }: { item: ExamBroadcast }) => {
   const { approve, reject } = useReviewExamBroadcast();
   const isPending = item.status === "PENDING";
+  const style = STATUS_STYLE[item.status];
 
   return (
     <div className="rounded-2xl border border-gray100 bg-white p-4 sm:p-5">
@@ -48,12 +59,12 @@ const BroadcastCard = ({ item }: { item: ExamBroadcast }) => {
             <p className="text-sm font-semibold text-gray900 truncate">{item.exam.subject.name}</p>
             <span
               className={cn(
-                "inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-semibold leading-none",
-                item.status === "PENDING" && "bg-amber500/10 text-amber500",
-                item.status === "APPROVED" && "bg-springgreen600/10 text-springgreen600",
-                item.status === "REJECTED" && "bg-red500/10 text-red500",
+                "inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-semibold leading-none",
+                style.bg,
+                style.text,
               )}
             >
+              <span className={cn("h-1.5 w-1.5 rounded-full", style.dot)} />
               {STATUS_LABEL[item.status]}
             </span>
           </div>
@@ -121,16 +132,11 @@ export const AdminApprovals = () => {
 
   const items = data?.requests ?? [];
 
-  const tabs: { id: TabId; label: string; icon: React.ReactNode }[] = [
-    { id: "exam-results", label: "Exam results", icon: <DocumentText size={15} variant="Bold" /> },
-    { id: "lesson-notes", label: "Lesson notes", icon: <DocumentText size={15} variant="Bold" /> },
-  ];
-
   return (
     <div className="p-4 md:p-6 w-full">
-      <PageHeader
-        title="Approvals"
-        hint={
+      <div className="flex flex-wrap items-center justify-between gap-3 mb-5">
+        <div className="flex items-center gap-3">
+          <h1 className="text-xl md:text-2xl font-semibold text-gray-900">Approvals</h1>
           <HelpHint
             title="Approvals"
             storageKey="approvals"
@@ -143,45 +149,49 @@ export const AdminApprovals = () => {
               { title: "Lesson notes", text: "Coming soon — lesson notes will be reviewable here too." },
             ]}
           />
-        }
-      />
+        </div>
 
-      <div className="flex flex-wrap items-center gap-2 mb-5">
-        {tabs.map((t) => (
-          <button
-            key={t.id}
-            type="button"
-            onClick={() => setTab(t.id)}
-            className={cn(
-              "flex items-center gap-1.5 rounded-full border h-10 px-4 text-sm font-medium transition-all active:scale-95",
-              tab === t.id
-                ? "bg-gray900 text-white border-gray900"
-                : "bg-white text-gray700 border-gray100 hover:border-gray200 hover:text-gray900",
-            )}
-          >
-            {t.icon}
-            {t.label}
-          </button>
-        ))}
+        <div className="inline-flex items-center gap-1 rounded-full border border-input bg-card p-1 overflow-x-auto max-w-full">
+          {TABS.map(({ id, label, Icon }) => {
+            const active = tab === id;
+            return (
+              <button
+                key={id}
+                type="button"
+                onClick={() => setTab(id)}
+                className={cn(
+                  "inline-flex flex-1 sm:flex-none items-center justify-center gap-1.5 rounded-full px-4 py-1.5 text-sm font-medium transition-colors whitespace-nowrap",
+                  active ? "bg-gray900 text-white" : "text-gray500 hover:text-gray900",
+                )}
+              >
+                <Icon size={15} color={active ? "#FFFFFF" : "#8C8C8C"} />
+                {label}
+              </button>
+            );
+          })}
+        </div>
       </div>
 
       {tab === "exam-results" && (
         <div className="flex flex-wrap items-center gap-2 mb-5">
-          {(["PENDING", "APPROVED", "REJECTED"] as StatusFilter[]).map((s) => (
-            <button
-              key={s}
-              type="button"
-              onClick={() => setStatusFilter(s)}
-              className={cn(
-                "flex items-center gap-1.5 rounded-full border h-9 px-3.5 text-xs font-medium transition-all active:scale-95",
-                statusFilter === s
-                  ? "bg-gray900 text-white border-gray900"
-                  : "bg-white text-gray700 border-gray100 hover:border-gray200 hover:text-gray900",
-              )}
-            >
-              {STATUS_LABEL[s]}
-            </button>
-          ))}
+          {(["PENDING", "APPROVED", "REJECTED"] as StatusFilter[]).map((s) => {
+            const style = STATUS_STYLE[s];
+            const active = statusFilter === s;
+            return (
+              <button
+                key={s}
+                type="button"
+                onClick={() => setStatusFilter(s)}
+                className={cn(
+                  "inline-flex items-center gap-1.5 rounded-full border px-3.5 py-1.5 text-xs font-medium transition-colors",
+                  active ? cn(style.bg, style.text, style.active) : "border-gray100 bg-white text-gray700 hover:text-gray900",
+                )}
+              >
+                <span className={cn("h-1.5 w-1.5 rounded-full", style.dot)} />
+                {STATUS_LABEL[s]}
+              </button>
+            );
+          })}
         </div>
       )}
 
