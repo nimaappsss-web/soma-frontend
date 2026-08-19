@@ -4,7 +4,7 @@ import { NotificationBell } from "../../features/notifications/components/Notifi
 export const MobileHeader = ({ onMenuClick }: { onMenuClick: () => void }) => {
   return (
     <header
-      className="flex items-center min-h-[62px] shrink-0 bg-pureWhite border-b border-gray100 px-4 md:hidden sticky top-0 z-30"
+      className="fixed inset-x-0 top-0 z-30 flex items-center min-h-[62px] bg-pureWhite border-b border-gray100 px-4 md:hidden"
       style={{ paddingTop: "env(safe-area-inset-top)" }}
     >
       <button

@@ -182,7 +182,9 @@ export const AppShell = ({
       </aside>
 
       {/* Right side: header + content */}
-      <div className="flex-1 flex flex-col min-w-0 min-h-0 overflow-hidden">
+      <div
+        className="flex-1 flex flex-col min-w-0 min-h-0 overflow-hidden pt-[calc(env(safe-area-inset-top)+62px)] md:pt-0"
+      >
         <MobileHeader onMenuClick={() => setMobileOpen(true)} />
         <header className="h-[62px] shrink-0 bg-pureWhite border-b border-gray100 items-center justify-end px-6 hidden md:flex">
           <div className="flex items-center gap-3">

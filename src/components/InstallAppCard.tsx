@@ -6,6 +6,23 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "./ui/
 import { InstallGuideSteps } from "./InstallGuideSteps";
 import { usePwaInstall } from "../utils/pwaInstall";
 
+declare const __BUILD_TIME__: string;
+
+const buildLabel = (() => {
+  const date = new Date(__BUILD_TIME__);
+  if (Number.isNaN(date.getTime())) return "unknown";
+  return date.toLocaleString(undefined, {
+    dateStyle: "medium",
+    timeStyle: "short",
+  });
+})();
+
+const BuildBadge = () => (
+  <p className="mt-4 border-t border-gray100 pt-3 text-[11px] text-gray500">
+    Build pushed: {buildLabel}
+  </p>
+);
+
 export const InstallAppCard = () => {
   const { installed, install } = usePwaInstall();
   const [showGuide, setShowGuide] = useState(false);
@@ -29,6 +46,7 @@ export const InstallAppCard = () => {
               <p className="text-xs text-gray500">The app icon is on your home screen.</p>
             </div>
           </div>
+          <BuildBadge />
         </CardContent>
       </Card>
     );
@@ -57,6 +75,7 @@ export const InstallAppCard = () => {
           </Button>
         </div>
         {showGuide && <InstallGuideSteps />}
+        <BuildBadge />
       </CardContent>
     </Card>
   );
