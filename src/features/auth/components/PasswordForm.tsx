@@ -1,5 +1,6 @@
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { Link } from "react-router";
 import { Input } from "../../../components/ui/input";
 import { Button } from "../../../components/ui/button";
 import {
@@ -41,9 +42,12 @@ export const PasswordForm = ({
 
       <p className="text-sm text-black/50 mt-2 font-normal">
         Forgot your password?{" "}
-        <a href="#" className="text-black underline">
+        <Link
+          to={`/forgot-password?email=${encodeURIComponent(identifier)}`}
+          className="text-black underline"
+        >
           Reset password
-        </a>
+        </Link>
       </p>
       <Button type="submit" disabled={isPending} className="w-full mt-5.25">
         {isPending ? "Logging in..." : "Log in"}

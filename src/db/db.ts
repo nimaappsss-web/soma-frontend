@@ -85,6 +85,7 @@ export interface TeacherCache {
   userId: string;
   name: string;
   email: string;
+  image?: string | null;
   role: string;
   active?: boolean;
   approvalStatus?: "APPROVED" | "PENDING" | "REJECTED";

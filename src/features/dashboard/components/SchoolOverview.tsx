@@ -7,29 +7,27 @@ const StatusRow = ({
   bg,
   label,
   value,
-  valueClass,
 }: {
   icon: ReactNode;
   bg: string;
   label: string;
   value: string | number;
-  valueClass: string;
 }) => (
   <div className="flex items-center justify-between">
     <div className="flex items-center gap-2.5">
       <div className={`w-8 h-8 rounded-lg ${bg} flex items-center justify-center shrink-0`}>{icon}</div>
       <span className="text-sm text-gray700">{label}</span>
     </div>
-    <span className={`text-sm font-semibold ${valueClass}`}>{value}</span>
+    <span className="text-sm font-semibold text-gray900">{value}</span>
   </div>
 );
 
-interface AcademicsSectionProps {
+interface SchoolOverviewProps {
   stats: DashboardStats | undefined;
   isLoading: boolean;
 }
 
-export const AcademicsSection = ({ stats, isLoading }: AcademicsSectionProps) => (
+export const SchoolOverview = ({ stats, isLoading }: SchoolOverviewProps) => (
   <div className="bg-white rounded-3xl border border-gray100 p-5">
     <h3 className="text-sm font-semibold text-gray900">Academics</h3>
 
@@ -39,34 +37,27 @@ export const AcademicsSection = ({ stats, isLoading }: AcademicsSectionProps) =>
         bg="bg-[#E9F7EE]"
         label="Active teachers"
         value={isLoading ? "—" : (stats?.teachers.active ?? 0)}
-        valueClass="text-gray900"
       />
       <StatusRow
         icon={<UserAdd size={16} color="#FBBC05" variant="Bold" />}
         bg="bg-[#FEF6E0]"
         label="Pending invites"
         value={isLoading ? "—" : (stats?.teachers.pendingInvites ?? 0)}
-        valueClass="text-gray900"
       />
-    </div>
-    <p className="text-[11px] uppercase tracking-wide text-gray400 text-center mt-3">
-      Teaching & learning
-    </p>
-
-    <div className="mt-4 pt-4 border-t border-gray100 space-y-3">
+      <p className="text-[11px] uppercase tracking-wide text-gray400">
+        Teaching & learning
+      </p>
       <StatusRow
         icon={<Profile size={16} color="#4285F4" variant="Bold" />}
         bg="bg-[#EBF0FF]"
         label="Male students"
         value={isLoading ? "—" : (stats?.students.male ?? 0)}
-        valueClass="text-gray900"
       />
       <StatusRow
         icon={<ProfileCircle size={16} color="#EC4899" variant="Bold" />}
         bg="bg-[#FDECF4]"
         label="Female students"
         value={isLoading ? "—" : (stats?.students.female ?? 0)}
-        valueClass="text-gray900"
       />
     </div>
   </div>

@@ -68,12 +68,26 @@ export const AppShell = ({
   const schoolFooter = (
     <div className={cn("border-t border-gray100 mt-1 shrink-0", collapsed ? "px-[12px] pb-4 pt-3" : "px-3 pb-4 pt-3")}>
       {collapsed ? (
-        <div className="flex items-center justify-start h-[45px] w-[48px]">
-          <Building variant="Bold" size={20} className="ml-[12px] text-gray300" />
+        <div className="flex items-center justify-center h-[45px] w-[48px]">
+          {user?.logoUrl ? (
+            <div className="w-[32px] h-[32px] overflow-hidden rounded-xl border border-gray100 bg-white flex items-center justify-center">
+              <img src={user.logoUrl} alt="School logo" className="w-full h-full object-contain p-0.5" />
+            </div>
+          ) : (
+            <Building variant="Bold" size={20} className="text-gray300" />
+          )}
         </div>
       ) : (
         <div className="flex items-center gap-3 px-4 h-[45px]">
-          <Building variant="Bold" size={20} className="text-gray300 shrink-0" />
+          {user?.logoUrl ? (
+            <div className="h-[38px] w-[38px] shrink-0 overflow-hidden rounded-xl border border-gray100 bg-white flex items-center justify-center">
+              <img src={user.logoUrl} alt="School logo" className="w-full h-full object-contain p-1" />
+            </div>
+          ) : (
+            <div className="flex items-center justify-center h-[38px] w-[38px] shrink-0 rounded-xl bg-gray50">
+              <Building variant="Bold" size={20} className="text-gray300" />
+            </div>
+          )}
           <div className="min-w-0 flex-1">
             <p className="text-xs font-medium text-gray900 truncate">{user?.schoolName ?? "School"}</p>
             <p className="text-[10px] text-gray500 truncate">School Address</p>
@@ -105,7 +119,7 @@ export const AppShell = ({
       {/* Mobile sidebar */}
       <MobileDrawer open={mobileOpen} onClose={closeMobile}>
         <div className="flex items-center justify-between h-[62px] shrink-0 border-b border-gray100 px-5">
-          <img src="/blackLogo.png" alt="Soma" className="h-[22px]" />
+          <img src={user?.logoUrl ?? "/blackLogo.png"} alt="Soma" className="h-[22px]" />
           <div className="flex items-center gap-3.5">
             <button
               onClick={() => { closeMobile(); setSearchOpen(true); }}

@@ -36,7 +36,7 @@ export const ProfileDropdown = () => {
         onClick={() => setOpen((o) => !o)}
         className="flex items-center gap-2.5 rounded-full p-1 transition-colors hover:bg-gray50"
       >
-        <Avatar name={user?.name ?? "?"} size={40} className="bg-gray900 text-white" />
+        <Avatar name={user?.name ?? "?"} imageUrl={user?.image ?? undefined} size={40} className="bg-gray900 text-white" />
         <div className="hidden text-left sm:block">
           <p className="text-sm font-semibold leading-tight text-gray900">{user?.name}</p>
           <p className="text-[11px] capitalize leading-tight text-gray400">{user?.role}</p>

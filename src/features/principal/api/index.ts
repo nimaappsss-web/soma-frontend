@@ -13,6 +13,7 @@ export { useSchoolInfo } from "./useSchoolInfo";
 export { useClassDetail } from "./useClassDetail";
 export { useUpdateClass } from "./useUpdateClass";
 export { useUpdateSubject } from "./useUpdateSubject";
+export { useExamBroadcasts, useReviewExamBroadcast } from "./useExamBroadcasts";
 export { useParentStats } from "./useParentStats";
 export { useInviteParent } from "./useInviteParent";
 export { useGenerateInviteLink } from "./useGenerateInviteLink";

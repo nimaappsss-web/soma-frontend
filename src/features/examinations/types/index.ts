@@ -277,11 +277,27 @@ export interface SubmitScoresBulkResponse {
 export interface GetScoresBulkResponse {
   message: string;
   examId: string;
+  visibleToParents?: boolean;
+  broadcastStatus?: "PENDING" | "APPROVED" | "REJECTED" | null;
   scores: Array<{
     studentId: string;
     score: number;
     remarks: string | null;
   }>;
+}
+
+export interface PublishScoresResponse {
+  message: string;
+  examId: string;
+  name: string;
+  type: string;
+  visibleToParents: boolean;
+}
+
+export interface SubmitForApprovalResponse {
+  message: string;
+  requestId: string;
+  status: string;
 }
 
 export interface ScoresBulkScope {

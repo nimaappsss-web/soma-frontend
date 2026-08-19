@@ -26,6 +26,7 @@ export interface Teacher {
   id: string;
   name: string;
   email: string;
+  image?: string | null;
   role: string;
   formClassId?: string | null;
   formClass?: string | null;

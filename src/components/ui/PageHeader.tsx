@@ -18,6 +18,8 @@ interface PageHeaderProps {
   onViewChange?: (view: PageViewMode) => void;
   actions?: ReactNode;
   hint?: ReactNode;
+  /** Keep search + filters inline on one row at all breakpoints (no stacking, no mobile bottom sheet). */
+  inline?: boolean;
 }
 
 export const PageHeader = ({
@@ -32,13 +34,16 @@ export const PageHeader = ({
   onViewChange,
   actions,
   hint,
+  inline = false,
 }: PageHeaderProps) => {
   const [filterOpen, setFilterOpen] = useState(false);
   const hasFilters = !!filters;
   const hasSearch = onSearchChange !== undefined;
 
   return (
-    <div className="flex flex-col xl:flex-row items-stretch xl:items-center justify-between gap-3 mb-5">
+    <div
+      className="flex flex-wrap items-center justify-between gap-3 mb-5"
+    >
       {/* Group 1: Title + Subtitle paired */}
       <div className="group flex items-center gap-3 shrink-0">
         <h1 className="text-[18px] sm:text-2xl font-semibold text-gray-900">
@@ -51,7 +56,13 @@ export const PageHeader = ({
       {/* Group 2: Filters + View toggle + Actions paired */}
       <div className="flex flex-1 items-center justify-end gap-2.5 flex-wrap xl:flex-nowrap">
         {/* Desktop inline filters */}
-        <div className="hidden md:flex items-center gap-2.5 flex-wrap xl:flex-nowrap">
+        <div
+          className={
+            inline
+              ? "flex items-center gap-2.5 flex-wrap"
+              : "hidden md:flex items-center gap-2.5 flex-wrap xl:flex-nowrap"
+          }
+        >
           {hasSearch && (
             <div className="relative flex-1 min-w-[150px] max-w-[260px]">
               <SearchNormal
@@ -70,15 +81,28 @@ export const PageHeader = ({
             </div>
           )}
 
-          {hasFilters && filters}
+          {hasFilters && (
+            <div
+              className={
+                inline
+                  ? "hidden sm:flex items-center gap-2.5"
+                  : "flex items-center gap-2.5"
+              }
+            >
+              {filters}
+            </div>
+          )}
         </div>
 
         {/* Mobile filter button */}
-        {(hasFilters || hasSearch) && (
+        {hasFilters && (
           <button
             type="button"
             onClick={() => setFilterOpen(true)}
-            className="flex md:hidden h-[44px] w-[44px] items-center justify-center rounded-[15px] border border-input bg-background shrink-0"
+            className={cn(
+              "flex h-[44px] w-[44px] items-center justify-center rounded-[15px] border border-input bg-background shrink-0",
+              inline ? "sm:hidden" : "md:hidden",
+            )}
           >
             <Filter size={16} color="#0D0D0D" variant="Linear" />
           </button>
@@ -115,7 +139,7 @@ export const PageHeader = ({
       </div>
 
       {/* Mobile filter bottom sheet */}
-      {(hasFilters || hasSearch) && (
+      {hasFilters && (
         <BottomSheet
           open={filterOpen}
           onClose={() => setFilterOpen(false)}

@@ -26,6 +26,7 @@ interface AuthContextType {
   login: (data: LoginResponse) => void;
   setTokens: (accessToken: string, refreshToken: string, user: User) => void;
   logout: () => Promise<void>;
+  updateUser: (patch: Partial<User>) => void;
 }
 
 const AuthContext = createContext<AuthContextType | null>(null);
@@ -49,7 +50,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
 
     const mergeUser = (fromServer: User) => {
-      const merged = { ...cachedUser, ...fromServer };
+      const merged = {
+        ...cachedUser,
+        ...fromServer,
+        logoUrl: fromServer.school?.logo ?? cachedUser?.logoUrl ?? undefined,
+        schoolName: fromServer.school?.name ?? cachedUser?.schoolName ?? undefined,
+      };
       userStorage.set(merged);
       setUser(merged);
     };
@@ -161,6 +167,15 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
   }, [navigate]);
 
+  const updateUser = useCallback((patch: Partial<User>) => {
+    setUser((prev) => {
+      if (!prev) return prev;
+      const merged = { ...prev, ...patch };
+      userStorage.set(merged);
+      return merged;
+    });
+  }, []);
+
   return (
     <AuthContext
       value={{
@@ -170,6 +185,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         login,
         setTokens,
         logout,
+        updateUser,
       }}
     >
       {children}

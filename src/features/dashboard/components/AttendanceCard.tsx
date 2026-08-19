@@ -5,7 +5,7 @@ interface AttendanceCardProps {
   isLoading: boolean;
 }
 
-const RING_RADIUS = 54;
+const RING_RADIUS = 94;
 const RING_CIRCUMFERENCE = 2 * Math.PI * RING_RADIUS;
 
 export const AttendanceCard = ({ stats, isLoading }: AttendanceCardProps) => {
@@ -21,25 +21,25 @@ export const AttendanceCard = ({ stats, isLoading }: AttendanceCardProps) => {
 
       <div className="flex-1 flex items-center justify-center">
         <div className="relative">
-          <svg width="140" height="140" viewBox="0 0 140 140">
-            <circle cx="70" cy="70" r={RING_RADIUS} fill="none" stroke="#F3F4F6" strokeWidth="10" />
+          <svg viewBox="0 0 220 220" className="w-[180px] h-[180px] lg:w-[220px] lg:h-[220px]">
+            <circle cx="110" cy="110" r={RING_RADIUS} fill="none" stroke="#F3F4F6" strokeWidth="12" />
             <circle
-              cx="70"
-              cy="70"
+              cx="110"
+              cy="110"
               r={RING_RADIUS}
               fill="none"
               stroke="#0D0D0D"
-              strokeWidth="10"
+              strokeWidth="12"
               strokeLinecap="round"
               strokeDasharray={RING_CIRCUMFERENCE}
               strokeDashoffset={offset}
-              transform="rotate(-90 70 70)"
+              transform="rotate(-90 110 110)"
               className="transition-all duration-700"
             />
           </svg>
           <div className="absolute inset-0 flex flex-col items-center justify-center">
-            <span className="text-[28px] font-bold text-gray900 leading-none">{isLoading ? "—" : `${percentage}%`}</span>
-            <span className="text-xs text-gray500 mt-1">Today</span>
+            <span className="text-[38px] font-bold text-gray900 leading-none">{isLoading ? "—" : `${percentage.toFixed(1)}%`}</span>
+            <span className="text-sm text-gray500 mt-1">Today</span>
           </div>
         </div>
       </div>

@@ -67,7 +67,7 @@ export const NotificationBell = () => {
       >
         <NotificationBing variant="Linear" size={22} color="#0D0D0D" />
         {badge && (
-          <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 rounded-full bg-springgreen600 text-white text-[10px] font-semibold flex items-center justify-center">
+          <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 rounded-full bg-red500 text-white text-[10px] font-semibold flex items-center justify-center">
             {badge}
           </span>
         )}

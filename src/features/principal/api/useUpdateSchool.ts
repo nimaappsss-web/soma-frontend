@@ -16,7 +16,7 @@ interface UpdateSchoolPayload {
   lga?: string;
   schoolType?: string[];
   address?: string;
-  logoUrl?: string;
+  logo?: string;
   arms?: string[];
   admissionPattern?: string;
   assessmentMode?: "standard" | "thirdTermAverage";

@@ -87,6 +87,10 @@ export interface User {
   schoolId?: string;
   schoolName?: string;
   image?: string;
+  dateOfBirth?: string | null;
+  employmentDate?: string | null;
+  address?: string | null;
+  gender?: "M" | "F" | null;
   phoneVerified?: boolean;
   emailVerified?: boolean;
   hasSchool?: boolean;
@@ -95,6 +99,16 @@ export interface User {
   needsPhoneSetup?: boolean;
   formClassId?: string;
   formClass?: string;
+  logoUrl?: string;
+  school?: {
+    id: string;
+    name: string;
+    logo?: string;
+    state?: string;
+    lga?: string;
+    schoolType?: string[];
+    arms?: string[];
+  };
   assignments?: Array<{
     id: string;
     type: "subject";

@@ -18,8 +18,7 @@ import { givenName } from "../../../utils/name";
 import { ProgressSection } from "./ProgressSection";
 import { SetupChecklist } from "./SetupChecklist";
 import { ClassSubjectsOverview } from "./ClassSubjectsOverview";
-import { AcademicsSection } from "./AcademicsSection";
-import { OperationsSection } from "./OperationsSection";
+import { SchoolOverview } from "./SchoolOverview";
 import { DashboardCalendar } from "./DashboardCalendar";
 import { localDateKey } from "../../../utils/date";
 import { TintedStatCard } from "./TintedStatCard";
@@ -70,8 +69,8 @@ export const DashboardHome = () => {
 
       <ClassSubjectsOverview />
 
-      {/* Main grid — middle column wider */}
-      <div className="grid grid-cols-1 lg:grid-cols-[1.3fr_2fr_1.3fr] gap-5 mt-6">
+      {/* Main grid — 2 col on small laptops, 3 col on xl */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-[1.3fr_2fr_1.3fr] gap-5 mt-6">
         {/* Left: Stat cards */}
         <div className="flex flex-col gap-4 p-6 rounded-3xl bg-white border border-gray100">
           <TintedStatCard
@@ -103,10 +102,7 @@ export const DashboardHome = () => {
         {/* Center column (wider) */}
         <div className="flex flex-col gap-5">
           <AttendanceCard stats={stats} isLoading={isLoading} />
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-            <AcademicsSection />
-            <OperationsSection stats={stats} isLoading={isLoading} />
-          </div>
+          <SchoolOverview stats={stats} isLoading={isLoading} />
         </div>
 
         {/* Right column */}

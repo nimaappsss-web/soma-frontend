@@ -3,7 +3,7 @@ import { useForm, useWatch, Controller, type Control } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { toast } from "@/utils/toast";
-import { User, Building, ArrowRight, CalendarTick, Card as CardIcon } from "iconsax-react";
+import { User, Building, ArrowRight, CalendarTick, Card as CardIcon, Building3 } from "iconsax-react";
 import { Link, useSearchParams } from "react-router";
 
 import { useAuth } from "../contexts/AuthContext";
@@ -17,6 +17,7 @@ import { uploadFile } from "../utils/upload";
 import { addToQueue } from "../sync/syncQueue";
 import { transformError } from "../utils/transformError";
 import { SCHOOL_TYPES, SCHOOL_TYPE_LABELS, type SchoolType } from "../utils/schoolType";
+import { SubscriptionCard } from "../features/settings/components/SubscriptionCard";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../components/ui/card";
 import { Input } from "../components/ui/input";
 import { SelectDropdown } from "../components/ui/select-dropdown";
@@ -72,24 +73,26 @@ export const AdminSettings = () => {
   };
 
   return (
-    <div className="p-6">
-      <h1 className="text-xl md:text-2xl font-bold text-gray900">Settings</h1>
+    <div className="p-4 md:p-6 w-full">
+      <div>
+        <h1 className="text-xl md:text-2xl font-bold text-gray900">Settings</h1>
+        <p className="text-xs md:text-sm text-gray500 mt-1">Manage your account, school and billing</p>
+      </div>
 
-      <div className="flex gap-3 mt-6 border-b border-gray-200">
+      <div className="mt-5 inline-flex items-center gap-1 rounded-full border border-input bg-card p-1 overflow-x-auto max-w-full">
         {tabs.map((tab) => {
           const Icon = tab.icon;
+          const active = activeTab === tab.id;
           return (
             <button
               key={tab.id}
               onClick={() => selectTab(tab.id)}
               className={cn(
-                "flex items-center gap-2 px-4 py-2.5 text-sm font-medium border-b-2 transition-colors -mb-px",
-                activeTab === tab.id
-                  ? "border-gray-900 text-gray-900"
-                  : "border-transparent text-gray-400 hover:text-gray-600",
+                "inline-flex flex-1 sm:flex-none items-center justify-center gap-1.5 rounded-full px-4 py-1.5 text-sm font-medium transition-colors whitespace-nowrap",
+                active ? "bg-gray900 text-white" : "text-gray500 hover:text-gray900",
               )}
             >
-              <Icon size={16} />
+              <Icon size={15} color={active ? "#FFFFFF" : "#8C8C8C"} />
               {tab.label}
             </button>
           );
@@ -107,11 +110,16 @@ export const AdminSettings = () => {
 };
 
 const AccountSection = () => {
-  const { user } = useAuth();
+  const { user, updateUser } = useAuth();
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const logoInputRef = useRef<HTMLInputElement>(null);
   const [pendingImage, setPendingImage] = useState<File | null>(null);
+  const [logoFile, setLogoFile] = useState<File | null>(null);
   const [saving, setSaving] = useState(false);
+  const [savingLogo, setSavingLogo] = useState(false);
   const changePassword = useChangePassword();
+  const { data: school } = useSchoolInfo();
+  const updateSchool = useUpdateSchool();
 
   const accountForm = useForm<AccountForm>({
     resolver: zodResolver(accountSchema),
@@ -127,14 +135,9 @@ const AccountSection = () => {
     if (!user) return;
     setSaving(true);
     try {
-      let imageUrl: string | null | undefined;
-      if (pendingImage) {
-        imageUrl = await uploadFile(pendingImage);
-      }
       const payload: Record<string, unknown> = {};
       if (data.name !== user.name) payload.name = data.name;
       if (data.phone !== (user.phone ?? "")) payload.phone = data.phone || null;
-      if (imageUrl) payload.image = imageUrl;
       if (Object.keys(payload).length === 0) {
         toast.success("Nothing to update");
         return;
@@ -147,8 +150,31 @@ const AccountSection = () => {
         method: "PATCH",
         payload,
       });
-      setPendingImage(null);
       toast.success("Profile updated!");
+    } catch (err) {
+      toast.error(transformError(err));
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const onSavePhoto = async () => {
+    if (!user || !pendingImage) return;
+    setSaving(true);
+    try {
+      const imageUrl = await uploadFile(pendingImage);
+      const payload: Record<string, unknown> = { image: imageUrl };
+      await addToQueue({
+        userId: user.id,
+        table: "users",
+        recordId: user.id,
+        endpoint: "/auth/me",
+        method: "PATCH",
+        payload,
+      });
+      updateUser({ image: imageUrl });
+      setPendingImage(null);
+      toast.success("Profile picture updated!");
     } catch (err) {
       toast.error(transformError(err));
     } finally {
@@ -169,36 +195,108 @@ const AccountSection = () => {
     );
   };
 
+  const onSaveLogo = async () => {
+    if (!logoFile) return;
+    setSavingLogo(true);
+    try {
+      const logoUrl = await uploadFile(logoFile);
+      await updateSchool.mutateAsync({ logo: logoUrl });
+      updateUser({ logoUrl });
+      setLogoFile(null);
+    } catch (err) {
+      toast.error(transformError(err));
+    } finally {
+      setSavingLogo(false);
+    }
+  };
+
   const previewUrl = pendingImage ? URL.createObjectURL(pendingImage) : null;
   const imageToShow = previewUrl || user?.image;
+  const logoToShow = logoFile ? URL.createObjectURL(logoFile) : school?.logo;
 
   return (
-    <div className="space-y-6">
-      <Card>
-        <CardHeader>
-          <CardTitle>Profile Picture</CardTitle>
+    <div className="space-y-5">
+      <SubscriptionCard />
+
+      <Card className="rounded-3xl border-gray100 shadow-none">
+        <CardHeader className="p-5 pb-0">
+          <CardTitle className="text-base font-semibold text-gray900">Profile Picture</CardTitle>
         </CardHeader>
-        <CardContent>
+        <CardContent className="p-5">
           <div className="flex items-center gap-6">
             <Avatar name={user?.name ?? "?"} imageUrl={imageToShow} size={80} className="border-2 border-gray-200" />
-            <div>
-              <Button type="button" onClick={() => fileInputRef.current?.click()} variant="outline" size="sm">
-                {pendingImage || user?.image ? "Change" : "Upload"}
-              </Button>
+            <div className="space-y-2">
+              <div className="flex items-center gap-2">
+                <Button type="button" onClick={() => fileInputRef.current?.click()} variant="outline" size="sm">
+                  {pendingImage || user?.image ? "Change" : "Upload"}
+                </Button>
+                {pendingImage && (
+                  <Button type="button" onClick={onSavePhoto} disabled={saving} size="sm">
+                    {saving ? "Saving..." : "Save photo"}
+                  </Button>
+                )}
+              </div>
               <Input ref={fileInputRef} type="file" accept="image/*" onChange={(e) => {
                 const file = e.target.files?.[0];
                 if (file) setPendingImage(file);
               }} className="hidden" />
+              <p className="text-xs text-gray-400">JPG, PNG or GIF. Compressed to max 1MB.</p>
             </div>
           </div>
         </CardContent>
       </Card>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Personal Information</CardTitle>
+      <Card className="rounded-3xl border-gray100 shadow-none">
+        <CardHeader className="p-5 pb-0">
+          <CardTitle className="text-base font-semibold text-gray900">School Logo</CardTitle>
+          <CardDescription className="text-xs text-gray500 mt-1">This logo appears on reports and invoices.</CardDescription>
         </CardHeader>
-        <CardContent>
+        <CardContent className="p-5">
+          <div className="flex items-center gap-6">
+            <div className="h-20 w-20 rounded-xl border border-gray-100 overflow-hidden bg-gray-50 flex items-center justify-center">
+              {logoToShow ? (
+                <img src={logoToShow} alt="School logo" className="w-full h-full object-cover" />
+              ) : (
+                <Building3 size={28} color="#8C8C8C" />
+              )}
+            </div>
+            <div className="space-y-2">
+              <div className="flex items-center gap-2">
+                <Button type="button" onClick={() => logoInputRef.current?.click()} variant="outline" size="sm">
+                  {logoToShow ? "Change" : "Upload"}
+                </Button>
+                {logoFile && (
+                  <Button
+                    type="button"
+                    onClick={onSaveLogo}
+                    disabled={savingLogo}
+                    size="sm"
+                  >
+                    {savingLogo ? "Saving..." : "Save logo"}
+                  </Button>
+                )}
+              </div>
+              <Input
+                ref={logoInputRef}
+                type="file"
+                accept="image/*"
+                onChange={(e) => {
+                  const file = e.target.files?.[0];
+                  if (file) setLogoFile(file);
+                }}
+                className="hidden"
+              />
+              <p className="text-xs text-gray-400">JPG, PNG or GIF. Compressed to max 1MB.</p>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card className="rounded-3xl border-gray100 shadow-none">
+        <CardHeader className="p-5 pb-0">
+          <CardTitle className="text-base font-semibold text-gray900">Personal Information</CardTitle>
+        </CardHeader>
+        <CardContent className="p-5">
           <form onSubmit={accountForm.handleSubmit(onSaveAccount)} className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
@@ -224,11 +322,11 @@ const AccountSection = () => {
         </CardContent>
       </Card>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Change Password</CardTitle>
+      <Card className="rounded-3xl border-gray100 shadow-none">
+        <CardHeader className="p-5 pb-0">
+          <CardTitle className="text-base font-semibold text-gray900">Change Password</CardTitle>
         </CardHeader>
-        <CardContent>
+        <CardContent className="p-5">
           <form onSubmit={passwordForm.handleSubmit(onChangePassword)} className="space-y-4">
             <div className="space-y-2">
               <Label>Current Password</Label>
@@ -356,12 +454,12 @@ const SchoolSection = () => {
   };
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>School Details</CardTitle>
-        <CardDescription>Edit your school's information</CardDescription>
+    <Card className="rounded-3xl border-gray100 shadow-none">
+      <CardHeader className="p-5 pb-0">
+        <CardTitle className="text-base font-semibold text-gray900">School Details</CardTitle>
+        <CardDescription className="text-xs text-gray500 mt-1">Edit your school's information</CardDescription>
       </CardHeader>
-      <CardContent>
+      <CardContent className="p-5">
         {isLoading ? (
           <SomaLoader label="Loading…" className="h-8 w-8" />
         ) : !school ? (
@@ -499,15 +597,15 @@ const PaymentsSection = () => {
 
   return (
     <div className="space-y-6">
-      <Card>
-        <CardHeader>
-          <CardTitle>Bank Transfer Details</CardTitle>
-          <CardDescription>
+      <Card className="rounded-3xl border-gray100 shadow-none">
+        <CardHeader className="p-5 pb-0">
+          <CardTitle className="text-base font-semibold text-gray900">Bank Transfer Details</CardTitle>
+          <CardDescription className="text-xs text-gray500 mt-1">
             The account parents send fees to when they pay by bank transfer. These details appear in
             their payment flow.
           </CardDescription>
         </CardHeader>
-        <CardContent>
+        <CardContent className="p-5">
           {isLoading ? (
             <SomaLoader label="Loading…" className="h-8 w-8" />
           ) : (
@@ -546,12 +644,12 @@ const TermSettingsSection = () => {
 
   return (
     <div className="space-y-6">
-      <Card>
-        <CardHeader>
-          <CardTitle>Term Settings</CardTitle>
-          <CardDescription>Configure how results are computed across the session.</CardDescription>
+      <Card className="rounded-3xl border-gray100 shadow-none">
+        <CardHeader className="p-5 pb-0">
+          <CardTitle className="text-base font-semibold text-gray900">Term Settings</CardTitle>
+          <CardDescription className="text-xs text-gray500 mt-1">Configure how results are computed across the session.</CardDescription>
         </CardHeader>
-        <CardContent>
+        <CardContent className="p-5">
           {isLoading ? (
             <SomaLoader label="Loading…" className="h-8 w-8" />
           ) : (
@@ -614,5 +712,3 @@ const SchoolTypeSelect = ({
     </div>
   );
 };
-
-

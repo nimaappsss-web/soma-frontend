@@ -1,0 +1,217 @@
+import { useState } from "react";
+import { ShieldTick, DocumentText, Clock, Check, Profile2User, Book } from "iconsax-react";
+import { cn } from "@/lib/utils";
+import { SomaLoader } from "../../components/ui/SomaLoader";
+import { EmptyState } from "../../components/ui/EmptyState";
+import { PageHeader } from "../../components/ui/PageHeader";
+import { Button } from "../../components/ui/button";
+import { HelpHint } from "../../components/ui/HelpHint";
+import {
+  useExamBroadcasts,
+  useReviewExamBroadcast,
+  type ExamBroadcast,
+} from "../../features/principal/api";
+
+type TabId = "exam-results" | "lesson-notes";
+type StatusFilter = "PENDING" | "APPROVED" | "REJECTED";
+
+const STATUS_LABEL: Record<string, string> = {
+  PENDING: "Pending",
+  APPROVED: "Approved",
+  REJECTED: "Rejected",
+};
+
+const formatRelativeDate = (iso: string) => {
+  const diff = Date.now() - new Date(iso).getTime();
+  const mins = Math.round(diff / 60000);
+  if (mins < 1) return "just now";
+  if (mins < 60) return `${mins}m ago`;
+  const hrs = Math.round(mins / 60);
+  if (hrs < 24) return `${hrs}h ago`;
+  const days = Math.round(hrs / 24);
+  if (days < 7) return `${days}d ago`;
+  return new Date(iso).toLocaleDateString("en-NG", { day: "numeric", month: "short" });
+};
+
+const BroadcastCard = ({ item }: { item: ExamBroadcast }) => {
+  const { approve, reject } = useReviewExamBroadcast();
+  const isPending = item.status === "PENDING";
+
+  return (
+    <div className="rounded-2xl border border-gray100 bg-white p-4 sm:p-5">
+      <div className="flex items-start gap-3">
+        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-gray100">
+          <Book size={18} variant="Bold" color="#0D0D0D" />
+        </div>
+        <div className="min-w-0 flex-1">
+          <div className="flex flex-wrap items-center gap-2">
+            <p className="text-sm font-semibold text-gray900 truncate">{item.exam.subject.name}</p>
+            <span
+              className={cn(
+                "inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-semibold leading-none",
+                item.status === "PENDING" && "bg-amber500/10 text-amber500",
+                item.status === "APPROVED" && "bg-springgreen600/10 text-springgreen600",
+                item.status === "REJECTED" && "bg-red500/10 text-red500",
+              )}
+            >
+              {STATUS_LABEL[item.status]}
+            </span>
+          </div>
+          <p className="text-xs text-gray500 mt-1">
+            {item.exam.component?.name ?? item.exam.name} · {item.exam.class?.name ?? "All classes"} ·{" "}
+            {item.exam.scoreCount} student{item.exam.scoreCount === 1 ? "" : "s"}
+          </p>
+          <p className="text-xs text-gray400 mt-1">
+            Term {item.exam.term} · {item.exam.session}
+          </p>
+        </div>
+      </div>
+
+      <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-gray500">
+        <span className="flex items-center gap-1.5">
+          <Profile2User size={14} color="#8C8C8C" />
+          {item.teacher?.name ?? "Teacher"}
+        </span>
+        <span className="flex items-center gap-1.5">
+          <Clock size={14} color="#8C8C8C" />
+          {formatRelativeDate(item.createdAt)}
+        </span>
+        {!isPending && item.reviewedBy && (
+          <span className="flex items-center gap-1.5">
+            <Check size={14} color="#8C8C8C" />
+            {item.status === "APPROVED" ? "Approved" : "Rejected"} by {item.reviewedBy.name}
+          </span>
+        )}
+      </div>
+
+      {item.note && <p className="text-xs text-gray600 mt-2 italic">“{item.note}”</p>}
+
+      {isPending && (
+        <div className="mt-4 flex flex-wrap gap-2">
+          <Button
+            size="sm"
+            onClick={() => approve.mutate(item.id)}
+            disabled={approve.isPending || reject.isPending}
+            className="flex-1 sm:flex-none"
+          >
+            {approve.isPending ? "Approving…" : "Approve"}
+          </Button>
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={() => reject.mutate(item.id)}
+            disabled={approve.isPending || reject.isPending}
+            className="flex-1 sm:flex-none text-red500 border-red500/40 hover:bg-red500/5"
+          >
+            {reject.isPending ? "Rejecting…" : "Reject"}
+          </Button>
+        </div>
+      )}
+    </div>
+  );
+};
+
+export const AdminApprovals = () => {
+  const [tab, setTab] = useState<TabId>("exam-results");
+  const [statusFilter, setStatusFilter] = useState<StatusFilter>("PENDING");
+
+  const { data, isLoading } = useExamBroadcasts(
+    tab === "exam-results" ? statusFilter : undefined,
+  );
+
+  const items = data?.requests ?? [];
+
+  const tabs: { id: TabId; label: string; icon: React.ReactNode }[] = [
+    { id: "exam-results", label: "Exam results", icon: <DocumentText size={15} variant="Bold" /> },
+    { id: "lesson-notes", label: "Lesson notes", icon: <DocumentText size={15} variant="Bold" /> },
+  ];
+
+  return (
+    <div className="p-4 md:p-6 w-full">
+      <PageHeader
+        title="Approvals"
+        hint={
+          <HelpHint
+            title="Approvals"
+            storageKey="approvals"
+            description="Review teacher submissions before they reach parents."
+            sections={[
+              {
+                title: "Exam results",
+                text: "Teachers submit terminal exam results here for your review. Approve to release them to parents as a report card; reject to keep them hidden.",
+              },
+              { title: "Lesson notes", text: "Coming soon — lesson notes will be reviewable here too." },
+            ]}
+          />
+        }
+      />
+
+      <div className="flex flex-wrap items-center gap-2 mb-5">
+        {tabs.map((t) => (
+          <button
+            key={t.id}
+            type="button"
+            onClick={() => setTab(t.id)}
+            className={cn(
+              "flex items-center gap-1.5 rounded-full border h-10 px-4 text-sm font-medium transition-all active:scale-95",
+              tab === t.id
+                ? "bg-gray900 text-white border-gray900"
+                : "bg-white text-gray700 border-gray100 hover:border-gray200 hover:text-gray900",
+            )}
+          >
+            {t.icon}
+            {t.label}
+          </button>
+        ))}
+      </div>
+
+      {tab === "exam-results" && (
+        <div className="flex flex-wrap items-center gap-2 mb-5">
+          {(["PENDING", "APPROVED", "REJECTED"] as StatusFilter[]).map((s) => (
+            <button
+              key={s}
+              type="button"
+              onClick={() => setStatusFilter(s)}
+              className={cn(
+                "flex items-center gap-1.5 rounded-full border h-9 px-3.5 text-xs font-medium transition-all active:scale-95",
+                statusFilter === s
+                  ? "bg-gray900 text-white border-gray900"
+                  : "bg-white text-gray700 border-gray100 hover:border-gray200 hover:text-gray900",
+              )}
+            >
+              {STATUS_LABEL[s]}
+            </button>
+          ))}
+        </div>
+      )}
+
+      {isLoading ? (
+        <div className="py-12">
+          <SomaLoader label="Loading approvals" />
+        </div>
+      ) : tab === "lesson-notes" ? (
+        <EmptyState
+          icon={<DocumentText size={30} variant="Bold" color="#8C8C8C" />}
+          title="Lesson note approvals coming soon"
+          description="Lesson notes will appear here for review once the feature is enabled."
+        />
+      ) : items.length === 0 ? (
+        <EmptyState
+          icon={<ShieldTick size={30} variant="Bold" color="#8C8C8C" />}
+          title={`No ${STATUS_LABEL[statusFilter].toLowerCase()} exam broadcasts`}
+          description={
+            statusFilter === "PENDING"
+              ? "When teachers submit terminal exam results for approval, they'll show up here."
+              : `Broadcasts you ${statusFilter === "APPROVED" ? "approve" : "reject"} will appear here.`
+          }
+        />
+      ) : (
+        <div className="grid gap-3">
+          {items.map((item) => (
+            <BroadcastCard key={item.id} item={item} />
+          ))}
+        </div>
+      )}
+    </div>
+  );
+};

@@ -16,6 +16,7 @@ import type { Teacher } from "../../features/teacher/types";
 import { getCelebration, type Celebration } from "../../utils/celebrations";
 import { PageHeader } from "../../components/ui/PageHeader";
 import { HelpHint } from "../../components/ui/HelpHint";
+import { useResponsiveVisibility } from "../../hooks/useResponsiveVisibility";
 
 type ViewMode = "list" | "grid";
 
@@ -49,6 +50,8 @@ export const AdminTeachers = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
   const [sortOrder, setSortOrder] = useState("");
+  const isMobile = useResponsiveVisibility(640);
+  const effectiveView: ViewMode = isMobile ? "grid" : view;
 
   const setViewMode = (next: ViewMode) => {
     setView(next);
@@ -120,8 +123,8 @@ export const AdminTeachers = () => {
         searchValue={searchTerm}
         onSearchChange={setSearchTerm}
         searchPlaceholder="Search teacher"
-        view={view}
-        onViewChange={setViewMode}
+        view={isMobile ? undefined : view}
+        onViewChange={isMobile ? undefined : setViewMode}
         filters={
           <>
             <SelectDropdown
@@ -201,7 +204,7 @@ export const AdminTeachers = () => {
             actionIcon={<Add size={16} color="#FFFFFF" variant="Linear" />}
             onAction={() => setShowInvite(true)}
           />
-        ) : view === "grid" ? (
+        ) : effectiveView === "grid" ? (
           <>
             {filteredInvites.length > 0 && (
               <div className="mb-4 rounded-xl border border-gray100 bg-white">
@@ -226,7 +229,7 @@ export const AdminTeachers = () => {
                 ))}
               </div>
             )}
-            <div className="grid grid-cols-2 gap-5 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4">
+            <div className="grid grid-cols-2 gap-2.5 sm:gap-5 lg:grid-cols-3 2xl:grid-cols-4">
               {filteredTeachers.map((t) => {
                 const celeb = teacherCelebration(t);
                 const className = t.formClass
@@ -236,24 +239,19 @@ export const AdminTeachers = () => {
                   <div
                     key={t.id}
                     onClick={() => navigate(`/admin/teachers/${t.id}`)}
-                    className="group relative overflow-hidden rounded-2xl border border-gray100 bg-gray50 p-6 pt-9 cursor-pointer transition-all hover:-translate-y-1 hover:border-gray300 hover:shadow-[0_22px_40px_-16px_rgba(0,0,0,0.24)]"
+                    className="group relative overflow-hidden rounded-2xl border border-transparent bg-gray50 p-6 pt-9 cursor-pointer transition-all hover:-translate-y-1 hover:border-gray200"
                   >
                     {celeb && <CelebrationDecor type={celeb.type} years={celeb.years} />}
-                    <div className="absolute inset-x-0 top-0 h-[7.5rem] bg-gradient-to-b from-gray200 via-gray200/70 to-transparent" />
                     <div className="pointer-events-none absolute -right-14 -top-16 h-36 w-36 rounded-full bg-[radial-gradient(circle,rgba(0,0,0,0.08)_0%,transparent_70%)]" />
                     <div className="pointer-events-none absolute -bottom-16 -left-14 h-36 w-36 rounded-full bg-[radial-gradient(circle,rgba(0,0,0,0.06)_0%,transparent_70%)]" />
                     <div className="absolute left-6 top-6 h-1 w-12 rounded-full bg-black/15" />
                     <div className="absolute right-6 top-6 h-7 w-7 rounded-full border-2 border-dashed border-black/20" />
-                    <img
-                      src="/icons/somawordmark_black.svg"
-                      alt=""
-                      className="pointer-events-none absolute -bottom-4 -right-4 w-40 opacity-[0.16]"
-                    />
                     <div className="relative flex flex-col items-center pt-10">
                       <div className="relative">
                         <div className="absolute -inset-3 rounded-full bg-gradient-to-br from-black/15 via-transparent to-black/5 blur-md" />
                         <Avatar
                           name={t.name}
+                          imageUrl={t.image}
                           size={84}
                           className="relative border-2 border-white shadow-[0_10px_24px_-8px_rgba(0,0,0,0.25)] ring-1 ring-black/5"
                         />
@@ -310,7 +308,7 @@ export const AdminTeachers = () => {
                   className="px-6 py-3 flex items-center justify-between cursor-pointer hover:bg-gray-50 transition-colors"
                 >
                   <div className="flex items-center gap-3 min-w-0">
-                    <Avatar name={t.name} size={32} />
+                    <Avatar name={t.name} imageUrl={t.image} size={32} />
                     <div className="min-w-0">
                       <span className="text-gray-800 font-medium">{t.name}</span>
                       <span className="ml-3 text-sm text-gray-400">{t.email}</span>

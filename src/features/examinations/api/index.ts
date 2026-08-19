@@ -25,3 +25,6 @@ export { useDeleteExamScheme } from "./useDeleteExamScheme";
 export { useCreateExamScheme } from "./useCreateExamScheme";
 export { useUpdateExamScheme } from "./useUpdateExamScheme";
 export { useCopyExamComponents } from "./useCopyExamComponents";
+export { usePublishExamScores } from "./usePublishExamScores";
+export { useUnpublishExamScores } from "./useUnpublishExamScores";
+export { useSubmitExamForApproval } from "./useSubmitExamForApproval";

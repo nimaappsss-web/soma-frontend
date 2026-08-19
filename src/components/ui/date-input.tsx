@@ -151,14 +151,14 @@ const DateInput = ({
   );
 
   return (
-    <div ref={wrapperRef} className={cn("relative", className && "w-full")}>
+    <div ref={wrapperRef} className={cn("relative w-full")}>
       <button
         ref={btnRef}
         type="button"
         onClick={handleToggle}
         disabled={disabled}
         className={cn(
-          "flex h-[45px] items-center rounded-[20px] border border-input bg-background px-4 text-sm cursor-pointer",
+          "flex h-[45px] w-full items-center rounded-[20px] border border-input bg-background px-4 text-sm cursor-pointer",
           disabled && "cursor-not-allowed opacity-50",
           hasError && "border-red-500",
           className,

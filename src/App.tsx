@@ -39,12 +39,14 @@ import { GuestRoute } from "./features/auth/components/GuestRoute";
 import { AdminClasses } from "./pages/admin/AdminClasses";
 import { ClassDetails } from "./pages/admin/ClassDetails";
 import { AdminParents } from "./pages/admin/AdminParents";
+import { AdminApprovals } from "./pages/admin/AdminApprovals";
 import { StaffDashboard } from "./pages/StaffDashboard";
 import { VerifyTeacher } from "./pages/VerifyTeacher";
 import { AuthProvider } from "./contexts/AuthContext";
 import { SyncProvider } from "./contexts/SyncContext";
 import { SyncIndicator } from "./components/SyncIndicator";
 import { Toaster } from "./components/ui/Toaster";
+import { PwaUpdateBanner } from "./components/ui/PwaUpdateBanner";
 import { InstallPWA } from "./components/InstallPWA";
 import { InitialSyncProvider } from "./sync/InitialSyncProvider";
 import { AdminSettings } from "./pages/AdminSettings";
@@ -138,6 +140,7 @@ function App() {
           <Route path="teachers/:id" element={<AdminTeacherDetails />} />
           <Route path="staff" element={<StaffManagement />} />
           <Route path="parents" element={<AdminParents />} />
+          <Route path="approvals" element={<AdminApprovals />} />
           <Route path="finance" element={<FinanceLayout />}>
             <Route index element={<FinanceOverview />} />
             <Route path="fee-structures" element={<FeeStructuresTab />} />
@@ -237,6 +240,7 @@ function App() {
       <SyncIndicator />
       <Toaster />
       <InstallPWA />
+      <PwaUpdateBanner />
       </InitialSyncProvider>
       </SyncProvider>
     </AuthProvider>

@@ -13,7 +13,7 @@ export default defineConfig({
     react(),
     tailwindcss(),
     VitePWA({
-      registerType: "autoUpdate",
+      registerType: "prompt",
       includeAssets: ["favicon.svg", "favicon2.svg", "icons.svg"],
       manifest: {
         name: "Soma",
@@ -51,6 +51,20 @@ export default defineConfig({
           {
             urlPattern: /^https?:\/\/.*\/api\/.*/i,
             handler: "NetworkOnly",
+          },
+          {
+            urlPattern: /^https?:\/\/res\.cloudinary\.com\/.*\/image\/.*/i,
+            handler: "CacheFirst",
+            options: {
+              cacheName: "cloudinary-images",
+              expiration: {
+                maxEntries: 200,
+                maxAgeSeconds: 60 * 60 * 24 * 30,
+              },
+              cacheableResponse: {
+                statuses: [0, 200],
+              },
+            },
           },
         ],
       },
