@@ -13,7 +13,7 @@ export const TeacherDashboard = () => {
     isLoading,
   } = useTeacherProfile();
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-full bg-gray-50">
       <header className="bg-white border-b border-gray-200 px-4 md:px-6 py-4 flex flex-wrap items-center justify-between gap-3">
         <h1 className="text-xl font-bold text-blue-700">Soma</h1>
         <div className="flex flex-wrap items-center gap-3">

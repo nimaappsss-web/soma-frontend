@@ -116,7 +116,7 @@ export const AppShell = ({
 
   return (
     <div
-      className="flex h-screen overflow-hidden bg-offWhite"
+      className="flex h-svh overflow-hidden bg-offWhite"
       style={{ height: "100dvh" }}
     >
       {/* Mobile sidebar */}
@@ -198,7 +198,7 @@ export const AppShell = ({
             </div>
           </div>
         </header>
-        <main className="flex-1 overflow-y-auto min-h-0">
+        <main className="flex-1 overflow-y-auto min-h-0 pb-[env(safe-area-inset-bottom)]">
           {children ?? <Outlet />}
         </main>
       </div>
