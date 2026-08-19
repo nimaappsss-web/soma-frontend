@@ -1128,4 +1128,24 @@ db.version(36).stores({
   syncQueue: "++id, status, createdAt, table, userId, nextAttemptAt",
 });
 
+// v37: schoolSettings was once cached as the whole { settings: [...] }
+// response object, which crashes consumers expecting an array. Drop those
+// rows so they're repopulated from the network in the correct shape.
+db.version(37)
+  .stores({})
+  .upgrade(async (tx) => {
+    const rows = await tx
+      .table("schoolSettings")
+      .toArray();
+    const stale = rows.filter(
+      (r: { settingsJson?: unknown }) =>
+        typeof r.settingsJson !== "string",
+    );
+    if (stale.length) {
+      await tx
+        .table("schoolSettings")
+        .bulkDelete(stale.map((r: { id: string }) => r.id));
+    }
+  });
+
 

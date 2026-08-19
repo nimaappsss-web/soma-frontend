@@ -9,7 +9,14 @@ import type { SchoolSetting, SchoolSettingsResponse } from "../types";
 const parseSettings = (json: string | undefined): SchoolSetting[] => {
   if (!json) return [];
   try {
-    return JSON.parse(json);
+    const parsed = JSON.parse(json);
+    if (Array.isArray(parsed)) return parsed;
+    // Older builds stored the whole { settings: [...] } response — unwrap it
+    // so stale IndexedDB rows can't crash consumers that call .find/.map.
+    if (parsed && Array.isArray((parsed as { settings?: unknown }).settings)) {
+      return (parsed as { settings: SchoolSetting[] }).settings;
+    }
+    return [];
   } catch {
     return [];
   }
