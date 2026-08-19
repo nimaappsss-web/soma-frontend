@@ -44,21 +44,32 @@ const write = (key: string, value: string) => {
 
 const todayKey = () => new Date().toISOString().slice(0, 10);
 
+let deferredInstallPrompt: BeforeInstallPromptEvent | null = null;
+
+const capturePrompt = (e: Event) => {
+  e.preventDefault();
+  deferredInstallPrompt = e as BeforeInstallPromptEvent;
+};
+
+if (typeof window !== "undefined") {
+  window.addEventListener("beforeinstallprompt", capturePrompt);
+}
+
 export function InstallPWA() {
-  const [deferredPrompt, setDeferredPrompt] =
-    useState<BeforeInstallPromptEvent | null>(null);
+  const [canInstall, setCanInstall] = useState(() => !!deferredInstallPrompt);
   const [installed, setInstalled] = useState(() => read(INSTALLED_KEY) === "1");
   const [open, setOpen] = useState(false);
   const [showGuide, setShowGuide] = useState(false);
 
   useEffect(() => {
-    const handler = (e: Event) => {
-      e.preventDefault();
-      setDeferredPrompt(e as BeforeInstallPromptEvent);
+    const onPrompt = () => setCanInstall(!!deferredInstallPrompt);
+    const onInstalled = () => setInstalled(true);
+    window.addEventListener("beforeinstallprompt", onPrompt);
+    window.addEventListener("appinstalled", onInstalled);
+    return () => {
+      window.removeEventListener("beforeinstallprompt", onPrompt);
+      window.removeEventListener("appinstalled", onInstalled);
     };
-    window.addEventListener("beforeinstallprompt", handler);
-    window.addEventListener("appinstalled", () => setInstalled(true));
-    return () => window.removeEventListener("beforeinstallprompt", handler);
   }, []);
 
   useEffect(() => {
@@ -83,16 +94,27 @@ export function InstallPWA() {
   };
 
   const handleInstall = async () => {
-    if (deferredPrompt) {
-      deferredPrompt.prompt();
-      const result = await deferredPrompt.userChoice;
-      if (result.outcome === "accepted") markInstalled();
-      setDeferredPrompt(null);
+    const promptEvent = deferredInstallPrompt;
+
+    if (!promptEvent) {
       setOpen(false);
+      setShowGuide(true);
       return;
     }
+
     setOpen(false);
-    setShowGuide(true);
+    await new Promise((resolve) => setTimeout(resolve, 0));
+
+    try {
+      await promptEvent.prompt();
+      const result = await promptEvent.userChoice;
+      if (result.outcome === "accepted") markInstalled();
+    } catch {
+      setShowGuide(true);
+    } finally {
+      deferredInstallPrompt = null;
+      setCanInstall(false);
+    }
   };
 
   const handleDismissForever = () => {
@@ -195,6 +217,13 @@ export function InstallPWA() {
               </li>
             )}
           </ol>
+          {!isIOS() && !canInstall && (
+            <p className="mt-4 rounded-lg bg-gray100 px-3 py-2 text-xs text-gray600">
+              Tip: Chrome only offers the one-tap{" "}
+              <span className="rounded-md bg-white px-1 py-0.5 text-gray900">Install</span> after you've used
+              Soma a few times. Until then, the menu steps above work just fine.
+            </p>
+          )}
         </div>
       )}
     </>
