@@ -35,7 +35,7 @@ export const AbsenteePreview = ({ absentees, isLoading }: AbsenteePreviewProps) 
           className="flex items-center gap-1 text-xs font-medium text-gray500 hover:text-gray700 transition-colors"
         >
           See all
-          <ArrowRight variant="Linear" size={14} className="text-gray900" />
+          <ArrowRight variant="Linear" size={14} color="#0D0D0D" />
         </Link>
       </div>
 

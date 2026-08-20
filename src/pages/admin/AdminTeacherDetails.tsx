@@ -5,6 +5,7 @@ import { ArrowLeft2, Book1, Building, Calendar, Call, Edit2, Message, Profile2Us
 import { Avatar } from "../../components/ui/Avatar";
 import { Button } from "../../components/ui/button";
 import { SomaLoader } from "../../components/ui/SomaLoader";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "../../components/ui/dialog";
 import { WarningBanner } from "../../components/others/WarningBanner";
 import { useTeacherDetail, useSetTeacherApproval, useSetTeacherActive } from "../../features/teacher/api";
 import { EditTeacherForm } from "../../features/teacher/components/EditTeacherForm";
@@ -17,14 +18,24 @@ const formatDate = (iso?: string) =>
     ? new Date(iso).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })
     : "—";
 
-const InfoItem = ({ icon, label, value }: { icon: React.ReactNode; label: string; value: string }) => (
-  <div className="flex items-start gap-3">
-    <div className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-gray100 text-gray500">
+const InfoItem = ({
+  icon,
+  label,
+  value,
+  tint,
+}: {
+  icon: React.ReactNode;
+  label: string;
+  value: string;
+  tint: string;
+}) => (
+  <div className="flex items-center gap-3">
+    <div className={cn("flex h-10 w-10 shrink-0 items-center justify-center rounded-[14px]", tint)}>
       {icon}
     </div>
     <div className="min-w-0">
-      <p className="text-xs text-gray400">{label}</p>
-      <p className="mt-0.5 truncate text-sm font-medium text-gray900">{value}</p>
+      <p className="text-xs text-gray500">{label}</p>
+      <p className="mt-0.5 truncate text-sm font-semibold text-gray900">{value}</p>
     </div>
   </div>
 );
@@ -71,7 +82,7 @@ export const AdminTeacherDetails = () => {
         </Link>
         <div className="mt-4 bg-white rounded-xl border border-gray100 p-10 text-center">
           <p className="text-sm text-gray500">Could not load this teacher.</p>
-          <p className="mt-1 text-xs text-gray400">{error?.message ?? "The teacher may not exist or the network is offline."}</p>
+          <p className="mt-1 text-xs text-gray500">{error?.message ?? "The teacher may not exist or the network is offline."}</p>
         </div>
       </div>
     );
@@ -106,7 +117,7 @@ export const AdminTeacherDetails = () => {
                   {status.label}
                 </span>
               </div>
-              <p className="mt-0.5 truncate text-sm text-gray400">{teacher.email}</p>
+              <p className="mt-0.5 truncate text-sm text-gray500">{teacher.email}</p>
               <div className="mt-2 flex flex-wrap items-center gap-2">
                 <span className="rounded-full bg-gray100 px-2.5 py-0.5 text-[11px] font-medium text-gray700 capitalize">
                   {roleLabel(teacher.role)}
@@ -120,25 +131,31 @@ export const AdminTeacherDetails = () => {
             </div>
           </div>
           <div className="flex shrink-0 gap-2 sm:ml-auto">
-            <Button size="sm" variant="outline" onClick={() => setEditing((v) => !v)}>
+            <Button size="sm" variant="outline" onClick={() => setEditing(true)}>
               <Edit2 size={14} color="#0D0D0D" />
-              {editing ? "Close Editing" : "Edit Teacher"}
+              Edit Teacher
             </Button>
           </div>
         </div>
       </div>
 
-      {editing && (
-        <div className="mt-4 bg-white rounded-xl border border-gray-100 p-5">
-          <div className="flex items-center justify-between mb-5">
-            <h3 className="font-semibold text-gray-900">Edit Teacher — {teacher.name}</h3>
-            <Button type="button" variant="ghost" size="sm" onClick={() => setEditing(false)}>
-              Close
-            </Button>
+      <Dialog open={editing} onOpenChange={(open) => !open && setEditing(false)}>
+        <DialogContent variant="middle" className="sm:max-w-xl">
+          <DialogHeader>
+            <DialogTitle>Edit Teacher</DialogTitle>
+            <DialogDescription>
+              Update {teacher.name}&apos;s profile, form class, and subject assignments.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="px-6 pb-6">
+            <EditTeacherForm
+              teacherId={teacher.id}
+              onDone={() => setEditing(false)}
+              onCancel={() => setEditing(false)}
+            />
           </div>
-          <EditTeacherForm teacherId={teacher.id} onDone={() => setEditing(false)} onCancel={() => setEditing(false)} />
-        </div>
-      )}
+        </DialogContent>
+      </Dialog>
 
       <div className="mt-4 bg-white rounded-xl border border-gray100 p-5">
         <h2 className="text-sm font-semibold text-gray900 mb-4">Manage account access</h2>
@@ -211,31 +228,51 @@ export const AdminTeacherDetails = () => {
       <div className="mt-4 grid grid-cols-1 lg:grid-cols-2 gap-4">
         <div className="bg-white rounded-xl border border-gray100 p-5">
           <h2 className="text-sm font-semibold text-gray900 mb-4">Contact &amp; Account</h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <InfoItem icon={<Call size={16} color="#8C8C8C" />} label="Phone" value={teacher.phone ?? "—"} />
-            <InfoItem icon={<Message size={16} color="#8C8C8C" />} label="Email" value={teacher.email ?? "—"} />
-            <InfoItem icon={<Profile2User size={16} color="#8C8C8C" />} label="Role" value={roleLabel(teacher.role)} />
-            <InfoItem icon={<Calendar size={16} color="#8C8C8C" />} label="Joined" value={formatDate(teacher.createdAt)} />
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-5">
+            <InfoItem
+              icon={<Call size={18} color="#34A853" />}
+              label="Phone"
+              value={teacher.phone ?? "—"}
+              tint="bg-springgreen600/10"
+            />
+            <InfoItem
+              icon={<Message size={18} color="#4285F4" />}
+              label="Email"
+              value={teacher.email ?? "—"}
+              tint="bg-azure500/10"
+            />
+            <InfoItem
+              icon={<Profile2User size={18} color="#8C37C3" />}
+              label="Role"
+              value={roleLabel(teacher.role)}
+              tint="bg-indigo500/10"
+            />
+            <InfoItem
+              icon={<Calendar size={18} color="#FBBC05" />}
+              label="Joined"
+              value={formatDate(teacher.createdAt)}
+              tint="bg-amber500/10"
+            />
           </div>
         </div>
 
         <div className="bg-white rounded-xl border border-gray100 p-5">
           <h2 className="text-sm font-semibold text-gray900 mb-4">Class Teacher</h2>
           {formClass ? (
-            <div className="flex items-center gap-3 rounded-lg border border-gray100 px-4 py-3">
-              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-gray100 text-gray500">
-                <Building size={16} color="#8C8C8C" />
+            <div className="flex items-center gap-3 rounded-xl border border-gray100 px-4 py-3">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-[14px] bg-violet500/10">
+                <Building size={18} color="#8B5CF6" />
               </div>
               <div>
-                <p className="text-sm font-medium text-gray900">{formClass.name}</p>
-                <p className="text-xs text-gray400">
+                <p className="text-sm font-semibold text-gray900">{formClass.name}</p>
+                <p className="text-xs text-gray500">
                   {formClass.level}
                   {formClass.arm ? ` · Arm ${formClass.arm}` : ""}
                 </p>
               </div>
             </div>
           ) : (
-            <p className="text-sm text-gray400">Not assigned to any form class.</p>
+            <p className="text-sm text-gray500">Not assigned to any form class.</p>
           )}
         </div>
       </div>
@@ -243,23 +280,30 @@ export const AdminTeacherDetails = () => {
       <div className="mt-4 bg-white rounded-xl border border-gray100 p-5">
         <h2 className="text-sm font-semibold text-gray900 mb-4">Subjects Taught</h2>
         {teacher.assignments.length === 0 ? (
-          <p className="text-sm text-gray400">No subjects assigned yet.</p>
+          <p className="text-sm text-gray500">No subjects assigned yet.</p>
         ) : (
           <div className="space-y-3">
             {teacher.assignments.map((a) => (
-              <div key={a.id} className="flex items-center justify-between gap-4 rounded-lg border border-gray100 px-4 py-3">
+              <div
+                key={a.id}
+                className="flex items-center justify-between gap-4 rounded-xl border border-gray100 px-4 py-3"
+              >
                 <div className="flex items-center gap-3 min-w-0">
-                  <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-gray100 text-gray500">
-                    <Book1 size={16} color="#8C8C8C" />
+                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-[14px] bg-azure500/10">
+                    <Book1 size={18} color="#4285F4" />
                   </div>
-                  <div className="min-w-0">
-                    <p className="truncate text-sm font-medium text-gray900">{a.subject.name}</p>
-                    {a.subject.code && <p className="text-xs text-gray400">{a.subject.code}</p>}
+                  <div className="flex items-center gap-2 min-w-0">
+                    <p className="truncate text-sm font-semibold text-gray900">{a.subject.name}</p>
+                    {a.subject.code && (
+                      <span className="shrink-0 rounded-md bg-gray100 px-1.5 py-0.5 text-[10px] font-semibold tracking-wide text-gray600">
+                        {a.subject.code}
+                      </span>
+                    )}
                   </div>
                 </div>
                 <div className="flex flex-wrap justify-end gap-1.5 shrink-0 max-w-[55%]">
                   {a.classes.length === 0 ? (
-                    <span className="text-xs text-gray400">No classes</span>
+                    <span className="text-xs text-gray500">No classes</span>
                   ) : (
                     a.classes.map((c) => (
                       <span

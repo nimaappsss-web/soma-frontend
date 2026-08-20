@@ -53,17 +53,26 @@ export const TeacherDashboard = () => {
   const birthdayFirst = birthdayStudent?.name?.split(" ")[0] ?? "";
 
   const attendanceStats = classSummary
-    ? {
-        attendance: {
-          today: {
-            present: classSummary.present ?? 0,
-            absent: classSummary.absent ?? 0,
-            percentage: classSummary.percentage ?? 0,
-            dayOfWeek: "",
+    ? (() => {
+        const present = classSummary.present ?? 0;
+        const absent = classSummary.absent ?? 0;
+        const total = present + absent;
+        const percentage =
+          total > 0
+            ? Math.round((present / total) * 100)
+            : classSummary.percentage ?? 0;
+        return {
+          attendance: {
+            today: {
+              present,
+              absent,
+              percentage,
+              dayOfWeek: "",
+            },
+            isHoliday: false,
           },
-          isHoliday: false,
-        },
-      }
+        };
+      })()
     : undefined;
 
   return (

@@ -1,11 +1,15 @@
+import { useState } from "react";
 import { useNavigate, useParams } from "react-router";
-import { ArrowLeft2, DocumentText, Profile2User } from "iconsax-react";
+import { ArrowLeft2, ArrowDown2, DocumentText, Profile2User } from "iconsax-react";
+import { motion, AnimatePresence } from "motion/react";
 import { useTeacherProfile } from "../../teacher/api";
 import { useActiveTerm } from "../../calendar/api";
 import { termLabel } from "../../calendar/utils/term";
 import { useStudents } from "../../students/api";
+import { useAuth } from "../../../contexts/AuthContext";
 import { useSessionAverageReport } from "../api/useSessionAverageReport";
 import { useReportSettings } from "../../report-card/api";
+import type { ReportTemplate, ReportTheme } from "../../report-card/types";
 import { ReportCardPreview } from "../../report-card/components/ReportCardPreview";
 import { cn } from "../../../lib/utils";
 const gradeTone = (grade: string) => {
@@ -14,12 +18,81 @@ const gradeTone = (grade: string) => {
   if (g.startsWith("B") || g.startsWith("C")) return "text-blue-600";
   return "text-amber-600";
 };
+interface ReportCardSectionProps {
+  report: NonNullable<ReturnType<typeof useSessionAverageReport>["report"]>;
+  template: ReportTemplate;
+  theme: ReportTheme;
+  studentName?: string;
+  admissionNo?: string;
+  className?: string;
+  schoolName?: string;
+  logoUrl?: string;
+}
+const ReportCardSection = ({ report, template, theme, studentName, admissionNo, className, schoolName, logoUrl }: ReportCardSectionProps) => {
+  const [open, setOpen] = useState(false);
+  return (
+    <div className="bg-white rounded-xl border border-gray100 overflow-hidden">
+      <button
+        type="button"
+        onClick={() => setOpen((o) => !o)}
+        aria-expanded={open}
+        className="flex w-full items-center justify-between gap-3 px-4 py-4 md:px-6 text-left transition-colors hover:bg-gray50/60"
+      >
+        <div className="flex items-center gap-3">
+          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-amber500/10">
+            <DocumentText size={18} color="#B45309" />
+          </div>
+          <div>
+            <h2 className="text-sm font-semibold text-gray900">Report Card Preview</h2>
+            <p className="text-xs text-gray500 mt-0.5">
+              How {schoolName || "the school"}'s report card will look for this student
+            </p>
+          </div>
+        </div>
+        <span
+          className={cn(
+            "flex h-7 w-7 shrink-0 items-center justify-center rounded-full border border-gray100 transition-transform duration-300",
+            open && "rotate-180",
+          )}
+        >
+          <ArrowDown2 size={14} color="#8C8C8C" />
+        </span>
+      </button>
+      <AnimatePresence initial={false}>
+        {open && (
+          <motion.div
+            key="report-card"
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: "auto", opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
+            className="overflow-hidden"
+          >
+            <div className="border-t border-gray100 p-4 md:p-6">
+              <ReportCardPreview
+                template={template}
+                theme={theme}
+                report={report}
+                studentName={studentName}
+                admissionNo={admissionNo}
+                className={className}
+                schoolName={schoolName}
+                logoUrl={logoUrl}
+              />
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+};
 export const StudentReportView = () => {
   const { studentId = "" } = useParams();
   const navigate = useNavigate();
   const { formClassId, formClass, schoolName } = useTeacherProfile();
   const { activeTerm } = useActiveTerm();
   const { settings } = useReportSettings();
+  const { user } = useAuth();
   const { data: students } = useStudents(formClassId ?? "", "ACTIVE");
   const student = students.find((s) => s.id === studentId);
   const { report, isThirdTermAverage, termTotals, isLoading, error } = useSessionAverageReport(studentId);
@@ -159,7 +232,7 @@ export const StudentReportView = () => {
                               {s.total}
                             </td>
                             <td className={cn("px-4 py-2.5 text-right font-bold tabular-nums", gradeTone(s.grade))}>
-                              {s.grade}
+                              {s.grade || "—"}
                             </td>
                           </tr>
                         );
@@ -176,7 +249,7 @@ export const StudentReportView = () => {
                           <td className="px-4 py-2.5 text-right tabular-nums text-gray600">{s.examScore}</td>
                           <td className="px-4 py-2.5 text-right font-semibold tabular-nums text-gray900">{s.total}</td>
                           <td className={cn("px-4 py-2.5 text-right font-bold tabular-nums", gradeTone(s.grade))}>
-                            {s.grade}
+                            {s.grade || "—"}
                           </td>
                         </tr>
                       ))}
@@ -185,23 +258,16 @@ export const StudentReportView = () => {
             </div>
           </div>
           {/* Report card preview */}
-          <div className="bg-white rounded-xl border border-gray100 p-4 md:p-6">
-            <h2 className="text-sm font-semibold text-gray900">Report Card Preview</h2>
-            <p className="text-xs text-gray500 mt-0.5">
-              Final look of {schoolName}'s report card for this student.
-            </p>
-            <div className="mt-4">
-              <ReportCardPreview
-                template={settings.template}
-                theme={settings.theme}
-                report={report}
-                studentName={student?.name}
-                admissionNo={student?.admissionNo}
-                className={formClass ?? undefined}
-                schoolName={schoolName}
-              />
-            </div>
-          </div>
+          <ReportCardSection
+            report={report}
+            template={settings.template}
+            theme={settings.theme}
+            studentName={student?.name}
+            admissionNo={student?.admissionNo}
+            className={formClass ?? undefined}
+            schoolName={schoolName}
+            logoUrl={user?.logoUrl}
+          />
         </div>
       )}
     </div>

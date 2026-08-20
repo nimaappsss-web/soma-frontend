@@ -83,12 +83,16 @@ const buildSessionReport = (
     const values = (map: Partial<Record<TermName, number>>) =>
       Object.values(map).filter((value): value is number => typeof value === "number");
     const sessionTotal = round1(average(values(subject.termTotals)));
+    const complete =
+      subject.termTotals.first !== undefined &&
+      subject.termTotals.second !== undefined &&
+      subject.termTotals.third !== undefined;
     return {
       ...subject,
       caTotal: round1(average(values(subject.termCaTotals))),
       examScore: round1(average(values(subject.termExamScores))),
       total: sessionTotal,
-      grade: gradeFor(sessionTotal),
+      grade: complete ? gradeFor(sessionTotal) : "",
     };
   });
 
@@ -116,8 +120,8 @@ export const useSessionAverageReport = (studentId: string) => {
   const userId = user?.id ?? "";
   const { activeTerm } = useActiveTerm();
   const { mode } = useAssessmentMode();
-  const isThirdTermAverage = mode === "thirdTermAverage";
   const activeTermName = activeTerm?.term ?? "";
+  const isThirdTermAverage = mode === "thirdTermAverage" && activeTermName === "third";
 
   const cached = useLiveQuery(
     async () => {

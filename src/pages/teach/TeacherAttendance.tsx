@@ -53,6 +53,7 @@ export const TeacherAttendance = () => {
   const [modifyMode, setModifyMode] = useState(false);
   const [userMarked, setUserMarked] = useState(false);
   const [dayNote, setDayNote] = useState("");
+  const [noteOpen, setNoteOpen] = useState(false);
 
   const initialized = useRef(false);
 
@@ -451,6 +452,41 @@ export const TeacherAttendance = () => {
               {todayEvents.map((e) => (
                 <p key={e.id} className="text-xs text-gray-700">{e.title}</p>
               ))}
+            </div>
+          )}
+          {modifyMode && (
+            <div className="mb-4 rounded-2xl border border-gray100 bg-white p-3 space-y-3">
+              <div className="flex items-center justify-between gap-3">
+                <div>
+                  <p className="text-sm font-medium text-gray-900">Editing attendance</p>
+                  <p className="text-xs text-gray-500">{markedCount} of {totalStudents} marked</p>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Button onClick={() => setModifyMode(false)} variant="ghost" size="sm">
+                    Cancel
+                  </Button>
+                  <Button onClick={handleSave} size="sm" disabled={markedCount === 0}>
+                    Save changes
+                  </Button>
+                </div>
+              </div>
+              <div>
+                <button
+                  onClick={() => setNoteOpen((v) => !v)}
+                  className="text-xs font-medium text-gray500 hover:text-gray900 transition-colors"
+                >
+                  {noteOpen ? "Hide note" : dayNote ? "Edit note" : "Add note"}
+                </button>
+                {noteOpen && (
+                  <input
+                    type="text"
+                    value={dayNote}
+                    onChange={(e) => setDayNote(e.target.value)}
+                    placeholder="Add a note (optional)"
+                    className="mt-2 w-full h-[38px] rounded-lg border border-gray200 bg-gray50 px-3 text-sm text-gray700 placeholder:text-gray400 focus:outline-none focus:ring-1 focus:ring-gray300"
+                  />
+                )}
+              </div>
             </div>
           )}
           {view === "card" ? (

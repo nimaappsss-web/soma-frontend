@@ -463,7 +463,7 @@ const SubjectBlock = ({
                         />
                       </div>
 
-                      <div className="sticky top-0 z-20 bg-white -mx-4 px-4 pb-1 md:mx-0 md:px-0 pt-2 md:pt-0">
+                      <div className="sticky top-0 z-20 bg-white -mx-4 px-4 pb-1 md:mx-0 md:px-0 pt-5 md:pt-5">
                         <div className="relative">
                           <SearchNormal
                             size={16}
@@ -530,9 +530,8 @@ const SubjectBlock = ({
                         </div>
                       )}
 
-                      <div className="mt-4 flex flex-col gap-3">
-                        <div className="flex items-center justify-between gap-3">
-                          <div className="flex rounded-full border border-gray100 bg-offWhite p-0.5 w-fit">
+                      <div className="mt-4 flex items-center justify-between gap-3">
+                        <div className="flex rounded-full border border-gray100 bg-offWhite p-0.5 w-fit">
                             <button
                               type="button"
                               onClick={() => setView("list")}
@@ -571,15 +570,6 @@ const SubjectBlock = ({
                             </span>
                           )}
                         </div>
-
-                        <button
-                          onClick={() => handleSave()}
-                          disabled={enteredCount === 0 || saveMutation.isPending}
-                          className="w-full sm:w-auto sm:self-end active:scale-95 transition-transform"
-                        >
-                          {saveMutation.isPending ? "Saving…" : `Save (${enteredCount})`}
-                        </button>
-                      </div>
 
                       <div className="mt-3 flex flex-wrap items-center justify-between gap-2 rounded-xl border border-gray200 bg-offWhite px-4 py-3">
                         <div className="flex items-center gap-2 min-w-0">
@@ -662,6 +652,18 @@ const SubjectBlock = ({
                             </button>
                           )}
                         </div>
+                      </div>
+
+                      <div className="mt-4 flex sm:justify-end">
+                        <Button
+                          onClick={() => handleSave()}
+                          disabled={enteredCount === 0 || saveMutation.isPending}
+                          variant="success"
+                          size="default"
+                          className="w-full sm:w-auto active:scale-95 transition-transform"
+                        >
+                          {saveMutation.isPending ? "Saving…" : `Save (${enteredCount})`}
+                        </Button>
                       </div>
 
                       <div className="mt-3">

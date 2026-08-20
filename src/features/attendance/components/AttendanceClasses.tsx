@@ -84,7 +84,7 @@ export const AttendanceClasses = () => {
                         className="flex items-center gap-0.5 text-xs font-medium text-gray500 hover:text-gray700 transition-colors"
                       >
                         View
-                        <ArrowRight variant="Linear" size={14} className="text-gray900" />
+                        <ArrowRight variant="Linear" size={14} color="#0D0D0D" />
                       </Link>
                     </div>
                   </div>

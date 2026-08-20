@@ -15,6 +15,7 @@ import { transformError } from "../utils/transformError";
 import { useAuth } from "./AuthContext";
 import { useQueryClient } from "@tanstack/react-query";
 import { attendanceKeys } from "../features/teacher/utils/query-keys";
+import { examKeys } from "../features/examinations/utils/query-keys";
 
 interface SyncContextType {
   pendingCount: number;
@@ -138,6 +139,11 @@ export const SyncProvider = ({ children }: { children: ReactNode }) => {
 
           if (item.table === "attendance") {
             queryClient.invalidateQueries({ queryKey: attendanceKeys.all });
+          } else if (item.table === "examScores") {
+            queryClient.invalidateQueries({ queryKey: examKeys.active() });
+            queryClient.invalidateQueries({ queryKey: ["exam", "scores"] });
+            queryClient.invalidateQueries({ queryKey: ["exam", "student-report"] });
+            queryClient.invalidateQueries({ queryKey: ["results"] });
           }
         } catch (error) {
           // A DELETE that 404s is already done on the server — treat as success.

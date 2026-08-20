@@ -14,7 +14,7 @@ export const EmptyState = ({ loading, error, onRetry }: EmptyStateProps) => {
   }
   return (
     <div className="bg-white rounded-xl border border-gray100 p-8 mt-4 text-center">
-      <CloudCross size={28} className="mx-auto text-gray300 mb-2" />
+      <CloudCross size={28} color="#BBBBBB" className="mx-auto mb-2" />
       <p className="text-sm font-medium text-gray900">No attendance data available</p>
       <p className="text-xs text-gray500 mt-1 max-w-xs mx-auto">
         {error ?? "Connect to the internet to get current data, then try again."}
@@ -23,7 +23,7 @@ export const EmptyState = ({ loading, error, onRetry }: EmptyStateProps) => {
         onClick={onRetry}
         className="mt-4 inline-flex items-center justify-center gap-1.5 rounded-full border border-gray100 px-6 py-3 md:px-4 md:py-2 text-sm md:text-xs font-medium text-gray700 hover:bg-gray50 active:scale-95 transition-colors"
       >
-        <Refresh size={14} variant="Bold" />
+        <Refresh size={14} variant="Bold" color="#242425" />
         Retry
       </button>
     </div>

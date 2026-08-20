@@ -11,9 +11,9 @@ interface TopAttendanceProps {
 const pctOf = (c: AttendanceSummaryByClass) => (c.total > 0 ? Math.round((c.present / c.total) * 100) : 0);
 
 const RankIcon = ({ rank }: { rank: number }) => {
-  if (rank === 1) return <Crown variant="Bold" size={16} className="text-amber500" />;
-  if (rank === 2) return <Medal variant="Bold" size={16} className="text-gray300" />;
-  if (rank === 3) return <Medal variant="Bold" size={16} className="text-orange-400" />;
+  if (rank === 1) return <Crown variant="Bold" size={16} color="#FBBC05" />;
+  if (rank === 2) return <Medal variant="Bold" size={16} color="#BBBBBB" />;
+  if (rank === 3) return <Medal variant="Bold" size={16} color="#FB923C" />;
   return (
     <span className="flex h-6 w-6 items-center justify-center rounded-full bg-gray50 text-[11px] font-semibold text-gray500">
       {rank}
@@ -45,7 +45,7 @@ export const TopAttendance = ({ classes, isLoading }: TopAttendanceProps) => {
     <div className="bg-white rounded-xl border border-gray100 p-5 mt-4">
       <div className="flex items-center justify-between mb-2">
         <div className="flex items-center gap-2">
-          <Ranking variant="Bold" size={16} className="text-gray900" />
+          <Ranking variant="Bold" size={16} color="#0D0D0D" />
           <h3 className="text-sm font-semibold text-gray900">Top Attendance</h3>
         </div>
         <Link
@@ -53,7 +53,7 @@ export const TopAttendance = ({ classes, isLoading }: TopAttendanceProps) => {
           className="flex items-center gap-1 text-xs font-medium text-gray500 hover:text-gray700 transition-colors"
         >
           See all
-          <ArrowRight variant="Linear" size={14} className="text-gray900" />
+          <ArrowRight variant="Linear" size={14} color="#0D0D0D" />
         </Link>
       </div>
 

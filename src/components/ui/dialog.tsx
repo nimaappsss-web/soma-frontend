@@ -85,10 +85,12 @@ const DialogContent = forwardRef<
     <DialogOverlay />
     <DialogPrimitive.Content
       ref={ref}
-      style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
+      style={{ paddingBottom: "calc(env(safe-area-inset-bottom) + var(--dialog-pb, 0px))" }}
       className={cn(
         contentStyles({ variant }),
-        variant === "center" || variant === "middle" ? "pb-4 md:pb-6" : "",
+        variant === "center" || variant === "middle"
+          ? "[--dialog-pb:1rem] md:[--dialog-pb:1.5rem]"
+          : "",
         className,
       )}
       onInteractOutside={(event) => {

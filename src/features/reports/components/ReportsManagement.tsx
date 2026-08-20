@@ -4,6 +4,7 @@ import { useReportSettings, useUpdateReportSettings } from "../../report-card/ap
 import { ReportCardPreview } from "../../report-card/components/ReportCardPreview";
 import type { ReportTemplate, ReportTheme, ReportSettings } from "../../report-card/types";
 import type { StudentAcademicsResponse } from "../../examinations/types";
+import { useAuth } from "../../../contexts/AuthContext";
 import { Button } from "../../../components/ui/button";
 import { cn } from "../../../lib/utils";
 import { HelpHint } from "../../../components/ui/HelpHint";
@@ -43,6 +44,7 @@ const SAMPLE_REPORT: StudentAcademicsResponse = {
 export const ReportsManagement = () => {
   const { settings, isLoading } = useReportSettings();
   const updateSettings = useUpdateReportSettings();
+  const { user } = useAuth();
 
   const [draft, setDraft] = useState<ReportSettings>(settings);
 
@@ -139,6 +141,7 @@ export const ReportsManagement = () => {
               admissionNo="ATH/2026/003"
               className="JSS 3 GOLD"
               schoolName="Sample Academy"
+              logoUrl={user?.logoUrl}
             />
           )}
         </div>

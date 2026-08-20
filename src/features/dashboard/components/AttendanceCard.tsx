@@ -9,9 +9,10 @@ const RING_RADIUS = 94;
 const RING_CIRCUMFERENCE = 2 * Math.PI * RING_RADIUS;
 
 export const AttendanceCard = ({ stats, isLoading }: AttendanceCardProps) => {
-  const percentage = isLoading ? 0 : (stats?.attendance.today.percentage ?? 0);
-  const present = isLoading ? 0 : (stats?.attendance.today.present ?? 0);
-  const absent = isLoading ? 0 : (stats?.attendance.today.absent ?? 0);
+  const hasData = !isLoading && !!stats;
+  const percentage = hasData ? (stats?.attendance.today.percentage ?? 0) : 0;
+  const present = hasData ? (stats?.attendance.today.present ?? 0) : 0;
+  const absent = hasData ? (stats?.attendance.today.absent ?? 0) : 0;
   const total = present + absent;
   const offset = RING_CIRCUMFERENCE - (percentage / 100) * RING_CIRCUMFERENCE;
 
@@ -38,7 +39,7 @@ export const AttendanceCard = ({ stats, isLoading }: AttendanceCardProps) => {
             />
           </svg>
           <div className="absolute inset-0 flex flex-col items-center justify-center">
-            <span className="text-[38px] font-bold text-gray900 leading-none">{isLoading ? "—" : `${percentage.toFixed(1)}%`}</span>
+            <span className="text-[38px] font-bold text-gray900 leading-none">{isLoading || !hasData ? "—" : `${percentage.toFixed(1)}%`}</span>
             <span className="text-sm text-gray500 mt-1">Today</span>
           </div>
         </div>

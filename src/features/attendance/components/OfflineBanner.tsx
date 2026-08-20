@@ -19,7 +19,7 @@ export const OfflineBanner = ({ isStale, savedAt, dataDate, requestedDate }: Off
 
   return (
     <div className="flex items-start gap-2.5 rounded-xl border border-gray100 bg-gray50 px-4 py-3">
-      <CloudCross size={16} className="text-gray500 mt-0.5 shrink-0" />
+      <CloudCross size={16} color="#8C8C8C" className="mt-0.5 shrink-0" />
       <div className="text-sm">
         {online && showingExact ? (
           <p className="text-gray700">
