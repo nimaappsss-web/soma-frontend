@@ -42,7 +42,7 @@ export const PageHeader = ({
 
   return (
     <div
-      className="flex flex-wrap items-center justify-between gap-3 mb-5"
+      className="flex flex-col items-start justify-between gap-3 mb-5 lg:flex-row xl:items-center"
     >
       {/* Group 1: Title + Subtitle paired */}
       <div className="group flex items-center gap-3 shrink-0">
@@ -54,7 +54,7 @@ export const PageHeader = ({
       </div>
 
       {/* Group 2: Filters + View toggle + Actions paired */}
-      <div className="flex flex-1 items-center justify-end gap-2.5 flex-wrap xl:flex-nowrap">
+      <div className="flex w-full flex-wrap items-center justify-end gap-2.5 lg:w-auto lg:flex-1 xl:flex-nowrap">
         {/* Desktop inline filters */}
         <div
           className={
