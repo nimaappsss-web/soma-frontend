@@ -11,7 +11,7 @@ import { formatNaira } from "../utils/currency";
 import type { Payment } from "../types";
 
 export const PendingVerificationTab = () => {
-  const { data, isLoading } = usePayments({ status: "PENDING", limit: 100 });
+  const { data, isLoading } = usePayments({ status: ["PENDING"], limit: 100 });
   const confirmMutation = useConfirmPayment();
   const rejectMutation = useRejectPayment();
 

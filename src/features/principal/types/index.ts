@@ -121,6 +121,7 @@ export interface Parent {
   phone: string | null;
   emailVerified: boolean;
   hasAccount: boolean;
+  image?: string | null;
   /** Present on active parents who haven't set a password yet — lets admin resend the invite link */
   inviteId?: string;
   status: "active" | "pending";

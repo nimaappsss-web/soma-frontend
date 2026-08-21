@@ -17,7 +17,11 @@ export const useSubmitExamForApproval = () => {
     SubmitForApprovalPayload
   >({
     mutationFn: (payload) =>
-      fetchData<SubmitForApprovalResponse>("/exams/scores/submit-for-approval", "POST", payload),
+      fetchData<SubmitForApprovalResponse, SubmitForApprovalPayload>(
+        "/exams/scores/submit-for-approval",
+        "POST",
+        payload,
+      ),
     onSuccess: async () => {
       toast.success("Submitted for principal approval");
       queryClient.invalidateQueries({ queryKey: ["exam", "scores"] });

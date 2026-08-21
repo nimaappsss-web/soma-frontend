@@ -5,11 +5,11 @@ export const PwaUpdateBanner = () => {
   const registrationRef = useRef<ServiceWorkerRegistration | null>(null);
 
   const {
-    needRefresh: [needRefresh, setNeedRefresh],
+    needRefresh: [, setNeedRefresh],
     offlineReady: [offlineReady, setOfflineReady],
   } = useRegisterSW({
     onRegisteredSW: (_url, reg) => {
-      registrationRef.current = reg;
+      registrationRef.current = reg ?? null;
       if (reg) {
         reg.addEventListener("updatefound", () => {
           const newSW = reg.installing;

@@ -13,7 +13,7 @@ export const usePublishExamScores = () => {
     ScoresBulkScope
   >({
     mutationFn: (scope) =>
-      fetchData<PublishScoresResponse>("/exams/scores/publish", "POST", scope),
+      fetchData<PublishScoresResponse, ScoresBulkScope>("/exams/scores/publish", "POST", scope),
     onSuccess: async () => {
       toast.success("Broadcast to parents");
       queryClient.invalidateQueries({ queryKey: ["exam", "scores"] });

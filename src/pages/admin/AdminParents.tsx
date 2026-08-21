@@ -15,12 +15,12 @@ const parentStatusOptions: SelectOption[] = [
 
 export const AdminParents = () => {
   const [search, setSearch] = useState("");
-  const [statusFilter, setStatusFilter] = useState("all");
+  const [statusFilter, setStatusFilter] = useState<"all" | "pending" | "registered">("all");
 
   const filters = (
     <SelectDropdown
       value={statusFilter}
-      onChange={setStatusFilter}
+      onChange={(value) => setStatusFilter(value as "all" | "pending" | "registered")}
       placeholder="All Parents"
       options={parentStatusOptions}
       buttonClassName="h-[45px] text-sm"
