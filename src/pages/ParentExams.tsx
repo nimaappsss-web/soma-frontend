@@ -27,45 +27,15 @@ const formatDate = (dateStr: string) => {
   return d.toLocaleDateString("en-NG", { weekday: "long", day: "numeric", month: "short" });
 };
 
-const scorePct = (score: number, max: number) => (max > 0 ? Math.round((score / max) * 100) : 0);
-
-const pctColor = (pct: number) => {
-  if (pct >= 70) return "text-springgreen600";
-  if (pct >= 50) return "text-amber500";
-  return "text-red500";
-};
-
-const ScoreBadge = ({ pct }: { pct: number }) => (
-  <span
-    className={cn(
-      "inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-bold",
-      pctColor(pct),
-      pct >= 70 ? "bg-springgreen600/10" : pct >= 50 ? "bg-amber500/10" : "bg-red500/10",
-    )}
-  >
-    {pct}%
-  </span>
-);
-
-const subjectPct = (s: ParentResultSubject): number | null => {
-  const hasExam = s.examScore !== null && s.examMaxScore !== null;
-  const caMax = s.components.reduce((sum, c) => sum + c.maxScore, 0);
-  if (hasExam && s.examMaxScore) return scorePct(s.total, s.examMaxScore);
-  if (s.components.length > 0 && caMax > 0) return scorePct(s.caTotal, caMax);
-  return null;
-};
-
 const MobileSubjectRow = ({ s, view }: { s: ParentResultSubject; view: ResultsView }) => {
   const hasExam = s.examScore !== null && s.examMaxScore !== null;
   const caMax = s.components.reduce((sum, c) => sum + c.maxScore, 0);
-  const pct = subjectPct(s);
   const showFull = view === "full";
 
   return (
     <div className="border-t border-gray100 px-5 py-4">
       <div className="flex items-center justify-between gap-3">
         <p className="text-sm font-semibold text-gray900">{s.subjectName}</p>
-        {pct !== null ? <ScoreBadge pct={pct} /> : <span className="text-gray400">—</span>}
       </div>
 
       {s.components.length > 0 && (
@@ -211,14 +181,12 @@ const ChildResultsTable = ({ child, view }: { child: ParentResultChild; view: Re
                   <th className="px-4 py-4 text-right whitespace-nowrap">CA Total</th>
                   {showExam && <th className="px-4 py-4 text-right whitespace-nowrap">Exam</th>}
                   {showOverall && <th className="px-4 py-4 text-right whitespace-nowrap">Overall</th>}
-                  <th className="px-5 py-4 text-right whitespace-nowrap">Score</th>
                 </tr>
               </thead>
               <tbody>
                 {child.subjects.map((s) => {
                   const hasExam = s.examScore !== null && s.examMaxScore !== null;
                   const caMax = s.components.reduce((sum, c) => sum + c.maxScore, 0);
-                  const pct = subjectPct(s);
                   const empty = s.components.length === 0 && !hasExam;
                   return (
                     <tr key={s.subjectId} className="border-t border-gray100 hover:bg-gray50">
@@ -267,9 +235,6 @@ const ChildResultsTable = ({ child, view }: { child: ParentResultChild; view: Re
                           {empty ? <span className="font-normal text-gray400">—</span> : s.total}
                         </td>
                       )}
-                      <td className="px-5 py-5 text-right whitespace-nowrap">
-                        {pct !== null ? <ScoreBadge pct={pct} /> : <span className="text-gray400">—</span>}
-                      </td>
                     </tr>
                   );
                 })}
