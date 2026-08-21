@@ -61,10 +61,14 @@ export const useBroadcastStatus = ({ classId, term, session }: BroadcastScope) =
       );
 
       const hasPending = await hasPendingBroadcastWrite(userId);
-      if (!hasPending) {
-        await saveCachedStatus(userId, classId, term, res.session ?? resolvedSession, res);
+      if (hasPending) {
+        // A broadcast write is still queued — keep serving the optimistic
+        // cached state so the fresh fetch doesn't revert what the user saw.
+        const cachedRow = await getCachedStatus(userId, classId, term);
+        return cachedRow?.status ?? res;
       }
 
+      await saveCachedStatus(userId, classId, term, res.session ?? resolvedSession, res);
       return res;
     },
     enabled: !!userId && !!classId && !!term,
@@ -74,7 +78,9 @@ export const useBroadcastStatus = ({ classId, term, session }: BroadcastScope) =
   const record = cached?.[0];
   const parsed = record ? (JSON.parse(record.statusJson) as BroadcastStatusResponse) : null;
 
-  const data = parsed ?? query.data ?? null;
+  // Fresh server data wins once fetched; the Dexie blob is the instant
+  // offline/offline-first fallback and covers failed refetches.
+  const data = query.data ?? parsed ?? null;
 
   return {
     data,
