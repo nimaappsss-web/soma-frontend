@@ -343,10 +343,17 @@ export interface StudentAcademicsResponse {
   attendancePercentage: number;
   position: number;
   classSize: number;
+  components?: Array<{
+    id: string;
+    name: string;
+    type: string;
+    maxScore: number;
+    sortOrder: number;
+  }>;
   subjects: Array<{
     subjectId: string;
     subjectName: string;
-    scores: Array<{ type: string; score: number; maxScore: number }>;
+    scores: Array<{ type: string; score: number; maxScore: number; componentId?: string }>;
     caTotal: number;
     examScore: number;
     total: number;

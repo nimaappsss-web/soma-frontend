@@ -295,7 +295,10 @@ const SubjectBlock = ({
       <button
         type="button"
         onClick={onToggle}
-        className="w-full flex items-center gap-3 p-4 text-left hover:bg-gray50/60 transition-colors rounded-xl"
+        className={cn(
+          "w-full flex items-center gap-3 p-4 text-left hover:bg-gray50/60 transition-colors rounded-xl",
+          open && "sticky top-0 z-30 bg-white",
+        )}
       >
         <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-gray100">
           <Book1 size={20} variant="Bold" color="#0D0D0D" />
@@ -463,7 +466,7 @@ const SubjectBlock = ({
                         />
                       </div>
 
-                      <div className="sticky top-0 z-20 bg-white -mx-4 px-4 pb-1 md:mx-0 md:px-0 pt-5 md:pt-5">
+                      <div className="sticky top-[72px] z-20 bg-white -mx-4 px-4 pb-1 md:mx-0 md:px-0 pt-5 md:pt-5">
                         <div className="relative">
                           <SearchNormal
                             size={16}
@@ -657,12 +660,18 @@ const SubjectBlock = ({
                       <div className="mt-4 flex sm:justify-end">
                         <Button
                           onClick={() => handleSave()}
-                          disabled={enteredCount === 0 || saveMutation.isPending}
+                          disabled={enteredCount === 0 || !hasUnsaved || saveMutation.isPending}
                           variant="success"
                           size="default"
                           className="w-full sm:w-auto active:scale-95 transition-transform"
                         >
-                          {saveMutation.isPending ? "Saving…" : `Save (${enteredCount})`}
+                          {saveMutation.isPending
+                            ? "Saving…"
+                            : enteredCount === 0
+                              ? "Save (0)"
+                              : hasUnsaved
+                                ? `Save (${enteredCount})`
+                                : "Saved"}
                         </Button>
                       </div>
 

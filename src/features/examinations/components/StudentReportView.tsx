@@ -8,9 +8,10 @@ import { termLabel } from "../../calendar/utils/term";
 import { useStudents } from "../../students/api";
 import { useAuth } from "../../../contexts/AuthContext";
 import { useSessionAverageReport } from "../api/useSessionAverageReport";
+import { useClassTermComponents } from "../api";
 import { useReportSettings } from "../../report-card/api";
 import type { ReportTemplate, ReportTheme } from "../../report-card/types";
-import { ReportCardPreview } from "../../report-card/components/ReportCardPreview";
+import { ReportCardPreview, type ReportColumnComponent } from "../../report-card/components/ReportCardPreview";
 import { cn } from "../../../lib/utils";
 const gradeTone = (grade: string) => {
   const g = grade.toUpperCase();
@@ -27,8 +28,9 @@ interface ReportCardSectionProps {
   className?: string;
   schoolName?: string;
   logoUrl?: string;
+  components?: ReportColumnComponent[];
 }
-const ReportCardSection = ({ report, template, theme, studentName, admissionNo, className, schoolName, logoUrl }: ReportCardSectionProps) => {
+const ReportCardSection = ({ report, template, theme, studentName, admissionNo, className, schoolName, logoUrl, components }: ReportCardSectionProps) => {
   const [open, setOpen] = useState(false);
   return (
     <div className="bg-white rounded-xl border border-gray100 overflow-hidden">
@@ -78,6 +80,7 @@ const ReportCardSection = ({ report, template, theme, studentName, admissionNo, 
                 className={className}
                 schoolName={schoolName}
                 logoUrl={logoUrl}
+                components={components}
               />
             </div>
           </motion.div>
@@ -97,6 +100,35 @@ export const StudentReportView = () => {
   const student = students.find((s) => s.id === studentId);
   const { report, isThirdTermAverage, termTotals, isLoading, error } = useSessionAverageReport(studentId);
   const term = activeTerm?.term ?? "";
+
+  // Headings come from the term configuration. Prefer the components resolved
+  // server-side for this student's class; fall back to locally cached scheme.
+  const { components: cachedComponents } = useClassTermComponents(isThirdTermAverage ? "" : term, formClassId);
+  const components = !isThirdTermAverage && report?.components?.length ? report.components : cachedComponents;
+
+  const scoreForComponent = (
+    scores: Array<{ type: string; score: number; maxScore: number; componentId?: string }> | undefined,
+    componentId: string,
+    examFallback?: number,
+  ): number | null => {
+    if (scores) {
+      const byId = scores.find((sc) => sc.componentId && sc.componentId === componentId);
+      if (byId) return byId.score;
+      const comp = components.find((c) => c.id === componentId);
+      if (comp) {
+        const occurrence = components.filter((c) => c.type === comp.type).findIndex((c) => c.id === componentId);
+        let idx = 0;
+        for (const sc of scores) {
+          if (sc.type === comp.type) {
+            if (idx === occurrence) return sc.score;
+            idx++;
+          }
+        }
+      }
+    }
+    return typeof examFallback === "number" ? examFallback : null;
+  };
+
   const termLabelText = isThirdTermAverage
     ? "Session Average"
     : term
@@ -197,13 +229,19 @@ export const StudentReportView = () => {
                         <th className="px-4 py-2.5 font-medium text-right">3rd</th>
                         <th className="px-4 py-2.5 font-medium text-right">Session</th>
                       </>
+                    ) : components.length > 0 ? (
+                      components.map((c) => (
+                        <th key={c.id} className="px-4 py-2.5 font-medium text-right whitespace-nowrap">
+                          {c.name}
+                        </th>
+                      ))
                     ) : (
                       <>
                         <th className="px-4 py-2.5 font-medium text-right">CA</th>
                         <th className="px-4 py-2.5 font-medium text-right">Exam</th>
-                        <th className="px-4 py-2.5 font-medium text-right">Total</th>
                       </>
                     )}
+                    <th className="px-4 py-2.5 font-medium text-right">Total</th>
                     <th className="px-4 py-2.5 font-medium text-right">Grade</th>
                   </tr>
                 </thead>
@@ -245,8 +283,25 @@ export const StudentReportView = () => {
                               <span className="ml-2 text-xs text-gray400 font-normal">{s.teacherName}</span>
                             )}
                           </td>
-                          <td className="px-4 py-2.5 text-right tabular-nums text-gray600">{s.caTotal}</td>
-                          <td className="px-4 py-2.5 text-right tabular-nums text-gray600">{s.examScore}</td>
+                          {components.length > 0
+                            ? components.map((c) => {
+                                const score = scoreForComponent(
+                                  s.scores,
+                                  c.id,
+                                  c.type === "EXAM" ? s.examScore : undefined,
+                                );
+                                return (
+                                  <td key={c.id} className="px-4 py-2.5 text-right tabular-nums text-gray600">
+                                    {score !== null ? score : "—"}
+                                  </td>
+                                );
+                              })
+                            : (
+                              <>
+                                <td className="px-4 py-2.5 text-right tabular-nums text-gray600">{s.caTotal}</td>
+                                <td className="px-4 py-2.5 text-right tabular-nums text-gray600">{s.examScore}</td>
+                              </>
+                            )}
                           <td className="px-4 py-2.5 text-right font-semibold tabular-nums text-gray900">{s.total}</td>
                           <td className={cn("px-4 py-2.5 text-right font-bold tabular-nums", gradeTone(s.grade))}>
                             {s.grade || "—"}
@@ -267,6 +322,7 @@ export const StudentReportView = () => {
             className={formClass ?? undefined}
             schoolName={schoolName}
             logoUrl={user?.logoUrl}
+            components={isThirdTermAverage ? undefined : components.length > 0 ? components : undefined}
           />
         </div>
       )}

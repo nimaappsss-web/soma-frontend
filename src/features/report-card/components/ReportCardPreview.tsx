@@ -18,6 +18,15 @@ const gradeLabel = (grade: string) => {
   return "—";
 };
 
+const ordinal = (n: number) => {
+  const rem10 = n % 10;
+  const rem100 = n % 100;
+  if (rem10 === 1 && rem100 !== 11) return `${n}st`;
+  if (rem10 === 2 && rem100 !== 12) return `${n}nd`;
+  if (rem10 === 3 && rem100 !== 13) return `${n}rd`;
+  return `${n}th`;
+};
+
 const gradeBadgeClass = (grade: string) => {
   const g = grade.toUpperCase();
   if (g.startsWith("A")) return "bg-emerald50 text-emerald700 border-emerald200";
@@ -55,6 +64,14 @@ const DOMAINS = [
   "Sports & Games",
 ];
 
+export interface ReportColumnComponent {
+  id: string;
+  name: string;
+  type: string;
+  maxScore: number;
+  sortOrder: number;
+}
+
 interface ReportCardPreviewProps {
   template: ReportTemplate;
   theme: ReportTheme;
@@ -64,6 +81,7 @@ interface ReportCardPreviewProps {
   className?: string;
   schoolName?: string;
   logoUrl?: string;
+  components?: ReportColumnComponent[];
 }
 
 export const ReportCardPreview = ({
@@ -75,6 +93,7 @@ export const ReportCardPreview = ({
   className,
   schoolName,
   logoUrl,
+  components,
 }: ReportCardPreviewProps) => {
   const accent = THEMES[theme] ?? THEMES.slate;
   const termTitle =
@@ -101,16 +120,32 @@ export const ReportCardPreview = ({
 
   const hasIndividualScores = subjects.some((s) => s.scores.length > 0);
 
+  const useConfigColumns = !!components && components.length > 0;
+
   const caColumns = (() => {
+    if (useConfigColumns) {
+      const sorted = [...components!].sort((a, b) => a.sortOrder - b.sortOrder);
+      const typeSeen = new Map<string, number>();
+      return sorted.map((c) => {
+        const index = typeSeen.get(c.type) ?? 0;
+        typeSeen.set(c.type, index + 1);
+        return { key: c.id, label: c.name, type: c.type, index };
+      });
+    }
     if (!hasIndividualScores) return [];
     const typeCount = new Map<string, number>();
     const ordered: string[] = [];
     for (const s of subjects) {
+      const perSubject = new Map<string, number>();
       for (const sc of s.scores) {
-        if (!typeCount.has(sc.type)) {
-          typeCount.set(sc.type, 0);
-          ordered.push(sc.type);
+        perSubject.set(sc.type, (perSubject.get(sc.type) ?? 0) + 1);
+      }
+      for (const [type, count] of perSubject) {
+        if (!typeCount.has(type)) {
+          typeCount.set(type, 0);
+          ordered.push(type);
         }
+        typeCount.set(type, Math.max(typeCount.get(type)!, count));
       }
     }
     const columns: Array<{ key: string; label: string; type: string; index: number }> = [];
@@ -118,7 +153,7 @@ export const ReportCardPreview = ({
       const count = typeCount.get(type)!;
       if (count > 1) {
         for (let i = 0; i < count; i++) {
-          const label = type === "TEST" ? `${i + 1}${i === 0 ? "st" : i === 1 ? "nd" : "rd"} Test` : type === "ASSIGNMENT" ? "Assignment" : type === "PROJECT" ? "Project" : `${type} ${i + 1}`;
+          const label = type === "TEST" ? `${ordinal(i + 1)} Test` : type === "ASSIGNMENT" ? "Assignment" : type === "PROJECT" ? "Project" : `${type} ${i + 1}`;
           columns.push({ key: `${type}_${i}`, label, type, index: i });
         }
       } else {
@@ -129,22 +164,13 @@ export const ReportCardPreview = ({
     return columns;
   })();
 
-  const getScoreForColumn = (subjectScores: Array<{ type: string; score: number; maxScore: number }>, col: { type: string; index: number }) => {
+  const getScoreForColumn = (subjectScores: Array<{ type: string; score: number; maxScore: number; componentId?: string }>, col: { key: string; type: string; index: number }) => {
+    const byId = subjectScores.find((sc) => sc.componentId && sc.componentId === col.key);
+    if (byId) return byId.score;
     let idx = 0;
     for (const sc of subjectScores) {
       if (sc.type === col.type) {
         if (idx === col.index) return sc.score;
-        idx++;
-      }
-    }
-    return null;
-  };
-
-  const maxScoreForColumn = (subjectScores: Array<{ type: string; score: number; maxScore: number }>, col: { type: string; index: number }) => {
-    let idx = 0;
-    for (const sc of subjectScores) {
-      if (sc.type === col.type) {
-        if (idx === col.index) return sc.maxScore;
         idx++;
       }
     }
@@ -245,14 +271,24 @@ export const ReportCardPreview = ({
                 style={{ backgroundColor: accent.soft, color: accent.hex }}
               >
                 <th className="px-4 py-3 first:rounded-tl-xl">Subject</th>
-                {hasIndividualScores &&
+                {useConfigColumns ? (
                   caColumns.map((col) => (
                     <th key={col.key} className="px-2 py-3 text-right whitespace-nowrap">
                       {col.label}
                     </th>
-                  ))}
-                {!hasIndividualScores && <th className="px-2 py-3 text-right">CA</th>}
-                <th className="px-2 py-3 text-right">Exam</th>
+                  ))
+                ) : (
+                  <>
+                    {hasIndividualScores &&
+                      caColumns.map((col) => (
+                        <th key={col.key} className="px-2 py-3 text-right whitespace-nowrap">
+                          {col.label}
+                        </th>
+                      ))}
+                    {!hasIndividualScores && <th className="px-2 py-3 text-right">CA</th>}
+                    <th className="px-2 py-3 text-right">Exam</th>
+                  </>
+                )}
                 <th className="px-2 py-3 text-right">Total</th>
                 <th className="px-2 py-3 text-center">Grade</th>
                 <th className="px-4 py-3 text-right last:rounded-tr-xl">Remarks</th>
@@ -274,24 +310,40 @@ export const ReportCardPreview = ({
                       <span className="ml-1.5 text-[10px] text-gray500 font-normal">{s.teacher}</span>
                     )}
                   </td>
-                  {hasIndividualScores &&
+                  {useConfigColumns ? (
                     caColumns.map((col) => {
-                      const score = getScoreForColumn(s.scores, col);
-                      const max = maxScoreForColumn(s.scores, col);
+                      const score = getScoreForColumn(s.scores, col) ?? (col.type === "EXAM" ? s.examScore : null);
                       return (
                         <td key={col.key} className="px-2 py-2.5 text-right tabular-nums text-gray600">
                           {score !== null ? (
-                            <span>{score}{max ? <span className="text-gray300">/{max}</span> : null}</span>
+                            <span>{score}</span>
                           ) : (
                             <span className="text-gray300">—</span>
                           )}
                         </td>
                       );
-                    })}
-                  {!hasIndividualScores && (
-                    <td className="px-2 py-2.5 text-right tabular-nums text-gray600">{s.caTotal}</td>
+                    })
+                  ) : (
+                    <>
+                      {hasIndividualScores &&
+                        caColumns.map((col) => {
+                          const score = getScoreForColumn(s.scores, col);
+                          return (
+                            <td key={col.key} className="px-2 py-2.5 text-right tabular-nums text-gray600">
+                              {score !== null ? (
+                                <span>{score}</span>
+                              ) : (
+                                <span className="text-gray300">—</span>
+                              )}
+                            </td>
+                          );
+                        })}
+                      {!hasIndividualScores && (
+                        <td className="px-2 py-2.5 text-right tabular-nums text-gray600">{s.caTotal}</td>
+                      )}
+                      <td className="px-2 py-2.5 text-right tabular-nums text-gray600">{s.examScore}</td>
+                    </>
                   )}
-                  <td className="px-2 py-2.5 text-right tabular-nums text-gray600">{s.examScore}</td>
                   <td className="px-2 py-2.5 text-right font-bold tabular-nums text-gray900">{s.total}</td>
                   <td className="px-2 py-2.5 text-center">
                     <span className={cn("inline-flex min-w-[28px] items-center justify-center rounded-lg border px-2 py-0.5 font-bold tabular-nums", gradeBadgeClass(s.grade))}>

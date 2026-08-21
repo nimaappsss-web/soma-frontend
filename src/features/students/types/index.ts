@@ -88,7 +88,7 @@ export interface StudentTimeline {
 export interface SubjectScore {
   subjectId: string;
   subjectName: string;
-  scores: Array<{ type: string; score: number; maxScore: number }>;
+  scores: Array<{ type: string; score: number; maxScore: number; componentId?: string }>;
   caTotal: number;
   examScore: number;
   total: number;

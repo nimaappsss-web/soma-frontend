@@ -17,6 +17,7 @@ export { useStudentReport } from "./useStudentReport";
 export { useAssessmentMode } from "./useAssessmentMode";
 export { useSessionAverageReport } from "./useSessionAverageReport";
 export { useExamComponents } from "./useExamComponents";
+export { useClassTermComponents } from "./useClassTermComponents";
 export { useExamSchemes } from "./useExamSchemes";
 export { useCreateExamComponent } from "./useCreateExamComponent";
 export { useUpdateExamComponent } from "./useUpdateExamComponent";
