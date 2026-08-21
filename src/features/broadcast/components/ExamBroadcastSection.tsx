@@ -14,6 +14,7 @@ import { Avatar } from "../../../components/ui/Avatar";
 import { Button } from "../../../components/ui/button";
 import { useSubmitExamSheet, useResendExamResults } from "../api";
 import { BroadcastConfirmModal, BroadcastNote } from "./BroadcastConfirmModal";
+import { StudentListSection } from "./StudentListSection";
 import type { BroadcastStatusResponse, BroadcastScope, BroadcastStudent } from "../types";
 
 const formatTime = (iso: string | null | undefined) =>
@@ -307,7 +308,10 @@ export const ExamBroadcastSection = ({
           </div>
 
           {/* Student list */}
-          <div className="space-y-2.5">
+          <StudentListSection
+            title="Students"
+            meta={`${completeStudents.length} of ${status.students.length} complete`}
+          >
             {status.students.map((s) => (
               <ExamStudentRow
                 key={s.studentId}
@@ -318,7 +322,7 @@ export const ExamBroadcastSection = ({
                 onResend={() => resendTo([s.studentId], false)}
               />
             ))}
-          </div>
+          </StudentListSection>
         </>
       )}
 

@@ -5,6 +5,7 @@ import { Avatar } from "../../../components/ui/Avatar";
 import { Button } from "../../../components/ui/button";
 import { useBroadcastCa } from "../api";
 import { BroadcastConfirmModal, BroadcastNote } from "./BroadcastConfirmModal";
+import { StudentListSection } from "./StudentListSection";
 import type { BroadcastStatusResponse, BroadcastScope, BroadcastStudent } from "../types";
 
 const formatTime = (iso: string) =>
@@ -275,11 +276,14 @@ export const CaBroadcastSection = ({
           </div>
 
           {/* Student list */}
-          <div className="space-y-2.5">
+          <StudentListSection
+            title="Students"
+            meta={`${completeCount} of ${totalCount} complete`}
+          >
             {status.students.map((s) => (
               <CaStudentRow key={s.studentId} student={s} />
             ))}
-          </div>
+          </StudentListSection>
         </>
       )}
 
