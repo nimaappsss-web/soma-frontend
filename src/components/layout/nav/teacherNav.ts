@@ -24,6 +24,7 @@ export const teacherNavItems: NavItem[] = [
     children: [
       { label: "Mark Scores", to: "/teach/ca-and-exams/mark-scores" },
       { label: "My Class", to: "/teach/ca-and-exams/my-class" },
+      { label: "Broadcast", to: "/teach/ca-and-exams/broadcast" },
     ],
   },
   { label: "Lesson Notes", to: "/teach/lesson-notes", Icon: Book1 },

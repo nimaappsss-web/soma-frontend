@@ -31,11 +31,15 @@ export const useReopenFreshnessCheck = () => {
   const { user } = useAuth();
   const queryClient = useQueryClient();
   const checkingRef = useRef(false);
+  const lastCheckRef = useRef(0);
 
   useEffect(() => {
     if (!user) return;
 
     const check = async () => {
+      const now = Date.now();
+      if (now - lastCheckRef.current < 10_000) return;
+      lastCheckRef.current = now;
       if (checkingRef.current) return;
       checkingRef.current = true;
       try {

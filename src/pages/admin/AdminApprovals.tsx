@@ -8,10 +8,15 @@ import { HelpHint } from "../../components/ui/HelpHint";
 import {
   useExamBroadcasts,
   useReviewExamBroadcast,
-  type ExamBroadcast,
 } from "../../features/principal/api";
+import type { ExamBroadcast } from "../../features/principal/api/useExamBroadcasts";
+import {
+  useExamSheetBroadcasts,
+  useReviewExamSheet,
+} from "../../features/broadcast/api/useExamSheetBroadcasts";
+import type { ExamSheetBroadcast } from "../../features/broadcast/types";
 
-type TabId = "exam-results" | "lesson-notes";
+type TabId = "exam-results" | "exam-sheet" | "lesson-notes";
 type StatusFilter = "PENDING" | "APPROVED" | "REJECTED";
 
 const STATUS_LABEL: Record<string, string> = {
@@ -28,6 +33,7 @@ const STATUS_STYLE: Record<string, { dot: string; text: string; bg: string; acti
 
 const TABS: { id: TabId; label: string; Icon: typeof DocumentText }[] = [
   { id: "exam-results", label: "Exam results", Icon: StatusUp },
+  { id: "exam-sheet", label: "Exam sheet", Icon: Book },
   { id: "lesson-notes", label: "Lesson notes", Icon: MessageText },
 ];
 
@@ -122,15 +128,103 @@ const BroadcastCard = ({ item }: { item: ExamBroadcast }) => {
   );
 };
 
+const ExamSheetCard = ({ item }: { item: ExamSheetBroadcast }) => {
+  const { approve, reject } = useReviewExamSheet();
+  const isPending = item.status === "PENDING";
+  const style = STATUS_STYLE[item.status];
+
+  return (
+    <div className="rounded-2xl border border-gray100 bg-white p-4 sm:p-5">
+      <div className="flex items-start gap-3">
+        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-gray100">
+          <Book size={18} variant="Bold" color="#0D0D0D" />
+        </div>
+        <div className="min-w-0 flex-1">
+          <div className="flex flex-wrap items-center gap-2">
+            <p className="text-sm font-semibold text-gray900 truncate">
+              {item.class.name} — Exam sheet
+            </p>
+            <span
+              className={cn(
+                "inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-semibold leading-none",
+                style.bg,
+                style.text,
+              )}
+            >
+              <span className={cn("h-1.5 w-1.5 rounded-full", style.dot)} />
+              {STATUS_LABEL[item.status]}
+            </span>
+          </div>
+          <p className="text-xs text-gray500 mt-1">
+            Term {item.term} · {item.session} · {item.examCount} subject{item.examCount === 1 ? "" : "s"} ·{" "}
+            {item.scoreCount} score{item.scoreCount === 1 ? "" : "s"} across {item.studentCount} student
+            {item.studentCount === 1 ? "" : "s"}
+          </p>
+          <p className="text-xs text-gray400 mt-1">
+            Whole-class terminal exam broadcast · parents see results once approved
+          </p>
+        </div>
+      </div>
+
+      <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-gray500">
+        <span className="flex items-center gap-1.5">
+          <Profile2User size={14} color="#8C8C8C" />
+          {item.teacher?.name ?? "Teacher"}
+        </span>
+        <span className="flex items-center gap-1.5">
+          <Clock size={14} color="#8C8C8C" />
+          {formatRelativeDate(item.createdAt)}
+        </span>
+        {!isPending && item.reviewedBy && (
+          <span className="flex items-center gap-1.5">
+            <Check size={14} color="#8C8C8C" />
+            {item.status === "APPROVED" ? "Approved" : "Rejected"} by {item.reviewedBy.name}
+          </span>
+        )}
+      </div>
+
+      {item.note && <p className="text-xs text-gray600 mt-2 italic">“{item.note}”</p>}
+
+      {isPending && (
+        <div className="mt-4 flex flex-wrap gap-2">
+          <Button
+            size="sm"
+            onClick={() => approve.mutate(item.id)}
+            disabled={approve.isPending || reject.isPending}
+            className="flex-1 sm:flex-none"
+          >
+            {approve.isPending ? "Approving…" : "Approve"}
+          </Button>
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={() => reject.mutate(item.id)}
+            disabled={approve.isPending || reject.isPending}
+            className="flex-1 sm:flex-none text-red500 border-red500/40 hover:bg-red500/5"
+          >
+            {reject.isPending ? "Rejecting…" : "Reject"}
+          </Button>
+        </div>
+      )}
+    </div>
+  );
+};
+
 export const AdminApprovals = () => {
   const [tab, setTab] = useState<TabId>("exam-results");
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("PENDING");
 
-  const { data, isLoading } = useExamBroadcasts(
+  const examBroadcasts = useExamBroadcasts(
     tab === "exam-results" ? statusFilter : undefined,
   );
+  const sheetBroadcasts = useExamSheetBroadcasts(
+    tab === "exam-sheet" ? statusFilter : undefined,
+  );
 
-  const items = data?.requests ?? [];
+  const isLoading = tab === "exam-results" ? examBroadcasts.isLoading : sheetBroadcasts.isLoading;
+  const items = tab === "exam-results"
+    ? (examBroadcasts.data?.requests ?? [])
+    : (sheetBroadcasts.data?.requests ?? []);
 
   return (
     <div className="p-4 md:p-6 w-full">
@@ -144,7 +238,11 @@ export const AdminApprovals = () => {
             sections={[
               {
                 title: "Exam results",
-                text: "Teachers submit terminal exam results here for your review. Approve to release them to parents as a report card; reject to keep them hidden.",
+                text: "Teachers submit terminal exam results per subject here for your review. Approve to release them to parents; reject to keep them hidden.",
+              },
+              {
+                title: "Exam sheet",
+                text: "Form teachers submit a whole class's exam sheet as one request. Approving releases every subject's exam result to parents and notifies each child's parent.",
               },
               { title: "Lesson notes", text: "Coming soon — lesson notes will be reviewable here too." },
             ]}
@@ -172,7 +270,7 @@ export const AdminApprovals = () => {
         </div>
       </div>
 
-      {tab === "exam-results" && (
+      {(tab === "exam-results" || tab === "exam-sheet") && (
         <div className="flex flex-wrap items-center gap-2 mb-5">
           {(["PENDING", "APPROVED", "REJECTED"] as StatusFilter[]).map((s) => {
             const style = STATUS_STYLE[s];
@@ -208,18 +306,24 @@ export const AdminApprovals = () => {
       ) : items.length === 0 ? (
         <EmptyState
           icon={<ShieldTick size={30} variant="Bold" color="#8C8C8C" />}
-          title={`No ${STATUS_LABEL[statusFilter].toLowerCase()} exam broadcasts`}
+          title={`No ${STATUS_LABEL[statusFilter].toLowerCase()} ${tab === "exam-sheet" ? "exam sheet approvals" : "exam broadcasts"}`}
           description={
             statusFilter === "PENDING"
-              ? "When teachers submit terminal exam results for approval, they'll show up here."
+              ? tab === "exam-sheet"
+                ? "When form teachers submit a class's exam sheet for approval, it'll show up here."
+                : "When teachers submit terminal exam results for approval, they'll show up here."
               : `Broadcasts you ${statusFilter === "APPROVED" ? "approve" : "reject"} will appear here.`
           }
         />
       ) : (
         <div className="grid gap-3">
-          {items.map((item) => (
-            <BroadcastCard key={item.id} item={item} />
-          ))}
+          {items.map((item) =>
+            tab === "exam-sheet" ? (
+              <ExamSheetCard key={item.id} item={item as unknown as ExamSheetBroadcast} />
+            ) : (
+              <BroadcastCard key={item.id} item={item as ExamBroadcast} />
+            ),
+          )}
         </div>
       )}
     </div>

@@ -18,6 +18,7 @@ import { SubjectDetail } from "./pages/teach/SubjectDetail";
 import { TeacherExams } from "./pages/teach/TeacherExams";
 import { TeacherActiveAssessments } from "./pages/teach/TeacherActiveAssessments";
 import { TeacherResults } from "./pages/teach/TeacherResults";
+import { TeacherBroadcast } from "./pages/teach/TeacherBroadcast";
 import { StudentReportView } from "./features/examinations/components/StudentReportView";
 import { TeacherExaminationsLayout, TeacherExaminationsIndex } from "./features/examinations/components/TeacherExaminationsLayout";
 import { useAnimatedFavicon } from "./hooks/useAnimatedFavicon";
@@ -189,6 +190,7 @@ function App() {
             <Route path="mark-scores" element={<TeacherExams />} />
             <Route path="active" element={<TeacherActiveAssessments />} />
           </Route>
+          <Route path="ca-and-exams/broadcast" element={<TeacherBroadcast />} />
           <Route path="ca-and-exams/my-class" element={<TeacherResults />} />
           <Route path="ca-and-exams/reports/:studentId" element={<StudentReportView />} />
           <Route path="results" element={<Navigate to="/teach/ca-and-exams/my-class" replace />} />

@@ -1,5 +1,5 @@
 import { Link, useParams } from "react-router";
-import { ArrowLeft2, ArrowRight, Building, Profile2User, Teacher } from "iconsax-react";
+import { ArrowLeft2, ArrowRight, Building, Profile2User, Teacher, Book1 } from "iconsax-react";
 
 import { useClassDetail } from "../../features/principal/api";
 import { SomaLoader } from "../../components/ui/SomaLoader";
@@ -17,8 +17,8 @@ const InfoItem = ({ icon, label, value }: { icon: React.ReactNode; label: string
 );
 
 export const ClassDetails = () => {
-  const { id } = useParams<{ id: string }>();
-  const { data, isLoading, error } = useClassDetail(id ?? "");
+  const { classId } = useParams<{ classId: string }>();
+  const { data, isLoading, error } = useClassDetail(classId ?? "");
   const classRecord = data?.class;
 
   if (isLoading) {
@@ -91,6 +91,39 @@ export const ClassDetails = () => {
           View students in this class
           <ArrowRight size={16} color="#FFFFFF" />
         </Link>
+      </div>
+
+      <div className="mt-4 bg-white rounded-xl border border-gray100 p-5">
+        <h2 className="text-sm font-semibold text-gray-900 mb-4">
+          Subjects{" "}
+          {classRecord.subjects && classRecord.subjects.length > 0 && (
+            <span className="text-xs font-normal text-gray-400">
+              · {classRecord.subjects.length} subject{classRecord.subjects.length === 1 ? "" : "s"}
+            </span>
+          )}
+        </h2>
+        {classRecord.subjects && classRecord.subjects.length > 0 ? (
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+            {classRecord.subjects.map((subject) => (
+              <div
+                key={subject.id}
+                className="flex items-center gap-3 rounded-lg border border-gray100 px-4 py-3"
+              >
+                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-gray100 text-gray500">
+                  <Book1 size={16} color="#8C8C8C" />
+                </div>
+                <div className="min-w-0">
+                  <p className="truncate text-sm font-medium text-gray-900">{subject.name}</p>
+                  {subject.code && (
+                    <p className="truncate text-xs text-gray-400">{subject.code}</p>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <p className="text-sm text-gray-400">No subjects assigned to this class yet.</p>
+        )}
       </div>
 
       <div className="mt-4 bg-white rounded-xl border border-gray100 p-5">

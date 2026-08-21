@@ -6,6 +6,9 @@ const TERM_LABELS: Record<string, { label: string; short: string }> = {
   first: { label: "First Term", short: "I" },
   second: { label: "Second Term", short: "II" },
   third: { label: "Third Term", short: "III" },
+  "1": { label: "First Term", short: "I" },
+  "2": { label: "Second Term", short: "II" },
+  "3": { label: "Third Term", short: "III" },
 };
 
 export const termLabel = (term: string) => {
@@ -13,6 +16,8 @@ export const termLabel = (term: string) => {
 };
 
 export const termNumber = (term: string): number => {
+  const n = parseInt(term, 10);
+  if (!isNaN(n)) return n;
   const idx = TERM_ORDER.indexOf(term as (typeof TERM_ORDER)[number]);
   return idx >= 0 ? idx + 1 : 1;
 };

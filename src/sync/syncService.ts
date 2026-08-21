@@ -9,14 +9,16 @@ import type {
   SchoolSettingsCache,
   ClassSubjectsCache,
 } from "../db/db";
-import {
-  seedActiveExamSummaries,
-  type ActiveExamSummariesResponse,
-} from "../features/examinations/utils/activeSummaries";
+import { seedActiveExamSummaries, type ActiveExamSummariesResponse } from "../features/examinations/utils/activeSummaries";
 import { seedReportSettings } from "../features/report-card/utils/reportCardCache";
 import { seedTermResults } from "../features/examinations/utils/termResultsCache";
 import type { TermResultsResponse } from "../features/examinations/types";
 import type { ReportSettings } from "../features/report-card/types";
+import type { BroadcastStatusResponse, ExamSheetBroadcastsResponse } from "../features/broadcast/types";
+import {
+  saveCachedStatus,
+  hasPendingBroadcastWrite,
+} from "../features/broadcast/utils/cache";
 
 export interface SyncProgress {
   current: number;
@@ -276,6 +278,55 @@ const reportSettingsPullTask: SyncTask = {
   },
 };
 
+const broadcastStatusTask: SyncTask = {
+  name: "broadcastStatus",
+  run: async (user) => {
+    const formClass = await db.teacherFormClass.get(user.id);
+    if (!formClass?.formClassId) return;
+    const terms = await db.academicTerms.where("userId").equals(user.id).toArray();
+    const active = terms.find((t) => t.isCurrent) ?? terms[0];
+    if (!active) return;
+    try {
+      const res = await fetchData<BroadcastStatusResponse>(
+        `/results/broadcast/status?classId=${formClass.formClassId}&term=${active.term}&session=`,
+        "GET",
+      );
+      const hasPending = await hasPendingBroadcastWrite(user.id);
+      if (!hasPending) {
+        await saveCachedStatus(
+          user.id,
+          formClass.formClassId,
+          active.term,
+          res.session ?? "",
+          res,
+        );
+      }
+    } catch {
+      return;
+    }
+  },
+};
+
+const examSheetBroadcastListTask: SyncTask = {
+  name: "examSheetBroadcasts",
+  run: async (user) => {
+    try {
+      const res = await fetchData<ExamSheetBroadcastsResponse>("/exams/sheet-broadcasts", "GET");
+      const hasPending = await hasPendingBroadcastWrite(user.id);
+      if (!hasPending) {
+        await db.examSheetBroadcastList.put({
+          id: user.id,
+          userId: user.id,
+          listJson: JSON.stringify(res),
+          updatedAt: Date.now(),
+        });
+      }
+    } catch {
+      return;
+    }
+  },
+};
+
 const principalTasks: SyncTask[] = [
   classesTask,
   subjectsTask,
@@ -285,6 +336,7 @@ const principalTasks: SyncTask[] = [
   schoolSettingsTask,
   academicTermsTask,
   reportSettingsPullTask,
+  examSheetBroadcastListTask,
 ];
 
 const teacherTasks: SyncTask[] = [
@@ -296,6 +348,7 @@ const teacherTasks: SyncTask[] = [
   termResultsPullTask,
   examScoresPullTask,
   reportSettingsPullTask,
+  broadcastStatusTask,
 ];
 
 const parentTasks: SyncTask[] = [

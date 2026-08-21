@@ -6,6 +6,8 @@ import { SomaLoader } from "../../../components/ui/SomaLoader";
 import { useParents } from "../api/useParents";
 import { useResendParentInvite } from "../api/useResendParentInvite";
 import { InviteParentModal } from "./InviteParentModal";
+import { ParentDetailModal } from "./ParentDetailModal";
+import type { Parent } from "../types";
 interface ParentsListSectionProps {
   limit?: number;
   search?: string;
@@ -18,6 +20,7 @@ export const ParentsListSection = ({
 }: ParentsListSectionProps) => {
   const [page, setPage] = useState(1);
   const [inviteOpen, setInviteOpen] = useState(false);
+  const [selectedParent, setSelectedParent] = useState<Parent | null>(null);
   const { data, isLoading, error } = useParents(page, limit);
   const resendMutation = useResendParentInvite();
 
@@ -115,7 +118,8 @@ export const ParentsListSection = ({
             {visiblePending.map((inv) => (
               <div
                 key={inv.id}
-                className="rounded-2xl border border-gray100 bg-white p-5 transition-shadow hover:shadow-[0_14px_30px_-16px_rgba(0,0,0,0.18)]"
+                onClick={() => setSelectedParent(inv)}
+                className="rounded-2xl border border-gray100 bg-white p-5 transition-shadow hover:shadow-[0_14px_30px_-16px_rgba(0,0,0,0.18)] cursor-pointer"
               >
                 <div className="flex items-start justify-between gap-3">
                   <div className="flex items-center gap-3 min-w-0">
@@ -148,7 +152,7 @@ export const ParentsListSection = ({
                     </span>
                   )}
                   <button
-                    onClick={() => resendMutation.mutate(inv.id)}
+                    onClick={(e) => { e.stopPropagation(); resendMutation.mutate(inv.id); }}
                     disabled={resendMutation.isPending}
                     title={inv.emailError ?? "Resend invite"}
                     className="ml-auto rounded-full px-3 py-1.5 text-xs font-medium text-gray900 transition-colors hover:bg-gray50 disabled:opacity-50"
@@ -176,7 +180,8 @@ export const ParentsListSection = ({
             {visibleRegistered.map((p) => (
               <div
                 key={p.id}
-                className="rounded-2xl border border-gray100 bg-white p-5 transition-shadow hover:shadow-[0_14px_30px_-16px_rgba(0,0,0,0.18)]"
+                onClick={() => setSelectedParent(p)}
+                className="rounded-2xl border border-gray100 bg-white p-5 transition-shadow hover:shadow-[0_14px_30px_-16px_rgba(0,0,0,0.18)] cursor-pointer"
               >
                 <div className="flex items-start justify-between gap-3">
                   <div className="flex items-center gap-3 min-w-0">
@@ -209,7 +214,7 @@ export const ParentsListSection = ({
                       No password
                     </span>
                     <button
-                      onClick={() => p.inviteId && resendMutation.mutate(p.inviteId)}
+                      onClick={(e) => { e.stopPropagation(); p.inviteId && resendMutation.mutate(p.inviteId); }}
                       disabled={resendMutation.isPending || !p.inviteId}
                       className="rounded-full px-3 py-1.5 text-xs font-medium text-gray900 transition-colors hover:bg-gray50 disabled:opacity-50"
                     >
@@ -246,6 +251,11 @@ export const ParentsListSection = ({
         </>
       )}
       <InviteParentModal open={inviteOpen} onClose={() => setInviteOpen(false)} />
+      <ParentDetailModal
+        open={selectedParent !== null}
+        onClose={() => setSelectedParent(null)}
+        parent={selectedParent}
+      />
     </div>
   );
 };

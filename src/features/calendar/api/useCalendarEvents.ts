@@ -76,6 +76,7 @@ export const useCalendarEvents = ({ from, to, type }: UseCalendarEventsParams = 
       return res;
     },
     enabled: !!userId && !!from && !!to,
+    refetchOnMount: "always",
     staleTime: 5 * 60 * 1000,
   });
 

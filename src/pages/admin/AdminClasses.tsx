@@ -8,6 +8,7 @@ import { SomaLoader } from "../../components/ui/SomaLoader";
 import { PageHeader } from "../../components/ui/PageHeader";
 import { compactSearch } from "../../utils/search";
 import { HelpHint } from "../../components/ui/HelpHint";
+import { useAuth } from "../../contexts/AuthContext";
 import { useSchoolSettings } from "../../features/settings/api/useSchoolSettings";
 import {
   useClasses,
@@ -38,6 +39,7 @@ type ClassModalState =
   | null;
 
 export const AdminClasses = () => {
+  const { user } = useAuth();
   const { data: classesData, isLoading } = useClasses();
   const { data: settings } = useSchoolSettings();
   const createMutation = useCreateClass();
@@ -288,6 +290,7 @@ export const AdminClasses = () => {
         classRecord={detailClass}
         deleting={deleteMutation.isPending}
         detailHref={detailClass ? `/admin/classes/${detailClass.id}` : undefined}
+        principalName={user?.name}
         onClose={() => setDetailClass(null)}
         onEdit={handleDetailEdit}
         onDelete={handleDetailDelete}

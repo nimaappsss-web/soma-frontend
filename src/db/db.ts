@@ -467,6 +467,38 @@ export interface InvoiceCache {
   updatedAt?: number;
 }
 
+// Broadcast center — offline-first cache. `broadcastStatus` holds the class-scoped
+// broadcast status blob (CA components, per-student matrix, CA/exam broadcast state,
+// delivered student ids) so the teacher's Broadcast page renders instantly offline.
+// `examSheetBroadcastList` holds the principal's exam-sheet approval list for the school.
+export interface BroadcastStatusCache {
+  id: string; // `${classId}:${term}:${session}`
+  userId: string;
+  classId: string;
+  term: string;
+  session: string;
+  statusJson: string;
+  updatedAt: number;
+}
+
+export interface ExamSheetBroadcastListCache {
+  id: string; // userId
+  userId: string;
+  listJson: string; // ExamSheetBroadcastsResponse serialized
+  updatedAt: number;
+}
+
+// Parent exam results — offline-first cache of the `/parents/me/exam-results`
+// response, scoped per user + term so each term's published scores render
+// instantly offline and the term selector can flip between cached results.
+export interface ParentExamResultsCache {
+  id: string; // `${userId}:${term}`
+  userId: string;
+  term: string;
+  resultsJson: string; // ParentExamResultsResponse serialized
+  updatedAt: number;
+}
+
 export const db = new Dexie("somaDB") as Dexie & {
   students: EntityTable<Student, "id">;
   attendance: EntityTable<AttendanceRecord, "id">;
@@ -508,6 +540,9 @@ export const db = new Dexie("somaDB") as Dexie & {
   classSubjects: EntityTable<ClassSubjectsCache, "id">;
   feeStructures: EntityTable<FeeStructureCache, "id">;
   invoices: EntityTable<InvoiceCache, "id">;
+  broadcastStatus: EntityTable<BroadcastStatusCache, "id">;
+  examSheetBroadcastList: EntityTable<ExamSheetBroadcastListCache, "id">;
+  parentExamResults: EntityTable<ParentExamResultsCache, "id">;
 };
 
 db.version(11).stores({
@@ -1147,5 +1182,20 @@ db.version(37)
         .bulkDelete(stale.map((r: { id: string }) => r.id));
     }
   });
+
+// v38: broadcast center tables. The broadcast status is cached per class scope so
+// the teacher's Broadcast page reads instantly offline; the principal's exam-sheet
+// approval list is cached per user. Writes are queued via the syncQueue and replayed
+// when back online.
+db.version(38).stores({
+  broadcastStatus: "id, userId, classId, term, session",
+  examSheetBroadcastList: "id, userId",
+});
+
+// v39: parent exam results cache, scoped per user + term so each term's
+// published scores render instantly offline.
+db.version(39).stores({
+  parentExamResults: "id, userId, term",
+});
 
 

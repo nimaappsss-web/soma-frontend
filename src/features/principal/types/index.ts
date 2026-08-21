@@ -173,6 +173,7 @@ export interface ClassDetail {
   arm?: string;
   studentCount: number;
   formTeacher: { id: string; name: string; email?: string; phone?: string } | null;
+  subjects?: { id: string; name: string; code?: string | null }[];
 }
 
 export interface ClassDetailResponse {
