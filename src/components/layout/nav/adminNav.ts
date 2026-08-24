@@ -14,6 +14,7 @@ import {
   StatusUp,
   Chart,
   ShieldTick,
+  Medal,
 } from "iconsax-react";
 import type { NavSection } from "../types";
 
@@ -39,6 +40,7 @@ export const adminNavSections: NavSection[] = [
     divider: true,
     items: [
       { label: "Classes", to: "/admin/classes", Icon: Teacher },
+      { label: "Promotion", to: "/admin/promotion", Icon: Medal, roles: ["principal", "school_admin"] },
       { label: "Subjects", to: "/admin/subjects", Icon: Book },
       { label: "Timetable", to: "/admin/timetable", Icon: CalendarTick },
       { label: "Attendance", to: "/admin/attendance", Icon: ClipboardTick },

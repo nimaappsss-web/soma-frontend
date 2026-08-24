@@ -7,6 +7,9 @@ import { SomaLoader } from "../../components/ui/SomaLoader";
 import { Avatar } from "../../components/ui/Avatar";
 import { CelebrationDecor } from "../../components/ui/CelebrationDecor";
 import { Button } from "../../components/ui/button";
+import { Input } from "../../components/ui/input";
+import { Label } from "../../components/ui/label";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "../../components/ui/dialog";
 import { SelectDropdown, type SelectOption } from "../../components/ui/select-dropdown";
 import { useTeachers, useResendInvite, useSetTeacherApproval } from "../../features/teacher/api";
 import { useClasses } from "../../features/principal/api";
@@ -45,6 +48,7 @@ export const AdminTeachers = () => {
   const approvalMutation = useSetTeacherApproval();
 
   const [editingTeacher, setEditingTeacher] = useState<Teacher | null>(null);
+  const [fixingInvite, setFixingInvite] = useState<{ id: string; email: string } | null>(null);
   const [showInvite, setShowInvite] = useState(false);
   const [view, setView] = useState<ViewMode>(readView);
   const [searchTerm, setSearchTerm] = useState("");
@@ -174,17 +178,30 @@ export const AdminTeachers = () => {
 
       <InviteTeacherModal open={showInvite} onClose={() => setShowInvite(false)} />
 
-      {editingTeacher && (
-        <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100 mb-6">
-          <div className="flex items-center justify-between mb-5">
-            <h3 className="font-semibold text-gray-800">Edit Teacher — {editingTeacher.name}</h3>
-            <Button type="button" variant="ghost" size="sm" onClick={stopEditing}>
-              Close
-            </Button>
+      <Dialog
+        open={editingTeacher !== null}
+        onOpenChange={(open) => {
+          if (!open) stopEditing();
+        }}
+      >
+        <DialogContent variant="middle" className="sm:max-w-xl">
+          <DialogHeader>
+            <DialogTitle>Edit Teacher</DialogTitle>
+            <DialogDescription>
+              Update {editingTeacher?.name}&apos;s profile, form class, and subject assignments.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="px-6 pb-6">
+            {editingTeacher && (
+              <EditTeacherForm
+                teacherId={editingTeacher.id}
+                onDone={stopEditing}
+                onCancel={stopEditing}
+              />
+            )}
           </div>
-          <EditTeacherForm teacherId={editingTeacher.id} onDone={stopEditing} onCancel={stopEditing} />
-        </div>
-      )}
+        </DialogContent>
+      </Dialog>
 
       <div className="mt-6">
         {isLoading ? (
@@ -218,13 +235,21 @@ export const AdminTeachers = () => {
                       </span>
                       <span className="ml-2 text-xs text-gray-400">{formatExpiry(invite.expiresIn)}</span>
                     </div>
-                    <button
-                      onClick={() => resendMutation.mutate(invite.id)}
-                      disabled={resendMutation.isPending && resendMutation.variables === invite.id}
-                      className="text-xs text-blue-600 hover:text-blue-700 disabled:opacity-50 underline"
-                    >
-                      {resendMutation.isPending && resendMutation.variables === invite.id ? "..." : "Resend"}
-                    </button>
+                    <div className="flex items-center gap-2 shrink-0">
+                      <button
+                        onClick={() => setFixingInvite({ id: invite.id, email: invite.email })}
+                        className="text-xs text-gray-500 hover:text-gray-900 underline"
+                      >
+                        Fix email
+                      </button>
+                      <button
+                        onClick={() => resendMutation.mutate({ inviteId: invite.id })}
+                        disabled={resendMutation.isPending && resendMutation.variables?.inviteId === invite.id && !resendMutation.variables?.email}
+                        className="text-xs text-blue-600 hover:text-blue-700 disabled:opacity-50 underline"
+                      >
+                        {resendMutation.isPending && resendMutation.variables?.inviteId === invite.id && !resendMutation.variables?.email ? "..." : "Resend"}
+                      </button>
+                    </div>
                   </div>
                 ))}
               </div>
@@ -288,13 +313,21 @@ export const AdminTeachers = () => {
                   </span>
                   <span className="ml-2 text-xs text-gray-400">{formatExpiry(invite.expiresIn)}</span>
                 </div>
-                <button
-                  onClick={() => resendMutation.mutate(invite.id)}
-                  disabled={resendMutation.isPending && resendMutation.variables === invite.id}
-                  className="text-xs text-blue-600 hover:text-blue-700 disabled:opacity-50 underline"
-                >
-                  {resendMutation.isPending && resendMutation.variables === invite.id ? "..." : "Resend"}
-                </button>
+                <div className="flex items-center gap-2 shrink-0">
+                  <button
+                    onClick={() => setFixingInvite({ id: invite.id, email: invite.email })}
+                    className="text-xs text-gray-500 hover:text-gray-900 underline"
+                  >
+                    Fix email
+                  </button>
+                  <button
+                    onClick={() => resendMutation.mutate({ inviteId: invite.id })}
+                    disabled={resendMutation.isPending && resendMutation.variables?.inviteId === invite.id && !resendMutation.variables?.email}
+                    className="text-xs text-blue-600 hover:text-blue-700 disabled:opacity-50 underline"
+                  >
+                    {resendMutation.isPending && resendMutation.variables?.inviteId === invite.id && !resendMutation.variables?.email ? "..." : "Resend"}
+                  </button>
+                </div>
               </div>
             ))}
             {filteredTeachers.map((t) => {
@@ -368,6 +401,64 @@ export const AdminTeachers = () => {
           </div>
         )}
       </div>
+
+      <Dialog
+        open={fixingInvite !== null}
+        onOpenChange={(o) => {
+          if (!o) setFixingInvite(null);
+        }}
+      >
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle className="pr-10">Fix invite email</DialogTitle>
+            <DialogDescription className="text-sm text-gray500">
+              The current invite was sent to{" "}
+              <span className="font-medium text-gray900">{fixingInvite?.email}</span>. Enter the
+              correct address and we'll resend the invitation there.
+            </DialogDescription>
+          </DialogHeader>
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              if (!fixingInvite) return;
+              const value = fixingInvite.email.trim();
+              if (!value || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) return;
+              resendMutation.mutate(
+                { inviteId: fixingInvite.id, email: value },
+                { onSuccess: () => setFixingInvite(null) },
+              );
+            }}
+            className="space-y-4 px-6 pb-6"
+          >
+            <div>
+              <Label htmlFor="fix-invite-email" className="mb-1.5 block text-sm">
+                New email
+              </Label>
+              <Input
+                id="fix-invite-email"
+                type="email"
+                required
+                autoFocus
+                defaultValue={fixingInvite?.email}
+                onChange={(e) => {
+                  if (fixingInvite) {
+                    setFixingInvite({ ...fixingInvite, email: e.target.value });
+                  }
+                }}
+                placeholder="teacher@school.com"
+              />
+            </div>
+            <div className="flex items-center justify-end gap-2 pt-1">
+              <Button type="button" variant="outline" size="sm" onClick={() => setFixingInvite(null)}>
+                Cancel
+              </Button>
+              <Button type="submit" size="sm" disabled={resendMutation.isPending}>
+                {resendMutation.isPending ? "Resending…" : "Resend invite"}
+              </Button>
+            </div>
+          </form>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

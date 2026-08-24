@@ -12,6 +12,8 @@ import { db } from "../db/db";
 import type { SyncQueueItem } from "../db/db";
 import { fetchData } from "../utils/fetchData";
 import { transformError } from "../utils/transformError";
+import { toast } from "@/utils/toast";
+import type { TeacherCache } from "../db/db";
 import { useAuth } from "./AuthContext";
 import { useQueryClient } from "@tanstack/react-query";
 import { attendanceKeys } from "../features/teacher/utils/query-keys";
@@ -39,6 +41,18 @@ const MAX_RETRIES = 3;
 const FAILED_TTL = 7 * 24 * 60 * 60 * 1000;
 const BACKOFF_BASE_MS = 15_000;
 const BACKOFF_CAP_MS = 30 * 60 * 1000;
+
+const TABLE_LABELS: Record<string, string> = {
+  teachers: "Teacher update",
+  students: "Student update",
+  classes: "Class update",
+  attendance: "Attendance upload",
+  examScores: "Score upload",
+  lessonNotes: "Lesson note update",
+  academicTerms: "Term update",
+  broadcastStatus: "Broadcast",
+  examSheetBroadcastList: "Approval update",
+};
 
 const isTransientError = (error: unknown): boolean => {
   const axiosError = error as { response?: { status?: number } };
@@ -165,12 +179,61 @@ export const SyncProvider = ({ children }: { children: ReactNode }) => {
               nextAttemptAt: Date.now() + nextBackoff(nextRetry),
             });
           } else {
-            await db.syncQueue.update(item.id!, {
-              status: "failed",
-              lastError: errorMessage,
-            });
-            setFailedCount((c) => c + 1);
-            setPendingCount((c) => Math.max(0, c - 1));
+            const permanent4xx = !!status && status >= 400 && status < 500;
+            const isTeacherWrite = item.table === "teachers" && item.method !== "DELETE";
+
+            // The server rejected the write outright (e.g. email already
+            // taken). Restore the cached record to server truth so the UI
+            // stops showing the rejected change, notify loudly, and drop the
+            // doomed write instead of leaving an unfixable item in the queue.
+            if (isTeacherWrite && permanent4xx) {
+              let reverted = true;
+              try {
+                const res = await fetchData<{ teachers: TeacherCache[] }>(
+                  "/teachers?limit=200",
+                  "GET",
+                );
+                const fresh = res.teachers?.find(
+                  (t: TeacherCache) => t.id === item.recordId,
+                );
+                if (fresh) {
+                  await db.teachers.put({ ...fresh, userId: user.id } as TeacherCache);
+                }
+                await db.teacherDetails.delete(item.recordId);
+              } catch {
+                reverted = false;
+              }
+
+              toast.error(
+                `${TABLE_LABELS[item.table] ?? "Update"} failed — ${errorMessage}`,
+                { duration: 60_000, position: "left" },
+              );
+
+              if (reverted) {
+                await db.syncQueue.delete(item.id!);
+              } else {
+                await db.syncQueue.update(item.id!, {
+                  status: "failed",
+                  lastError: errorMessage,
+                });
+                setFailedCount((c) => c + 1);
+              }
+              setPendingCount((c) => Math.max(0, c - 1));
+            } else {
+              await db.syncQueue.update(item.id!, {
+                status: "failed",
+                lastError: errorMessage,
+              });
+              setFailedCount((c) => c + 1);
+              setPendingCount((c) => Math.max(0, c - 1));
+
+              // Permanent failures must be loud — the local cache still shows
+              // the "successful" edit until it's corrected.
+              toast.error(
+                `${TABLE_LABELS[item.table] ?? "Update"} failed — ${errorMessage}`,
+                { duration: 60_000, position: "left" },
+              );
+            }
           }
         }
 

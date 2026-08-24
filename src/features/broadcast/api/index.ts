@@ -6,6 +6,7 @@ import { fetchData } from "../../../utils/fetchData";
 import { useAuth } from "../../../contexts/AuthContext";
 import { db } from "../../../db/db";
 import { addToQueue } from "../../../sync/syncQueue";
+import { notifyIfOffline } from "../../../utils/offlineNotice";
 import { broadcastKeys } from "../utils/query-keys";
 import {
   getCachedStatus,
@@ -152,6 +153,10 @@ export const useBroadcastCa = () => {
         payload: { classId, term, session, componentIds: payload.componentIds },
       });
 
+      notifyIfOffline(
+        "No internet — CA results are saved and will broadcast to parents automatically once you reconnect.",
+      );
+
       return {
         message: "CA results broadcast to parents",
         componentIds: payload.componentIds,
@@ -206,6 +211,10 @@ export const useSubmitExamSheet = () => {
         method: "POST",
         payload: { classId, term, session, note: payload.note ?? null },
       });
+
+      notifyIfOffline(
+        "No internet — the exam sheet is saved and will be sent for approval automatically once you reconnect.",
+      );
 
       return {
         message: "Exam sheet submitted for principal approval",
@@ -264,6 +273,10 @@ export const useResendExamResults = () => {
         method: "POST",
         payload: { classId, term, session, studentIds: targetIds },
       });
+
+      notifyIfOffline(
+        "No internet — the resend is saved and will reach parents automatically once you reconnect.",
+      );
 
       return {
         message: `Exam results sent to ${targetIds.length} parent${targetIds.length === 1 ? "" : "s"}`,

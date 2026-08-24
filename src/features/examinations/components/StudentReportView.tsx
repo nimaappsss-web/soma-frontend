@@ -1,11 +1,11 @@
 import { useState } from "react";
-import { useNavigate, useParams } from "react-router";
+import { useNavigate, useParams, useSearchParams } from "react-router";
 import { ArrowLeft2, ArrowDown2, DocumentText, Profile2User } from "iconsax-react";
 import { motion, AnimatePresence } from "motion/react";
 import { useTeacherProfile } from "../../teacher/api";
 import { useActiveTerm } from "../../calendar/api";
 import { termLabel } from "../../calendar/utils/term";
-import { useStudents } from "../../students/api";
+import { useStudents, useAllStudents } from "../../students/api";
 import { useAuth } from "../../../contexts/AuthContext";
 import { useSessionAverageReport } from "../api/useSessionAverageReport";
 import { useClassTermComponents } from "../api";
@@ -29,9 +29,10 @@ interface ReportCardSectionProps {
   schoolName?: string;
   logoUrl?: string;
   components?: ReportColumnComponent[];
+  defaultOpen?: boolean;
 }
-const ReportCardSection = ({ report, template, theme, studentName, admissionNo, className, schoolName, logoUrl, components }: ReportCardSectionProps) => {
-  const [open, setOpen] = useState(false);
+const ReportCardSection = ({ report, template, theme, studentName, admissionNo, className, schoolName, logoUrl, components, defaultOpen = false }: ReportCardSectionProps) => {
+  const [open, setOpen] = useState(defaultOpen);
   return (
     <div className="bg-white rounded-xl border border-gray100 overflow-hidden">
       <button
@@ -91,13 +92,21 @@ const ReportCardSection = ({ report, template, theme, studentName, admissionNo, 
 };
 export const StudentReportView = () => {
   const { studentId = "" } = useParams();
+  const [searchParams] = useSearchParams();
+  const openReportCard = searchParams.get("open") === "report";
   const navigate = useNavigate();
   const { formClassId, formClass, schoolName } = useTeacherProfile();
   const { activeTerm } = useActiveTerm();
   const { settings } = useReportSettings();
   const { user } = useAuth();
+  // Admins open this view from the approvals drill-down; they have no form
+  // class, so resolve the student from the whole-school list instead.
+  const isAdminView = ["principal", "school_admin", "bursar"].includes(user?.role ?? "");
+  const { data: allStudents } = useAllStudents(user?.id ?? "");
   const { data: students } = useStudents(formClassId ?? "", "ACTIVE");
-  const student = students.find((s) => s.id === studentId);
+  const student = isAdminView
+    ? (allStudents ?? []).find((s) => s.id === studentId)
+    : (students ?? []).find((s) => s.id === studentId);
   const { report, isThirdTermAverage, termTotals, isLoading, error } = useSessionAverageReport(studentId);
   const term = activeTerm?.term ?? "";
 
@@ -137,8 +146,16 @@ export const StudentReportView = () => {
   return (
     <div className="p-4 md:p-6 w-full">
       <button
-        onClick={() => navigate("/teach/ca-and-exams/my-class")}
-        aria-label="Back to My Class"
+        onClick={() =>
+          navigate(
+            isAdminView && student?.classId
+              ? `/admin/approvals/class/${student.classId}`
+              : isAdminView
+                ? "/admin/students"
+                : "/teach/ca-and-exams/my-class",
+          )
+        }
+        aria-label="Back"
         className="mb-4 flex h-8 w-8 items-center justify-center rounded-full bg-black text-white transition-colors hover:bg-gray900 active:scale-95"
       >
         <ArrowLeft2 variant="Linear" size={16} color="#FFFFFF" />
@@ -323,6 +340,7 @@ export const StudentReportView = () => {
             schoolName={schoolName}
             logoUrl={user?.logoUrl}
             components={isThirdTermAverage ? undefined : components.length > 0 ? components : undefined}
+            defaultOpen={openReportCard}
           />
         </div>
       )}

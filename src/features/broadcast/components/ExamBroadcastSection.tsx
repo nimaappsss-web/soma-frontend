@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import { useNavigate } from "react-router";
 import {
   Send2,
   TickCircle,
@@ -57,14 +58,24 @@ const ExamStudentRow = ({
   canResend,
   resending,
   onResend,
+  onOpen,
 }: {
   student: BroadcastStudent;
   delivered: boolean;
   canResend: boolean;
   resending: boolean;
   onResend: () => void;
+  onOpen: () => void;
 }) => (
-  <div className="rounded-2xl border border-gray100 bg-white p-4">
+  <div
+    className="cursor-pointer rounded-2xl border border-gray100 bg-white p-4 transition-colors hover:border-gray200"
+    onClick={onOpen}
+    role="link"
+    tabIndex={0}
+    onKeyDown={(e) => {
+      if (e.key === "Enter") onOpen();
+    }}
+  >
     <div className="flex items-start gap-3">
       <Avatar name={student.studentName} size={40} className="shrink-0" />
       <div className="min-w-0 flex-1">
@@ -83,7 +94,10 @@ const ExamStudentRow = ({
               ) : canResend ? (
                 <button
                   type="button"
-                  onClick={onResend}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onResend();
+                  }}
                   disabled={resending}
                   className="inline-flex items-center gap-1 rounded-full border border-gray900 bg-gray900 px-2.5 py-1 text-[11px] font-semibold text-white transition-all active:scale-95"
                 >
@@ -137,6 +151,7 @@ export const ExamBroadcastSection = ({
 }) => {
   const [confirmSubmit, setConfirmSubmit] = useState(false);
   const [confirmResend, setConfirmResend] = useState(false);
+  const navigate = useNavigate();
   const submitMutation = useSubmitExamSheet();
   const resendMutation = useResendExamResults();
 
@@ -320,6 +335,7 @@ export const ExamBroadcastSection = ({
                 canResend={examStatus === "APPROVED"}
                 resending={resendMutation.isPending}
                 onResend={() => resendTo([s.studentId], false)}
+                onOpen={() => navigate(`/teach/ca-and-exams/reports/${s.studentId}?open=report`)}
               />
             ))}
           </StudentListSection>

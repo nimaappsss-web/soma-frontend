@@ -132,6 +132,22 @@ export const EditTeacherForm = ({ teacherId, onDone, onCancel }: EditTeacherForm
       const nextEmail = (formData.email ?? "").trim();
       const emailChanged = nextEmail !== "" && nextEmail.toLowerCase() !== originalEmail;
 
+      // Best-effort offline guard: email is globally unique on the server, so
+      // catch duplicates we can see locally before queueing the change.
+      if (emailChanged) {
+        const cachedTeachers = await db.teachers.where("userId").equals(user.id).toArray();
+        const clash = cachedTeachers.find(
+          (t) =>
+            t.id !== teacherId &&
+            (t.email ?? "").trim().toLowerCase() === nextEmail.toLowerCase(),
+        );
+        if (clash) {
+          toast.error(`This email is already used by ${clash.name || "another user"}`);
+          setSaving(false);
+          return;
+        }
+      }
+
       const payload: UpdateTeacherPayload = {
         name: formData.name.trim(),
         ...(emailChanged ? { email: nextEmail } : {}),

@@ -23,8 +23,9 @@ import { HelpHint } from "../../../components/ui/HelpHint";
 import { useAuth } from "../../../contexts/AuthContext";
 import { db } from "../../../db/db";
 import { useMyAssignments } from "../../teacher/api/useMyAssignments";
+import { useTeacherProfile } from "../../teacher/api/useTeacherProfile";
 import { useActiveTerm } from "../../calendar/api";
-import { useExamComponents, useDeleteExamScores, usePublishExamScores, useSubmitExamForApproval, useUnpublishExamScores } from "../api";
+import { useExamComponents, useDeleteExamScores, usePublishExamScores, useUnpublishExamScores } from "../api";
 import { useStudents } from "../../students/api";
 import { useExamScoresLocal, useExamScoresBulk, useSaveExamScores, examScoreKey } from "../api";
 import { SelectDropdown } from "../../../components/ui/select-dropdown";
@@ -67,6 +68,7 @@ const SubjectBlock = ({
 }: SubjectBlockProps) => {
   const { user } = useAuth();
   const userId = user?.id ?? "";
+  const { formClassId } = useTeacherProfile();
   const navigate = useNavigate();
   const subject = assignment.subject;
   const classOptions = assignment.classes.map((c) => ({
@@ -84,7 +86,6 @@ const SubjectBlock = ({
   const [sessionDismissed, setSessionDismissed] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [confirmBroadcast, setConfirmBroadcast] = useState(false);
-  const [confirmSubmitForApproval, setConfirmSubmitForApproval] = useState(false);
   const [confirmUnpublish, setConfirmUnpublish] = useState(false);
   const [switchTarget, setSwitchTarget] = useState<{ kind: "component" | "class"; value: string } | null>(null);
   const rosterStripRef = useRef<HTMLDivElement>(null);
@@ -101,10 +102,14 @@ const SubjectBlock = ({
   const saveMutation = useSaveExamScores();
   const deleteScoresMutation = useDeleteExamScores();
   const publishMutation = usePublishExamScores();
-  const submitForApprovalMutation = useSubmitExamForApproval();
   const unpublishMutation = useUnpublishExamScores();
   const visibleToParents = bulkQuery.data?.visibleToParents ?? false;
   const broadcastStatus = bulkQuery.data?.broadcastStatus ?? null;
+  // Broadcasting rights (CA -> parents, exam -> principal, hiding results)
+  // belong exclusively to the class teacher of the selected class.
+  const canBroadcast =
+    ["principal", "school_admin"].includes(user?.role ?? "") ||
+    (!!formClassId && formClassId === classId);
 
   const savedScoreMap = new Map(savedScores.map((r) => [r.studentId, r]));
 
@@ -199,6 +204,11 @@ const SubjectBlock = ({
 
   const selectedComponent = components.find((c) => c.id === componentId) ?? null;
   const isExamType = selectedComponent?.type === "EXAM";
+  // Exam visibility now comes from the class teacher's whole-sheet broadcast,
+  // so a session can be live without its own per-subject request.
+  const examLiveStatus = isExamType
+    ? (broadcastStatus ?? (visibleToParents ? "APPROVED" : null))
+    : null;
 
   const activeCount = useLiveQuery(
     async () => {
@@ -574,6 +584,7 @@ const SubjectBlock = ({
                           )}
                         </div>
 
+                      {canBroadcast && (
                       <div className="mt-3 flex flex-wrap items-center justify-between gap-2 rounded-xl border border-gray200 bg-offWhite px-4 py-3">
                         <div className="flex items-center gap-2 min-w-0">
                           <TickCircle
@@ -584,20 +595,20 @@ const SubjectBlock = ({
                           />
                           <p className="text-sm text-gray600 min-w-0 truncate">
                             {isExamType
-                              ? broadcastStatus === "APPROVED"
-                                ? "Approved — parents can see this exam result"
-                                : broadcastStatus === "REJECTED"
+                              ? examLiveStatus === "APPROVED"
+                                ? "Approved — parents see this result. Editing scores sends it back for approval"
+                                : examLiveStatus === "REJECTED"
                                   ? "Rejected by principal — not visible to parents"
-                                  : broadcastStatus === "PENDING"
+                                  : examLiveStatus === "PENDING"
                                     ? "Submitted for principal approval"
-                                    : "Hidden from parents until the principal approves"
+                                    : "Hidden from parents until the class teacher broadcasts the exam sheet"
                               : visibleToParents
-                                ? "Visible to parents — re-saving keeps parents in sync"
+                                ? "Visible to parents — edits go live automatically and the class teacher is notified"
                                 : "Hidden from parents until you broadcast"}
                           </p>
                         </div>
                         <div className="flex flex-wrap items-center gap-2 shrink-0">
-                          {((!isExamType && visibleToParents) || (isExamType && broadcastStatus === "APPROVED")) && (
+                          {((!isExamType && visibleToParents) || (isExamType && examLiveStatus === "APPROVED")) && (
                             <button
                               onClick={() => setConfirmUnpublish(true)}
                               disabled={unpublishMutation.isPending}
@@ -607,55 +618,28 @@ const SubjectBlock = ({
                               {unpublishMutation.isPending ? "Hiding…" : "Hide from parents"}
                             </button>
                           )}
-                          {isExamType ? (
-                            <button
-                              onClick={() => setConfirmSubmitForApproval(true)}
-                              disabled={enteredCount === 0 || submitForApprovalMutation.isPending}
-                              className={cn(
-                                "flex items-center gap-1.5 rounded-full border h-10 px-4 text-sm font-medium transition-all active:scale-95 shrink-0",
-                                broadcastStatus === "APPROVED"
-                                  ? "border-springgreen600/40 text-springgreen600 bg-white hover:bg-springgreen600/5"
-                                  : broadcastStatus === "REJECTED"
-                                    ? "border-amber500/50 text-amber500 bg-white hover:bg-amber500/5"
-                                    : "border-gray900 bg-gray900 text-white hover:opacity-90",
-                              )}
-                            >
-                              <Send2
-                                size={14}
-                                variant="Bold"
-                                color={broadcastStatus === "APPROVED" ? "#34A853" : broadcastStatus === "REJECTED" ? "#FBBC05" : "#FFFFFF"}
-                              />
-                              {submitForApprovalMutation.isPending
-                                ? "Submitting…"
-                                : broadcastStatus === "APPROVED"
-                                  ? "Approved"
-                                  : broadcastStatus === "REJECTED"
-                                    ? "Rejected — resubmit"
-                                    : broadcastStatus === "PENDING"
-                                      ? "Submitted"
-                                      : "Submit for approval"}
-                            </button>
-                          ) : (
-                            <button
-                              onClick={() => setConfirmBroadcast(true)}
-                              disabled={enteredCount === 0 || publishMutation.isPending}
-                              className={cn(
-                                "flex items-center gap-1.5 rounded-full border h-10 px-4 text-sm font-medium transition-all active:scale-95 shrink-0",
-                                visibleToParents
-                                  ? "border-springgreen600/40 text-springgreen600 bg-white hover:bg-springgreen600/5"
-                                  : "border-gray900 bg-gray900 text-white hover:opacity-90",
-                              )}
-                            >
-                              <Send2 size={14} variant="Bold" color={visibleToParents ? "#34A853" : "#FFFFFF"} />
-                              {publishMutation.isPending
-                                ? "Broadcasting…"
-                                : visibleToParents
-                                  ? "Broadcast again"
-                                  : "Broadcast to parents"}
-                            </button>
-                          )}
-                        </div>
-                      </div>
+                          {!isExamType && (
+                             <button
+                               onClick={() => setConfirmBroadcast(true)}
+                               disabled={enteredCount === 0 || publishMutation.isPending}
+                               className={cn(
+                                 "flex items-center gap-1.5 rounded-full border h-10 px-4 text-sm font-medium transition-all active:scale-95 shrink-0",
+                                 visibleToParents
+                                   ? "border-springgreen600/40 text-springgreen600 bg-white hover:bg-springgreen600/5"
+                                   : "border-gray900 bg-gray900 text-white hover:opacity-90",
+                               )}
+                             >
+                               <Send2 size={14} variant="Bold" color={visibleToParents ? "#34A853" : "#FFFFFF"} />
+                               {publishMutation.isPending
+                                 ? "Broadcasting…"
+                                 : visibleToParents
+                                   ? "Broadcast again"
+                                   : "Broadcast to parents"}
+                              </button>
+                            )}
+                         </div>
+                       </div>
+                       )}
 
                       <div className="mt-4 flex sm:justify-end">
                         <Button
@@ -805,38 +789,6 @@ const SubjectBlock = ({
               }
             >
               {publishMutation.isPending ? "Broadcasting…" : "Confirm"}
-            </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
-
-      <Dialog open={confirmSubmitForApproval} onOpenChange={setConfirmSubmitForApproval}>
-        <DialogContent className="max-w-sm">
-          <DialogHeader>
-            <DialogTitle className="pr-10">Submit {selectedComponent?.name ?? "this exam"} for approval?</DialogTitle>
-            <DialogDescription className="text-sm text-gray500">
-              This sends the full exam result of your students in{" "}
-              {classOptions.find((c) => c.value === classId)?.label ?? "this class"} to the principal for review.
-              Once approved, parents will see it as a report card. You can still edit scores while it's pending.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="flex items-center justify-end gap-2 mt-2 pr-6 pb-6 md:pb-0">
-            <Button variant="outline" size="sm" onClick={() => setConfirmSubmitForApproval(false)}>
-              Cancel
-            </Button>
-            <Button
-              size="sm"
-              disabled={submitForApprovalMutation.isPending}
-              onClick={() =>
-                submitForApprovalMutation.mutate(
-                  { subjectId: subject.id, classId, componentId, term },
-                  {
-                    onSuccess: () => setConfirmSubmitForApproval(false),
-                  },
-                )
-              }
-            >
-              {submitForApprovalMutation.isPending ? "Submitting…" : "Confirm"}
             </Button>
           </div>
         </DialogContent>

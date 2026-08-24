@@ -38,6 +38,8 @@ import { ParentSetup } from "./pages/ParentSetup";
 import { AcceptParentInvite } from "./pages/AcceptParentInvite";
 import { GuestRoute } from "./features/auth/components/GuestRoute";
 import { AdminClasses } from "./pages/admin/AdminClasses";
+import { AdminPromotion } from "./pages/admin/AdminPromotion";
+import { AdminApprovalClass } from "./pages/admin/AdminApprovalClass";
 import { ClassDetails } from "./pages/admin/ClassDetails";
 import { AdminParents } from "./pages/admin/AdminParents";
 import { AdminApprovals } from "./pages/admin/AdminApprovals";
@@ -143,6 +145,7 @@ function App() {
           <Route path="staff" element={<StaffManagement />} />
           <Route path="parents" element={<AdminParents />} />
           <Route path="approvals" element={<AdminApprovals />} />
+          <Route path="approvals/class/:classId" element={<AdminApprovalClass />} />
           <Route path="finance" element={<FinanceLayout />}>
             <Route index element={<FinanceOverview />} />
             <Route path="fee-structures" element={<FeeStructuresTab />} />
@@ -173,7 +176,9 @@ function App() {
           </Route>
           <Route path="reports" element={<ReportsManagement />} />
           <Route path="classes" element={<AdminClasses />} />
+          <Route path="promotion" element={<AdminPromotion />} />
           <Route path="classes/:classId" element={<ClassDetails />} />
+          <Route path="reports/:studentId" element={<StudentReportView />} />
           <Route path="subjects" element={<AdminSubjects />} />
           <Route path="settings" element={<AdminSettings />} />
           <Route path="profile" element={<AdminProfile />} />

@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Profile2User, StatusUp, MedalStar } from "iconsax-react";
+import { Profile2User, StatusUp, MedalStar, Warning2 } from "iconsax-react";
 import { cn } from "@/lib/utils";
 import { useTeacherProfile } from "../../teacher/api";
 import { useActiveTerm } from "../../calendar/api";
@@ -113,6 +113,22 @@ export const BroadcastCenter = () => {
         />
       ) : statusQuery.data ? (
         <>
+          {(statusQuery.data.edits?.length ?? 0) > 0 && (
+            <div className="mb-4 flex items-start gap-2.5 rounded-xl border border-amber500/40 bg-amber500/5 px-4 py-3">
+              <Warning2 size={18} variant="Bold" color="#B45309" className="shrink-0 mt-0.5" />
+              <div className="min-w-0">
+                <p className="text-sm font-semibold text-gray900">
+                  Scores changed since your last broadcast
+                </p>
+                <p className="text-xs text-gray600 mt-0.5">
+                  {statusQuery.data.edits!
+                    .map((e) => `${e.componentName} (${e.editedBy ?? "a subject teacher"})`)
+                    .join(", ")}{" "}
+                  — check the details before broadcasting again.
+                </p>
+              </div>
+            </div>
+          )}
           {section === "ca" && (
             <CaBroadcastSection status={statusQuery.data} scope={{ classId: formClassId, term }} />
           )}

@@ -63,6 +63,15 @@ export type BroadcastStatusResponse = {
     reviewedAt: string | null;
   } | null;
   examDeliveredStudentIds: string[];
+  /** Sessions whose scores were changed by someone other than the class teacher since the last broadcast/review. */
+  edits?: {
+    examId: string;
+    subjectId: string;
+    componentName: string;
+    type: string;
+    editedAt: string;
+    editedBy: string | null;
+  }[];
 };
 
 export type BroadcastScope = {

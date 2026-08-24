@@ -59,7 +59,7 @@ export const TeacherListSection = () => {
                 <td className="py-2.5">
                   <button
                     type="button"
-                    onClick={() => resendMutation.mutate(invite.id)}
+                    onClick={() => resendMutation.mutate({ inviteId: invite.id })}
                     disabled={resendMutation.isPending}
                     className="text-xs text-blue-600 hover:text-blue-700 disabled:opacity-50"
                   >

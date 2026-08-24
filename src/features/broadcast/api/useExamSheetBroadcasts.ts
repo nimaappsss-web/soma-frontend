@@ -60,7 +60,10 @@ export const useExamSheetBroadcasts = (status?: ExamBroadcastStatus) => {
     ? (JSON.parse(record.listJson) as ExamSheetBroadcastsResponse)
     : null;
 
-  const all = parsed ?? query.data ?? { requests: [] };
+  // Fresh server data wins once fetched; the cached blob is only the
+  // instant/offline fallback, and pending review writes keep their
+  // optimistic state pinned until they sync.
+  const all = query.data ?? parsed ?? { requests: [] };
   const data: ExamSheetBroadcastsResponse = status
     ? { requests: (all.requests ?? []).filter((r) => r.status === status) }
     : all;
