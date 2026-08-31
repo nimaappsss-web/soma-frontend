@@ -12,6 +12,7 @@ import { OnboardingRoute } from "./features/auth/components/OnboardingRoute";
 import { ContinuousAssessment } from "./pages/ContinuousAssessment";
 import { CompleteRegistration } from "./pages/CompleteRegistration";
 import { ProtectedRoute } from "./features/auth/components/ProtectedRoute";
+import { AdminRoleRoute } from "./features/auth/components/AdminRoleRoute";
 import { TeacherDashboard } from "./pages/teach/TeacherDashboard";
 import { TeacherSubjects } from "./pages/teach/TeacherSubjects";
 import { SubjectDetail } from "./pages/teach/SubjectDetail";
@@ -137,49 +138,51 @@ function App() {
           }
         />
         <Route path="/admin" element={<ProtectedRoute><AdminLayout /></ProtectedRoute>}>
-          <Route index element={<DashboardHome />} />
-          <Route path="students" element={<AdminStudents />} />
-          <Route path="students/:id" element={<StudentDetails />} />
-          <Route path="teachers" element={<AdminTeachers />} />
-          <Route path="teachers/:id" element={<AdminTeacherDetails />} />
-          <Route path="staff" element={<StaffManagement />} />
-          <Route path="parents" element={<AdminParents />} />
-          <Route path="approvals" element={<AdminApprovals />} />
-          <Route path="approvals/class/:classId" element={<AdminApprovalClass />} />
-          <Route path="finance" element={<FinanceLayout />}>
-            <Route index element={<FinanceOverview />} />
-            <Route path="fee-structures" element={<FeeStructuresTab />} />
-            <Route path="invoices" element={<InvoicesTab />} />
-            <Route path="payments" element={<PaymentsTab />} />
-            <Route path="pending" element={<PendingVerificationTab />} />
+          <Route element={<AdminRoleRoute />}>
+            <Route index element={<DashboardHome />} />
+            <Route path="students" element={<AdminStudents />} />
+            <Route path="students/:id" element={<StudentDetails />} />
+            <Route path="teachers" element={<AdminTeachers />} />
+            <Route path="teachers/:id" element={<AdminTeacherDetails />} />
+            <Route path="staff" element={<StaffManagement />} />
+            <Route path="parents" element={<AdminParents />} />
+            <Route path="approvals" element={<AdminApprovals />} />
+            <Route path="approvals/class/:classId" element={<AdminApprovalClass />} />
+            <Route path="finance" element={<FinanceLayout />}>
+              <Route index element={<FinanceOverview />} />
+              <Route path="fee-structures" element={<FeeStructuresTab />} />
+              <Route path="invoices" element={<InvoicesTab />} />
+              <Route path="payments" element={<PaymentsTab />} />
+              <Route path="pending" element={<PendingVerificationTab />} />
+            </Route>
+            <Route path="finance/fee-structures/:groupId" element={<FeeStructureDetails />} />
+            <Route path="announcements" element={<AnnouncementsManagement />} />
+            <Route path="moments" element={<MomentsManagement />} />
+            <Route path="timetable" element={<TimetableLayout />}>
+              <Route index element={<TimetableManagement />} />
+              <Route path="configs" element={<TimetableConfigsPage />} />
+              <Route path=":classId" element={<TimetableView />} />
+            </Route>
+            <Route path="attendance" element={<AttendanceOverview />} />
+            <Route path="attendance/classes" element={<AttendanceClasses />} />
+            <Route path="attendance/absentees" element={<AttendanceAbsentees />} />
+            <Route path="examinations" element={<ExaminationsLayout />}>
+              <Route index element={<SchemeConfig />} />
+              <Route path="configure" element={<SchemeConfig />} />
+            </Route>
+            <Route path="calendar" element={<CalendarLayout />}>
+              <Route index element={<Navigate to="events" replace />} />
+              <Route path="events" element={<CalendarEvents />} />
+              <Route path="holidays" element={<CalendarHolidays />} />
+              <Route path="terms" element={<CalendarTerms />} />
+            </Route>
+            <Route path="reports" element={<ReportsManagement />} />
+            <Route path="classes" element={<AdminClasses />} />
+            <Route path="promotion" element={<AdminPromotion />} />
+            <Route path="classes/:classId" element={<ClassDetails />} />
+            <Route path="reports/:studentId" element={<StudentReportView />} />
+            <Route path="subjects" element={<AdminSubjects />} />
           </Route>
-          <Route path="finance/fee-structures/:groupId" element={<FeeStructureDetails />} />
-          <Route path="announcements" element={<AnnouncementsManagement />} />
-          <Route path="moments" element={<MomentsManagement />} />
-          <Route path="timetable" element={<TimetableLayout />}>
-            <Route index element={<TimetableManagement />} />
-            <Route path="configs" element={<TimetableConfigsPage />} />
-            <Route path=":classId" element={<TimetableView />} />
-          </Route>
-          <Route path="attendance" element={<AttendanceOverview />} />
-          <Route path="attendance/classes" element={<AttendanceClasses />} />
-          <Route path="attendance/absentees" element={<AttendanceAbsentees />} />
-          <Route path="examinations" element={<ExaminationsLayout />}>
-            <Route index element={<SchemeConfig />} />
-            <Route path="configure" element={<SchemeConfig />} />
-          </Route>
-          <Route path="calendar" element={<CalendarLayout />}>
-            <Route index element={<Navigate to="events" replace />} />
-            <Route path="events" element={<CalendarEvents />} />
-            <Route path="holidays" element={<CalendarHolidays />} />
-            <Route path="terms" element={<CalendarTerms />} />
-          </Route>
-          <Route path="reports" element={<ReportsManagement />} />
-          <Route path="classes" element={<AdminClasses />} />
-          <Route path="promotion" element={<AdminPromotion />} />
-          <Route path="classes/:classId" element={<ClassDetails />} />
-          <Route path="reports/:studentId" element={<StudentReportView />} />
-          <Route path="subjects" element={<AdminSubjects />} />
           <Route path="settings" element={<AdminSettings />} />
           <Route path="profile" element={<AdminProfile />} />
         </Route>

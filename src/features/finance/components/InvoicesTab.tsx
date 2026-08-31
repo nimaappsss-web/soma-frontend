@@ -7,6 +7,7 @@ import { Button } from "../../../components/ui/button";
 import { SelectDropdown } from "../../../components/ui/select-dropdown";
 import { MultiSelect } from "../../../components/ui/multi-select";
 import { BottomSheet } from "../../../components/mobile/BottomSheet";
+import { CollapsibleCard } from "../../../components/mobile/CollapsibleCard";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "../../../components/ui/dialog";
 import { EmptyState } from "../../../components/ui/EmptyState";
 import { SomaLoader } from "../../../components/ui/SomaLoader";
@@ -171,7 +172,8 @@ export const InvoicesTab = () => {
           actionIcon={<DocumentDownload size={15} />}
         />
       ) : (
-        <div className="bg-white rounded-xl border border-gray-100 divide-y divide-gray-50">
+        <>
+        <div className="hidden md:block bg-white rounded-xl border border-gray-100 divide-y divide-gray-50">
           {invoices.map((inv) => (
             <div key={inv.id} className="flex items-center justify-between p-4">
               <div className="flex items-center gap-3 min-w-0">
@@ -215,6 +217,103 @@ export const InvoicesTab = () => {
             </div>
           ))}
         </div>
+
+        <div className="md:hidden space-y-3.5">
+          {invoices.map((inv) => (
+            <CollapsibleCard
+              key={inv.id}
+              collapsed={
+                <div className="flex items-center gap-3 min-w-0">
+                  <div className="w-11 h-11 rounded-full bg-gray-50 ring-1 ring-gray-100 flex items-center justify-center shrink-0">
+                    <ReceiptText size={19} variant="Bold" color="#0D0D0D" />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center justify-between gap-2">
+                      <p className="text-[15px] font-semibold text-gray900 leading-snug truncate">
+                        {inv.studentName}
+                      </p>
+                      <span className={cn("shrink-0 text-xs font-medium px-2.5 py-1 rounded-full", statusStyles[inv.status])}>
+                        {statusLabel[inv.status]}
+                      </span>
+                    </div>
+                    <p className="text-2xl font-bold text-gray900 mt-1">
+                      {formatNaira(inv.amount)}
+                    </p>
+                  </div>
+                </div>
+              }
+              expanded={
+                <div className="space-y-3">
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="rounded-lg bg-gray-50 px-3 py-2">
+                      <p className="text-[11px] uppercase tracking-wider text-gray-400">Fee</p>
+                      <p className="text-[13px] font-medium text-gray-700 mt-0.5 break-words leading-snug">
+                        {inv.feeName || "—"}
+                      </p>
+                    </div>
+                    <div className="rounded-lg bg-gray-50 px-3 py-2">
+                      <p className="text-[11px] uppercase tracking-wider text-gray-400">Admission No</p>
+                      <p className="text-[13px] font-medium text-gray-700 mt-0.5 break-words leading-snug">
+                        {inv.admissionNo || "—"}
+                      </p>
+                    </div>
+                  </div>
+
+                  {(inv.term || inv.session) && (
+                    <div className="rounded-lg bg-gray-50 px-3 py-2">
+                      <p className="text-[11px] uppercase tracking-wider text-gray-400">Term / Session</p>
+                      <p className="text-[13px] font-medium text-gray-700 mt-0.5">
+                        {[inv.term ? termLabel(inv.term).label : undefined, inv.session]
+                          .filter(Boolean)
+                          .join(" · ") || "—"}
+                      </p>
+                    </div>
+                  )}
+
+                  <div className="grid grid-cols-2 gap-2.5">
+                    <Button
+                      variant="outline"
+                      className="h-[46px] rounded-full px-3"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setViewId(inv.id);
+                      }}
+                    >
+                      <Eye size={16} color="#8C8C8C" />
+                      View
+                    </Button>
+                    {inv.status !== "PAID" ? (
+                      <Button
+                        className="h-[46px] rounded-full px-3"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          reminderMutation.mutate({ invoiceId: inv.id });
+                        }}
+                        disabled={reminderMutation.isPending}
+                      >
+                        <Send2 size={16} color="#FFFFFF" />
+                        Remind
+                      </Button>
+                    ) : (
+                      <Button
+                        variant="outline"
+                        className="h-[46px] rounded-full px-3"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setViewId(inv.id);
+                        }}
+                      >
+                        <Eye size={16} color="#8C8C8C" />
+                        Details
+                      </Button>
+                    )}
+                  </div>
+                </div>
+              }
+            />
+          ))}
+        </div>
+        </>
       )}
 
       <Dialog open={bulkOpen} onOpenChange={setBulkOpen}>

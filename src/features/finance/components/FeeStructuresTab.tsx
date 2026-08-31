@@ -181,7 +181,7 @@ export const FeeStructuresTab = () => {
 
                 <div className="min-w-0">
                   <p className="text-[15px] font-semibold text-gray900 leading-snug">{group.name}</p>
-                  <p className="mt-1 text-xs text-gray-400 truncate">
+                  <p className="mt-1 text-xs text-gray-400 leading-snug break-words">
                     {group.session} · {group.isCompulsory ? "Compulsory" : "Optional"}
                   </p>
                 </div>
@@ -189,7 +189,7 @@ export const FeeStructuresTab = () => {
                 <div className="mt-auto flex items-end justify-between gap-3 border-t border-gray-50 pt-4">
                   <div className="min-w-0">
                     <p className="text-xl font-bold text-gray900">{formatNaira(group.amount)}</p>
-                    <p className="mt-0.5 truncate text-xs text-gray-400">
+                    <p className="mt-0.5 break-words text-xs text-gray-400 leading-snug">
                       {classNames(group.classes)}
                     </p>
                   </div>

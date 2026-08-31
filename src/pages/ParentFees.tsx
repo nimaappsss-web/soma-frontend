@@ -24,7 +24,8 @@ export const ParentFees = () => {
 
   const totalFee = allFees.totalFee;
   const totalPaid = allFees.paid;
-  const totalOutstanding = allFees.outstanding;
+  const totalPending = allFees.pending;
+  const remainingAfterPending = allFees.outstandingNetOfPending;
   const overallProgress = totalFee > 0 ? (totalPaid / totalFee) * 100 : 0;
 
   return (
@@ -57,8 +58,13 @@ export const ParentFees = () => {
                     Total left to pay for {children.length === 1 ? "your child" : `all ${children.length} children`}
                   </p>
                   <p className="text-4xl md:text-5xl font-bold mt-1 tracking-tight">
-                    {formatNaira(totalOutstanding)}
+                    {formatNaira(remainingAfterPending)}
                   </p>
+                  {totalPending > 0 && (
+                    <p className="mt-2 inline-flex items-center rounded-full bg-white/15 px-3 py-1 text-xs font-medium text-white">
+                      {formatNaira(totalPending)} awaiting school confirmation
+                    </p>
+                  )}
                 </div>
                 <button
                   type="button"

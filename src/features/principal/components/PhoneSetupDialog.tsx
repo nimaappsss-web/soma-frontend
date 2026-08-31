@@ -18,7 +18,7 @@ const phoneSchema = z.object({
 type PhoneFormData = z.infer<typeof phoneSchema>;
 
 export const PhoneSetupDialog = () => {
-  const { setTokens, user } = useAuth();
+  const { updateUser } = useAuth();
   const queryClient = useQueryClient();
 
   const {
@@ -41,13 +41,7 @@ export const PhoneSetupDialog = () => {
     mutationFn: (payload) => fetchData("/auth/me", "PATCH", payload),
     onSuccess: (res) => {
       toast.success("Phone number saved!");
-      if (user) {
-        setTokens(
-          localStorage.getItem("soma_access_token") || "",
-          localStorage.getItem("soma_refresh_token") || "",
-          { ...user, ...res.user, needsPhoneSetup: false },
-        );
-      }
+      updateUser({ ...res.user, needsPhoneSetup: false });
       queryClient.invalidateQueries({ queryKey: ["me"] });
     },
     onError: (error) => {

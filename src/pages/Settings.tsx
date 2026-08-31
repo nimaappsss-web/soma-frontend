@@ -121,7 +121,7 @@ export const Settings = () => {
     );
   };
   const { tab } = useParams<{ tab: string }>();
-  const isAdmin = ["principal", "admin"].includes(user?.role?.toLowerCase() ?? "");
+  const isAdmin = ["principal", "school_admin"].includes(user?.role?.toLowerCase() ?? "");
   const sidebarItems = isAdmin
     ? [{ id: "account", label: "Account Settings" }, { id: "school", label: "School" }]
     : [{ id: "account", label: "Account Settings" }];

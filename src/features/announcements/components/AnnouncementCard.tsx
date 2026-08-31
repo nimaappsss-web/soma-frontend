@@ -1,4 +1,5 @@
 import { VolumeHigh, Danger, Warning2, Notification, Clock } from "iconsax-react";
+import type { ReactNode } from "react";
 import { cn } from "@/lib/utils";
 import type { Announcement, AnnouncementPriority } from "../types";
 
@@ -57,9 +58,10 @@ const initials = (name: string) =>
 interface AnnouncementCardProps {
   announcement: Announcement;
   showAudience?: boolean;
+  action?: ReactNode;
 }
 
-export const AnnouncementCard = ({ announcement: a, showAudience = false }: AnnouncementCardProps) => {
+export const AnnouncementCard = ({ announcement: a, showAudience = false, action }: AnnouncementCardProps) => {
   const meta = PRIORITY_META[a.priority] ?? PRIORITY_META.NORMAL;
   const Icon = meta.icon;
 
@@ -72,9 +74,12 @@ export const AnnouncementCard = ({ announcement: a, showAudience = false }: Anno
         <div className="min-w-0 flex-1">
           <div className="flex items-start justify-between gap-2">
             <h3 className="font-semibold text-gray900 leading-snug">{a.title}</h3>
-            <span className={cn("text-[11px] font-medium px-2.5 py-1 rounded-full shrink-0", meta.chip)}>
-              {meta.label}
-            </span>
+            <div className="flex items-center gap-2 shrink-0">
+              <span className={cn("text-[11px] font-medium px-2.5 py-1 rounded-full", meta.chip)}>
+                {meta.label}
+              </span>
+              {action}
+            </div>
           </div>
           <p className="mt-2 text-sm text-gray600 whitespace-pre-wrap leading-relaxed">{a.message}</p>
         </div>

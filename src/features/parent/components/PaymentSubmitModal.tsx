@@ -246,7 +246,7 @@ export const PaymentSubmitModal = ({ open, onOpenChange, childName, invoice }: P
                   autoFocus
                 />
                 <p className="text-xs text-gray-400">
-                  Still to pay: <span className="text-gray900 font-medium">{formatNaira(invoice.outstanding)}</span>
+                  Still to pay: <span className="text-gray900 font-medium">{formatNaira(Math.max(0, invoice.outstanding - sendAmount))}</span>
                 </p>
                 {amountClamped && (
                   <p className="text-xs text-amber-600">

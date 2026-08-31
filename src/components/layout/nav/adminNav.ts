@@ -21,34 +21,36 @@ import type { NavSection } from "../types";
 export const adminNavSections: NavSection[] = [
   {
     items: [
-      { label: "Home", to: "/admin", Icon: Home2, end: true, roles: ["principal", "school_admin", "bursar"] },
-      { label: "Students", to: "/admin/students", Icon: Teacher },
+      { label: "Home", to: "/admin", Icon: Home2, end: true, roles: ["principal", "school_admin"] },
+      { label: "Students", to: "/admin/students", Icon: Teacher, roles: ["principal", "school_admin"] },
       {
         label: "Staff",
         to: "/admin/staff",
         Icon: Briefcase,
         hasCaret: true,
+        roles: ["principal", "school_admin"],
         children: [
           { label: "Teachers", to: "/admin/teachers" },
           { label: "Non-Teachers", to: "/admin/staff" },
         ],
       },
-      { label: "Parents", to: "/admin/parents", Icon: Profile2User },
+      { label: "Parents", to: "/admin/parents", Icon: Profile2User, roles: ["principal", "school_admin"] },
     ],
   },
   {
     divider: true,
     items: [
-      { label: "Classes", to: "/admin/classes", Icon: Teacher },
+      { label: "Classes", to: "/admin/classes", Icon: Teacher, roles: ["principal", "school_admin"] },
       { label: "Promotion", to: "/admin/promotion", Icon: Medal, roles: ["principal", "school_admin"] },
-      { label: "Subjects", to: "/admin/subjects", Icon: Book },
-      { label: "Timetable", to: "/admin/timetable", Icon: CalendarTick },
-      { label: "Attendance", to: "/admin/attendance", Icon: ClipboardTick },
-      { label: "Approvals", to: "/admin/approvals", Icon: ShieldTick },
+      { label: "Subjects", to: "/admin/subjects", Icon: Book, roles: ["principal", "school_admin"] },
+      { label: "Timetable", to: "/admin/timetable", Icon: CalendarTick, roles: ["principal", "school_admin"] },
+      { label: "Attendance", to: "/admin/attendance", Icon: ClipboardTick, roles: ["principal", "school_admin"] },
+      { label: "Approvals", to: "/admin/approvals", Icon: ShieldTick, roles: ["principal", "school_admin"] },
       {
         label: "CA & Exams",
         to: "/admin/examinations",
         Icon: StatusUp,
+        roles: ["principal", "school_admin"],
         children: [{ label: "Configure", to: "/admin/examinations/configure" }],
       },
       {
@@ -56,6 +58,7 @@ export const adminNavSections: NavSection[] = [
         to: "/admin/calendar",
         Icon: Calendar,
         hasCaret: true,
+        roles: ["principal", "school_admin"],
         children: [
           { label: "Events", to: "/admin/calendar/events" },
           { label: "Holidays", to: "/admin/calendar/holidays" },
@@ -81,8 +84,8 @@ export const adminNavSections: NavSection[] = [
           { label: "Pending Verification", to: "/admin/finance/pending" },
         ],
       },
-      { label: "Moments", to: "/admin/moments", Icon: MagicStar },
-      { label: "Reports", to: "/admin/reports", Icon: Chart },
+      { label: "Moments", to: "/admin/moments", Icon: MagicStar, roles: ["principal", "school_admin"] },
+      { label: "Reports", to: "/admin/reports", Icon: Chart, roles: ["principal", "school_admin"] },
     ],
   },
   {

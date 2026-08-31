@@ -14,7 +14,9 @@ export interface ParentTermFees {
   term: string;
   totalFee: number;
   paid: number;
+  pending: number;
   outstanding: number;
+  outstandingNetOfPending: number;
   status: "UNPAID" | "PARTIAL" | "PAID";
   invoices: Invoice[];
   history: Payment[];
@@ -49,7 +51,9 @@ export const useParentFees = (studentId: string) => {
         term,
         totalFee: 0,
         paid: 0,
+        pending: 0,
         outstanding: 0,
+        outstandingNetOfPending: 0,
         status: "UNPAID",
         invoices: [],
         history: [],
@@ -69,11 +73,13 @@ export const useParentFees = (studentId: string) => {
       const entry = ensure(term);
       entry.history.push(pay);
       if (pay.status === "CONFIRMED") entry.paid += pay.amount ?? 0;
+      else if (pay.status === "PENDING") entry.pending += pay.amount ?? 0;
     }
 
     const terms: ParentTermFees[] = [];
     for (const entry of byTerm.values()) {
       entry.outstanding = Math.max(0, entry.totalFee - entry.paid);
+      entry.outstandingNetOfPending = Math.max(0, entry.outstanding - entry.pending);
       if (entry.totalFee > 0 && entry.paid >= entry.totalFee) entry.status = "PAID";
       else if (entry.paid > 0) entry.status = "PARTIAL";
       entry.history.sort((a, b) =>

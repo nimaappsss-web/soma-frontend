@@ -9,7 +9,9 @@ export interface ParentFeesSummary {
   studentId: string;
   totalFee: number;
   paid: number;
+  pending: number;
   outstanding: number;
+  outstandingNetOfPending: number;
   status: "UNPAID" | "PARTIAL" | "PAID";
 }
 
@@ -38,7 +40,9 @@ export const useAllParentFees = () => {
         studentId,
         totalFee: 0,
         paid: 0,
+        pending: 0,
         outstanding: 0,
+        outstandingNetOfPending: 0,
         status: "UNPAID",
       };
       map.set(studentId, entry);
@@ -53,13 +57,15 @@ export const useAllParentFees = () => {
     for (const pay of paymentsQuery.data?.payments ?? []) {
       const entry = ensure(pay.studentId);
       if (pay.status === "CONFIRMED") entry.paid += pay.amount ?? 0;
+      else if (pay.status === "PENDING") entry.pending += pay.amount ?? 0;
     }
 
     const summaries: ParentFeesSummary[] = [];
     for (const entry of map.values()) {
       entry.outstanding = Math.max(0, entry.totalFee - entry.paid);
+      entry.outstandingNetOfPending = Math.max(0, entry.outstanding - entry.pending);
       if (entry.totalFee > 0 && entry.paid >= entry.totalFee) entry.status = "PAID";
-      else if (entry.paid > 0) entry.status = "PARTIAL";
+      else if (entry.paid > 0 || entry.pending > 0) entry.status = "PARTIAL";
       summaries.push(entry);
     }
     return summaries;
@@ -67,13 +73,17 @@ export const useAllParentFees = () => {
 
   const totalFee = byStudent.reduce((s, f) => s + f.totalFee, 0);
   const paid = byStudent.reduce((s, f) => s + f.paid, 0);
+  const pending = byStudent.reduce((s, f) => s + f.pending, 0);
   const outstanding = byStudent.reduce((s, f) => s + f.outstanding, 0);
+  const outstandingNetOfPending = byStudent.reduce((s, f) => s + f.outstandingNetOfPending, 0);
 
   return {
     summaries: byStudent,
     totalFee,
     paid,
+    pending,
     outstanding,
+    outstandingNetOfPending,
     isLoading: invoicesQuery.isLoading || paymentsQuery.isLoading,
     error: invoicesQuery.error ?? paymentsQuery.error,
   };

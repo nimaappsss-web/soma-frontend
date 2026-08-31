@@ -6,6 +6,7 @@ import { cn } from "@/lib/utils";
 import { Button } from "../../../components/ui/button";
 import { MultiSelect } from "../../../components/ui/multi-select";
 import { EmptyState } from "../../../components/ui/EmptyState";
+import { CollapsibleCard } from "../../../components/mobile/CollapsibleCard";
 import { usePayments } from "../api";
 import { formatNaira } from "../utils/currency";
 import { CollectPaymentDialog } from "./CollectPaymentDialog";
@@ -81,7 +82,8 @@ export const PaymentsTab = () => {
           actionIcon={<Add size={15} />}
         />
       ) : (
-        <div className="bg-white rounded-xl border border-gray-100 divide-y divide-gray-50">
+        <>
+        <div className="hidden md:block bg-white rounded-xl border border-gray-100 divide-y divide-gray-50">
           {payments.map((p) => (
             <div key={p.id} className="flex items-center justify-between p-4">
               <div className="flex items-center gap-3 min-w-0">
@@ -114,6 +116,75 @@ export const PaymentsTab = () => {
             </div>
           ))}
         </div>
+
+        <div className="md:hidden space-y-3.5">
+          {payments.map((p) => (
+            <CollapsibleCard
+              key={p.id}
+              collapsed={
+                <div className="flex items-center gap-3 min-w-0">
+                  <div className="w-11 h-11 rounded-full bg-gray-50 ring-1 ring-gray-100 flex items-center justify-center shrink-0">
+                    {p.status === "PENDING" ? (
+                      <Clock size={19} variant="Bold" color="#4285F4" />
+                    ) : (
+                      <CardAdd size={19} variant="Bold" color="#0D0D0D" />
+                    )}
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center justify-between gap-2">
+                      <p className="text-[15px] font-semibold text-gray900 leading-snug truncate">
+                        {p.studentName}
+                      </p>
+                      <span className={cn("shrink-0 text-xs font-medium px-2.5 py-1 rounded-full", statusStyles[p.status])}>
+                        {statusLabel[p.status]}
+                      </span>
+                    </div>
+                    <p className="text-2xl font-bold text-gray900 mt-1">
+                      {formatNaira(p.amount)}
+                    </p>
+                  </div>
+                </div>
+              }
+              expanded={
+                <div className="space-y-3">
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="rounded-lg bg-gray-50 px-3 py-2">
+                      <p className="text-[11px] uppercase tracking-wider text-gray-400">Date</p>
+                      <p className="text-[13px] font-medium text-gray-700 mt-0.5">
+                        {new Date(p.createdAt).toLocaleDateString("en-NG", { day: "numeric", month: "short", year: "numeric" })}
+                      </p>
+                    </div>
+                    <div className="rounded-lg bg-gray-50 px-3 py-2">
+                      <p className="text-[11px] uppercase tracking-wider text-gray-400">Method</p>
+                      <p className="text-[13px] font-medium text-gray-700 mt-0.5">
+                        {methodLabel[p.method]}
+                      </p>
+                    </div>
+                  </div>
+
+                  {p.reference && (
+                    <div className="rounded-lg border border-dashed border-gray-200 px-3 py-2">
+                      <p className="text-[11px] uppercase tracking-wider text-gray-400">Reference</p>
+                      <p className="text-[13px] font-medium text-gray-700 mt-0.5 break-all leading-snug">
+                        {p.reference}
+                      </p>
+                    </div>
+                  )}
+
+                  {p.status === "REJECTED" && p.rejectedReason && (
+                    <div className="rounded-lg bg-red-50 px-3 py-2">
+                      <p className="text-[11px] uppercase tracking-wider text-red-400">Reason not accepted</p>
+                      <p className="text-[13px] font-medium text-red-600 mt-0.5 leading-snug break-words">
+                        {p.rejectedReason}
+                      </p>
+                    </div>
+                  )}
+                </div>
+              }
+            />
+          ))}
+        </div>
+        </>
       )}
 
       <CollectPaymentDialog open={collectOpen} onOpenChange={setCollectOpen} />

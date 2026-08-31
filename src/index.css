@@ -16,6 +16,19 @@
     overscroll-behavior-y: none;
   }
 
+  /* Remove the blue focus ring/border on react-phone-number-input */
+  .PhoneInput {
+    --PhoneInput-color--focus: var(--color-gray500);
+  }
+  .PhoneInputInput {
+    outline: none !important;
+    box-shadow: none !important;
+  }
+  .PhoneInput:focus-within .PhoneInputCountryIcon--border,
+  .PhoneInputCountrySelect:focus + .PhoneInputCountryIcon--border {
+    box-shadow: none !important;
+  }
+
   :root {
     --background: 0 0% 100%;
     --foreground: 222.2 84% 4.9%;

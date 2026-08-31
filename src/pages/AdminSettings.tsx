@@ -61,11 +61,23 @@ const tabs = [
 
 type Tab = (typeof tabs)[number]["id"];
 
+// Roles that may access the school-managing settings tabs. Staff like the
+// bursar are restricted to their own Account settings only.
+const ADMIN_SETTINGS_ROLES = ["principal", "school_admin"];
+
 export const AdminSettings = () => {
+  const { user } = useAuth();
+  const role = user?.role?.toLowerCase() ?? "";
+  const canManageSchool = ADMIN_SETTINGS_ROLES.includes(role);
+
+  const visibleTabs: (typeof tabs)[number][] = canManageSchool
+    ? [...tabs]
+    : [tabs[0]];
+
   const [searchParams, setSearchParams] = useSearchParams();
   const tabParam = searchParams.get("tab");
   const initialTab: Tab =
-    tabParam && tabs.some((t) => t.id === tabParam) ? (tabParam as Tab) : "account";
+    tabParam && visibleTabs.some((t) => t.id === tabParam) ? (tabParam as Tab) : "account";
   const [activeTab, setActiveTab] = useState<Tab>(initialTab);
 
   const selectTab = (tab: Tab) => {
@@ -81,7 +93,7 @@ export const AdminSettings = () => {
       </div>
 
       <div className="mt-5 inline-flex items-center gap-1 rounded-full border border-input bg-card p-1 overflow-x-auto no-scrollbar max-w-full">
-        {tabs.map((tab) => {
+        {visibleTabs.map((tab) => {
           const Icon = tab.icon;
           const active = activeTab === tab.id;
           return (

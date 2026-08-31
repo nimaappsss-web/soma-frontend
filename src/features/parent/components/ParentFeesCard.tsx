@@ -145,7 +145,12 @@ export const ParentFeesCard = ({ child, showDetails: showDetailsProp, onToggleDe
               </div>
               <div>
                 <p className="text-xs text-gray-400">Still to pay</p>
-                <p className="text-2xl font-bold text-gray900 mt-0.5">{formatNaira(active.outstanding)}</p>
+                <p className="text-2xl font-bold text-gray900 mt-0.5">{formatNaira(active.outstandingNetOfPending)}</p>
+                {active.pending > 0 && (
+                  <p className="text-[11px] text-gray400 mt-1">
+                    +{formatNaira(active.pending)} awaiting school confirmation
+                  </p>
+                )}
               </div>
             </div>
 

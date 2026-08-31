@@ -6,13 +6,14 @@ import { formatNaira } from "../../finance/utils/currency";
 
 const PRICE_PER_STUDENT_PER_TERM = 500;
 
+const SUBSCRIPTION_ROLES = ["principal", "school_admin"];
+
 export const SubscriptionCard = () => {
   const { user } = useAuth();
-  const { data: stats } = useDashboardStats();
+  const role = user?.role?.toLowerCase() ?? "";
+  const isAdmin = SUBSCRIPTION_ROLES.includes(role);
+  const { data: stats } = useDashboardStats({ enabled: isAdmin });
 
-  const isAdmin = ["principal", "admin", "school_admin", "bursar"].includes(
-    user?.role?.toLowerCase() ?? "",
-  );
   if (!isAdmin) return null;
 
   const studentCount = stats?.students.total ?? 0;

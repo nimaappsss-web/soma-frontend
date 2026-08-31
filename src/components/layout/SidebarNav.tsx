@@ -23,7 +23,12 @@ export const SidebarNav = ({
   onNavigate,
   disabled,
   autoExpandActive,
-}: SidebarNavProps) => (
+}: SidebarNavProps) => {
+  const visibleSections: NavSection[] = sections
+    .map((section) => ({ ...section, items: section.items ?? [] }))
+    .filter((section) => section.items.length > 0);
+
+  return (
   <nav
     className={cn(
       "flex-1 py-4 space-y-0.5 overflow-y-auto",
@@ -31,7 +36,7 @@ export const SidebarNav = ({
       disabled && "pointer-events-none opacity-40",
     )}
   >
-    {sections.map((section, idx) => (
+    {visibleSections.map((section, idx) => (
       <div key={idx} className="space-y-0.5">
         {section.divider && idx > 0 && <div className="border-t border-gray100 my-2" />}
         {section.items.map((item) => {
@@ -138,4 +143,5 @@ export const SidebarNav = ({
       </div>
     ))}
   </nav>
-);
+  );
+};

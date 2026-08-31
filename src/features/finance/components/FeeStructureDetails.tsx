@@ -89,7 +89,7 @@ export const FeeStructureDetails = () => {
           </div>
           <div className="min-w-0 flex-1">
             <h1 className="text-lg font-semibold text-gray-900">{group.name}</h1>
-            <p className="mt-0.5 truncate text-sm text-gray-400">
+            <p className="mt-0.5 break-words text-sm text-gray-400 leading-snug">
               {termLabel(group.term).label} · {group.session}
             </p>
           </div>
@@ -160,7 +160,7 @@ export const FeeStructureDetails = () => {
                   <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-gray100 text-gray500">
                     <Building size={16} color="#8C8C8C" />
                   </div>
-                  <p className="truncate text-sm font-medium text-gray-900">{classIdToName.get(classId) ?? "Unknown class"}</p>
+                  <p className="break-words text-sm font-medium text-gray-900 leading-snug">{classIdToName.get(classId) ?? "Unknown class"}</p>
                 </div>
                 {cls?.schoolType && (
                   <span className="shrink-0 inline-flex items-center gap-1 rounded-full bg-gray50 px-2.5 py-1 text-xs text-gray500">

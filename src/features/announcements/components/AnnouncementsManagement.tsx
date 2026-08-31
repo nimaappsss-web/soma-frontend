@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Add, Speaker } from "iconsax-react";
+import { Add, Speaker, Trash } from "iconsax-react";
 
 import { Input } from "../../../components/ui/input";
 import { Button } from "../../../components/ui/button";
@@ -10,6 +10,7 @@ import { EmptyState } from "../../../components/ui/EmptyState";
 import { HelpHint } from "../../../components/ui/HelpHint";
 import { SomaLoader } from "../../../components/ui/SomaLoader";
 import { useAnnouncements, useCreateAnnouncement, useDeleteAnnouncement } from "../api";
+import { AnnouncementCard } from "./AnnouncementCard";
 import type { CreateAnnouncementPayload, AnnouncementAudience, AnnouncementPriority } from "../types";
 
 const audienceOptions = [
@@ -138,23 +139,22 @@ export const AnnouncementsManagement = () => {
       ) : announcements.length > 0 ? (
         <div className="space-y-3">
           {announcements.map((a) => (
-            <div key={a.id} className="bg-white rounded-xl border border-gray-100 p-5 flex items-start justify-between gap-4">
-              <div className="min-w-0 flex-1">
-                <div className="flex items-center gap-2 mb-1">
-                  <span className="text-sm font-semibold text-gray-900">{a.title}</span>
-                  <span className={`text-[11px] font-medium px-2 py-0.5 rounded-full ${a.priority === "URGENT" ? "bg-red-100 text-red-700" : a.priority === "IMPORTANT" ? "bg-amber-100 text-amber-700" : "bg-gray-100 text-gray-600"}`}>
-                    {a.priority}
-                  </span>
-                </div>
-                <p className="text-sm text-gray-600 whitespace-pre-wrap">{a.message}</p>
-                <div className="flex items-center gap-3 mt-2 text-xs text-gray-400">
-                  <span>{a.createdBy.name}</span>
-                  <span>{new Date(a.createdAt).toLocaleDateString()}</span>
-                  <span>{audienceOptions.find((o) => o.value === a.audience)?.label ?? a.audience}</span>
-                </div>
-              </div>
-              <Button onClick={() => deleteMutation.mutate(a.id)} variant="ghost" size="sm">Delete</Button>
-            </div>
+            <AnnouncementCard
+              key={a.id}
+              announcement={a}
+              showAudience
+              action={
+                <Button
+                  onClick={() => deleteMutation.mutate(a.id)}
+                  variant="ghost"
+                  size="sm"
+                  className="rounded-full px-2.5 text-red-500 hover:text-red-600 hover:bg-red-50"
+                  aria-label={`Delete ${a.title}`}
+                >
+                  <Trash size={14} color="#CD432F" />
+                </Button>
+              }
+            />
           ))}
         </div>
       ) : (
