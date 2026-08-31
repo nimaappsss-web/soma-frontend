@@ -1,40 +1,19 @@
-import { useMemo } from "react";
 import { Link, useParams } from "react-router";
-import { ArrowLeft2, ArrowRight, Book1, ClipboardTick, DocumentText } from "iconsax-react";
+import { ArrowLeft2, Book1, ClipboardTick, DocumentText } from "iconsax-react";
 
-import { useAuth } from "../../contexts/AuthContext";
 import { useTeacherProfile } from "../../features/teacher/api";
-import { useLessonNotes } from "../../features/lesson-notes/api";
-import { useCurriculumTopics } from "../../features/lesson-notes/api";
 import { buttonVariants } from "../../components/ui/button";
 import { SomaLoader } from "../../components/ui/SomaLoader";
+import { ComingSoon } from "../../components/ui/ComingSoon";
 import { cn } from "../../lib/utils";
 
 export const SubjectDetail = () => {
   const { subjectId } = useParams();
-  const { user } = useAuth();
   const { assignments, isLoading } = useTeacherProfile();
-  const notes = useLessonNotes(user?.id ?? "");
 
   const assignment = assignments.find((a) => a.subject.id === subjectId);
   const subject = assignment?.subject;
   const firstClass = assignment?.classes[0];
-
-  const { data: topics = [] } = useCurriculumTopics(
-    firstClass?.name ?? "",
-    subject?.name ?? "",
-  );
-
-  const subjectNotes = useMemo(() => {
-    if (!assignment) return [];
-    return notes
-      .filter(
-        (n) =>
-          n.subjectName.toLowerCase() === assignment.subject.name.toLowerCase(),
-      )
-      .sort((a, b) => b.updatedAt - a.updatedAt)
-      .slice(0, 3);
-  }, [notes, assignment]);
 
   if (isLoading) {
     return (
@@ -106,53 +85,25 @@ export const SubjectDetail = () => {
         </Link>
       </div>
 
-      <div className="mt-6 rounded-xl border border-gray100 bg-white p-5">
-        <div className="flex items-center justify-between gap-3">
-          <h3 className="text-base font-semibold text-gray900">Lesson Notes</h3>
-          <Link
-            to="/teach/lesson-notes"
-            className="inline-flex items-center gap-1 text-xs font-medium text-gray500 hover:text-gray900"
-          >
-            View all <ArrowRight size={14} color="#8C8C8C" />
-          </Link>
+      <div className="mt-6 grid grid-cols-1 gap-5">
+        <div>
+          <h3 className="text-base font-semibold text-gray900 mb-3">Lesson Notes</h3>
+          <ComingSoon
+            compact
+            title="Coming soon"
+            description="Lesson notes for this subject will be available here."
+          />
         </div>
-        {subjectNotes.length > 0 ? (
-          <div className="mt-4 divide-y divide-gray50">
-            {subjectNotes.map((n) => (
-              <div key={n.id} className="py-2.5">
-                <p className="truncate text-sm font-medium text-gray900">{n.topic || "Untitled"}</p>
-                <p className="text-xs text-gray500">
-                  {n.className} · Week {n.week}
-                </p>
-              </div>
-            ))}
-          </div>
-        ) : (
-          <p className="mt-4 text-sm text-gray500">No lesson notes for this subject yet.</p>
-        )}
-      </div>
 
-      {firstClass && (
-        <div className="mt-5 rounded-xl border border-gray100 bg-white p-5">
-          <h3 className="text-base font-semibold text-gray900">Curriculum Topics</h3>
-          {topics.length > 0 ? (
-            <div className="mt-4 flex flex-wrap gap-2">
-              {topics.map((t, i) => (
-                <span
-                  key={`${t.term}-${t.week}-${i}`}
-                  className="rounded-full bg-offWhite px-3 py-1.5 text-xs text-gray700"
-                >
-                  Week {t.week} — {t.topic}
-                </span>
-              ))}
-            </div>
-          ) : (
-            <p className="mt-4 text-sm text-gray500">
-              Topics will appear here once the curriculum is published for {firstClass.name}.
-            </p>
-          )}
+        <div>
+          <h3 className="text-base font-semibold text-gray900 mb-3">Curriculum Topics</h3>
+          <ComingSoon
+            compact
+            title="Coming soon"
+            description="Curriculum topics for this subject will be published here."
+          />
         </div>
-      )}
+      </div>
     </div>
   );
 };
