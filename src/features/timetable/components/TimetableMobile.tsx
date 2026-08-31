@@ -2,7 +2,7 @@ import { useMemo } from "react";
 import { cn } from "../../../lib/utils";
 import { DAYS, type TimetableBreak } from "../types";
 import { gridRowsFromTimes, overlaps } from "../utils/allocate";
-import { buildSubjectColorMap, solidSwatch } from "../utils/subjectColors";
+import { buildSubjectColorMap } from "../utils/subjectColors";
 import { buildClassColorMap } from "../utils/classColors";
 import { type GridEntryData } from "./TimetableGrid";
 
@@ -98,20 +98,14 @@ export const TimetableMobile = ({
                       onClick={() => onCellClick?.(day, t.period)}
                       className={cn(
                         "flex w-full items-center justify-between gap-3 rounded-lg px-3 py-2 text-left",
-                        "bg-gray50",
-                        onCellClick && "active:bg-accent",
+                        colorFor(slot),
+                        onCellClick && "cursor-pointer active:brightness-95",
                         clash && "ring-2 ring-red400",
                       )}
                     >
                       <div className="flex min-w-0 items-center gap-2">
-                        <span
-                          className={cn(
-                            "h-2 w-2 shrink-0 rounded-full",
-                            solidSwatch(colorFor(slot)),
-                          )}
-                        />
                         <div className="min-w-0">
-                          <p className="truncate text-[13px] font-semibold text-gray900">
+                          <p className="truncate text-[13px] font-semibold">
                             {slot.subjectName || "Subject"}
                           </p>
                           {showClass && slot.className && (
@@ -120,12 +114,12 @@ export const TimetableMobile = ({
                             </span>
                           )}
                           {slot.teacherName && (
-                            <p className="truncate text-[11px] text-placeholder">{slot.teacherName}</p>
+                            <p className="truncate text-[11px] opacity-80">{slot.teacherName}</p>
                           )}
                         </div>
                       </div>
                       <div className="shrink-0 text-right">
-                        <span className="text-[11px] text-placeholder">
+                        <span className="text-[11px] opacity-80">
                           {slot.startTime}–{slot.endTime}
                         </span>
                         {clash && (
