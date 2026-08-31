@@ -22,7 +22,11 @@ export const TeacherLayout = () => {
   const navItems: NavItem[] = useMemo(
     () =>
       teacherNavItems
-        .filter((item) => isFormTeacher || item.to !== "/teach/attendance")
+        .filter(
+          (item) =>
+            isFormTeacher ||
+            (item.to !== "/teach/attendance" && item.to !== "/teach/students"),
+        )
         .map((item) => {
           if (!item.children) return item;
           if (isFormTeacher) return item;
