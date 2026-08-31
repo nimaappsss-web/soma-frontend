@@ -34,7 +34,7 @@ export const TeacherAnnouncements = () => {
           <SomaLoader label="Loading announcements" className="h-8 w-8" />
         </div>
       ) : announcements.length > 0 ? (
-        <div className="max-w-2xl space-y-4">
+        <div className="space-y-4">
           {announcements.map((a) => (
             <AnnouncementCard key={a.id} announcement={a} showAudience />
           ))}
