@@ -37,6 +37,8 @@ interface TimetableGridProps {
   colorBy?: "subject" | "class";
   /** Set of `day:startTime` keys for the currently in-progress lesson(s). */
   nowKeys?: Set<string>;
+  /** Today's weekday name (e.g. "MONDAY") to highlight today's column. */
+  today?: string;
   emptyHint?: string;
 }
 
@@ -58,6 +60,7 @@ interface GridTableProps {
   showTeacher: boolean;
   showClass: boolean;
   nowKeys?: Set<string>;
+  today?: string;
   emptyHint?: string;
 }
 
@@ -72,6 +75,7 @@ const GridTable = ({
   showTeacher,
   showClass,
   nowKeys,
+  today,
   emptyHint,
 }: GridTableProps) => {
   const periodTimes = useMemo(
@@ -108,17 +112,26 @@ const GridTable = ({
           <th className="sticky left-0 z-10 bg-background px-3 py-3 text-left text-xs font-medium text-placeholder">
             Period
           </th>
-          {days.map((day, i) => (
-            <th
-              key={day}
-              className={cn(
-                "px-3 py-3 text-center text-xs font-medium uppercase tracking-wide text-placeholder",
-                i % 2 === 1 && "bg-accent/40",
-              )}
-            >
-              {day}
-            </th>
-          ))}
+          {days.map((day, i) => {
+            const isToday = today === day;
+            return (
+              <th
+                key={day}
+                className={cn(
+                  "px-3 py-3 text-center text-xs font-medium uppercase tracking-wide text-placeholder",
+                  i % 2 === 1 && "bg-accent/40",
+                  isToday && "bg-gray900 text-white",
+                )}
+              >
+                {day}
+                {isToday && (
+                  <span className="ml-1.5 inline-flex items-center gap-1 rounded-full bg-green500 px-1.5 py-0.5 text-[9px] font-bold normal-case tracking-wide text-white">
+                    Today
+                  </span>
+                )}
+              </th>
+            );
+          })}
         </tr>
       </thead>
       <tbody>
@@ -175,13 +188,19 @@ const GridTable = ({
                         disabled={!onCellClick}
                         onClick={() => onCellClick?.(day, t.period)}
                         className={cn(
-                          "flex h-full w-full min-h-[44px] cursor-default flex-col justify-center rounded-lg px-2 py-1 text-left transition-colors",
+                          "relative flex h-full w-full min-h-[44px] cursor-default flex-col justify-center rounded-lg px-2 py-1 text-left transition-colors",
                           colorFor(slot),
                           onCellClick && "cursor-pointer hover:brightness-95",
                           busyCell && "ring-2 ring-red400",
                           nowKeys?.has(`${day}:${slot.startTime}`) && "current-pulse",
                         )}
                       >
+                        {nowKeys?.has(`${day}:${slot.startTime}`) && (
+                          <span className="absolute right-1.5 top-1.5 inline-flex items-center gap-1 rounded-full bg-green500 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wide text-white">
+                            <span className="h-1 w-1 rounded-full bg-white" />
+                            Now
+                          </span>
+                        )}
                         <span className="text-[13px] font-semibold leading-tight">
                           {slot.subjectName || "Subject"}
                         </span>
@@ -262,6 +281,7 @@ export const TimetableGrid = ({
   showClass = false,
   colorBy = "subject",
   nowKeys,
+  today,
   emptyHint,
 }: TimetableGridProps) => {
   const groups = useMemo(() => groupDaysBySignature(entries, breaks), [entries, breaks]);
@@ -309,6 +329,7 @@ export const TimetableGrid = ({
               showTeacher={showTeacher}
               showClass={showClass}
               nowKeys={nowKeys}
+              today={today}
               emptyHint={emptyHint}
             />
           </div>

@@ -2,13 +2,12 @@ import { useEffect, useMemo, useState } from "react";
 import { CalendarTick } from "iconsax-react";
 
 import { useAuth } from "../../contexts/AuthContext";
-import { useTeacherProfile } from "../../features/teacher/api";
 import { useTeacherTimetableCache } from "../../features/timetable/api";
 import { TimetableGrid } from "../../features/timetable/components/TimetableGrid";
 import { buildClassColorMap } from "../../features/timetable/utils/classColors";
 import { TimetableMobile } from "../../features/timetable/components/TimetableMobile";
 import { TeacherCalendar } from "../../features/timetable/components/TeacherCalendar";
-import { currentLessonKeys } from "../../features/timetable/utils/currentLesson";
+import { currentLessonKeys, todayName } from "../../features/timetable/utils/currentLesson";
 import { distinctClasses, lessonsForDate, lessonsPerClass } from "../../features/timetable/utils/timetableDates";
 import { EmptyState } from "../../components/ui/EmptyState";
 import { SomaLoader } from "../../components/ui/SomaLoader";
@@ -21,7 +20,6 @@ export const TeacherTimetable = () => {
   const { user } = useAuth();
   const teacherId = user?.id ?? "";
   const { entries, isLoading, error, refresh } = useTeacherTimetableCache(teacherId);
-  const { assignments } = useTeacherProfile();
 
   const [filterClass, setFilterClass] = useState<string>("all");
   const [view, setView] = useState<ViewMode>("week");
@@ -35,6 +33,7 @@ export const TeacherTimetable = () => {
   }, []);
 
   const nowKeys = useMemo(() => currentLessonKeys(entries, now), [entries, now]);
+  const today = useMemo(() => todayName(now), [now]);
 
   // A teacher's own name is redundant inside the grid cells.
   const selfEntries = useMemo(() => entries.map((e) => ({ ...e, teacherName: "" })), [entries]);
@@ -52,8 +51,6 @@ export const TeacherTimetable = () => {
     () => (selectedDate ? lessonsForDate(selfEntries, selectedDate) : []),
     [selectedDate, selfEntries],
   );
-
-  const classList = classes.length > 0 ? classes : assignments.flatMap((a) => a.classes.map((c) => c.name));
 
   return (
     <div className="mx-auto max-w-5xl px-4 py-6 md:px-8">
@@ -124,6 +121,9 @@ export const TeacherTimetable = () => {
                     )}
                   />
                   {name}
+                  <span className={filterClass === name ? "text-white/60" : "text-placeholder"}>
+                    · {counts.get(name) ?? 0}/wk
+                  </span>
                 </button>
               ))}
             </div>
@@ -145,43 +145,10 @@ export const TeacherTimetable = () => {
             </div>
           </div>
 
-          {/* Classes you teach strip */}
-          {classList.length > 0 && (
-            <div className="rounded-xl border border-input bg-card p-4">
-              <p className="text-sm font-semibold text-gray900">Classes you teach</p>
-              <div className="mt-3 flex flex-wrap gap-2">
-                {classList.map((name) => (
-                  <button
-                    key={name}
-                    type="button"
-                    onClick={() => setFilterClass(name === filterClass ? "all" : name)}
-                    className={cn(
-                      "inline-flex items-center gap-2 rounded-xl border px-3 py-1.5 text-xs transition-colors",
-                      filterClass === name
-                        ? "border-gray900 bg-gray900 text-white"
-                        : "border-gray100 bg-offWhite text-gray900 hover:bg-gray50",
-                    )}
-                  >
-                    <span
-                      className={cn(
-                        "h-2 w-2 shrink-0 rounded-full",
-                        (classColorMap.get(name) ?? "").split(" ")[1]?.replace("text-", "bg-") ?? "bg-gray500",
-                      )}
-                    />
-                    <span className="font-medium">{name}</span>
-                    <span className={filterClass === name ? "text-white/60" : "text-placeholder"}>
-                      · {counts.get(name) ?? 0}/wk
-                    </span>
-                  </button>
-                ))}
-              </div>
-            </div>
-          )}
-
           {view === "week" ? (
             <>
               <div className="hidden md:block">
-                <TimetableGrid periodsPerDay={9} entries={filtered} showTeacher={false} showClass colorBy="class" nowKeys={nowKeys} />
+                <TimetableGrid periodsPerDay={9} entries={filtered} showTeacher={false} showClass colorBy="class" nowKeys={nowKeys} today={today} />
               </div>
               <div className="md:hidden">
                 <TimetableMobile periodsPerDay={9} entries={filtered} showClass colorBy="class" nowKeys={nowKeys} />

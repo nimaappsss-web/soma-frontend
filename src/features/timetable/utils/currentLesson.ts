@@ -15,16 +15,19 @@ const toMinutes = (time: string): number => {
 
 const keyOf = (day: string, startTime: string) => `${day}:${startTime}`;
 
+/** The weekday name for a given date (or undefined on weekends). */
+export const todayName = (now: Date = new Date()): string | undefined =>
+  DAY_NAMES[now.getDay()];
+
 /**
- * Returns a set of `day:startTime` keys for the lesson(s) currently in progress
- * (today, and now falls within start–end). Used to pulse "what you should be
- * doing right now" on the teacher timetable. Falls back safely on weekends.
+ * Returns a set of `day:startTime` keys for today's lessons whose time window
+ * the current time falls inside — i.e. the lesson(s) happening right now.
  */
 export const currentLessonKeys = (
   entries: GridEntryData[],
   now: Date = new Date(),
 ): Set<string> => {
-  const today = DAY_NAMES[now.getDay()];
+  const today = todayName(now);
   if (!today) return new Set();
 
   const minutes = toMinutes(now.toTimeString().slice(0, 5));

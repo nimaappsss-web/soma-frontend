@@ -123,9 +123,16 @@ export const TimetableMobile = ({
                         </div>
                       </div>
                       <div className="shrink-0 text-right">
-                        <span className="text-[11px] opacity-80">
-                          {slot.startTime}–{slot.endTime}
-                        </span>
+                        {nowKeys?.has(`${day}:${slot.startTime}`) ? (
+                          <span className="inline-flex items-center gap-1 rounded-full bg-green500 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-white">
+                            <span className="h-1.5 w-1.5 rounded-full bg-white animate-pulse" />
+                            Now
+                          </span>
+                        ) : (
+                          <span className="text-[11px] opacity-80">
+                            {slot.startTime}–{slot.endTime}
+                          </span>
+                        )}
                         {clash && (
                           <p className="text-[10px] font-semibold text-red500">Clash</p>
                         )}
