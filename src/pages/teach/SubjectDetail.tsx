@@ -4,7 +4,6 @@ import { ArrowLeft2, Book1, ClipboardTick, DocumentText } from "iconsax-react";
 import { useTeacherProfile } from "../../features/teacher/api";
 import { buttonVariants } from "../../components/ui/button";
 import { SomaLoader } from "../../components/ui/SomaLoader";
-import { ComingSoon } from "../../components/ui/ComingSoon";
 import { cn } from "../../lib/utils";
 
 export const SubjectDetail = () => {
@@ -83,26 +82,6 @@ export const SubjectDetail = () => {
         <Link to="/teach/ca-and-exams/active" className={cn(buttonVariants({ variant: "outline" }))}>
           <DocumentText size={18} color="#0D0D0D" /> Active Assessments
         </Link>
-      </div>
-
-      <div className="mt-6 grid grid-cols-1 gap-5">
-        <div>
-          <h3 className="text-base font-semibold text-gray900 mb-3">Lesson Notes</h3>
-          <ComingSoon
-            compact
-            title="Coming soon"
-            description="Lesson notes for this subject will be available here."
-          />
-        </div>
-
-        <div>
-          <h3 className="text-base font-semibold text-gray900 mb-3">Curriculum Topics</h3>
-          <ComingSoon
-            compact
-            title="Coming soon"
-            description="Curriculum topics for this subject will be published here."
-          />
-        </div>
       </div>
     </div>
   );
