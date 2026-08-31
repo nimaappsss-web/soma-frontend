@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Add, Speaker, Trash } from "iconsax-react";
 
+import { useAuth } from "../../../contexts/AuthContext";
 import { Input } from "../../../components/ui/input";
 import { Button } from "../../../components/ui/button";
 import { SelectDropdown } from "../../../components/ui/select-dropdown";
@@ -27,9 +28,13 @@ const priorityOptions = [
   { value: "URGENT", label: "Urgent" },
 ] as const;
 
+const CAN_MANAGE_ANNOUNCEMENTS = ["principal", "school_admin"];
+
 const emptyPayload: CreateAnnouncementPayload = { title: "", message: "", audience: "" as AnnouncementAudience, priority: "NORMAL" };
 
 export const AnnouncementsManagement = () => {
+  const { user } = useAuth();
+  const canManage = CAN_MANAGE_ANNOUNCEMENTS.includes(user?.role?.toLowerCase() ?? "");
   const { data, isLoading } = useAnnouncements();
   const createMutation = useCreateAnnouncement();
   const deleteMutation = useDeleteAnnouncement();
@@ -69,9 +74,11 @@ export const AnnouncementsManagement = () => {
           </div>
           <p className="text-sm text-gray-400 mt-1">Broadcast messages to staff, parents, and everyone at your school</p>
         </div>
-        <Button onClick={() => setDialogOpen(true)} variant="outline" size="sm">
-          New Announcement
-        </Button>
+        {canManage && (
+          <Button onClick={() => setDialogOpen(true)} variant="outline" size="sm">
+            New Announcement
+          </Button>
+        )}
       </div>
 
       <Dialog
@@ -144,15 +151,17 @@ export const AnnouncementsManagement = () => {
               announcement={a}
               showAudience
               action={
-                <Button
-                  onClick={() => deleteMutation.mutate(a.id)}
-                  variant="ghost"
-                  size="sm"
-                  className="rounded-full px-2.5 text-red-500 hover:text-red-600 hover:bg-red-50"
-                  aria-label={`Delete ${a.title}`}
-                >
-                  <Trash size={14} color="#CD432F" />
-                </Button>
+                canManage ? (
+                  <Button
+                    onClick={() => deleteMutation.mutate(a.id)}
+                    variant="ghost"
+                    size="sm"
+                    className="rounded-full px-2.5 text-red-500 hover:text-red-600 hover:bg-red-50"
+                    aria-label={`Delete ${a.title}`}
+                  >
+                    <Trash size={14} color="#CD432F" />
+                  </Button>
+                ) : undefined
               }
             />
           ))}
@@ -162,9 +171,9 @@ export const AnnouncementsManagement = () => {
           icon={<Speaker size={30} variant="Bold" color="#0D0D0D" />}
           title="No announcements yet"
           description="Share updates with staff and parents. Create your first announcement to get started."
-          actionLabel="New Announcement"
-          actionIcon={<Add size={16} color="#FFFFFF" variant="Linear" />}
-          onAction={() => setDialogOpen(true)}
+          actionLabel={canManage ? "New Announcement" : undefined}
+          actionIcon={canManage ? <Add size={16} color="#FFFFFF" variant="Linear" /> : undefined}
+          onAction={canManage ? () => setDialogOpen(true) : undefined}
         />
       )}
     </div>

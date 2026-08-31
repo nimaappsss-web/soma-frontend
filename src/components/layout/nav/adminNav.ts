@@ -91,7 +91,7 @@ export const adminNavSections: NavSection[] = [
   {
     divider: true,
     items: [
-      { label: "Announcements", to: "/admin/announcements", Icon: VolumeHigh, roles: ["principal", "school_admin", "bursar"] },
+      { label: "Announcements", to: "/admin/announcements", Icon: VolumeHigh, roles: ["principal", "school_admin"] },
       { label: "Settings", to: "/admin/settings", Icon: Setting2, roles: ["principal", "school_admin", "bursar"] },
     ],
   },
