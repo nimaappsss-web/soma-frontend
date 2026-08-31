@@ -2,15 +2,20 @@ import { NavLink, Outlet, Navigate } from "react-router";
 import { ClipboardTick, Activity, VolumeUp, People } from "iconsax-react";
 import { cn } from "../../../lib/utils";
 import { HelpHint } from "../../../components/ui/HelpHint";
+import { useTeacherProfile } from "../../teacher/api";
 
 const tabs = [
-  { label: "Mark Scores", to: "/teach/ca-and-exams/mark-scores", Icon: ClipboardTick },
-  { label: "My Class", to: "/teach/ca-and-exams/my-class", Icon: People },
-  { label: "Broadcast", to: "/teach/ca-and-exams/broadcast", Icon: VolumeUp },
-  { label: "Active", to: "/teach/ca-and-exams/active", Icon: Activity },
+  { label: "Mark Scores", to: "/teach/ca-and-exams/mark-scores", Icon: ClipboardTick, classTeacherOnly: false },
+  { label: "My Class", to: "/teach/ca-and-exams/my-class", Icon: People, classTeacherOnly: true },
+  { label: "Broadcast", to: "/teach/ca-and-exams/broadcast", Icon: VolumeUp, classTeacherOnly: true },
+  { label: "Active", to: "/teach/ca-and-exams/active", Icon: Activity, classTeacherOnly: false },
 ];
 
 export const TeacherExaminationsLayout = () => {
+  const { formClassId } = useTeacherProfile();
+  const isClassTeacher = !!formClassId;
+  const visibleTabs = tabs.filter((tab) => !tab.classTeacherOnly || isClassTeacher);
+
   return (
     <div className="flex flex-col min-h-full">
       <div className="p-4 md:p-6 pb-0 w-full">
@@ -32,7 +37,7 @@ export const TeacherExaminationsLayout = () => {
         </p>
 
         <div className="flex w-full md:w-fit gap-1 mb-4 rounded-full bg-gray100 p-1 overflow-x-auto no-scrollbar">
-          {tabs.map((tab) => {
+          {visibleTabs.map((tab) => {
             const Icon = tab.Icon;
             return (
               <NavLink
