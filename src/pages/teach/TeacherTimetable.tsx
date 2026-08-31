@@ -114,12 +114,14 @@ export const TeacherTimetable = () => {
                       : "border-input text-gray700 hover:bg-gray50",
                   )}
                 >
-                  <span
-                    className={cn(
-                      "h-2 w-2 rounded-full",
-                      (classColorMap.get(name) ?? "").split(" ")[1]?.replace("text-", "bg-") ?? "bg-gray500",
-                    )}
-                  />
+                  {filterClass === name && (
+                    <span
+                      className={cn(
+                        "h-2 w-2 rounded-full",
+                        (classColorMap.get(name) ?? "").split(" ")[1]?.replace("text-", "bg-") ?? "bg-gray500",
+                      )}
+                    />
+                  )}
                   {name}
                   <span className={filterClass === name ? "text-white/60" : "text-placeholder"}>
                     · {counts.get(name) ?? 0}/wk
