@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { CalendarTick } from "iconsax-react";
 
 import { useAuth } from "../../contexts/AuthContext";
@@ -8,6 +8,7 @@ import { TimetableGrid } from "../../features/timetable/components/TimetableGrid
 import { buildClassColorMap } from "../../features/timetable/utils/classColors";
 import { TimetableMobile } from "../../features/timetable/components/TimetableMobile";
 import { TeacherCalendar } from "../../features/timetable/components/TeacherCalendar";
+import { currentLessonKeys } from "../../features/timetable/utils/currentLesson";
 import { distinctClasses, lessonsForDate, lessonsPerClass } from "../../features/timetable/utils/timetableDates";
 import { EmptyState } from "../../components/ui/EmptyState";
 import { SomaLoader } from "../../components/ui/SomaLoader";
@@ -25,6 +26,15 @@ export const TeacherTimetable = () => {
   const [filterClass, setFilterClass] = useState<string>("all");
   const [view, setView] = useState<ViewMode>("week");
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
+  const [now, setNow] = useState(() => new Date());
+
+  // Keep the "current lesson" in sync with the clock while the page is open.
+  useEffect(() => {
+    const id = setInterval(() => setNow(new Date()), 60_000);
+    return () => clearInterval(id);
+  }, []);
+
+  const nowKeys = useMemo(() => currentLessonKeys(entries, now), [entries, now]);
 
   // A teacher's own name is redundant inside the grid cells.
   const selfEntries = useMemo(() => entries.map((e) => ({ ...e, teacherName: "" })), [entries]);
@@ -171,10 +181,10 @@ export const TeacherTimetable = () => {
           {view === "week" ? (
             <>
               <div className="hidden md:block">
-                <TimetableGrid periodsPerDay={9} entries={filtered} showTeacher={false} showClass colorBy="class" />
+                <TimetableGrid periodsPerDay={9} entries={filtered} showTeacher={false} showClass colorBy="class" nowKeys={nowKeys} />
               </div>
               <div className="md:hidden">
-                <TimetableMobile periodsPerDay={9} entries={filtered} showClass colorBy="class" />
+                <TimetableMobile periodsPerDay={9} entries={filtered} showClass colorBy="class" nowKeys={nowKeys} />
               </div>
             </>
           ) : (

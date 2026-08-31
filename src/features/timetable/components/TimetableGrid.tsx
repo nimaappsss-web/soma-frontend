@@ -35,6 +35,8 @@ interface TimetableGridProps {
   showClass?: boolean;
   /** Color cells by subject (default) or by class (teacher view). */
   colorBy?: "subject" | "class";
+  /** Set of `day:startTime` keys for the currently in-progress lesson(s). */
+  nowKeys?: Set<string>;
   emptyHint?: string;
 }
 
@@ -55,6 +57,7 @@ interface GridTableProps {
   onCellClick?: (day: string, period: number) => void;
   showTeacher: boolean;
   showClass: boolean;
+  nowKeys?: Set<string>;
   emptyHint?: string;
 }
 
@@ -68,6 +71,7 @@ const GridTable = ({
   onCellClick,
   showTeacher,
   showClass,
+  nowKeys,
   emptyHint,
 }: GridTableProps) => {
   const periodTimes = useMemo(
@@ -175,6 +179,7 @@ const GridTable = ({
                           colorFor(slot),
                           onCellClick && "cursor-pointer hover:brightness-95",
                           busyCell && "ring-2 ring-red400",
+                          nowKeys?.has(`${day}:${slot.startTime}`) && "current-pulse",
                         )}
                       >
                         <span className="text-[13px] font-semibold leading-tight">
@@ -256,6 +261,7 @@ export const TimetableGrid = ({
   showTeacher = true,
   showClass = false,
   colorBy = "subject",
+  nowKeys,
   emptyHint,
 }: TimetableGridProps) => {
   const groups = useMemo(() => groupDaysBySignature(entries, breaks), [entries, breaks]);
@@ -302,6 +308,7 @@ export const TimetableGrid = ({
               onCellClick={onCellClick}
               showTeacher={showTeacher}
               showClass={showClass}
+              nowKeys={nowKeys}
               emptyHint={emptyHint}
             />
           </div>

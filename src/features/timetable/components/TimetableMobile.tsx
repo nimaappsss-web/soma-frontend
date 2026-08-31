@@ -15,6 +15,8 @@ interface TimetableMobileProps {
   showClass?: boolean;
   /** Color entries by subject (default) or by class (teacher view). */
   colorBy?: "subject" | "class";
+  /** Set of `day:startTime` keys for the currently in-progress lesson(s). */
+  nowKeys?: Set<string>;
 }
 
 export const TimetableMobile = ({
@@ -25,6 +27,7 @@ export const TimetableMobile = ({
   onCellClick,
   showClass = false,
   colorBy = "subject",
+  nowKeys,
 }: TimetableMobileProps) => {
   const periodTimes = useMemo(
     () => gridRowsFromTimes(entries, breaks, periodsPerDay),
@@ -101,6 +104,7 @@ export const TimetableMobile = ({
                         colorFor(slot),
                         onCellClick && "cursor-pointer active:brightness-95",
                         clash && "ring-2 ring-red400",
+                        nowKeys?.has(`${day}:${slot.startTime}`) && "current-pulse",
                       )}
                     >
                       <div className="flex min-w-0 items-center gap-2">
