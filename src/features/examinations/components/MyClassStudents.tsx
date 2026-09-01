@@ -6,7 +6,6 @@ import { termLabel } from "../../calendar/utils/term";
 import { useStudents } from "../../students/api";
 import { Avatar } from "../../../components/ui/Avatar";
 import { EmptyState } from "../../../components/ui/EmptyState";
-import { HelpHint } from "../../../components/ui/HelpHint";
 export const MyClassStudents = () => {
   const navigate = useNavigate();
   const { formClassId, formClass, schoolName, isLoading: profileLoading } = useTeacherProfile();
@@ -39,24 +38,9 @@ export const MyClassStudents = () => {
   const subtitle = [schoolName, formClass, term ? termLabel(term).label : ""].filter(Boolean).join(" · ");
   return (
     <div className="p-4 md:p-6 w-full">
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-        <div>
-          <div className="group flex items-center gap-2.5">
-            <h1 className="text-xl md:text-2xl font-bold text-gray900">My Class</h1>
-            <HelpHint
-              title="My Class"
-              storageKey="my-class"
-              description="The students in your class, ready for scoring."
-              sections={[
-                { title: "Your roster", text: "Every student in your class is listed here, with your class name shown below the title." },
-                { title: "Open a student", text: "Tap a student to score or review their CA and exam results." },
-              ]}
-            />
-          </div>
-          <p className="text-xs md:text-sm text-gray500 mt-0.5">{subtitle || formClass}</p>
-        </div>
+      <div className="flex items-center justify-end mb-4">
         <p className="text-xs text-gray400">
-          {sortedStudents.length} student{sortedStudents.length === 1 ? "" : "s"}
+          {sortedStudents.length} student{sortedStudents.length === 1 ? "" : "s"} · {subtitle}
         </p>
       </div>
       {studentsLoading ? (

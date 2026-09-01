@@ -37,6 +37,12 @@ const statusLabel: Record<InvoiceStatus, string> = {
   PAID: "Paid",
 };
 
+const invoicesLoadingDescriptions = [
+  "Loading your invoices…",
+  "Checking payment statuses…",
+  "Almost there…",
+];
+
 export const InvoicesTab = () => {
   const { data: classesData } = useClasses();
   const { activeTerm } = useActiveTerm();
@@ -158,7 +164,11 @@ export const InvoicesTab = () => {
         </div>
       </BottomSheet>
 
-      {!isLoading && invoices.length === 0 ? (
+      {isLoading ? (
+        <div className="flex min-h-[calc(100dvh-190px)] w-full items-center justify-center rounded-2xl border border-gray100 bg-white px-6 py-14">
+          <SomaLoader label="Loading invoices" descriptions={invoicesLoadingDescriptions} />
+        </div>
+      ) : !isLoading && invoices.length === 0 ? (
         <EmptyState
           icon={<ReceiptText color="#0D0D0D" />}
           title={hasFilters ? "No invoices match your filters" : "No invoices yet"}
@@ -358,7 +368,7 @@ export const InvoicesTab = () => {
         <DialogContent variant="center" className="md:max-w-2xl">
           {detailLoading ? (
             <div className="py-10">
-              <SomaLoader label="Loading invoice" className="h-8 w-8" />
+              <SomaLoader label="Loading invoice" descriptions={invoicesLoadingDescriptions} className="h-8 w-8" />
             </div>
           ) : detailData?.invoice ? (
             <InvoiceView invoice={detailData.invoice} onClose={() => setViewId(null)} />

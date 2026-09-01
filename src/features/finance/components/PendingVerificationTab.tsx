@@ -6,10 +6,17 @@ import { Input } from "../../../components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "../../../components/ui/dialog";
 import { EmptyState } from "../../../components/ui/EmptyState";
 import { CollapsibleCard } from "../../../components/mobile/CollapsibleCard";
+import { SomaLoader } from "../../../components/ui/SomaLoader";
 import { MoneyInput } from "./MoneyInput";
 import { usePayments, useConfirmPayment, useRejectPayment } from "../api";
 import { formatNaira } from "../utils/currency";
 import type { Payment } from "../types";
+
+const pendingLoadingDescriptions = [
+  "Checking for payments waiting on you…",
+  "Pulling submitted payments…",
+  "Almost there…",
+];
 
 export const PendingVerificationTab = () => {
   const { data, isLoading } = usePayments({ status: ["PENDING"], limit: 100 });
@@ -64,7 +71,11 @@ export const PendingVerificationTab = () => {
         Payments parents submitted are waiting for your confirmation.
       </p>
 
-      {!isLoading && pending.length === 0 ? (
+      {isLoading ? (
+        <div className="flex min-h-[calc(100dvh-190px)] w-full items-center justify-center rounded-2xl border border-gray100 bg-white px-6 py-14">
+          <SomaLoader label="Loading pending payments" descriptions={pendingLoadingDescriptions} />
+        </div>
+      ) : !isLoading && pending.length === 0 ? (
         <EmptyState
           icon={<Clock color="#0D0D0D" />}
           title="Nothing waiting for verification"

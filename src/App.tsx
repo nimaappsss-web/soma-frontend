@@ -197,9 +197,9 @@ function App() {
             <Route index element={<TeacherExaminationsIndex />} />
             <Route path="mark-scores" element={<TeacherExams />} />
             <Route path="active" element={<TeacherActiveAssessments />} />
+            <Route path="broadcast" element={<TeacherBroadcast />} />
+            <Route path="my-class" element={<TeacherResults />} />
           </Route>
-          <Route path="ca-and-exams/broadcast" element={<TeacherBroadcast />} />
-          <Route path="ca-and-exams/my-class" element={<TeacherResults />} />
           <Route path="ca-and-exams/reports/:studentId" element={<StudentReportView />} />
           <Route path="results" element={<Navigate to="/teach/ca-and-exams/my-class" replace />} />
           <Route path="lesson-notes" element={<TeacherLessonNotes />} />

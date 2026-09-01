@@ -24,6 +24,7 @@ export const teacherNavItems: NavItem[] = [
       { label: "Mark Scores", to: "/teach/ca-and-exams/mark-scores" },
       { label: "My Class", to: "/teach/ca-and-exams/my-class" },
       { label: "Broadcast", to: "/teach/ca-and-exams/broadcast" },
+      { label: "Active", to: "/teach/ca-and-exams/active" },
     ],
   },
   { label: "Timetable", to: "/teach/timetable", Icon: CalendarTick },

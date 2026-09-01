@@ -3,6 +3,13 @@ import { Add, Bank, Card, ReceiptText, Wallet3 } from "iconsax-react";
 import { useFinanceSummary } from "../api";
 import { formatNaira } from "../utils/currency";
 import { TintedStatCard } from "../../dashboard/components/TintedStatCard";
+import { SomaLoader } from "../../../components/ui/SomaLoader";
+
+const overviewLoadingDescriptions = [
+  "Pulling up your finance summary…",
+  "Tallying collections and outstanding fees…",
+  "Just a moment…",
+];
 
 export const FinanceOverview = () => {
   const { data, isLoading } = useFinanceSummary();
@@ -43,7 +50,11 @@ export const FinanceOverview = () => {
     },
   ];
 
-  return (
+  return isLoading ? (
+    <div className="flex min-h-[calc(100dvh-190px)] w-full items-center justify-center rounded-3xl border border-gray100 bg-white px-6 py-14">
+      <SomaLoader label="Loading overview" descriptions={overviewLoadingDescriptions} />
+    </div>
+  ) : (
     <div className="flex flex-col gap-5">
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
         {cards.map((card) => (

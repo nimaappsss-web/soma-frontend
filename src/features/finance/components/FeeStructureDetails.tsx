@@ -14,6 +14,12 @@ import { formatNaira } from "../utils/currency";
 import { FeeStructureFormDialog } from "./FeeStructureFormDialog";
 import { groupFees } from "../utils/feeGroups";
 
+const feeStructureDetailsLoadingDescriptions = [
+  "Loading this fee structure…",
+  "Sorting terms and classes…",
+  "Almost there…",
+];
+
 export const FeeStructureDetails = () => {
   const { groupId = "" } = useParams<{ groupId: string }>();
   const { data, isLoading } = useFeeStructures();
@@ -54,8 +60,8 @@ export const FeeStructureDetails = () => {
   if (isLoading && !group) {
     return (
       <div className="p-4 md:p-6 w-full">
-        <div className="py-24">
-          <SomaLoader label="Loading fee structure" className="h-8 w-8" />
+        <div className="flex min-h-[calc(100dvh-190px)] w-full items-center justify-center rounded-2xl border border-gray100 bg-white">
+          <SomaLoader label="Loading fee structure" descriptions={feeStructureDetailsLoadingDescriptions} className="h-8 w-8" />
         </div>
       </div>
     );

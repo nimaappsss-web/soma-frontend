@@ -7,6 +7,7 @@ import { Button } from "../../../components/ui/button";
 import { Avatar } from "../../../components/ui/Avatar";
 import { EmptyState } from "../../../components/ui/EmptyState";
 import { SelectDropdown, type SelectOption } from "../../../components/ui/select-dropdown";
+import { SomaLoader } from "../../../components/ui/SomaLoader";
 import { useStaffList, useDeleteStaff, useResendStaffInvite } from "../api";
 import { InviteStaffModal } from "./InviteStaffModal";
 import type { StaffMember, StaffStatus } from "../types";
@@ -31,6 +32,12 @@ const StatusBadge = ({ status }: { status: StaffStatus }) => {
     return <span className="inline-flex items-center gap-1 rounded-full bg-amber500/10 px-2.5 py-1 text-xs font-medium text-amber500"><Edit2 size={12} color="#FBBC05" /> Invited</span>;
   return <span className="inline-flex items-center gap-1 rounded-full bg-gray500/10 px-2.5 py-1 text-xs font-medium text-gray500"><CloseCircle size={12} color="#8C8C8C" /> Inactive</span>;
 };
+
+const staffLoadingDescriptions = [
+  "Fetching your non-teaching team…",
+  "Checking staff and bursars…",
+  "Almost there…",
+];
 
 const RoleBadge = ({ role }: { role: string }) => {
   const isBursar = role.toUpperCase() === "BURSAR";
@@ -114,8 +121,8 @@ export const StaffManagement = () => {
       />
 
       {isLoading ? (
-        <div className="bg-white rounded-2xl border border-gray100 p-10 text-center">
-          <p className="text-sm text-gray500">Loading staff...</p>
+        <div className="flex items-center justify-center rounded-2xl border border-gray100 bg-white p-16">
+          <SomaLoader label="Loading staff" descriptions={staffLoadingDescriptions} />
         </div>
       ) : staff.length === 0 ? (
         <EmptyState

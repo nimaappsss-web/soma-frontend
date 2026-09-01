@@ -79,9 +79,14 @@ export const useBroadcastStatus = ({ classId, term, session }: BroadcastScope) =
   const record = cached?.[0];
   const parsed = record ? (JSON.parse(record.statusJson) as BroadcastStatusResponse) : null;
 
-  // Fresh server data wins once fetched; the Dexie blob is the instant
-  // offline/offline-first fallback and covers failed refetches.
-  const data = query.data ?? parsed ?? null;
+  // Dexie is the source of truth for offline-first reads (see OFFLINE_CRUD.md).
+  // It stays in lockstep with server fetches (queryFn saves each response via
+  // saveCachedStatus) and additionally reflects optimistic mutations (e.g. an
+  // exam re-broadcast clearing `edits`). Preferring it means the "scores
+  // changed since your last broadcast" banner responds immediately on Dexie
+  // change via useLiveQuery — no invalidateQueries needed. query.data is the
+  // fallback for the instant before the Dexie record arrives.
+  const data = parsed ?? query.data ?? null;
 
   return {
     data,
@@ -200,6 +205,10 @@ export const useSubmitExamSheet = () => {
             createdAt: nowIso,
             reviewedAt: null,
           },
+          // Re-submitting the sheet acknowledges any post-broadcast edits, so the
+          // "scores changed since your last broadcast" banner should clear.
+          // useLiveQuery picks this Dexie change up immediately — no invalidation.
+          edits: [],
         });
       }
 

@@ -8,7 +8,6 @@ import { useBroadcastStatus } from "../api";
 import { transformError } from "../../../utils/transformError";
 import { SomaLoader } from "../../../components/ui/SomaLoader";
 import { EmptyState } from "../../../components/ui/EmptyState";
-import { HelpHint } from "../../../components/ui/HelpHint";
 import { CaBroadcastSection } from "./CaBroadcastSection";
 import { ExamBroadcastSection } from "./ExamBroadcastSection";
 
@@ -57,19 +56,6 @@ export const BroadcastCenter = () => {
   return (
     <div className="p-4 md:p-6 w-full">
       <div className="flex flex-col gap-3 mb-4">
-        <div className="group flex items-center gap-2.5">
-          <h1 className="text-xl md:text-2xl font-bold text-gray900">Broadcast</h1>
-          <HelpHint
-            title="Broadcast"
-            storageKey="broadcast-center"
-            description="Share CA and exam results with parents of your class."
-            sections={[
-              { title: "Continuous Assessment", text: "Pick which mark types (Test 1, Test 2, Practical…) to include, then broadcast straight to parents — no approval needed." },
-              { title: "Examination", text: "Submit the whole exam sheet for principal approval. Once approved it's sent to parents, and you can resend to individual students without another approval." },
-              { title: "Missing scores", text: "Students with unmarked scores show badges here so you know what's left before broadcasting." },
-            ]}
-          />
-        </div>
         <p className="text-xs md:text-sm text-gray500">{subtitle || formClass}</p>
 
         <div className="inline-flex w-fit items-center gap-1 rounded-full border border-input bg-card p-1 overflow-x-auto no-scrollbar max-w-full">
@@ -85,7 +71,7 @@ export const BroadcastCenter = () => {
                   active ? "bg-gray900 text-white" : "text-gray500 hover:text-gray900",
                 )}
               >
-                <Icon size={15} color={active ? "#FFFFFF" : "#8C8C8C"} />
+                <Icon size={14} color={active ? "#FFFFFF" : "#8C8C8C"} />
                 {label}
               </button>
             );

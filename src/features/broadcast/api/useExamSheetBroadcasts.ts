@@ -60,10 +60,13 @@ export const useExamSheetBroadcasts = (status?: ExamBroadcastStatus) => {
     ? (JSON.parse(record.listJson) as ExamSheetBroadcastsResponse)
     : null;
 
-  // Fresh server data wins once fetched; the cached blob is only the
-  // instant/offline fallback, and pending review writes keep their
-  // optimistic state pinned until they sync.
-  const all = query.data ?? parsed ?? { requests: [] };
+  // Dexie is the source of truth for offline-first reads (see OFFLINE_CRUD.md).
+  // It stays in lockstep with server fetches and additionally reflects optimistic
+  // review writes (applyReview flips status to APPROVED/REJECTED). Preferring it
+  // means approving a request removes it from the PENDING list immediately via
+  // useLiveQuery — no invalidateQueries needed. query.data is the fallback for the
+  // instant before the Dexie record arrives.
+  const all = parsed ?? query.data ?? { requests: [] };
   const data: ExamSheetBroadcastsResponse = status
     ? { requests: (all.requests ?? []).filter((r) => r.status === status) }
     : all;

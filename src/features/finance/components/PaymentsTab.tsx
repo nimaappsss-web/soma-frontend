@@ -7,6 +7,7 @@ import { Button } from "../../../components/ui/button";
 import { MultiSelect } from "../../../components/ui/multi-select";
 import { EmptyState } from "../../../components/ui/EmptyState";
 import { CollapsibleCard } from "../../../components/mobile/CollapsibleCard";
+import { SomaLoader } from "../../../components/ui/SomaLoader";
 import { usePayments } from "../api";
 import { formatNaira } from "../utils/currency";
 import { CollectPaymentDialog } from "./CollectPaymentDialog";
@@ -36,6 +37,12 @@ const statusLabel: Record<PaymentStatus, string> = {
   PENDING: "Waiting for school",
   REJECTED: "Not accepted",
 };
+
+const paymentsLoadingDescriptions = [
+  "Loading your payments…",
+  "Checking records…",
+  "Almost there…",
+];
 
 export const PaymentsTab = () => {
   const [status, setStatus] = useState<string[]>([]);
@@ -68,7 +75,11 @@ export const PaymentsTab = () => {
         </Button>
       </div>
 
-      {!isLoading && payments.length === 0 ? (
+      {isLoading ? (
+        <div className="flex min-h-[calc(100dvh-190px)] w-full items-center justify-center rounded-2xl border border-gray100 bg-white px-6 py-14">
+          <SomaLoader label="Loading payments" descriptions={paymentsLoadingDescriptions} />
+        </div>
+      ) : !isLoading && payments.length === 0 ? (
         <EmptyState
           icon={<Card color="#0D0D0D" />}
           title={status.length > 0 ? "No payments with this status" : "No payments yet"}

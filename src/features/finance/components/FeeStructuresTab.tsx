@@ -5,6 +5,7 @@ import { Add, Wallet3, Filter, ArrowRight } from "iconsax-react";
 import { SelectDropdown } from "../../../components/ui/select-dropdown";
 import { BottomSheet } from "../../../components/mobile/BottomSheet";
 import { EmptyState } from "../../../components/ui/EmptyState";
+import { SomaLoader } from "../../../components/ui/SomaLoader";
 import { useFeeStructures } from "../api";
 import { useClasses } from "../../principal/api";
 import { useActiveTerm } from "../../calendar/api";
@@ -13,6 +14,12 @@ import { schoolTypeLabel } from "../../../utils/schoolType";
 import { formatNaira } from "../utils/currency";
 import { FeeStructureFormDialog } from "./FeeStructureFormDialog";
 import { groupFees, classNames, termOptions } from "../utils/feeGroups";
+
+const feeStructureLoadingDescriptions = [
+  "Loading your fee structures…",
+  "Sorting terms and classes…",
+  "Almost there…",
+];
 
 export const FeeStructuresTab = () => {
   const { data, isLoading } = useFeeStructures();
@@ -139,7 +146,11 @@ export const FeeStructuresTab = () => {
         </BottomSheet>
       )}
 
-      {!isLoading && groups.length === 0 ? (
+      {isLoading ? (
+        <div className="flex min-h-[calc(100dvh-190px)] w-full items-center justify-center rounded-2xl border border-gray100 bg-white px-6 py-14">
+          <SomaLoader label="Loading fee structures" descriptions={feeStructureLoadingDescriptions} />
+        </div>
+      ) : !isLoading && groups.length === 0 ? (
         hasFilters ? (
           <EmptyState
             icon={<Wallet3 color="#0D0D0D" />}
