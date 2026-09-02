@@ -22,7 +22,6 @@ import { TeacherResults } from "./pages/teach/TeacherResults";
 import { TeacherBroadcast } from "./pages/teach/TeacherBroadcast";
 import { StudentReportView } from "./features/examinations/components/StudentReportView";
 import { TeacherExaminationsLayout, TeacherExaminationsIndex } from "./features/examinations/components/TeacherExaminationsLayout";
-import { useAnimatedFavicon } from "./hooks/useAnimatedFavicon";
 import { TeacherStudents } from "./pages/teach/TeacherStudents";
 import { AdminStudents } from "./pages/admin/AdminStudents";
 import { StudentDetails } from "./pages/StudentDetails";
@@ -82,8 +81,6 @@ import { CalendarLayout, CalendarEvents, CalendarHolidays, CalendarTerms } from 
 import { ReportsManagement } from "./features/reports/components/ReportsManagement";
 
 function App() {
-  useAnimatedFavicon(["/favicon2.svg", "/favicon.svg"], [3000, 600]);
-
   return (
     <AuthProvider>
       <SyncProvider>
