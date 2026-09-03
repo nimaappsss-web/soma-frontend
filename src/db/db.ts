@@ -1198,4 +1198,14 @@ db.version(39).stores({
   parentExamResults: "id, userId, term",
 });
 
+// v40: Index email across parents/teachers/pendingInvites and parentEmail on
+// students so the real-time email lookup can find existing accounts instantly
+// (all offline). Indexing email also lets Dexie's .where("email") queries work.
+db.version(40).stores({
+  students: "id, name, classId, status, schoolId, userId, [userId+classId], parentEmail",
+  parents: "id, status, schoolId, userId, email",
+  teachers: "id, userId, email",
+  pendingInvites: "id, userId, email",
+});
+
 

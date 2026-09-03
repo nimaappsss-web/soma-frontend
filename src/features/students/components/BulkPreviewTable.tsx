@@ -22,6 +22,25 @@ const getRowErrors = (row: BulkStudentRow): string[] => {
   const errors: string[] = [];
   if (!row.name.trim() || row.name.trim().length < 2) errors.push("Name required (min 2 chars)");
   if (!row.classId) errors.push("Class required");
+
+  const email = (row.parentEmail || "").trim();
+  const phone = (row.parentPhone || "").trim();
+
+  // A parent must be reachable: require a phone when no email is provided.
+  if (!email && !phone) {
+    errors.push("Parent phone or email required so the parent can be reached");
+  }
+
+  // Validate email format when provided.
+  if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    errors.push(`Invalid email: "${email}"`);
+  }
+
+  // Validate phone format (Nigerian) when provided.
+  if (phone && !/^\+?(0[789][01]\d{8}|234[789][01]\d{8}|[789][01]\d{8})$/.test(phone.replace(/[\s-]/g, ""))) {
+    errors.push("Invalid phone number (use a valid Nigerian number)");
+  }
+
   return errors;
 };
 

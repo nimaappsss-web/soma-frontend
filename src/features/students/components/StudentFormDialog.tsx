@@ -6,7 +6,11 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "../../../compo
 import { Button } from "../../../components/ui/button";
 import { Input } from "../../../components/ui/input";
 import { SelectDropdown, type SelectOption } from "../../../components/ui/select-dropdown";
+import { EmailLookupBadge } from "../../../components/others/EmailLookupBadge";
+import { useAuth } from "../../../contexts/AuthContext";
+import { useEmailLookup } from "../../../hooks/useEmailLookup";
 import { editStudentSchema, type EditStudentFormData } from "../utils/validationSchema";
+import { useFailedStudentContact } from "../api/useFailedStudentContact";
 import type { Student } from "../types";
 
 interface StudentFormDialogProps {
@@ -37,11 +41,13 @@ export const StudentFormDialog = ({
   isSaving,
   onSubmit,
 }: StudentFormDialogProps) => {
+  const { user } = useAuth();
   const {
     register,
     handleSubmit,
     control,
     reset,
+    watch,
     formState: { errors },
   } = useForm<EditStudentFormData>({
     resolver: zodResolver(editStudentSchema),
@@ -61,6 +67,11 @@ export const StudentFormDialog = ({
       status: student.status,
     });
   }, [student, reset]);
+
+  const email = watch("parentEmail") ?? "";
+  const { result: emailResult } = useEmailLookup(email, user?.id ?? "", user?.email, student?.id);
+
+  const emailTaken = !!emailResult?.found && emailResult.type === "staff";
 
   const strip = (data: EditStudentFormData): Record<string, unknown> => {
     const payload: Record<string, unknown> = {};
@@ -98,6 +109,8 @@ export const StudentFormDialog = ({
     </div>
   );
 
+  const rejectedContact = useFailedStudentContact(student?.id ?? "");
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent variant="middle">
@@ -105,9 +118,25 @@ export const StudentFormDialog = ({
           <DialogTitle>{student ? `Edit ${student.name}` : "Edit student"}</DialogTitle>
         </DialogHeader>
         <form
-          onSubmit={handleSubmit((data) => onSubmit(strip(data)))}
+          onSubmit={(e) => {
+            e.preventDefault();
+            if (emailTaken) return;
+            handleSubmit((data) => onSubmit(strip(data)))(e);
+          }}
           className="px-6 pb-6 space-y-3"
         >
+          {rejectedContact && (
+            <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3">
+              <p className="text-xs font-semibold text-red-700">
+                Parent contact wasn't accepted
+              </p>
+              <p className="text-xs text-red-600 mt-1">
+                This contact wasn't saved — it's already linked to an existing
+                account. Enter a different parent email or phone above to fix it.
+              </p>
+            </div>
+          )}
+
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             {field("Full Name *", "name", "Chidi Okonkwo")}
             <div>
@@ -169,11 +198,20 @@ export const StudentFormDialog = ({
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             {field("Parent Name", "parentName", "Mr. Okonkwo")}
             {field("Parent Phone", "parentPhone", "08012345678", "tel")}
-            {field("Parent Email", "parentEmail", "okonkwo@email.com", "email")}
+            <div>
+              <label className="block text-xs text-gray-500 mb-1">Parent Email</label>
+              <Input type="email" {...register("parentEmail")} placeholder="okonkwo@email.com" />
+              {errors.parentEmail && (
+                <p className="text-xs text-destructive mt-1">{errors.parentEmail.message}</p>
+              )}
+              {emailResult && emailResult.found && (
+                <EmailLookupBadge result={emailResult} />
+              )}
+            </div>
           </div>
 
           <div className="flex gap-3 pt-2">
-            <Button type="submit" disabled={isSaving} className="flex-1">
+            <Button type="submit" disabled={isSaving || emailTaken} className="flex-1">
               {isSaving ? "Saving..." : "Update"}
             </Button>
             <Button

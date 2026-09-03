@@ -1,6 +1,6 @@
 import { useState, type ReactNode } from "react";
 import { NavLink, Outlet, useLocation } from "react-router";
-import { ArrowLeft2, Building, SearchNormal } from "iconsax-react";
+import { ArrowLeft2, SearchNormal } from "iconsax-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { ProfileDropdown } from "@/components/ui/ProfileDropdown";
 import { NotificationBell } from "@/features/notifications/components/NotificationBell";
@@ -74,7 +74,9 @@ export const AppShell = ({
               <img src={user.logoUrl} alt="School logo" className="w-full h-full object-contain p-0.5" />
             </div>
           ) : (
-            <Building variant="Bold" size={20} className="text-gray300" />
+            <div className="w-[32px] h-[32px] flex items-center justify-center rounded-xl bg-black text-white text-sm font-semibold uppercase">
+              {(user?.schoolName ?? "S").trim().charAt(0)}
+            </div>
           )}
         </div>
       ) : (
@@ -84,8 +86,8 @@ export const AppShell = ({
               <img src={user.logoUrl} alt="School logo" className="w-full h-full object-contain p-1" />
             </div>
           ) : (
-            <div className="flex items-center justify-center h-[38px] w-[38px] shrink-0 rounded-xl bg-gray50">
-              <Building variant="Bold" size={20} className="text-gray300" />
+            <div className="flex items-center justify-center h-[38px] w-[38px] shrink-0 rounded-xl bg-black text-white text-sm font-semibold uppercase">
+              {(user?.schoolName ?? "S").trim().charAt(0)}
             </div>
           )}
           <div className="min-w-0 flex-1">

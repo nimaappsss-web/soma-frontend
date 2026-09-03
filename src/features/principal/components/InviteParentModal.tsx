@@ -8,11 +8,13 @@ import { Button } from "../../../components/ui/button";
 import { Input } from "../../../components/ui/input";
 import { Label } from "../../../components/ui/label";
 import { ErrorMessage } from "../../../components/others/ErrorMessage";
+import { EmailLookupBadge } from "../../../components/others/EmailLookupBadge";
 import { transformError } from "../../../utils/transformError";
 import { SelectDropdown, type SelectOption } from "../../../components/ui/select-dropdown";
 import { useInviteParent } from "../api/useInviteParent";
 import { useAllStudents } from "../../students/api/useAllStudents";
 import { useAuth } from "../../../contexts/AuthContext";
+import { useEmailLookup } from "../../../hooks/useEmailLookup";
 
 const schema = z.object({
   name: z.string().min(2, "Parent name is required"),
@@ -37,11 +39,16 @@ export const InviteParentModal = ({ open, onClose }: InviteParentModalProps) => 
     register,
     handleSubmit,
     reset,
+    watch,
     formState: { errors },
   } = useForm<FormData>({
     resolver: zodResolver(schema),
     defaultValues: { name: "", email: "", phone: "" },
   });
+
+  const email = watch("email") ?? "";
+  const { result: emailResult } = useEmailLookup(email, user?.id ?? "", user?.email);
+  const emailTaken = !!emailResult?.found && emailResult.type === "staff";
 
   const studentOptions: SelectOption[] = (students ?? []).map((s) => ({
     value: s.id,
@@ -50,6 +57,7 @@ export const InviteParentModal = ({ open, onClose }: InviteParentModalProps) => 
 
   const onSubmit = (data: FormData) => {
     if (!studentId) return;
+    if (emailTaken) return;
     inviteMutation.mutate(
       {
         name: data.name,
@@ -111,6 +119,9 @@ export const InviteParentModal = ({ open, onClose }: InviteParentModalProps) => 
               {errors.email && (
                 <p className="text-sm text-destructive">{errors.email.message}</p>
               )}
+              {emailResult && emailResult.found && (
+                <EmailLookupBadge result={emailResult} />
+              )}
             </div>
 
             <div className="space-y-2">
@@ -146,7 +157,7 @@ export const InviteParentModal = ({ open, onClose }: InviteParentModalProps) => 
               </Button>
               <Button
                 type="submit"
-                disabled={inviteMutation.isPending || !studentId}
+                disabled={inviteMutation.isPending || !studentId || emailTaken}
                 className="w-full"
               >
                 {inviteMutation.isPending ? "Sending..." : "Send Invite"}

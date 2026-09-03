@@ -7,22 +7,55 @@ import { Input } from "../../../components/ui/input";
 import { DateInput } from "../../../components/ui/date-input";
 import { SelectDropdown, type SelectOption } from "../../../components/ui/select-dropdown";
 import { Button } from "../../../components/ui/button";
+import { EmailLookupBadge } from "../../../components/others/EmailLookupBadge";
+import { useAuth } from "../../../contexts/AuthContext";
+import { useEmailLookup } from "../../../hooks/useEmailLookup";
 import type { CreateStudentPayload } from "../types";
 import { buildGuardianName } from "../../../utils/guardianName";
 
-const addStudentSchema = z.object({
-  firstName: z.string().min(1, "First name is required"),
-  lastName: z.string().min(1, "Last name is required"),
-  classId: z.string().min(1, "Class is required"),
-  gender: z.enum(["M", "F"]).optional().or(z.literal("")),
-  dateOfBirth: z.string().optional().or(z.literal("")),
-  status: z.enum(["ACTIVE", "TRANSFERRED", "WITHDRAWN", "GRADUATED"]).optional(),
-  address: z.string().optional().or(z.literal("")),
-  parentTitle: z.string().optional().or(z.literal("")),
-  parentName: z.string().optional().or(z.literal("")),
-  parentEmail: z.string().email("Invalid email").optional().or(z.literal("")),
-  parentPhone: z.string().optional().or(z.literal("")),
-});
+const phoneRegex = /^\+?(0[789][01]\d{8}|234[789][01]\d{8}|[789][01]\d{8})$/;
+
+const contactRules = (data: {
+  parentPhone?: unknown;
+  parentEmail?: unknown;
+}, ctx: z.RefinementCtx) => {
+  const phone = String(data.parentPhone ?? "").trim();
+  const email = String(data.parentEmail ?? "").trim();
+
+  // A parent must be reachable: require a phone when no email is provided.
+  if (!email && !phone) {
+    ctx.addIssue({
+      code: "custom",
+      path: ["parentPhone"],
+      message: "A parent phone or email is required so the parent can be reached.",
+    });
+  }
+
+  // Validate phone format (Nigerian) when provided.
+  if (phone && !phoneRegex.test(phone.replace(/[\s-]/g, ""))) {
+    ctx.addIssue({
+      code: "custom",
+      path: ["parentPhone"],
+      message: "Invalid phone number. Use a valid Nigerian number (e.g. 08123456789 or +2348123456789).",
+    });
+  }
+};
+
+const addStudentSchema = z
+  .object({
+    firstName: z.string().min(1, "First name is required"),
+    lastName: z.string().min(1, "Last name is required"),
+    classId: z.string().min(1, "Class is required"),
+    gender: z.enum(["M", "F"]).optional().or(z.literal("")),
+    dateOfBirth: z.string().optional().or(z.literal("")),
+    status: z.enum(["ACTIVE", "TRANSFERRED", "WITHDRAWN", "GRADUATED"]).optional(),
+    address: z.string().optional().or(z.literal("")),
+    parentTitle: z.string().optional().or(z.literal("")),
+    parentName: z.string().optional().or(z.literal("")),
+    parentEmail: z.string().email("Invalid email").optional().or(z.literal("")),
+    parentPhone: z.string().optional().or(z.literal("")),
+  })
+  .superRefine(contactRules);
 
 type AddStudentFormData = z.infer<typeof addStudentSchema>;
 
@@ -65,11 +98,13 @@ export const AddStudentDialog = ({
   isSaving,
   onSubmit,
 }: AddStudentDialogProps) => {
+  const { user } = useAuth();
   const {
     register,
     handleSubmit,
     reset,
     control,
+    watch,
     formState: { errors },
   } = useForm<AddStudentFormData>({
     resolver: zodResolver(addStudentSchema),
@@ -87,6 +122,11 @@ export const AddStudentDialog = ({
       parentPhone: "",
     },
   });
+
+  const email = watch("parentEmail") ?? "";
+  const { result: emailResult } = useEmailLookup(email, user?.id ?? "", user?.email);
+
+  const emailTaken = !!emailResult?.found && emailResult.type === "staff";
 
   useEffect(() => {
     if (open) {
@@ -106,6 +146,7 @@ export const AddStudentDialog = ({
   };
 
   const onFormSubmit = async (data: AddStudentFormData) => {
+    if (emailTaken) return;
     const payload: CreateStudentPayload = {
       name: `${data.firstName} ${data.lastName}`.trim(),
       classId: data.classId,
@@ -142,7 +183,7 @@ export const AddStudentDialog = ({
         <Button
           type="submit"
           form="add-student-form"
-          disabled={isSaving}
+          disabled={isSaving || emailTaken}
         >
           {isSaving ? "Saving..." : "Save"}
         </Button>
@@ -274,6 +315,12 @@ export const AddStudentDialog = ({
                   registration={register("parentEmail")}
                   hasError={errors.parentEmail}
                 />
+                {errors.parentEmail && (
+                  <p className="text-xs text-red-500 mt-1">{errors.parentEmail.message}</p>
+                )}
+                {emailResult && emailResult.found && (
+                  <EmailLookupBadge result={emailResult} />
+                )}
               </div>
 
               <div>

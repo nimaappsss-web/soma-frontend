@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Link, useParams, useLocation } from "react-router";
+import { useParams, useLocation, useNavigate } from "react-router";
 import {
   ArrowLeft2,
   Book1,
@@ -19,7 +19,9 @@ import { Avatar } from "../components/ui/Avatar";
 import { Button } from "../components/ui/button";
 import { SomaLoader } from "../components/ui/SomaLoader";
 import { useStudentDetail, useStudentAcademics, useStudentMonthlyAttendance, useStudentTimeline, useUpdateStudent } from "../features/students/api";
+import { useFailedStudentContact } from "../features/students/api/useFailedStudentContact";
 import { StudentFormDialog } from "../features/students/components/StudentFormDialog";
+import { SiblingBadge } from "../features/students/components/SiblingBadge";
 import type { TimelineEvent } from "../features/students/types";
 import type { UpdateStudentPayload } from "../features/students/types";
 import { useClasses } from "../features/principal/api";
@@ -82,8 +84,11 @@ const TIMELINE_ICON: Record<string, React.ReactNode> = {
 export const StudentDetails = () => {
   const { id } = useParams<{ id: string }>();
   const location = useLocation();
+  const navigate = useNavigate();
   const isTeacher = location.pathname.startsWith("/teach");
   const backTo = isTeacher ? "/teach/students" : "/admin/students";
+
+  const goBack = () => navigate(backTo);
 
   const { data: student, isLoading } = useStudentDetail(id ?? "");
   const { data: classesData } = useClasses();
@@ -98,6 +103,7 @@ export const StudentDetails = () => {
   const { timeline: timelineData } = useStudentTimeline({ studentId: id ?? "" });
   const updateMutation = useUpdateStudent();
   const [editing, setEditing] = useState(false);
+  const rejectedContact = useFailedStudentContact(id ?? "");
 
   if (isLoading) {
     return (
@@ -112,13 +118,14 @@ export const StudentDetails = () => {
   if (!student) {
     return (
       <div className="p-6">
-        <Link
-          to={backTo}
+        <button
+          type="button"
+          onClick={goBack}
           aria-label="Back to Students"
           className="flex h-8 w-8 items-center justify-center rounded-full bg-black text-white transition-colors hover:bg-gray900 active:scale-95"
         >
           <ArrowLeft2 variant="Linear" size={16} color="#FFFFFF" />
-        </Link>
+        </button>
         <div className="mt-4 rounded-xl border border-gray100 bg-white p-10 text-center">
           <p className="text-sm text-gray500">Could not load this student.</p>
         </div>
@@ -141,13 +148,14 @@ export const StudentDetails = () => {
 
   return (
     <div className="p-4 md:p-6">
-      <Link
-        to={backTo}
+      <button
+        type="button"
+        onClick={goBack}
         aria-label="Back to Students"
         className="flex h-8 w-8 items-center justify-center rounded-full bg-black text-white transition-colors hover:bg-gray900 active:scale-95"
       >
         <ArrowLeft2 variant="Linear" size={16} color="#FFFFFF" />
-      </Link>
+      </button>
 
       <div className="mt-4 rounded-xl border border-gray100 bg-white p-5 flex flex-wrap items-center gap-4">
         <Avatar name={student.name} imageUrl={student.imageUrl} size={56} />
@@ -215,9 +223,22 @@ export const StudentDetails = () => {
             <MetaField icon={<Profile2User size={13} color="#8C8C8C" />} label="Parent / Guardian" value={student.parentName ?? "—"} />
             <MetaField icon={<Call size={13} color="#8C8C8C" />} label="Phone" value={student.parentPhone ?? "—"} />
             <MetaField className="sm:col-span-2" icon={<Message size={13} color="#8C8C8C" />} label="Email" value={student.parentEmail ?? "—"} />
+            {rejectedContact && (
+              <div className="sm:col-span-2 rounded-lg border border-red-200 bg-red-50 px-3 py-2.5">
+                <p className="text-xs font-semibold text-red-700">Parent contact wasn't accepted</p>
+                <p className="text-xs text-red-600 mt-0.5">
+                  This contact wasn't saved — it's already linked to an existing account. Edit the
+                  student to use a different parent email or phone.
+                </p>
+              </div>
+            )}
           </div>
         </InfoCard>
       </div>
+
+      {student.parentEmail && (
+        <SiblingBadge parentEmail={student.parentEmail} currentStudentId={student.id} />
+      )}
 
       <div className="mt-4 rounded-xl border border-gray100 bg-white p-5">
         <h2 className="text-sm font-semibold text-gray900 mb-4">Attendance — {now.toLocaleString("en-GB", { month: "long", year: "numeric" })}</h2>
