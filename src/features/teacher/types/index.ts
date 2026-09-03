@@ -65,6 +65,8 @@ export interface PendingInvite {
   email: string;
   status: "pending";
   expiresIn: number;
+  emailFailed?: boolean;
+  emailError?: string | null;
 }
 
 export interface UpdateTeacherPayload {

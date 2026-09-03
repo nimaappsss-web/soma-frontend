@@ -5,8 +5,8 @@ import { HelpHint } from "../../../components/ui/HelpHint";
 import { useTeacherProfile } from "../../teacher/api";
 
 const tabs = [
-  { label: "Mark Scores", to: "/teach/ca-and-exams/mark-scores", Icon: ClipboardTick, classTeacherOnly: false },
-  { label: "My Class", to: "/teach/ca-and-exams/my-class", Icon: People, classTeacherOnly: true },
+  { label: "Subject Scores", to: "/teach/ca-and-exams/mark-scores", Icon: ClipboardTick, classTeacherOnly: false },
+  { label: "My Class Scores", to: "/teach/ca-and-exams/my-class", Icon: People, classTeacherOnly: true },
   { label: "Broadcast", to: "/teach/ca-and-exams/broadcast", Icon: VolumeUp, classTeacherOnly: true },
   { label: "Active", to: "/teach/ca-and-exams/active", Icon: Activity, classTeacherOnly: false },
 ];

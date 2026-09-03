@@ -1,10 +1,8 @@
 import { Link, useParams } from "react-router";
-import { ArrowLeft2, Book1, ClipboardTick, DocumentText } from "iconsax-react";
+import { ArrowLeft2, Book1 } from "iconsax-react";
 
 import { useTeacherProfile } from "../../features/teacher/api";
-import { buttonVariants } from "../../components/ui/button";
 import { SomaLoader } from "../../components/ui/SomaLoader";
-import { cn } from "../../lib/utils";
 
 export const SubjectDetail = () => {
   const { subjectId } = useParams();
@@ -12,7 +10,6 @@ export const SubjectDetail = () => {
 
   const assignment = assignments.find((a) => a.subject.id === subjectId);
   const subject = assignment?.subject;
-  const firstClass = assignment?.classes[0];
 
   if (isLoading) {
     return (
@@ -40,10 +37,6 @@ export const SubjectDetail = () => {
       </div>
     );
   }
-
-  const markScoresHref =
-    `/teach/ca-and-exams/mark-scores?subjectId=${encodeURIComponent(subject.id)}` +
-    (firstClass ? `&classId=${encodeURIComponent(firstClass.id)}` : "");
 
   return (
     <div className="p-4 md:p-6 w-full">
@@ -73,15 +66,6 @@ export const SubjectDetail = () => {
             ))}
           </div>
         )}
-      </div>
-
-      <div className="mt-5 flex flex-wrap gap-3">
-        <Link to={markScoresHref} className={cn(buttonVariants({ variant: "default" }))}>
-          <ClipboardTick size={18} color="#FFFFFF" /> Mark Scores
-        </Link>
-        <Link to="/teach/ca-and-exams/active" className={cn(buttonVariants({ variant: "outline" }))}>
-          <DocumentText size={18} color="#0D0D0D" /> Active Assessments
-        </Link>
       </div>
     </div>
   );

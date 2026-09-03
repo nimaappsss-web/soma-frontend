@@ -14,6 +14,7 @@ import { SelectDropdown, type SelectOption } from "../../components/ui/select-dr
 import { useTeachers, useResendInvite, useSetTeacherApproval } from "../../features/teacher/api";
 import { useClasses } from "../../features/principal/api";
 import { InviteTeacherModal } from "../../features/principal/components/InviteTeacherModal";
+import { PendingInviteActions } from "../../features/principal/components/PendingInviteActions";
 import { EditTeacherForm } from "../../features/teacher/components/EditTeacherForm";
 import type { Teacher } from "../../features/teacher/types";
 import { getCelebration, type Celebration } from "../../utils/celebrations";
@@ -226,30 +227,28 @@ export const AdminTeachers = () => {
             {filteredInvites.length > 0 && (
               <div className="mb-4 rounded-xl border border-gray100 bg-white">
                 {filteredInvites.map((invite) => (
-                  <div key={invite.id} className="px-5 py-3 flex items-center justify-between">
-                    <div>
-                      <span className="text-gray-400">—</span>
-                      <span className="ml-3 text-gray-500">{invite.email}</span>
-                      <span className="ml-2 inline-block px-2 py-0.5 rounded text-xs font-medium bg-amber-100 text-amber-700">
-                        Pending
-                      </span>
-                      <span className="ml-2 text-xs text-gray-400">{formatExpiry(invite.expiresIn)}</span>
+                  <div
+                    key={invite.id}
+                    className="px-5 py-4 flex items-center gap-4 border-b border-gray50 last:border-0"
+                  >
+                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-gray100">
+                      <TeacherIcon size={18} variant="Bold" color="#8C8C8C" />
                     </div>
-                    <div className="flex items-center gap-2 shrink-0">
-                      <button
-                        onClick={() => setFixingInvite({ id: invite.id, email: invite.email })}
-                        className="text-xs text-gray-500 hover:text-gray-900 underline"
-                      >
-                        Fix email
-                      </button>
-                      <button
-                        onClick={() => resendMutation.mutate({ inviteId: invite.id })}
-                        disabled={resendMutation.isPending && resendMutation.variables?.inviteId === invite.id && !resendMutation.variables?.email}
-                        className="text-xs text-blue-600 hover:text-blue-700 disabled:opacity-50 underline"
-                      >
-                        {resendMutation.isPending && resendMutation.variables?.inviteId === invite.id && !resendMutation.variables?.email ? "..." : "Resend"}
-                      </button>
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate text-sm font-medium text-gray900">{invite.email}</p>
+                      <div className="mt-0.5 flex items-center gap-2">
+                        <span className="inline-block rounded-full bg-amber-100 px-2 py-0.5 text-[11px] font-medium text-amber-700">
+                          Pending
+                        </span>
+                        <span className="text-xs text-gray400">{formatExpiry(invite.expiresIn)}</span>
+                      </div>
                     </div>
+                    <PendingInviteActions
+                      invite={invite}
+                      isResending={resendMutation.isPending && resendMutation.variables?.inviteId === invite.id && !resendMutation.variables?.email}
+                      onResend={() => resendMutation.mutate({ inviteId: invite.id })}
+                      onFixEmail={() => setFixingInvite({ id: invite.id, email: invite.email })}
+                    />
                   </div>
                 ))}
               </div>
@@ -304,30 +303,25 @@ export const AdminTeachers = () => {
           <div className="bg-white rounded-xl shadow-sm border border-gray100">
             <div className="divide-y divide-gray-100">
             {filteredInvites.map((invite) => (
-              <div key={invite.id} className="px-6 py-3 flex items-center justify-between">
-                <div>
-                  <span className="text-gray-400">—</span>
-                  <span className="ml-3 text-gray-500">{invite.email}</span>
-                  <span className="ml-2 inline-block px-2 py-0.5 rounded text-xs font-medium bg-yellow-100 text-yellow-700">
-                    Pending
-                  </span>
-                  <span className="ml-2 text-xs text-gray-400">{formatExpiry(invite.expiresIn)}</span>
+              <div key={invite.id} className="px-6 py-4 flex items-center gap-4">
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-gray100">
+                  <TeacherIcon size={18} variant="Bold" color="#8C8C8C" />
                 </div>
-                <div className="flex items-center gap-2 shrink-0">
-                  <button
-                    onClick={() => setFixingInvite({ id: invite.id, email: invite.email })}
-                    className="text-xs text-gray-500 hover:text-gray-900 underline"
-                  >
-                    Fix email
-                  </button>
-                  <button
-                    onClick={() => resendMutation.mutate({ inviteId: invite.id })}
-                    disabled={resendMutation.isPending && resendMutation.variables?.inviteId === invite.id && !resendMutation.variables?.email}
-                    className="text-xs text-blue-600 hover:text-blue-700 disabled:opacity-50 underline"
-                  >
-                    {resendMutation.isPending && resendMutation.variables?.inviteId === invite.id && !resendMutation.variables?.email ? "..." : "Resend"}
-                  </button>
+                <div className="min-w-0 flex-1">
+                  <p className="truncate text-sm font-medium text-gray900">{invite.email}</p>
+                  <div className="mt-0.5 flex items-center gap-2">
+                    <span className="inline-block rounded-full bg-amber-100 px-2 py-0.5 text-[11px] font-medium text-amber-700">
+                      Pending
+                    </span>
+                    <span className="text-xs text-gray400">{formatExpiry(invite.expiresIn)}</span>
+                  </div>
                 </div>
+                <PendingInviteActions
+                  invite={invite}
+                  isResending={resendMutation.isPending && resendMutation.variables?.inviteId === invite.id && !resendMutation.variables?.email}
+                  onResend={() => resendMutation.mutate({ inviteId: invite.id })}
+                  onFixEmail={() => setFixingInvite({ id: invite.id, email: invite.email })}
+                />
               </div>
             ))}
             {filteredTeachers.map((t) => {

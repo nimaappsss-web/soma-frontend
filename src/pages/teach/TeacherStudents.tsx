@@ -64,11 +64,11 @@ export const TeacherStudents = () => {
   return (
     <div className="p-4 md:p-6 w-full">
       <StudentPageHeader
-        title="Students"
+        title="My Class"
         subtitle={formClass ? <span className="inline-flex items-center rounded-full bg-green-50 px-2.5 py-0.5 text-xs font-medium text-green-700">{formClass}</span> : undefined}
         hint={
           <HelpHint
-            title="Students"
+            title="My Class"
             storageKey="teacher-students"
             description="The students in your assigned class."
             sections={[

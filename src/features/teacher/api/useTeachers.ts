@@ -4,6 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "../../../contexts/AuthContext";
 import { db, type TeacherCache, type PendingInviteCache } from "../../../db/db";
 import { fetchData } from "../../../utils/fetchData";
+import { teacherKeys } from "../utils/query-keys";
 import type { AxiosErrorResponse, TeachersResponse } from "../types";
 
 export const useTeachers = () => {
@@ -22,7 +23,7 @@ export const useTeachers = () => {
   );
 
   const query = useQuery<TeachersResponse, AxiosErrorResponse>({
-    queryKey: ["teachers", userId],
+    queryKey: teacherKeys.list(userId),
     queryFn: async () => {
       const res = await fetchData<TeachersResponse>(
         "/teachers?limit=200",
